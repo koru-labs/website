@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
-import "../../image9/event/IL2Event.sol";
+import "../event/IL2Event.sol";
 import "../model/L2EventDefinitions.sol";
 
 library TokenEventLib2 {

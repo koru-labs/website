@@ -188,6 +188,11 @@
               "type": "uint8"
             },
             {
+              "internalType": "bytes",
+              "name": "issuerEncryptedAmount",
+              "type": "bytes"
+            },
+            {
               "internalType": "address",
               "name": "owner",
               "type": "address"
@@ -304,6 +309,11 @@
               "type": "uint8"
             },
             {
+              "internalType": "bytes",
+              "name": "issuerEncryptedAmount",
+              "type": "bytes"
+            },
+            {
               "internalType": "address",
               "name": "owner",
               "type": "address"
@@ -338,6 +348,19 @@
         }
       ],
       "name": "privateRollbackAmount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "totalSupply",
+          "type": "uint256"
+        }
+      ],
+      "name": "privateSetTotalSupply",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -397,6 +420,11 @@
               "internalType": "enum TokenModel2.TokenBox",
               "name": "location",
               "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "issuerEncryptedAmount",
+              "type": "bytes"
             },
             {
               "internalType": "address",
@@ -463,6 +491,11 @@
               "type": "uint8"
             },
             {
+              "internalType": "bytes",
+              "name": "issuerEncryptedAmount",
+              "type": "bytes"
+            },
+            {
               "internalType": "address",
               "name": "owner",
               "type": "address"
@@ -486,41 +519,6 @@
       "name": "privateSplitApproval",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "privateTotalSupply",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "cl_x",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "cl_y",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "cr_x",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "cr_y",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct TokenModel2.ElGamal",
-          "name": "",
-          "type": "tuple"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {

@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
-import "../../image9/nova/sol/fr.sol";
-import "../../image9/nova/sol/verifier.sol";
+import "../nova/sol/fr.sol";
+import "../nova/sol/verifier.sol";
 import "../model/TokenModel.sol";
 
 

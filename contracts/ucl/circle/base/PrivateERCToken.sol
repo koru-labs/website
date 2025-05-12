@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import "../../image9/event/IL2Event.sol";
+import "../event/IL2Event.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "./IPrivateERCToken.sol";

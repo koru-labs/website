@@ -1,0 +1,69 @@
+pragma solidity ^0.8.0;
+
+import "../model/TokenModel.sol";
+
+
+
+    enum TokenSCTypeEnum {
+        ERC20,
+        ERC1155
+    }
+
+
+    struct TokenSCCreatedEvent {
+        address TokenSCAddress;
+        TokenSCTypeEnum TokenSCType;
+        address Deployer;
+    }
+
+    struct TokenDetailBody {
+        uint256 id;
+        address tokenSCAddress;
+        uint256 tokenType;
+        address owner;
+        address manager;
+        uint256 cl_x;
+        uint256 cl_y;
+        uint256 cr_x;
+        uint256 cr_y;
+        uint256 amount;
+        bytes encryptedAmount;
+        TokenModel2.TokenStatus status;
+        uint256 parentId;
+    }
+
+    struct TokenMetaBody {
+        uint256 id;
+        address tokenSCAddress;
+        uint256 tokenType;
+        address owner;
+        address manager;
+        TokenModel2.TokenStatus status;
+        uint256 parentId;
+    }
+
+    struct TokenRemovedEvent {
+        address owner;
+        uint256 tokenId;
+    }
+
+    struct TokenExchangedEvent {
+        uint256 tokenId;
+        address owner;
+        address newOwner;
+    }
+
+    struct TokenProofRequestEvent {
+        address tokenScAddress;
+        uint256 tokenType;
+        uint256 amount;
+        address ownerAddress;
+    }
+
+    struct TokenProofDeliverEvent {
+        string tokenId;
+        address tokenScAddress;
+        uint256 tokenType;
+        uint256 amount;
+        address ownerAddress;
+    }
