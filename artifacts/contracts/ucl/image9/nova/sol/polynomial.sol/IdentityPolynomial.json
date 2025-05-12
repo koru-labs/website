@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IdentityPolynomial",
+  "sourceName": "contracts/ucl/image9/nova/sol/polynomial.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea264697066735822122028ec4e3d974fc18cb6c5d8a8c84e270fab6a663f7fbaa7e73c7932f1e3c1fdd964736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea264697066735822122028ec4e3d974fc18cb6c5d8a8c84e270fab6a663f7fbaa7e73c7932f1e3c1fdd964736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

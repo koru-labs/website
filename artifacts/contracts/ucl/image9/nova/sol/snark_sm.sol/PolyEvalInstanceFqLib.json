@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PolyEvalInstanceFqLib",
+  "sourceName": "contracts/ucl/image9/nova/sol/snark_sm.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea26469706673582212203a96bf2b894fd85333deed6dec3dbdb4e1f01464ff1c3dacd4855a25ddabf79b64736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212203a96bf2b894fd85333deed6dec3dbdb4e1f01464ff1c3dacd4855a25ddabf79b64736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "RelaxedR1CSSNARKVerifierKeyLib",
+  "sourceName": "contracts/ucl/image9/nova/sol/r1cs.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea26469706673582212201b9675fc51e6971043cc469adddc5ccc2f21a1f2eba251451cd46fcd3211e15164736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212201b9675fc51e6971043cc469adddc5ccc2f21a1f2eba251451cd46fcd3211e15164736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

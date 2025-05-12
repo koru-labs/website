@@ -1,0 +1,280 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "CurvesTestSC",
+  "sourceName": "contracts/test/CurvesTestSC.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "Identity",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "p1",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "p2",
+          "type": "tuple"
+        }
+      ],
+      "name": "add",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "point",
+          "type": "tuple"
+        }
+      ],
+      "name": "double",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "point",
+          "type": "tuple"
+        }
+      ],
+      "name": "negate",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "point",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint256",
+          "name": "scalar",
+          "type": "uint256"
+        }
+      ],
+      "name": "scalarMul",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Grumpkin.GrumpkinAffinePoint",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040523460195760405161048661001f823961048690f35b600080fdfe6080604052600436101561001257600080fd5b60003560e01c8063124eaee61461006257806340a058671461005d57806382d23b8a14610058578063ed0fc4f0146100535763fb6b9e9a03610072576101ef565b6101d4565b6101a4565b610165565b610093565b600091031261007257565b600080fd5b565b604081019291610077919080518252602090810151910152565b34610072576100a3366004610067565b6100ba6100ae61027a565b60405191829182610079565b0390f35b634e487b7160e01b600052604160045260246000fd5b90601f01601f1916810190811067ffffffffffffffff8211176100f657604052565b6100be565b9061007761010860405190565b92836100d4565b91906040838203126100725761013790602061012b60406100fb565b94803586520190503590565b6020830152565b91906060838203126100725761016290604061015a828661010f565b940190503590565b90565b34610072576100ba6100ae61017b36600461013e565b90610314565b91906080838203126100725761016290604061019d828661010f565b940161010f565b34610072576100ba6100ae6101ba366004610181565b90610385565b90604082820312610072576101629161010f565b34610072576100ba6100ae6101ea3660046101c0565b6103d3565b34610072576100ba6100ae6102053660046101c0565b610415565b61016260406100fb565b61021c61020a565b906000825260006020830152565b610162610214565b91906040838203126100725761013790602061024e60406100fb565b85518152940151919050565b906040828203126100725761016291610232565b6040513d6000823e3d90fd5b61028261022a565b5060408051630927577360e11b8152908173__$a0c01262bc241d8142645cac943909d9c2$__8180600481015b03915af49081156102ee576000916102c5575090565b610162915060403d6040116102e7575b6102df81836100d4565b81019061025a565b503d6102d5565b61026e565b81518152602091820151918101919091526060810192916100779160400152565b6102af9160409161032361022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__9061034360405190565b8095819482936103576399922b4a60e01b90565b8452600484016102f3565b815181526020918201518282015282516040820152910151606082015260800190565b6102af9160409161039461022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__906103b460405190565b8095819482936103c863713b60c660e01b90565b845260048401610362565b60406102af916103e161022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__6040519384928391829163193e644d60e31b5b835260048301610079565b60406102af9161042361022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__60405193849283918291630a07c2e760e01b61040a56fea2646970667358221220878526845ae9adb06d0aa90e2b39242cb470be9e31c3e90b238735fb140ca4b364736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600436101561001257600080fd5b60003560e01c8063124eaee61461006257806340a058671461005d57806382d23b8a14610058578063ed0fc4f0146100535763fb6b9e9a03610072576101ef565b6101d4565b6101a4565b610165565b610093565b600091031261007257565b600080fd5b565b604081019291610077919080518252602090810151910152565b34610072576100a3366004610067565b6100ba6100ae61027a565b60405191829182610079565b0390f35b634e487b7160e01b600052604160045260246000fd5b90601f01601f1916810190811067ffffffffffffffff8211176100f657604052565b6100be565b9061007761010860405190565b92836100d4565b91906040838203126100725761013790602061012b60406100fb565b94803586520190503590565b6020830152565b91906060838203126100725761016290604061015a828661010f565b940190503590565b90565b34610072576100ba6100ae61017b36600461013e565b90610314565b91906080838203126100725761016290604061019d828661010f565b940161010f565b34610072576100ba6100ae6101ba366004610181565b90610385565b90604082820312610072576101629161010f565b34610072576100ba6100ae6101ea3660046101c0565b6103d3565b34610072576100ba6100ae6102053660046101c0565b610415565b61016260406100fb565b61021c61020a565b906000825260006020830152565b610162610214565b91906040838203126100725761013790602061024e60406100fb565b85518152940151919050565b906040828203126100725761016291610232565b6040513d6000823e3d90fd5b61028261022a565b5060408051630927577360e11b8152908173__$a0c01262bc241d8142645cac943909d9c2$__8180600481015b03915af49081156102ee576000916102c5575090565b610162915060403d6040116102e7575b6102df81836100d4565b81019061025a565b503d6102d5565b61026e565b81518152602091820151918101919091526060810192916100779160400152565b6102af9160409161032361022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__9061034360405190565b8095819482936103576399922b4a60e01b90565b8452600484016102f3565b815181526020918201518282015282516040820152910151606082015260800190565b6102af9160409161039461022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__906103b460405190565b8095819482936103c863713b60c660e01b90565b845260048401610362565b60406102af916103e161022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__6040519384928391829163193e644d60e31b5b835260048301610079565b60406102af9161042361022a565b5073__$a0c01262bc241d8142645cac943909d9c2$__60405193849283918291630a07c2e760e01b61040a56fea2646970667358221220878526845ae9adb06d0aa90e2b39242cb470be9e31c3e90b238735fb140ca4b364736f6c63430008190033",
+  "linkReferences": {
+    "contracts/ucl/curves/blocks/grumpkin/Grumpkin.sol": {
+      "Grumpkin": [
+        {
+          "length": 20,
+          "start": 692
+        },
+        {
+          "length": 20,
+          "start": 837
+        },
+        {
+          "length": 20,
+          "start": 950
+        },
+        {
+          "length": 20,
+          "start": 1027
+        },
+        {
+          "length": 20,
+          "start": 1093
+        }
+      ]
+    }
+  },
+  "deployedLinkReferences": {
+    "contracts/ucl/curves/blocks/grumpkin/Grumpkin.sol": {
+      "Grumpkin": [
+        {
+          "length": 20,
+          "start": 661
+        },
+        {
+          "length": 20,
+          "start": 806
+        },
+        {
+          "length": 20,
+          "start": 919
+        },
+        {
+          "length": 20,
+          "start": 996
+        },
+        {
+          "length": 20,
+          "start": 1062
+        }
+      ]
+    }
+  }
+}

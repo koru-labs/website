@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "RelaxedR1CSInstanceGrumpkinLib",
+  "sourceName": "contracts/ucl/image9/nova/sol/r1cs.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220c9cbb9c51183473f3b2c58f405273eec17dd18af069041fa080eff101e26002564736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220c9cbb9c51183473f3b2c58f405273eec17dd18af069041fa080eff101e26002564736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

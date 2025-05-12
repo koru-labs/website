@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "CompressedSNARKLib",
+  "sourceName": "contracts/ucl/image9/nova/sol/compressed.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220571acfa45ff24ed1595c79ad27a193cb858ae44fd3d17a4e5c771a3d3167fc0b64736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220571acfa45ff24ed1595c79ad27a193cb858ae44fd3d17a4e5c771a3d3167fc0b64736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,68 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "HamsaInternalEvents",
+  "sourceName": "contracts/ucl/util/HamsaInternalEvents.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "BundleCancel",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "BundleExpire",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "BundleFill",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x608060405234601657604051603f601c8239603f90f35b600080fdfe6080604052600080fdfea26469706673582212208f1134d5d352655bd273d12253dfb731e7541f9314da48d788764f4d7e3b2d4264736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212208f1134d5d352655bd273d12253dfb731e7541f9314da48d788764f4d7e3b2d4264736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

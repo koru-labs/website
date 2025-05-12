@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "UCLBase",
+  "sourceName": "contracts/ucl/ucl_base.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601657604051603f601c8239603f90f35b600080fdfe6080604052600080fdfea26469706673582212207c3d40be836a76b57d287f3c08741439a34c42f6a75904336a55b593ab6eddf464736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212207c3d40be836a76b57d287f3c08741439a34c42f6a75904336a55b593ab6eddf464736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

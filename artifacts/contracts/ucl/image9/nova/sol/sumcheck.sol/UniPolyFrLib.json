@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "UniPolyFrLib",
+  "sourceName": "contracts/ucl/image9/nova/sol/sumcheck.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea264697066735822122054c9f3d05551c481e582032820d926018a226f656050aa29c21f17ff6b9d2d2a64736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea264697066735822122054c9f3d05551c481e582032820d926018a226f656050aa29c21f17ff6b9d2d2a64736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

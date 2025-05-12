@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Keccak256Transcript",
+  "sourceName": "contracts/ucl/image9/nova/sol/transcript.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220bdbe1319c291c1f1b026e21ad0de6dae31ad87c9c611081e473590ad2f5c673264736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220bdbe1319c291c1f1b026e21ad0de6dae31ad87c9c611081e473590ad2f5c673264736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

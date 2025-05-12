@@ -1,0 +1,872 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ITokenScBase",
+  "sourceName": "contracts/ucl/image9/base/ITokenScBase.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelDvpReservation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "toManager",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "commitDVP",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenValueUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackTokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewToken[]",
+          "name": "childTokens",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "delegateTransferToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256[]",
+              "name": "id",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenMergeAndUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackTokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewToken[]",
+          "name": "childTokens",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "mergeAndSplitTokenForDVP",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "childTokens",
+          "type": "uint256[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenValueUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        }
+      ],
+      "name": "mergeTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackTokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewToken",
+          "name": "token",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "mintToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "removeToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "rollbackDVP",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenValueUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackTokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewToken[]",
+          "name": "childTokens",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "splitToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenValueUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "id",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenType",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "manager",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "cl_x",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "cl_y",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "cr_x",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "cr_y",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "enum TokenModel.TokenStatus",
+                  "name": "status",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "encryptedAmount",
+                  "type": "bytes"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "rollbackTokenId",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct TokenModel.NewToken[]",
+              "name": "token",
+              "type": "tuple[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackPkX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackPkY",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "receiverPkX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "receiverPkY",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewBatchToken[]",
+          "name": "childTokens",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "splitTokenForBatchDVP",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.TokenValueUpdate",
+          "name": "parentTokenUpdate",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rollbackTokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenModel.NewToken[]",
+          "name": "childTokens",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "bytes",
+          "name": "proof",
+          "type": "bytes"
+        }
+      ],
+      "name": "splitTokenForDVP",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "toManager",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "transferToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "toManager",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "validateDVP",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

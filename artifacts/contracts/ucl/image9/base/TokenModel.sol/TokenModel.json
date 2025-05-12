@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TokenModel",
+  "sourceName": "contracts/ucl/image9/base/TokenModel.sol",
+  "abi": [],
+  "bytecode": "0x608060405234601a57604051603f6020823930815050603f90f35b600080fdfe6080604052600080fdfea2646970667358221220fc16f6b9f076f43c91e0f29b1f906cdd06624220f00e334b7d458bbe7fa77c1064736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220fc16f6b9f076f43c91e0f29b1f906cdd06624220f00e334b7d458bbe7fa77c1064736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

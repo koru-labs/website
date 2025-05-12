@@ -1,0 +1,196 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "L2EventParser",
+  "sourceName": "contracts/ucl/image9/event/L2EventParser.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenSCAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cl_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_x",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cr_y",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "encryptedAmount",
+              "type": "bytes"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "parentId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenDetailBody",
+          "name": "e",
+          "type": "tuple"
+        }
+      ],
+      "name": "parseTokenDetail",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenSCAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenType",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "internalType": "enum TokenModel.TokenStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "parentId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenMetaBody",
+          "name": "e",
+          "type": "tuple"
+        }
+      ],
+      "name": "parseTokenMeta",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TokenRemovedEvent",
+          "name": "e",
+          "type": "tuple"
+        }
+      ],
+      "name": "parseTokenRemovedEvent",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "TokenSCAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "enum TokenSCTypeEnum",
+              "name": "TokenSCType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "Deployer",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct TokenSCCreatedEvent",
+          "name": "e",
+          "type": "tuple"
+        }
+      ],
+      "name": "parseTokenSCCreated",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040523460195760405161048a61001f823961048a90f35b600080fdfe6080604052600436101561001257600080fd5b60003560e01c80634463372914610052578063588afee21461004d5780638c3dc80d146100485763c1b5ba6f036100bf57610444565b610390565b61030d565b61012e565b634e487b7160e01b600052604160045260246000fd5b90601f01601f1916810190811067ffffffffffffffff82111761008f57604052565b610057565b906100a86100a160405190565b928361006d565b565b90565b6001600160a01b0381165b036100bf57565b600080fd5b905035906100a8826100ad565b806100b8565b905035906100a8826100d1565b91906040838203126100bf576101139060206101006040610094565b9461010b83826100c4565b8652016100d7565b6020830152565b906040828203126100bf576100aa916100e4565b346100bf5761013e36600461011a565b50604051005b67ffffffffffffffff811161008f57602090601f01601f19160190565b90826000939282370152565b9092919261018261017d82610144565b610094565b93818552818301116100bf576100a8916020850190610161565b9080601f830112156100bf578160206100aa9335910161016d565b600411156100bf57565b905035906100a8826101b7565b9190916101a0818403126100bf576101e76101a0610094565b926101f281836100d7565b845261020181602084016100c4565b602085015261021381604084016100d7565b604085015261022581606084016100c4565b606085015261023781608084016100c4565b60808501526102498160a084016100d7565b60a085015261025b8160c084016100d7565b60c085015261026d8160e084016100d7565b60e0850152610100610281828285016100d7565b90850152610120610294828285016100d7565b908501526101408201359067ffffffffffffffff82116100bf576102bd816102e193850161019c565b6101408601526101606102d2828286016101c1565b908601526101808093016100d7565b90830152565b906020828203126100bf57813567ffffffffffffffff81116100bf576100aa92016101ce565b346100bf5761013e3660046102e7565b600211156100bf57565b905035906100a88261031d565b91906060838203126100bf576103759060406103506060610094565b9461035b83826100c4565b865261036a8360208301610327565b6020870152016100c4565b6040830152565b906060828203126100bf576100aa91610334565b346100bf5761013e36600461037c565b919060e0838203126100bf576104299060c06103bc60e0610094565b946103c783826100d7565b86526103d683602083016100c4565b60208701526103e883604083016100d7565b60408701526103fa83606083016100c4565b606087015261040c83608083016100c4565b608087015261041e8360a083016101c1565b60a0870152016100d7565b60c0830152565b9060e0828203126100bf576100aa916103a0565b346100bf5761013e36600461043056fea2646970667358221220178fda22fd42375e3b5a2b2b7090ca2ff9f9812b3541fbf1b4013197c024920664736f6c63430008190033",
+  "deployedBytecode": "0x6080604052600436101561001257600080fd5b60003560e01c80634463372914610052578063588afee21461004d5780638c3dc80d146100485763c1b5ba6f036100bf57610444565b610390565b61030d565b61012e565b634e487b7160e01b600052604160045260246000fd5b90601f01601f1916810190811067ffffffffffffffff82111761008f57604052565b610057565b906100a86100a160405190565b928361006d565b565b90565b6001600160a01b0381165b036100bf57565b600080fd5b905035906100a8826100ad565b806100b8565b905035906100a8826100d1565b91906040838203126100bf576101139060206101006040610094565b9461010b83826100c4565b8652016100d7565b6020830152565b906040828203126100bf576100aa916100e4565b346100bf5761013e36600461011a565b50604051005b67ffffffffffffffff811161008f57602090601f01601f19160190565b90826000939282370152565b9092919261018261017d82610144565b610094565b93818552818301116100bf576100a8916020850190610161565b9080601f830112156100bf578160206100aa9335910161016d565b600411156100bf57565b905035906100a8826101b7565b9190916101a0818403126100bf576101e76101a0610094565b926101f281836100d7565b845261020181602084016100c4565b602085015261021381604084016100d7565b604085015261022581606084016100c4565b606085015261023781608084016100c4565b60808501526102498160a084016100d7565b60a085015261025b8160c084016100d7565b60c085015261026d8160e084016100d7565b60e0850152610100610281828285016100d7565b90850152610120610294828285016100d7565b908501526101408201359067ffffffffffffffff82116100bf576102bd816102e193850161019c565b6101408601526101606102d2828286016101c1565b908601526101808093016100d7565b90830152565b906020828203126100bf57813567ffffffffffffffff81116100bf576100aa92016101ce565b346100bf5761013e3660046102e7565b600211156100bf57565b905035906100a88261031d565b91906060838203126100bf576103759060406103506060610094565b9461035b83826100c4565b865261036a8360208301610327565b6020870152016100c4565b6040830152565b906060828203126100bf576100aa91610334565b346100bf5761013e36600461037c565b919060e0838203126100bf576104299060c06103bc60e0610094565b946103c783826100d7565b86526103d683602083016100c4565b60208701526103e883604083016100d7565b60408701526103fa83606083016100c4565b606087015261040c83608083016100c4565b608087015261041e8360a083016101c1565b60a0870152016100d7565b60c0830152565b9060e0828203126100bf576100aa916103a0565b346100bf5761013e36600461043056fea2646970667358221220178fda22fd42375e3b5a2b2b7090ca2ff9f9812b3541fbf1b4013197c024920664736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

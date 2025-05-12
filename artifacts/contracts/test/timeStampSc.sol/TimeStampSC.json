@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TimeStampSC",
+  "sourceName": "contracts/test/timeStampSc.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "blockNumber",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "blockTimeStamp",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x60806040523460165760405160b0601c823960b090f35b600080fdfe60806040526004361015601157600080fd5b60003560e01c806357e871e714602e57636f891f8203603c576066565b6041565b6000910312603c57565b600080fd5b34603c57604e3660046032565b6062435b6040519182918290815260200190565b0390f35b34603c5760733660046032565b606242605256fea264697066735822122018cc1b7a8c571e864e6983930e614b89f72cfae66c18935d6abf4606f1ae2e9c64736f6c63430008190033",
+  "deployedBytecode": "0x60806040526004361015601157600080fd5b60003560e01c806357e871e714602e57636f891f8203603c576066565b6041565b6000910312603c57565b600080fd5b34603c57604e3660046032565b6062435b6040519182918290815260200190565b0390f35b34603c5760733660046032565b606242605256fea264697066735822122018cc1b7a8c571e864e6983930e614b89f72cfae66c18935d6abf4606f1ae2e9c64736f6c63430008190033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
