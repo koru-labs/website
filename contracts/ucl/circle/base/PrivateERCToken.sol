@@ -14,11 +14,12 @@ contract PrivateERCToken is IPrivateERCToken {
     mapping(address=>TokenModel.Account) accountTokens;
     mapping(address => mapping(uint256 => TokenModel.TokenEntity)) public userTokenMap;
     uint256 public privateTotalSupply;
+    mapping(address => bool) public isBankAccount;
 
-    constructor(IL2Event l2Event) {
+    constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event) {
         scOwner = msg.sender;
         _l2Event = l2Event;
-        TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, TokenModel.TokenSCTypeEnum.ERC20);
+        TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
     function privateReserveAmount(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
@@ -179,5 +180,23 @@ contract PrivateERCToken is IPrivateERCToken {
 //        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.OutBox, amountId);
 //        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.ApvBox, amountId);
 //        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), entity);
+    }
+
+    modifier onlyBankAccount() {
+        require(isBankAccount[msg.sender], "Only bank account can call this function");
+        _;
+    }
+
+    function addBankAccount(address account) external onlySCOwner {
+        isBankAccount[account] = true;
+    }
+
+    function removeBankAccount(address account) external onlySCOwner {
+        isBankAccount[account] = false;
+    }
+
+    modifier onlySCOwner() {
+        require(msg.sender == scOwner, "Only owner can call this function");
+        _;
     }
 }

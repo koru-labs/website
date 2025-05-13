@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../../ucl/curves/blocks/grumpkin/Grumpkin.sol" as GrumpkinAlgorithmLib;
 import "../event/IL2Event.sol";
 import "../event/L2EventDefinitions.sol";
 import "../model/TokenModel.sol";
