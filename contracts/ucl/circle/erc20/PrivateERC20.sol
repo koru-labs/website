@@ -6,19 +6,85 @@ import {FiatTokenV2_2} from "../../../usdc/v2/FiatTokenV2_2.sol";
 import "./ElGamal.sol";
 
 contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
-    ElGamal _totalSupply;
-    ElGamal[] _suplyInBox;
+    uint256 _publicTotalSupply;
+    ElGamal _privateTotalSupply;
+    ElGamal[] _supllyCredits;
+    ElGamal[] _supllyDebits;
+
     address _supplyAuthority;
     mapping(address => Account) private _accounts;
 
+    /**
+     * @dev Returns the cyphered value of tokens in existence.
+     */
     function privateTotalSupply() external view returns (ElGamal memory) {
-        uint256 totalSupply = _totalSupply;
-        for (uint256 i = 0; i < _suplyInBox.length; i++) {
-            totalSupply += _suplyInBox[i];
+        uint256 consolidatedSupply = _privateTotalSupply;
+        for (uint256 i = 0; i < _supllyCredits.length; i++) {
+            consolidatedSupply = addElGamal(
+                consolidatedSupply,
+                _supllyCredits[i]
+            );
         }
-        return totalSupply;
+        for (uint256 i = 0; i < _supllyDebits.length; i++) {
+            consolidatedSupply = subtractElGamal(
+                consolidatedSupply,
+                _supllyDebits[i]
+            );
+        }
+        return consolidatedSupply;
     }
 
+    function publicTotalSupply() external view returns (uint256) {
+        if (_supllyCredits.length == 0 && _supllyDebits.length == 0) {
+            return _publicTotalSupply;            
+        } else {
+            emit TotalSupplyOutDated(_publicTotalSupply);
+            return 0;
+        }
+    }
+
+    function revealTotalSupply(
+        ElGamal memory privateTotalSupply,
+        uint256 publicTotalSupply,
+        bytes calldata proof
+    ) external {
+        require(_supllyCredits.length + _supllyDebits.length > 2);
+        require(
+            verifyRevealTotalSupply(
+                msg.sender,
+                privateTotalSupply,
+                publicTotalSupply,
+                proof
+            )
+        );
+        ElGamal memory consolidadtedSuply = _privateTotalSupply;
+        // consolidate all credits
+        for (uint256 i = 0; i < _supllyCredits.length; i++) {
+            consolidadtedSuply = addElGamal(
+                consolidadtedSuply,
+                _supllyCredits[i]
+            );
+        }
+        // consolidate all debits
+        for (uint256 i = 0; i < _supllyDebits.length; i++) {
+            consolidadtedSuply = subtractElGamal(
+                consolidadtedSuply,
+                _supllyDebits[i]
+            );
+        }
+        // check if the consolidated supply is equal to the informed private supply
+        require(isEqualElGamal(consolidadtedSuply, privateTotalSupply));
+        // update supply
+        _privateTotalSupply = consolidadtedSuply;
+        _publicTotalSupply = publicTotalSupply;
+        // clean up debits and credits
+        _supllyCredits = new ElGamal[](0);
+        _supllyDebits = new ElGamal[](0);
+    }
+
+    /**
+     * @dev Returns the cyphered value of tokens owned by `account`.
+     */
     function privateBalanceOf(
         address account
     ) external view returns (ElGamal memory) {
@@ -29,6 +95,15 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
         return accountbalance;
     }
 
+    /**
+     * @notice Mints private fiat tokens to an address and updates the total supply.
+     * @param to The address that will receive the minted tokens.
+     * @param amount The amount of tokens to mint. Must be less than or equal
+     * to the minterAllowance of the caller.
+     * @param supply The amount of tokens to increment in total suplly.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
     function privateMint(
         address to,
         ElGamal memory amount,
@@ -42,17 +117,17 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
         notBlacklisted(_to)
         returns (bool)
     {
-        require(verifyMintProof(to, amount, _supplyAuthority, supply, proof));
-        _suplyInBox.push(supply);
+        require(verifyMintProof(to, amount, _supplyAuthority, supply, proof)); //TODO check the minterAllowance
+        _supllyCredits.push(supply);
         _accounts[to].inBox.push(amount);
-        emit PrivateTransfer(address(0), to, amount);
+        emit PrivateMint(to, amount);
         return true;
     }
 
     function privateTransfer(
-        address to,
         ElGamal memory oldBalance,
         ElGamal memory newBalance,
+        address to,
         ElGamal memory value,
         bytes calldata proof
     ) external returns (bool) {
@@ -66,9 +141,7 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
                 proof
             )
         );
-        require(checkBalance(msg.sender, oldBalance));
-        consolidateBalance(msg.sender, oldBalance);
-        updateBalance(msg.sender, oldBalance, newBalance);
+        require(updateBalance(msg.sender, oldBalance, newBalance));
         addToInbox(to, value);
         emit PrivateTransfer(msg.sender, to, value);
         return true;
@@ -77,15 +150,15 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     function privateAllowance(
         address owner,
         address spender
-    ) external view returns (ElGamal memory) {
-        return _accounts[owner].outBox[spender].amount;
+    ) external view returns (Allowance memory) {
+        return _accounts[owner].outBox[spender];
     }
 
     function privateApprove(
         address spender,
         ElGamal memory oldBalance,
         ElGamal memory newBalance,
-        Allowance allowance,
+        Allowance memory allowance,
         bytes calldata proof
     ) external returns (bool) {
         require(
@@ -98,10 +171,8 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
                 proof
             )
         );
-        require(checkBalance(msg.sender, oldBalance));
-        consolidateBalance(msg.sender, oldBalance);
-        updateBalance(msg.sender, oldBalance, newBalance);
-        _accounts[msg.sender].outBox[spender] += allowance;
+        require(updateBalance(msg.sender, oldBalance, newBalance));
+        _accounts[msg.sender].outBox[spender] = allowance;
         emit PrivateApproval(msg.sender, spender, allowance);
         return true;
     }
@@ -136,12 +207,102 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
         ElGamal memory oldBalance,
         ElGamal memory newBalance,
         ElGamal memory supply,
-        ElGamal memory amount,
+        ElGamal memory supplyAmount,
         bytes calldata proof
-    ) external whenNotPaused onlyMinters notBlacklisted(msg.sender) {
-        require(verifyBurnProof(msg.sender, oldBalance, newBalance, amount, supply, proof));
-        consolidateSupply();
-        decrementSupply(supply);
+    ) external whenNotPaused notBlacklisted(msg.sender) {
+        // verify burn proof
+        require(
+            verifyBurnProof(
+                msg.sender,
+                oldBalance,
+                newBalance,
+                amount,
+                _supplyAuthority,
+                supplyAmount,
+                proof
+            )
+        );
+        // remove from balance
+        require(updateBalance(msg.sender, oldBalance, newBalance));
+        // remove from supply
+        _supllyDebits.push(supplyAmount);
         emit PrivateBurn(msg.sender, amount);
+    }
+
+    // function decrementSupply(ElGamal memory amount) internal{
+    //     // consolidate supply
+    //     for (uint256 i = 0; i < _supllyCredits.length; i++) {
+    //         _totalSupply = addElGamal(_totalSupply, _supllyCredits[i]);
+    //     }
+    //     _supllyCredits = new ElGamal[](0);
+    //     _totalSupply = substractElGamal(_totalSupply, amount);
+    // }
+
+    function updateBalance(
+        address account,
+        ElGamal memory oldBalance,
+        ElGamal memory newBalance
+    ) internal returns (bool) {
+        //update balance, do not touch the inbox
+        if (_accounts[account].balance == oldBalance) {
+            _accounts[account].balance = newBalance;
+            return true;
+        }
+
+        // consolidate inbox, then update balance
+        ElGamal balance = _accounts[account].balance;
+        for (uint256 i = 0; i < _accounts[account].inBox.length; i++) {
+            balance += _accounts[account].inBox[i];
+            if (balance == oldBalance) {
+                _accounts[account].inBox = shiftLeft(
+                    _accounts[account].inBox,
+                    i
+                );
+                _accounts[account].balance = newBalance;
+                return true;
+            }
+        }
+        // not possible to update balance
+        return false;
+    }
+
+    function addAllowance(
+        Allowance memory a,
+        Allowance memory b
+    ) internal pure returns (Allowance memory) {
+        //TODO add the two allowances and returns the result (a+b)
+    }
+
+    function addElGamal(
+        ElGamal memory a,
+        ElGamal memory b
+    ) internal pure returns (Elgmal memory) {
+        //TODO add the two elgamal and returns the result (a+b)
+    }
+
+    function substractElGamal(
+        ElGamal memory a,
+        ElGamal memory b
+    ) internal pure returns (Elgmal memory) {
+        //TODO substract b from a and returns the result (a-b)
+    }
+
+    function isEqualElGamal(
+        ElGamal memory a,
+        ElGamal memory b
+    ) internal pure returns (bool) {
+        //TODO returns true if a == b
+    }
+
+    function shiftLeft(
+        ElGamal[] memory oldArray,
+        uint256 shift
+    ) internal returns (ElGamal[] memory) {
+        require(shift < oldArray.length);
+        ElGamal[] memory newArray = new ElGamal[](array.length - shift);
+        for (uint256 i = 0; i < newArray.length; i++) {
+            newArray[i] = oldArray[i + shift];
+        }
+        return newArray;
     }
 }

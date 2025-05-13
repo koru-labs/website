@@ -15,26 +15,23 @@ interface IPrivateERC20 {
         address indexed to,
         ElGamal value
     );
+    
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
      *
      * Note that `value` may be zero.
      */
-    event PrivateMint(
-        address indexed from,
-        ElGamal value
-    );
+    event PrivateMint(address indexed from, ElGamal value);
+    
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
      *
      * Note that `value` may be zero.
      */
-    event PrivateBurn(
-        address indexed from,
-        ElGamal value
-    );
+    event PrivateBurn(address indexed from, ElGamal value);
+    
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
@@ -46,19 +43,26 @@ interface IPrivateERC20 {
     );
 
     /**
-     * @dev Returns the value of tokens in existence.
+     * @dev Emitted when someone tries to read the total supply and it is outdated.
+     */
+    event TotalSupplyOutdated (
+        ElGamal value
+    );
+
+    /**
+     * @dev Returns the cyphered value of tokens in existence.
      */
     function privateTotalSupply() external view returns (ElGamal memory);
 
     /**
-     * @dev Returns the value of tokens owned by `account`.
+     * @dev Returns the cyphered value of tokens owned by `account`.
      */
     function privateBalanceOf(
         address account
     ) external view returns (ElGamal memory);
 
     /**
-     * @notice Mints fiat tokens to an address and updates the total supply.
+     * @notice Mints private fiat tokens to an address and updates the total supply.
      * @param to The address that will receive the minted tokens.
      * @param amount The amount of tokens to mint. Must be less than or equal
      * to the minterAllowance of the caller.
@@ -74,13 +78,21 @@ interface IPrivateERC20 {
     ) external returns (bool);
 
     /**
-     * @dev Moves a `value` amount of tokens from the caller's account to `to`.
+     * @dev Moves a private `value` amount of tokens from the caller's account to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {PrivateTransfer} event.
+     * @param oldBalance The balance of the caller from which the transfer will be spent.
+     * @param newBalance The new balance of the caller.
+     * @param to The address that will receive the transferred tokens.
+     * @param value The amount of tokens to transfer.
+     * @param proof The proof.
+     * @return True if the operation was successful.
      */
     function privateTransfer(
+        ElGamal memory oldBalance,
+        ElGamal memory newBalance,
         address to,
         ElGamal memory value,
         bytes calldata proof
@@ -91,7 +103,7 @@ interface IPrivateERC20 {
      * allowed to spend on behalf of `owner` through {transferFrom}. This is
      * zero by default.
      *
-     * This value changes when {approve} or {transferFrom} are called.
+     * This value changes when {privateApprove} or {privateTransferFrom} are called.
      */
     function privateAllowance(
         address owner,
@@ -120,7 +132,7 @@ interface IPrivateERC20 {
     ) external returns (bool);
 
     /**
-     * @dev Moves a `value` amount of tokens from `from` to `to` using the
+     * @dev Moves a private `value` amount of tokens from `from` to `to` using the private
      * allowance mechanism. `value` is then deducted from the caller's
      * allowance.
      *
