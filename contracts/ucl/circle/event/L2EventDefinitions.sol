@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
@@ -12,7 +13,7 @@ import "../model/TokenModel.sol";
 
     struct TokenSCCreatedEvent {
         address TokenSCAddress;
-        TokenSCTypeEnum TokenSCType;
+        TokenModel.TokenSCTypeEnum TokenSCType;
         address Deployer;
     }
 
@@ -26,9 +27,9 @@ import "../model/TokenModel.sol";
         uint256 cl_y;
         uint256 cr_x;
         uint256 cr_y;
-        uint256 amount;
+        TokenModel.ElGamal amount;
         bytes encryptedAmount;
-        TokenModel2.TokenStatus status;
+        TokenModel.TokenStatus status;
         uint256 parentId;
     }
 
@@ -38,7 +39,7 @@ import "../model/TokenModel.sol";
         uint256 tokenType;
         address owner;
         address manager;
-        TokenModel2.TokenStatus status;
+        TokenModel.TokenStatus status;
         uint256 parentId;
     }
 
@@ -66,4 +67,14 @@ import "../model/TokenModel.sol";
         uint256 tokenType;
         uint256 amount;
         address ownerAddress;
+    }
+
+    struct TokenMintBurnBody {
+        uint256 id;
+        address tokenSCAddress;
+        uint256 tokenType;
+        address owner;
+        address manager;
+        TokenModel.TokenStatus status;
+        bytes issuerEncryptedAmount;
     }

@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 
-library TokenModel2 {
+library TokenModel {
     enum TokenSCTypeEnum {
         ERC20,
         ERC1155
@@ -62,9 +63,10 @@ library TokenModel2 {
 
     struct Account {
         address addr;
-        mapping(uint256 => TokenEntity) inBox;
-        mapping(uint256 => TokenEntity) outBox;
-        mapping(uint256 => TokenEntity) apvBox;
+//        mapping(uint256 => TokenEntity) inBox;
+//        mapping(uint256 => TokenEntity) outBox;
+//        mapping(uint256 => TokenEntity) apvBox;
+        mapping(uint256 => TokenEntity) tokens;
 
         mapping(address=>ElGamal) allowance;
     }

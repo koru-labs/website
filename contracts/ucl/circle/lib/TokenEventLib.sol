@@ -1,16 +1,17 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
 import "../event/IL2Event.sol";
-import "../model/L2EventDefinitions.sol";
+import "../event/L2EventDefinitions.sol";
 
-library TokenEventLib2 {
+library TokenEventLib {
 
     function triggerTokenSCCreatedEvent(
         IL2Event _l2Event,
         address tokenSCAddress,
         address deployer,
-        TokenModel2.TokenSCTypeEnum TokenSCType
+        TokenModel.TokenSCTypeEnum TokenSCType
     ) public {
 
         TokenSCCreatedEvent memory e = TokenSCCreatedEvent({
@@ -25,7 +26,7 @@ library TokenEventLib2 {
     function triggerTokenMintedEvent(
         IL2Event _l2Event,
         address eventSource,
-        TokenModel2.TokenEntity memory token
+        TokenModel.TokenEntity memory token
     ) public {
         TokenMintBurnBody memory eventData = TokenMintBurnBody({
         id: token.id,
@@ -44,7 +45,7 @@ library TokenEventLib2 {
     function triggerTokenBurnedEvent(
         IL2Event _l2Event,
         address eventSource,
-        TokenModel2.TokenEntity memory token
+        TokenModel.TokenEntity memory token
     ) public {
         TokenMintBurnBody memory eventData = TokenMintBurnBody({
         id: token.id,
@@ -63,7 +64,7 @@ library TokenEventLib2 {
     function triggerTokenSplitEvent(
         IL2Event _l2Event,
         address eventSource,
-        TokenModel2.TokenEntity memory token
+        TokenModel.TokenEntity memory token
     ) public {
         TokenDetailBody memory eventData = TokenDetailBody({
         id: token.id,
@@ -75,6 +76,8 @@ library TokenEventLib2 {
         cl_y: token.amount.cl_y,
         cr_x: token.amount.cr_x,
         cr_y: token.amount.cr_y,
+        amount: token.amount,
+        encryptedAmount: token.issuerEncryptedAmount,
         status: token.status,
         parentId: 0
         });
@@ -85,7 +88,7 @@ library TokenEventLib2 {
     function triggerTokenRemovedEvent(
         IL2Event _l2Event,
         address eventSource,
-        TokenModel2.TokenEntity memory token
+        TokenModel.TokenEntity memory token
     ) public {
         TokenRemovedEvent memory eventData = TokenRemovedEvent({
         owner:  token.owner,

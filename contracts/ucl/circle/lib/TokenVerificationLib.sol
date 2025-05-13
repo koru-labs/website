@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../nova/sol/fr.sol";
@@ -5,7 +6,7 @@ import "../nova/sol/verifier.sol";
 import "../model/TokenModel.sol";
 
 
-library TokenVerificationLib2 {
+library TokenVerificationLib {
 
     function verify(bytes calldata proofData) public view returns (uint, Fr[] memory, Fr[] memory) {
         ZKProof memory proof;
@@ -14,7 +15,7 @@ library TokenVerificationLib2 {
     }
 
 
-    function verifyTokenSplit(TokenModel2.ParentTokens memory parentTokens, TokenModel2.AmountInfo[] memory reservedAmounts, bytes calldata proof)
+    function verifyTokenSplit(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts, bytes calldata proof)
         public view returns (bool, uint, uint256[] memory) {
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(proof);
 
@@ -49,6 +50,23 @@ library TokenVerificationLib2 {
 //            childTokens[receiverChildTokenIndex].cr_y == Fr.unwrap(zn[7]))) {
 //            return (false, result, znValues);
 //        }
+
+        return (true, result, znValues);
+    }
+
+    function verifyTokenMint(TokenModel.ElGamal calldata encryptedData, bytes calldata proof) public view returns (bool, uint, uint256[] memory) {
+        (uint result, Fr[] memory z0, Fr[] memory zn) = verify(proof);
+
+        uint256[] memory znValues = new uint256[](4);
+        znValues[0] = Fr.unwrap(zn[0]);
+        znValues[1] = Fr.unwrap(zn[1]);
+        znValues[2] = Fr.unwrap(zn[2]);
+        znValues[3] = Fr.unwrap(zn[3]);
+
+        if (encryptedData.cl_x != Fr.unwrap(zn[0]) || encryptedData.cl_y != Fr.unwrap(zn[1]) ||
+        encryptedData.cr_x != Fr.unwrap(zn[2]) || encryptedData.cr_y != Fr.unwrap(zn[3])) {
+            return (false, result, znValues);
+        }
 
         return (true, result, znValues);
     }

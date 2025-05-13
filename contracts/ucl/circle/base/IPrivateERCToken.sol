@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
@@ -6,13 +7,13 @@ interface IPrivateERCToken {
     // hamsa-ucl public functions
 
 
-    //doc: function privateReserveAmount(address owner, TokenModel2.ElGamal memory currentBalance, TokenModel2.ElGamal memory newBalance,
-     //   TokenModel2.AmountInfo[] memory reservedAmounts, bytes calldata proof) external;
-    function privateReserveAmount(TokenModel2.ParentTokens memory parentTokens, TokenModel2.AmountInfo[] memory reservedAmounts,
+    //doc: function privateReserveAmount(address owner, TokenModel.ElGamal memory currentBalance, TokenModel.ElGamal memory newBalance,
+     //   TokenModel.AmountInfo[] memory reservedAmounts, bytes calldata proof) external;
+    function privateReserveAmount(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
         bytes calldata proof) external;
 
-    function privateSplitApproval(address owner, TokenModel2.AmountInfo memory approvedAmount,
-        TokenModel2.AmountInfo[] memory splitAmounts, bytes calldata proof) external;
+    function privateSplitApproval(address owner, TokenModel.AmountInfo memory approvedAmount,
+        TokenModel.AmountInfo[] memory splitAmounts, bytes calldata proof) external;
 
     function privateRollbackAmount(uint256 amountId) external;  //move amount from out-box/apv-box back into in-box
 
@@ -21,15 +22,15 @@ interface IPrivateERCToken {
     //circle- v1
 
     // ERC: function mint(address _to, uint256 _amount) external;
-    //  doc: function privateMint(address to, TokenModel2.AmountInfo calldata amountInfo, bytes calldata proof) external;
-    function privateMint(address to, address to_manager, TokenModel2.AmountInfo calldata amountInfo, bytes calldata proof) external;
+    //  doc: function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external;
+    function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external;
 
     // ERC: function totalSupply() external  view returns (uint256);
-//    function privateTotalSupply() external view returns (TokenModel2.ElGamal memory);
+//    function privateTotalSupply() external view returns (TokenModel.ElGamal memory);
     function privateSetTotalSupply(uint256 totalSupply) external;
 
     // ERC: function balanceOf(address account) external view returns (uint256);
-    function privateBalanceOf(address owner, uint256 token_type) external returns (TokenModel2.ElGamal memory);
+    function privateBalanceOf(address owner, uint256 token_type) external returns (TokenModel.ElGamal memory);
 
 
     // ERC: function approve(address spender, uint256 value) external;
@@ -39,7 +40,7 @@ interface IPrivateERCToken {
     function privateTransferFrom(address from, address to, uint256[] memory amountIds) external;
 
     // ERC: function allowance(owner, spender) external view returns(uint256);
-    function privateAllowance(address owner, address spender) external returns (TokenModel2.ElGamal memory);
+    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory);
 
 
     // ERC: function transfer(address to, uint256 value) external returns (bool);
