@@ -7,19 +7,72 @@ import "../lib/TokenEventLib.sol";
 import "./IPrivateERCToken.sol";
 import "../lib/TokenVerificationLib.sol";
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PrivateERCToken is IPrivateERCToken {
+contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant BANK_ROLE = keccak256("BANK_ROLE");
+    
     IL2Event _l2Event;
     address scOwner;
     mapping(address=>TokenModel.Account) accountTokens;
     mapping(address => mapping(uint256 => TokenModel.TokenEntity)) public userTokenMap;
     uint256 public privateTotalSupply;
     mapping(address => bool) public isBankAccount;
+    mapping(address => bool) public blacklisted;
 
     constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event) {
         scOwner = msg.sender;
         _l2Event = l2Event;
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(BANK_ROLE, msg.sender);
+    }
+    
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+    
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
+    
+    function addToBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        blacklisted[account] = true;
+    }
+    
+    function removeFromBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        blacklisted[account] = false;
+    }
+    
+    function addBankAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isBankAccount[account] = true;
+        _grantRole(BANK_ROLE, account);
+    }
+
+    function removeBankAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isBankAccount[account] = false;
+        _revokeRole(BANK_ROLE, account);
+    }
+    
+    modifier notBlacklisted(address account) {
+        require(!blacklisted[account], "PrivateERCToken: account is blacklisted");
+        _;
+    }
+    
+    modifier onlyBankAccount() {
+        require(hasRole(BANK_ROLE, msg.sender), "PrivateERCToken: caller is not a bank account");
+        _;
+    }
+    
+    modifier onlySCOwner() {
+        require(msg.sender == scOwner, "PrivateERCToken: caller is not the owner");
+        _;
     }
 
     function privateReserveAmount(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
@@ -113,12 +166,24 @@ contract PrivateERCToken is IPrivateERCToken {
 
     }
 
-    function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external {
+    function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) 
+        external 
+        whenNotPaused
+        onlyRole(MINTER_ROLE)
+        notBlacklisted(msg.sender)
+        notBlacklisted(amountInfo.owner) 
+    {
+        require(amountInfo.owner != address(0), "PrivateERCToken: mint to the zero address");
+        
+        // Verify proof
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenMint(amountInfo.amount, proof);
-        require(isValid, "invalid proof");
+        require(isValid, "PrivateERCToken: invalid proof");
 
-        TokenOperationsLib.mintTokenLogic(userTokenMap,amountInfo.owner,amountInfo.manager, amountInfo);
+        
+        // Mint token
+        TokenOperationsLib.mintTokenLogic(userTokenMap, amountInfo.owner, amountInfo.manager, amountInfo);
 
+        // Trigger event
         TokenModel.TokenEntity memory entity = userTokenMap[amountInfo.owner][amountInfo.id];
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), entity);
     }
@@ -180,23 +245,5 @@ contract PrivateERCToken is IPrivateERCToken {
 //        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.OutBox, amountId);
 //        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.ApvBox, amountId);
 //        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), entity);
-    }
-
-    modifier onlyBankAccount() {
-        require(isBankAccount[msg.sender], "Only bank account can call this function");
-        _;
-    }
-
-    function addBankAccount(address account) external onlySCOwner {
-        isBankAccount[account] = true;
-    }
-
-    function removeBankAccount(address account) external onlySCOwner {
-        isBankAccount[account] = false;
-    }
-
-    modifier onlySCOwner() {
-        require(msg.sender == scOwner, "Only owner can call this function");
-        _;
     }
 }
