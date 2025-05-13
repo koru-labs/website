@@ -1,32 +1,50 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./ElGamal.sol";
 
 interface IPrivateERC20 {
-    // hamsa-ucl public functions
-
-    struct ElGamal {
-        uint256 cl_x;
-        uint256 cl_y;
-        uint256 cr_x;
-        uint256 cr_y;
-    }
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
      *
      * Note that `value` may be zero.
      */
-    event PrivateTransfer(address indexed from, address indexed to, ElGamal value);
-
+    event PrivateTransfer(
+        address indexed from,
+        address indexed to,
+        ElGamal value
+    );
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event PrivateMint(
+        address indexed from,
+        ElGamal value
+    );
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event PrivateBurn(
+        address indexed from,
+        ElGamal value
+    );
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event PrivateApproval(address indexed owner, address indexed spender, ElGamal value);
+    event PrivateApproval(
+        address indexed owner,
+        address indexed spender,
+        ElGamal value
+    );
 
-        
-    function privateMint(address to, ElGamal memory amount, ElGamal memory supply, bytes calldata proof) external;
-    
     /**
      * @dev Returns the value of tokens in existence.
      */
@@ -35,7 +53,25 @@ interface IPrivateERC20 {
     /**
      * @dev Returns the value of tokens owned by `account`.
      */
-    function privateBalanceOf(address account) external view returns (ElGamal memory);
+    function privateBalanceOf(
+        address account
+    ) external view returns (ElGamal memory);
+
+    /**
+     * @notice Mints fiat tokens to an address and updates the total supply.
+     * @param to The address that will receive the minted tokens.
+     * @param amount The amount of tokens to mint. Must be less than or equal
+     * to the minterAllowance of the caller.
+     * @param supply The amount of tokens to increment in total suplly.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
+    function privateMint(
+        address to,
+        ElGamal memory amount,
+        ElGamal memory supply,
+        bytes calldata proof
+    ) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from the caller's account to `to`.
@@ -44,7 +80,11 @@ interface IPrivateERC20 {
      *
      * Emits a {PrivateTransfer} event.
      */
-    function privateTransfer(address to, ElGamal memory value, bytes calldata proof) external returns (bool);
+    function privateTransfer(
+        address to,
+        ElGamal memory value,
+        bytes calldata proof
+    ) external returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -53,7 +93,10 @@ interface IPrivateERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function privateAllowance(address owner, address spender) external view returns (ElGamal memory);
+    function privateAllowance(
+        address owner,
+        address spender
+    ) external view returns (ElGamal memory);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -70,7 +113,11 @@ interface IPrivateERC20 {
      *
      * Emits an {PrivateApproval} event.
      */
-    function privateApprove(address spender, ElGamal memory value, bytes calldata proof) external returns (bool);
+    function privateApprove(
+        address spender,
+        ElGamal memory value,
+        bytes calldata proof
+    ) external returns (bool);
 
     /**
      * @dev Moves a `value` amount of tokens from `from` to `to` using the
@@ -81,7 +128,10 @@ interface IPrivateERC20 {
      *
      * Emits a {PrivateTransfer} event.
      */
-    function privateTransferFrom(address from, address to, ElGamal memory value, bytes calldata proof) external returns (bool);
-
-
+    function privateTransferFrom(
+        address from,
+        address to,
+        ElGamal memory value,
+        bytes calldata proof
+    ) external returns (bool);
 }
