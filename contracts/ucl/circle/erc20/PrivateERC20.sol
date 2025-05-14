@@ -6,12 +6,19 @@ import {FiatTokenV2_2} from '../../../usdc/v2/FiatTokenV2_2.sol';
 import './ElGamal.sol';
 
 contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
+
   // suplly related fields
   address _supplyAuthority;
   uint256 _publicTotalSupply;
   ElGamal _privateTotalSupply;
   ElGamal[] _supllyCredits;
   ElGamal[] _supllyDebits;
+
+  struct Account {
+    ElGamal balance;
+    ElGamal[] inBox;
+    mapping(address => Allowance) outBox;
+  }
 
   // private accounts
   mapping(address => Account) private _accounts;
