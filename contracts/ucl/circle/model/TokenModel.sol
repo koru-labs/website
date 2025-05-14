@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "../base/BankRegistration.sol";
+
 
 library TokenModel {
     enum TokenSCTypeEnum {
@@ -73,6 +75,20 @@ library TokenModel {
     
     struct BankAllowances {
         mapping(address => ElGamal) allowances;
+    }
+
+    struct VerifyTokenMintParams {
+        BankRegistration bankRegistration;
+        address minter;
+        ElGamal initialMinterAllowance;
+        ElGamal currentMintAmount;
+        TokenModel.AmountInfo amountInfo;
+        bytes proof;
+    }
+
+    struct GrumpkinPublicKey {
+        uint256 x;
+        uint256 y;
     }
 }
 
