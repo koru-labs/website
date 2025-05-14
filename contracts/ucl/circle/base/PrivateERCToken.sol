@@ -229,8 +229,8 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 //        });
 //    }
 
-    function privateSetTotalSupply(uint256 totalSupply) external {
-        totalSupply = totalSupply;
+    function privateSetTotalSupply(uint256 totalSupply) onlySCOwner external {
+        privateTotalSupply = totalSupply;
     }
 
     function privateBalanceOf(address owner, uint256 token_type) external returns (TokenModel.ElGamal memory) {
