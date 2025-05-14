@@ -10,7 +10,8 @@
     "@openzeppelin/test-helpers": "^0.5.16",
     "chai": "4.3.7",
     "hardhat": "^2.22.5",
-    "mocha": "^10.7.3"
+    "mocha": "^10.7.3",
+    "prettier": "^3.5.3"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.3",
