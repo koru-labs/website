@@ -192,12 +192,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     {
         require(amountInfo.owner != address(0), "PrivateERCToken: mint to the zero address");
 
-        //BankRegistration bankRegistration;
-        //        address minter;
-        //        ElGamal initialMinterAllowance;
-        //        ElGamal currentMintAmount;
-        //        TokenModel.AmountInfo amountInfo;
-        //        bytes proof;
         TokenModel.VerifyTokenMintParams memory params = TokenModel.VerifyTokenMintParams({
             bankRegistration: _bankRegistration,
             minter: msg.sender,
