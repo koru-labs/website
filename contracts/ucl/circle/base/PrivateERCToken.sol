@@ -88,45 +88,44 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         _;
     }
 
-    function privateReserveAmount(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
+    function privateReserveAmount(address owner, TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
         bytes calldata proof) external {
 
-//        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(parentTokens, reservedAmounts, proof);
-//        require(isValid, "invalid proof");
-//
-//        address owner= msg.sender;
-//        TokenModel.Account storage ownerAccount = accountTokens[owner];
-//
-//        // create all child tokens
-//        for (uint256 i = 0; i < reservedAmounts.length; i++) {
-//            TokenModel.AmountInfo memory child = reservedAmounts[i];
-//
-//            TokenModel.TokenEntity memory childEntity = TokenModel.TokenEntity({
-//            id : child.id,
-//            tokenType : child.token_type,
-//            owner : child.owner,
-//            manager : child.manager,
-//            status : child.status,
-//
-//            amount: child.amount,
-//            issuerEncryptedAmount: child.issuerEncryptedAmount,
-//
-//            approvedSpender : address(0),
-//            rollbackTokenId : 0
-//            });
-//
-//            saveTokenInBox(ownerAccount, child.location, childEntity);
-//            TokenEventLib.triggerTokenSplitEvent(_l2Event, address(this), childEntity);
-//        }
-//
-//        //delete all parent tokens
-//        for(uint i=0;i<parentTokens.parentIds.length;i++) {
-//            uint256 pid = parentTokens.parentIds[i];
-//            TokenModel.TokenEntity memory parentEntity = ownerAccount.inBox[pid];
-//
-//            deleteTokenInBox(ownerAccount, TokenModel.TokenBox.InBox, pid);
-//            TokenEventLib.triggerTokenRemovedEvent(_l2Event, address(this), parentEntity);
-//        }
+        TokenModel.Account storage ownerAccount = accountTokens[owner];
+
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(ownerAccount, parentTokens, reservedAmounts, proof);
+        require(isValid, "PrivateERCToken: invalid proof");
+
+        // create all child tokens
+        for (uint256 i = 0; i < reservedAmounts.length; i++) {
+            TokenModel.AmountInfo memory child = reservedAmounts[i];
+
+            TokenModel.TokenEntity memory childEntity = TokenModel.TokenEntity({
+            id : child.id,
+            tokenType : child.token_type,
+            owner : child.owner,
+            manager : child.manager,
+            status : child.status,
+
+            amount : child.amount,
+            issuerEncryptedAmount : child.issuerEncryptedAmount,
+
+            approvedSpender : address(0),
+            rollbackTokenId : 0
+            });
+
+            ownerAccount.tokens[child.id] = childEntity;
+            TokenEventLib.triggerTokenSplitEvent(_l2Event, address(this), childEntity);
+        }
+
+        //delete all parent tokens
+        for (uint i = 0; i < parentTokens.parentIds.length; i++) {
+            uint256 pid = parentTokens.parentIds[i];
+            TokenModel.TokenEntity memory parentEntity = ownerAccount.tokens[pid];
+
+            TokenEventLib.triggerTokenRemovedEvent(_l2Event, address(this), parentEntity);
+            delete ownerAccount.tokens[pid];
+        }
     }
 
     function deleteTokenInBox(TokenModel.Account storage ownerAccount, TokenModel.TokenBox box, uint256 tokenId) internal {
