@@ -9,7 +9,7 @@ interface IPrivateERCToken {
 
     //doc: function privateReserveAmount(address owner, TokenModel.ElGamal memory currentBalance, TokenModel.ElGamal memory newBalance,
      //   TokenModel.AmountInfo[] memory reservedAmounts, bytes calldata proof) external;
-    function privateReserveAmount(TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
+    function privateReserveAmount(address owner, TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
         bytes calldata proof) external;
 
     function privateSplitApproval(address owner, TokenModel.AmountInfo memory approvedAmount,

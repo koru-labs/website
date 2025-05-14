@@ -40,6 +40,7 @@ library TokenModel {
         bytes issuerEncryptedAmount;
         address owner;
         address manager;
+        uint256 rollbackTokenId;
     }
 
     struct ParentTokens {
