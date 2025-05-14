@@ -22,6 +22,8 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     uint256 public privateTotalSupply;
     mapping(address => bool) public isBankAccount;
     mapping(address => bool) public blacklisted;
+    
+    mapping(address => TokenModel.ElGamal) public bankAllowances;
 
     constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event) {
         scOwner = msg.sender;
@@ -58,6 +60,17 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     function removeBankAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         isBankAccount[account] = false;
         _revokeRole(BANK_ROLE, account);
+    }
+    
+  
+    function setBankAllowance(address bank, TokenModel.ElGamal calldata allowanceAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
+        bankAllowances[bank] = allowanceAmount;
+    }
+    
+    function removeBankAllowance(address bank) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
+        delete bankAllowances[bank];
     }
     
     modifier notBlacklisted(address account) {
@@ -172,15 +185,24 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         onlyRole(MINTER_ROLE)
         notBlacklisted(msg.sender)
         notBlacklisted(amountInfo.owner) 
+        onlyBankAccount
     {
         require(amountInfo.owner != address(0), "PrivateERCToken: mint to the zero address");
         
-        // Verify proof
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenMint(amountInfo.amount, proof);
         require(isValid, "PrivateERCToken: invalid proof");
 
+        TokenModel.ElGamal memory newAllowance = TokenModel.ElGamal({
+            cl_x: znValues[4],
+            cl_y: znValues[5],
+            cr_x: znValues[6],
+            cr_y: znValues[7]
+        });
         
-        // Mint token
+        
+        bankAllowances[msg.sender] = newAllowance;
+        
+
         TokenOperationsLib.mintTokenLogic(userTokenMap, amountInfo.owner, amountInfo.manager, amountInfo);
 
         // Trigger event
@@ -226,7 +248,11 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         cr_y: 0
         });
     }
-
+    
+    function getBankAllowance(address bank) external view returns (TokenModel.ElGamal memory) {
+        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
+        return bankAllowances[bank];
+    }
 
     function privateTransfer(address to, uint256[] memory amountIds) external {
 

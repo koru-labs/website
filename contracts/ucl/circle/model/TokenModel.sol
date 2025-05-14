@@ -70,6 +70,10 @@ library TokenModel {
 
         mapping(address=>ElGamal) allowance;
     }
+    
+    struct BankAllowances {
+        mapping(address => ElGamal) allowances;
+    }
 }
 
 
