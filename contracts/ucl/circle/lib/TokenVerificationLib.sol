@@ -61,23 +61,23 @@ library TokenVerificationLib {
         uint256[] memory znValues = new uint256[](12);
         
 
-        znValues[0] = Fr.unwrap(zn[0]);  // mint token cl_x
-        znValues[1] = Fr.unwrap(zn[1]);  // mint token cl_y
-        znValues[2] = Fr.unwrap(zn[2]);  // mint token cr_x
-        znValues[3] = Fr.unwrap(zn[3]);  // mint token cr_y
+        znValues[0] = Fr.unwrap(zn[0]);
+        znValues[1] = Fr.unwrap(zn[1]);
+        znValues[2] = Fr.unwrap(zn[2]);
+        znValues[3] = Fr.unwrap(zn[3]);
         
 
-        znValues[4] = Fr.unwrap(zn[4]);  // 新allowance cl_x
-        znValues[5] = Fr.unwrap(zn[5]);  // 新allowance cl_y
-        znValues[6] = Fr.unwrap(zn[6]);  // 新allowance cr_x
-        znValues[7] = Fr.unwrap(zn[7]);  // 新allowance cr_y
+        znValues[4] = Fr.unwrap(zn[4]);
+        znValues[5] = Fr.unwrap(zn[5]);
+        znValues[6] = Fr.unwrap(zn[6]);
+        znValues[7] = Fr.unwrap(zn[7]);
 
-        znValues[8] = Fr.unwrap(zn[8]);  // mint token公钥x
-        znValues[9] = Fr.unwrap(zn[9]);  // mint token公钥y
+        znValues[8] = Fr.unwrap(zn[8]);
+        znValues[9] = Fr.unwrap(zn[9]);
         
 
-        znValues[10] = Fr.unwrap(zn[10]); // 新allowance公钥x
-        znValues[11] = Fr.unwrap(zn[11]); // 新allowance公钥y
+        znValues[10] = Fr.unwrap(zn[10]);
+        znValues[11] = Fr.unwrap(zn[11]);
 
 
         if (encryptedData.cl_x != znValues[0] || 
