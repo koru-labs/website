@@ -117,6 +117,7 @@ async function main() {
         const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
             libraries: {
                 "ZkVerifier": deployed.libraries.ZkVerifier,
+                "Grumpkin": deployed.libraries.Grumpkin
             }
         });
         const tokenVerificationLib = await TokenVerificationLibFactory.deploy();
