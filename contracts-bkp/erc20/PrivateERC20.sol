@@ -294,22 +294,37 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return false;
   }
 
+  /**
+   * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
   function addAllowance(Allowance memory a, Allowance memory b) internal pure returns (Allowance memory) {
     //TODO add the two allowances and returns the result (a+b)
   }
 
+  /**
+   * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
   function addElGamal(ElGamal memory a, ElGamal memory b) internal pure returns (Elgmal memory) {
     //TODO add the two elgamal and returns the result (a+b)
   }
 
+  /**
+   * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
   function substractElGamal(ElGamal memory a, ElGamal memory b) internal pure returns (Elgmal memory) {
     //TODO substract b from a and returns the result (a-b)
   }
 
+  /**
+   * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
   function isEqualElGamal(ElGamal memory a, ElGamal memory b) internal pure returns (bool) {
     //TODO returns true if a == b
   }
 
+  /**
+   * @dev THIS FUNCTION may or may not BELONG TO AN ELGAMAL LIBRARY, this is a style decision.
+   */
   function shiftLeft(ElGamal[] memory oldArray, uint256 shift) internal returns (ElGamal[] memory) {
     require(shift < oldArray.length);
     ElGamal[] memory newArray = new ElGamal[](array.length - shift);
