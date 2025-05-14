@@ -6,7 +6,6 @@ import {FiatTokenV2_2} from '../../contracts/usdc/v2/FiatTokenV2_2.sol';
 import './ElGamal.sol';
 
 contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
-
   // suplly related fields
   address _supplyAuthority;
   uint256 _publicTotalSupply;
@@ -37,7 +36,8 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return consolidatedSupply;
   }
 
-  function publicTotalSupply() external view returns (uint256) {  //TODO check if this is the right way to do it
+  function publicTotalSupply() external view returns (uint256) {
+    //TODO check if this is the right way to do it
     if (_supllyCredits.length == 0 && _supllyDebits.length == 0) {
       return _publicTotalSupply;
     } else {
@@ -48,7 +48,7 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
 
   function revealTotalSupply(ElGamal memory privateTotalSupply, uint256 publicTotalSupply, bytes calldata proof) external {
     // this check is required to guarantee minters' and burners' privacy
-    require(_supllyCredits.length + _supllyDebits.length > 2); 
+    require(_supllyCredits.length + _supllyDebits.length > 2);
     require(verifyRevealTotalSupply(msg.sender, privateTotalSupply, publicTotalSupply, proof));
     ElGamal memory consolidadtedSuply = _privateTotalSupply;
     // consolidate all credits
@@ -104,13 +104,7 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return true;
   }
 
-  function verifyMintProof(
-    address to,
-    ElGamal memory amount,
-    address minter,
-    ElGamal memory supply,
-    bytes calldata proof
-  ) internal view returns (bool) {
+  function verifyMintProof(address to, ElGamal memory amount, address minter, ElGamal memory supply, bytes calldata proof) internal view returns (bool) {
     //TODO verify the mint proof
     // The zk circuit should verify this:
     // verify if supply elgamal is a valid elgamal
@@ -145,22 +139,18 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
   ) internal view returns (bool) {
     //TODO verify the transfer proof
     // The zk circuit should verify this:
-    // verify if oldBalance elgamal is a valid elgamal
-    // verify if newBalance elgamal is a valid elgamal
-    // verify if the newBalance's Elgamal cyphered value plus the amount's Elgamal cyphered value equals the oldBalance's Elgamal cyphered value 
-    // verify if the "from" address is the address of the public key inside oldBalance elgamal
-    // verify if the "from" address is the address of the public key inside newBalance elgamal
-    // verify if the "to" address is the address of the public key inside amount elgamal
+    // verify if "oldBalance" elgamal is a valid elgamal
+    // verify if "newBalance" elgamal is a valid elgamal
+    // verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
+    // verify if the "from" address is the address of the public key inside "oldBalance" elgamal
+    // verify if the "from" address is the address of the public key inside "newBalance" elgamal
+    // verify if the "to" address is the address of the public key inside "amount" elgamal
     return true;
   }
 
   function privateAllowance(address owner, address spender) external view returns (Allowance memory) {
     return _accounts[owner].outBox[spender];
   }
-
-
-
-
 
   function privateApprove(
     address spender,
@@ -176,10 +166,6 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return true;
   }
 
-
-
-
-
   function privateTransferFrom(
     address from,
     Allowance oldAllowance,
@@ -189,21 +175,44 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     bytes calldata proof
   ) external returns (bool) {
     require(verifyTransferFromProof(msg.sender, from, oldAllowance, newAllowance, to, value, proof));
-    require(checkAllowance(msg.sender, from, oldAllowance));
-    updateAllowance(msg.sender, from, oldAllowance, newAllowance);
+    require(updateAllowance(msg.sender, from, oldAllowance, newAllowance));
     addToInbox(to, value);
     emit PrivateTransfer(from, to, value);
     return true;
   }
 
+  function verifyTransferFromProof(
+    address from,
+    Allowance memory oldAllowance,
+    Allowance memory newAllowance,
+    address to,
+    ElGamal memory value,
+    bytes calldata proof
+  ) internal view returns (bool) {
+    //TODO verify the transfer from proof
+    // The zk circuit should verify this:    
+    // verify if "newAllowance" is a valid allowance 
+      // verify if "newAllowance.amount" belongs to "to" 
+      // verify if "newAllowance.backup" belongs to "from"
+      // verify if "newAllowance.amount" cyphered value equals the "oldAllowance.backup" cyphered value
+    // verify if "value" is a valid ElGamal
+      // verify if the "to" address is the address of the public key inside "value" elgamal
+    // verify if the "newAllowance"'s Elgamal cyphered value plus the "value"'s Elgamal cyphered value equals the "oldAllowance"'s Elgamal cyphered value
+    return true;
+  }
 
-
-
+  function updateAllowance(address owner, address spender, Allowance memory oldAllowance, Allowance memory newAllowance) internal returns (bool) {
+    if (_accounts[owner].outBox[spender] == oldAllowance) {
+      _accounts[owner].outBox[spender] = newAllowance;
+      return true;
+    }
+    return false;
+  }
 
   function burn(
     ElGamal memory oldBalance,
     ElGamal memory newBalance,
-    ElGamal memory supply,
+    ElGamal memory amount,
     ElGamal memory supplyAmount,
     bytes calldata proof
   ) external whenNotPaused notBlacklisted(msg.sender) {
@@ -216,7 +225,31 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     emit PrivateBurn(msg.sender, amount);
   }
 
+  function verifyBurnProof(
+    address from,
+    ElGamal memory oldBalance,
+    ElGamal memory newBalance,
+    ElGamal memory amount,
+    address supplyAuthority,
+    ElGamal memory supplyAmount,
+    bytes calldata proof
+  ) internal view returns (bool) {
+    //TODO verify the burn proof
+    // The zk circuit should verify this:
+    // verify if "oldBalance" elgamal is a valid elgamal
+    // verify if "newBalance" elgamal is a valid elgamal
+    // verify if "amount" elgamal is a valid elgamal
+    // verify if "supplyAmount" elgamal is a valid elgamal
 
+    // verify if the "from" address is the address of the public key inside "oldBalance" elgamal
+    // verify if the "from" address is the address of the public key inside "newBalance" elgamal
+    // verify if the "from" address is the address of the public key inside "amount" elgamal
+    // verify if the "supplyAuthority" address is the address of the public key inside "supplyAmount" elgamal
+    
+    // verify if the "supplyAmount"'s Elgamal cyphered value equals the "amount"'s Elgamal cyphered value
+    // verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
+    return true;
+  }
 
   function updateBalance(address account, ElGamal memory oldBalance, ElGamal memory newBalance) internal returns (bool) {
     //update balance, do not touch the inbox
@@ -238,9 +271,6 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     // not possible to update balance
     return false;
   }
-
-
-
 
   function addAllowance(Allowance memory a, Allowance memory b) internal pure returns (Allowance memory) {
     //TODO add the two allowances and returns the result (a+b)
