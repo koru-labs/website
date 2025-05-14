@@ -5,6 +5,18 @@ import {IPrivateERC20} from './IPrivateERC20.sol';
 import {FiatTokenV2_2} from '../../contracts/usdc/v2/FiatTokenV2_2.sol';
 import './ElGamal.sol';
 
+////////////////////////////////
+// THIS CONTRACT IS A GUIDANCE
+// FOR THE UCL PRIVATE DEV
+// PROJECT, IT IS NOT FINAL YET.
+////////////////////////////////
+
+/**
+ * @title PrivateERC20
+ * @author Aldenio
+ * @notice This contract implements a private ERC20 token.
+ * @dev This contract extends the FiatTokenV2_2 contract from Circle.
+ */
 contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
   // suplly related fields
   address _supplyAuthority;
@@ -104,14 +116,18 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return true;
   }
 
+  /**
+   * @dev THIS FUNCTION IS HERE JUST TO DOCUMENT THE CHECKS THAT THE ZK CIRCUIT SHOULD PERFORM.
+   * @dev The zk circuit should verify this:
+   * @dev verify that supply elgamal is a valid elgamal
+   * @dev verify that amount elgamal is a valid elgamal
+   * @dev verify that the amount and the supply elgamals have the same value
+   * @dev verify that the "_supplyAuthority" address is the address of the public key inside supply elgamal
+   * @dev verify that the "to" address is the address of the public key inside amount elgamal
+   */
   function verifyMintProof(address to, ElGamal memory amount, address minter, ElGamal memory supply, bytes calldata proof) internal view returns (bool) {
-    //TODO verify the mint proof
-    // The zk circuit should verify this:
-    // verify if supply elgamal is a valid elgamal
-    // verify if amount elgamal is a valid elgamal
-    // verify if the amount and the supply elgamals have the same value
-    // verify if the "_supplyAuthority" address is the address of the public key inside supply elgamal
-    // verify if the "to" address is the address of the public key inside amount elgamal
+    //THIS FUNCTION WILL NOT EXIST IN THE FINAL CONTRACT
+    //TODO remove this function and use the zk circuit verifier contract instead.
     return true;
   }
 
@@ -129,6 +145,16 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return true;
   }
 
+  /**
+   * @dev THIS FUNCTION IS HERE JUST TO DOCUMENT THE CHECKS THAT THE ZK CIRCUIT SHOULD PERFORM.
+   * @dev The zk circuit should verify this:
+   * @dev verify if "oldBalance" elgamal is a valid elgamal
+   * @dev verify if "newBalance" elgamal is a valid elgamal
+   * @dev verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
+   * @dev verify if the "from" address is the address of the public key inside "oldBalance" elgamal
+   * @dev verify if the "from" address is the address of the public key inside "newBalance" elgamal
+   * @dev verify if the "to" address is the address of the public key inside "amount" elgamal
+   */
   function verifyTransferProof(
     address from,
     ElGamal memory oldBalance,
@@ -137,14 +163,8 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     ElGamal memory amount,
     bytes calldata proof
   ) internal view returns (bool) {
-    //TODO verify the transfer proof
-    // The zk circuit should verify this:
-    // verify if "oldBalance" elgamal is a valid elgamal
-    // verify if "newBalance" elgamal is a valid elgamal
-    // verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
-    // verify if the "from" address is the address of the public key inside "oldBalance" elgamal
-    // verify if the "from" address is the address of the public key inside "newBalance" elgamal
-    // verify if the "to" address is the address of the public key inside "amount" elgamal
+    //THIS FUNCTION WILL NOT EXIST IN THE FINAL CONTRACT
+    //TODO remove this function and use the zk circuit verifier contract instead.
     return true;
   }
 
@@ -180,7 +200,17 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     emit PrivateTransfer(from, to, value);
     return true;
   }
-
+  /**
+   * @dev THIS FUNCTION IS HERE JUST TO DOCUMENT THE CHECKS THAT THE ZK CIRCUIT SHOULD PERFORM.
+   * @dev The zk circuit should verify this:
+   * @dev verify if "newAllowance" is a valid allowance
+   * @dev verify if "newAllowance.amount" belongs to "to"
+   * @dev verify if "newAllowance.backup" belongs to "from"
+   * @dev verify if "newAllowance.amount" cyphered value equals the "oldAllowance.backup" cyphered value
+   * @dev verify if "value" is a valid ElGamal
+   * @dev verify if the "to" address is the address of the public key inside "value" elgamal
+   * @dev verify if the "newAllowance"'s Elgamal cyphered value plus the "value"'s Elgamal cyphered value equals the "oldAllowance"'s Elgamal cyphered value
+   */
   function verifyTransferFromProof(
     address from,
     Allowance memory oldAllowance,
@@ -189,15 +219,8 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     ElGamal memory value,
     bytes calldata proof
   ) internal view returns (bool) {
-    //TODO verify the transfer from proof
-    // The zk circuit should verify this:    
-    // verify if "newAllowance" is a valid allowance 
-      // verify if "newAllowance.amount" belongs to "to" 
-      // verify if "newAllowance.backup" belongs to "from"
-      // verify if "newAllowance.amount" cyphered value equals the "oldAllowance.backup" cyphered value
-    // verify if "value" is a valid ElGamal
-      // verify if the "to" address is the address of the public key inside "value" elgamal
-    // verify if the "newAllowance"'s Elgamal cyphered value plus the "value"'s Elgamal cyphered value equals the "oldAllowance"'s Elgamal cyphered value
+    //THIS FUNCTION WILL NOT EXIST IN THE FINAL CONTRACT
+    //TODO remove this function and use the zk circuit verifier contract instead.
     return true;
   }
 
@@ -216,15 +239,26 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     ElGamal memory supplyAmount,
     bytes calldata proof
   ) external whenNotPaused notBlacklisted(msg.sender) {
-    // verify burn proof
     require(verifyBurnProof(msg.sender, oldBalance, newBalance, amount, _supplyAuthority, supplyAmount, proof));
-    // remove from balance
     require(updateBalance(msg.sender, oldBalance, newBalance));
-    // remove from supply
     _supllyDebits.push(supplyAmount);
     emit PrivateBurn(msg.sender, amount);
   }
 
+/**
+ * @dev THIS FUNCTION IS HERE JUST TO DOCUMENT THE CHECKS THAT THE ZK CIRCUIT SHOULD PERFORM.
+ * @dev The zk circuit should verify this:
+ * @dev verify if "oldBalance" elgamal is a valid elgamal
+ * @dev verify if "newBalance" elgamal is a valid elgamal
+ * @dev verify if "amount" elgamal is a valid elgamal
+ * @dev verify if "supplyAmount" elgamal is a valid elgamal
+ * @dev verify if the "from" address is the address of the public key inside "oldBalance" elgamal
+ * @dev verify if the "from" address is the address of the public key inside "newBalance" elgamal
+ * @dev verify if the "from" address is the address of the public key inside "amount" elgamal
+ * @dev verify if the "supplyAuthority" address is the address of the public key inside "supplyAmount" elgamal
+ * @dev verify if the "supplyAmount"'s Elgamal cyphered value equals the "amount"'s Elgamal cyphered value
+ * @dev verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
+ */
   function verifyBurnProof(
     address from,
     ElGamal memory oldBalance,
@@ -234,20 +268,8 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     ElGamal memory supplyAmount,
     bytes calldata proof
   ) internal view returns (bool) {
-    //TODO verify the burn proof
-    // The zk circuit should verify this:
-    // verify if "oldBalance" elgamal is a valid elgamal
-    // verify if "newBalance" elgamal is a valid elgamal
-    // verify if "amount" elgamal is a valid elgamal
-    // verify if "supplyAmount" elgamal is a valid elgamal
-
-    // verify if the "from" address is the address of the public key inside "oldBalance" elgamal
-    // verify if the "from" address is the address of the public key inside "newBalance" elgamal
-    // verify if the "from" address is the address of the public key inside "amount" elgamal
-    // verify if the "supplyAuthority" address is the address of the public key inside "supplyAmount" elgamal
-    
-    // verify if the "supplyAmount"'s Elgamal cyphered value equals the "amount"'s Elgamal cyphered value
-    // verify if the "newBalance"'s Elgamal cyphered value plus the "amount"'s Elgamal cyphered value equals the "oldBalance"'s Elgamal cyphered value
+    //THIS FUNCTION WILL NOT EXIST IN THE FINAL CONTRACT
+    //TODO remove this function and use the zk circuit verifier contract instead.
     return true;
   }
 
