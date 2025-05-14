@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IPrivateERC20} from './IPrivateERC20.sol';
-import {FiatTokenV2_2} from '../../../usdc/v2/FiatTokenV2_2.sol';
+import {FiatTokenV2_2} from '../../contracts/usdc/v2/FiatTokenV2_2.sol';
 import './ElGamal.sol';
 
 contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
@@ -158,6 +158,10 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     return _accounts[owner].outBox[spender];
   }
 
+
+
+
+
   function privateApprove(
     address spender,
     ElGamal memory oldBalance,
@@ -171,6 +175,10 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     emit PrivateApproval(msg.sender, spender, allowance);
     return true;
   }
+
+
+
+
 
   function privateTransferFrom(
     address from,
@@ -187,6 +195,10 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     emit PrivateTransfer(from, to, value);
     return true;
   }
+
+
+
+
 
   function burn(
     ElGamal memory oldBalance,
@@ -226,6 +238,9 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     // not possible to update balance
     return false;
   }
+
+
+
 
   function addAllowance(Allowance memory a, Allowance memory b) internal pure returns (Allowance memory) {
     //TODO add the two allowances and returns the result (a+b)
