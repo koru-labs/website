@@ -96,8 +96,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
         TokenModel.Account storage ownerAccount = accountTokens[owner];
 
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(ownerAccount, parentTokens, reservedAmounts, proof);
-        require(isValid, "PrivateERCToken: invalid proof");
+
 
         // create all child tokens
         for (uint256 i = 0; i < reservedAmounts.length; i++) {
@@ -120,6 +119,9 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
             ownerAccount.tokens[child.id] = childEntity;
             TokenEventLib.triggerTokenSplitEvent(_l2Event, address(this), childEntity);
         }
+        
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(ownerAccount, parentTokens, reservedAmounts, proof);
+        require(isValid, "PrivateERCToken: invalid proof");
 
         //delete all parent tokens
         for (uint i = 0; i < parentTokens.parentIds.length; i++) {

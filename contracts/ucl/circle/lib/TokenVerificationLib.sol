@@ -51,15 +51,15 @@ library TokenVerificationLib {
         }
 
         require(rollbackTokenId!=0, "rollbackToken not found");
-        require(receiverTokenId!=0, "rollbackToken not found");
+        require(receiverTokenId!=0, "receiverToken not found");
 
 
         for (uint256 i = 0; i < reservedAmounts.length; i++) {
             if (reservedAmounts[i].id != rollbackTokenId && reservedAmounts[i].id!= receiverTokenId) {
-                rollbackTokenId = reservedAmounts[i].id;
+                changeTokenId = reservedAmounts[i].id;
             }
         }
-        require(rollbackTokenId!=0, "rollbackToken not found");
+        require(changeTokenId!=0, "changeToken not found");
 
         TokenModel.TokenEntity memory rollbackTokenEntity = ownerAccount.tokens[rollbackTokenId];
         require(verifySplitRollbackToken(zn, rollbackTokenEntity), "verifyDVPRollbackToken error");
