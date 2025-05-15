@@ -173,8 +173,13 @@ async function main() {
         // 调用BankRegistration的register方法 (使用占位符数据)
         console.log("注册银行到BankRegistration合约 (使用占位符)...");
         const placeholderBankAddress = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB"; // 您后续可以修改此地址
-        const placeholderPublicKey = { x: "0x0000000000000000000000000000000000000000000000000000000000000001", y: "0x0000000000000000000000000000000000000000000000000000000000000001" }; // 您后续可以修改此公钥, ensuring it's a valid bytes32 representation if needed by the contract
+        const placeholderPublicKey = { x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086", y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9" }; // 您后续可以修改此公钥, ensuring it's a valid bytes32 representation if needed by the contract
         let regTx = await bankRegistration.register(placeholderBankAddress, placeholderPublicKey);
+        await regTx.wait();
+        console.log(`银行 ${placeholderBankAddress} 已使用占位符公钥注册到BankRegistration`);
+        const placeholderBankAddress2 = "0x122A4F8848fB5df788340FD07fc7276cc038dC01"; // 您后续可以修改此地址
+        const placeholderPublicKey2 = { x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276", y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24" }; // 您后续可以修改此公钥, ensuring it's a valid bytes32 representation if needed by the contract
+         regTx = await bankRegistration.register(placeholderBankAddress2, placeholderPublicKey2);
         await regTx.wait();
         console.log(`银行 ${placeholderBankAddress} 已使用占位符公钥注册到BankRegistration`);
 
@@ -206,7 +211,7 @@ async function main() {
 
         let tx;
         const bankAccountsP1 = [
-            "0x4568E35F2c4590Bde059be615015AaB6cc873004",
+            "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
         ];
 
@@ -233,7 +238,7 @@ async function main() {
         const BANK_ROLE_P2 = await privateERCToken2.BANK_ROLE(); // Assuming BANK_ROLE is also needed
 
         const bankAccountsP2 = [
-            "0x4568E35F2c4590Bde059be615015AaB6cc873004",
+            "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
             "0xb65Ebc891fBE21A42F73f9cf364759fbCF51A56A"
         ];

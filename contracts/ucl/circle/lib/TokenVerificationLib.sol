@@ -139,14 +139,14 @@ library TokenVerificationLib {
         znValues[7] = Fr.unwrap(zn[7]);
 
         // receiver public key
-        require(minter.x == znValues[8] && minter.y == znValues[9], "minter public key not match");
         znValues[8] = Fr.unwrap(zn[8]);
         znValues[9] = Fr.unwrap(zn[9]);
-        
+        require(to.x == znValues[8] && to.y == znValues[9], "receiver public key not match");
+
         // minter  public key
-        require(to.x == znValues[10] && to.y == znValues[11], "to public key not match");
         znValues[10] = Fr.unwrap(zn[10]);
         znValues[11] = Fr.unwrap(zn[11]);
+        require(minter.x == znValues[10] && minter.y == znValues[11], "minter public key not match");
 
         return (true, result, znValues);
     }
