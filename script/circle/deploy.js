@@ -170,18 +170,18 @@ async function main() {
         console.log("BankRegistration部署到:", bankRegistration.target);
         deployed.contracts.BankRegistration = bankRegistration.target;
 
-        // 调用BankRegistration的register方法 (使用占位符数据)
-        console.log("注册银行到BankRegistration合约 (使用占位符)...");
-        const placeholderBankAddress = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB"; // 您后续可以修改此地址
-        const placeholderPublicKey = { x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086", y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9" }; // 您后续可以修改此公钥, ensuring it's a valid bytes32 representation if needed by the contract
-        let regTx = await bankRegistration.register(placeholderBankAddress, placeholderPublicKey);
+        // 调用BankRegistration的register方法
+        console.log("注册银行到BankRegistration合约...");
+        const bankAddress = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB"; 
+        const publicKey = { x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086", y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9" }; 
+        let regTx = await bankRegistration.register(bankAddress, publicKey);
         await regTx.wait();
-        console.log(`银行 ${placeholderBankAddress} 已使用占位符公钥注册到BankRegistration`);
-        const placeholderBankAddress2 = "0x122A4F8848fB5df788340FD07fc7276cc038dC01"; // 您后续可以修改此地址
-        const placeholderPublicKey2 = { x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276", y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24" }; // 您后续可以修改此公钥, ensuring it's a valid bytes32 representation if needed by the contract
-         regTx = await bankRegistration.register(placeholderBankAddress2, placeholderPublicKey2);
+        console.log(`银行 ${bankAddress} 已注册到BankRegistration`);
+        const bankAddress2 = "0x122A4F8848fB5df788340FD07fc7276cc038dC01";
+        const publicKey2 = { x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276", y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24" }; 
+         regTx = await bankRegistration.register(bankAddress2, publicKey2);
         await regTx.wait();
-        console.log(`银行 ${placeholderBankAddress} 已使用占位符公钥注册到BankRegistration`);
+        console.log(`银行 ${bankAddress} 已公钥注册到BankRegistration`);
 
         // 部署代币合约
         console.log("部署PrivateERCToken合约...");

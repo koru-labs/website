@@ -20,7 +20,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     IL2Event _l2Event;
     address scOwner;
     mapping(address=>TokenModel.Account) accountTokens;
-    mapping(address => mapping(uint256 => TokenModel.TokenEntity)) public userTokenMap;
     uint256 public privateTotalSupply;
     mapping(address => bool) public isBankAccount;
     mapping(address => bool) public blacklisted;
@@ -213,10 +212,10 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
         privateMinterAllowed[msg.sender] = newAllowance;
 
-        TokenOperationsLib.mintTokenLogic(userTokenMap, amountInfo.owner, amountInfo.manager, amountInfo);
+        TokenOperationsLib.mintTokenLogic(accountTokens[amountInfo.owner].tokens, amountInfo.owner, amountInfo.manager, amountInfo);
 
         // Trigger event
-        TokenModel.TokenEntity memory entity = userTokenMap[amountInfo.owner][amountInfo.id];
+        TokenModel.TokenEntity memory entity = accountTokens[amountInfo.owner].tokens[amountInfo.id];
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), entity);
     }
 
