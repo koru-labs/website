@@ -265,6 +265,10 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         return privateMinterAllowed[bank];
     }
 
+    function getAccountTokenEntity(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory) {
+        return accountTokens[owner].tokens[tokenId];
+    }
+
     function privateTransfer(address to, uint256[] memory amountIds) external {
 
     }
