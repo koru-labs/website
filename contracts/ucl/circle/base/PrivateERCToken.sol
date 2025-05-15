@@ -212,7 +212,9 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
         privateMinterAllowed[msg.sender] = newAllowance;
 
+        accountTokens[amountInfo.owner].addr = amountInfo.owner;
         TokenOperationsLib.mintTokenLogic(accountTokens[amountInfo.owner].tokens, amountInfo.owner, amountInfo.manager, amountInfo);
+
 
         // Trigger event
         TokenModel.TokenEntity memory entity = accountTokens[amountInfo.owner].tokens[amountInfo.id];
