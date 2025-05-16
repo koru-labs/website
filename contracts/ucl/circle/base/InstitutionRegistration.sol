@@ -3,18 +3,6 @@ pragma solidity ^0.8.0;
 import "../model/TokenModel.sol";
 
 contract InstitutionRegistration {
-    // institution:
-    // name
-    // managerAddress
-    // publicKey
-
-    // user:
-    // address
-    // managerAddress
-
-    // 一个用户仅在一个manager下
-    // 使用hamsaevent 发送事件
-
     address public owner;
     mapping(address => TokenModel.GrumpkinPublicKey) public institutionPublicKey;
     
