@@ -158,11 +158,6 @@ library TokenVerificationLib {
         TokenModel.ElGamal memory currentMintAmount = params.currentMintAmount;
         require(currentMintAmount.cl_x == znValues[0] && currentMintAmount.cl_y == znValues[1] && currentMintAmount.cr_x == znValues[2] && currentMintAmount.cr_y == znValues[3], "currentMintAmount not match");
 
-        // verify newMinterAllowed 4-7
-        // newMinterAllowed = initialMinterAllowed - currentMintAmount
-        TokenModel.ElGamal memory newMinterAllowed = TokenGrumpkinLib.subElGamal(initialMinterAllowed, currentMintAmount);
-        require(newMinterAllowed.cl_x == znValues[4] && newMinterAllowed.cl_y == znValues[5] && newMinterAllowed.cr_x == znValues[6] && newMinterAllowed.cr_y == znValues[7], "newMinterAllowed not match");
-
         // verify supplyIncrease 8-11
         TokenModel.ElGamal memory supplyIncrease = params.supplyIncrease;
         require(supplyIncrease.cl_x == znValues[8] && supplyIncrease.cl_y == znValues[9] && supplyIncrease.cr_x == znValues[10] && supplyIncrease.cr_y == znValues[11], "supplyIncrease not match");
