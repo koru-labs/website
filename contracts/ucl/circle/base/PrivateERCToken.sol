@@ -244,6 +244,12 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         return true;
     }
 
+    function getAccountToken(address account,  TokenModel.ElGamal memory amount) external view returns (TokenModel.ElGamal memory) {
+        bytes32 tokenId = hashElgamal(amount);
+        TokenModel.Account2 storage account2 = accountTokens2[account];
+        return account2.tokens[tokenId];
+    }
+
     /**
      * @notice Adds a supply to the total supply.
        * @param supplyIncrease The amount of tokens to add to the total supply.
@@ -329,7 +335,8 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
-        removeBalance(msg.sender, consumedAmount);
+        removeBalance(msg.sender, consumedTokens);
+        addBalance(msg.sender, consumedTokensRemainingAmount);
         addBalance(to, amount);
         // TODO: Event
     }
@@ -347,12 +354,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         toAccount.tokens[tokenId] = amount;
     }
 
-    function removeBalance(address to, TokenModel.ElGamal memory amount) internal {
+    function removeBalance(address to, bytes32[] memory amount) internal {
         TokenModel.Account2 storage toAccount = accountTokens2[to];
-        bytes32 tokenId = hashElgamal(amount);
 
-        toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, amount);
-        delete toAccount.tokens[tokenId];
+        for (uint256 i = 0; i < amount.length; i++) {
+            toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.tokens[amount[i]]);
+            delete toAccount.tokens[amount[i]];
+        }
     }
 
     function sumTokens(address account, bytes32[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
