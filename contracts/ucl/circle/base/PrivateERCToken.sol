@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./BankRegistration.sol";
+import "./InstitutionRegistration.sol";
 import "../event/IL2Event.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
@@ -16,20 +16,24 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant BANK_ROLE = keccak256("BANK_ROLE");
 
-    BankRegistration private _bankRegistration;
+    InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-    address scOwner;
+    address scOwner;// For example, it's circle
     mapping(address=>TokenModel.Account) accountTokens;
+    mapping(address=>TokenModel.Account2) accountTokens2;
     uint256 public privateTotalSupply;
+    TokenModel.ElGamal _privateTotalSupply;
+    uint256 _numberOfTotalSupplyChanges;
+
     mapping(address => bool) public isBankAccount;
     mapping(address => bool) public blacklisted;
     
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
 
-    constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event,BankRegistration bankRegistration) {
+    constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event, InstitutionRegistration institutionRegistration) {
         scOwner = msg.sender;
         _l2Event = l2Event;
-        _bankRegistration = bankRegistration;
+        _institutionRegistration = institutionRegistration;
 
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
         
@@ -183,45 +187,81 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
     }
 
-    function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) 
+    /**
+     * @notice Mints private fiat tokens to an address and updates the total supply.
+       * @param to The address that will receive the minted tokens.
+       * @param amount The amount of tokens to mint. Must be less than or equal
+       * to the minterAllowance of the caller.
+       * @param supplyIncrease The amount of tokens to increment in total suplly.
+       * @param proof The proof.
+       * @return True if the operation was successful.
+       */
+    function privateMint(
+        address to,
+        TokenModel.ElGamal memory amount,
+        TokenModel.ElGamal memory supplyIncrease,
+        bytes calldata proof
+    ) 
         external 
         whenNotPaused
         onlyRole(MINTER_ROLE)
         notBlacklisted(msg.sender)
-        notBlacklisted(amountInfo.owner) 
+        notBlacklisted(to) 
         onlyBankAccount
+        returns (bool)
     {
-        require(amountInfo.owner != address(0), "PrivateERCToken: mint to the zero address");
+        require(to != address(0), "PrivateERCToken: mint to the zero address");
 
         TokenModel.VerifyTokenMintParams memory params = TokenModel.VerifyTokenMintParams({
-            bankRegistration: _bankRegistration,
+            institutionRegistration: _institutionRegistration,
             minter: msg.sender,
-            initialMinterAllowance: privateMinterAllowed[msg.sender],
-            currentMintAmount: amountInfo.amount,
-            amountInfo: amountInfo,
-            proof : proof
+            to: to,
+            scOwner: scOwner,
+            initialMinterAllowed: privateMinterAllowed[msg.sender],
+            currentMintAmount: amount,
+            supplyIncrease : supplyIncrease,
+            proof:  proof
         });
-
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenMint(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
-        TokenModel.ElGamal memory newAllowance = TokenModel.ElGamal({
+        TokenModel.ElGamal memory newAllowed = TokenModel.ElGamal({
             cl_x: znValues[4],
             cl_y: znValues[5],
             cr_x: znValues[6],
             cr_y: znValues[7]
         });
+        privateMinterAllowed[msg.sender] = newAllowed;
+        // TODO:TokenEventLib.triggerTokenMintAllowedUpdatedEvent();
 
-        privateMinterAllowed[msg.sender] = newAllowance;
+        addSupply(supplyIncrease);
+        // TODO:TokenEventLib.triggerTokenSupplyUpdatedEvent();
 
-        accountTokens[amountInfo.owner].addr = amountInfo.owner;
-        TokenOperationsLib.mintTokenLogic(accountTokens[amountInfo.owner].tokens, amountInfo.owner, amountInfo.manager, amountInfo);
+        TokenModel.Account2 storage toAccount = accountTokens2[to];
+        bytes32 tokenId = hashElgamal(amount);
 
+        toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, amount);
+        toAccount.tokens[tokenId] = amount;
 
-        // Trigger event
-        TokenModel.TokenEntity memory entity = accountTokens[amountInfo.owner].tokens[amountInfo.id];
-        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), entity);
+        // TODO:TokenEventLib.triggerTokenMintedEvent2();
+
+        return true;
     }
+
+    /**
+     * @notice Adds a supply to the total supply.
+       * @param supplyIncrease The amount of tokens to add to the total supply.
+       */
+    function addSupply(TokenModel.ElGamal memory supplyIncrease) internal {
+        _privateTotalSupply = TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease);
+        _numberOfTotalSupplyChanges++;
+    }
+
+    function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
+        return keccak256(abi.encode(elgamal));
+    }
+
+
 
 //    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
 //        return TokenModel.ElGamal( {

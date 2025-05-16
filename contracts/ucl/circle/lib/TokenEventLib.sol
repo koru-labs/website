@@ -41,6 +41,25 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, token.manager, "TokenMinted", eventBody);
     }
 
+    function triggerTokenMintedEvent2(
+        IL2Event _l2Event,
+        address eventSource,
+        uint256 tokenID,
+        TokenModel.ElGamal memory amount,
+        address to
+    )public{
+        //TODO
+    }
+
+    // TODO
+    function triggerTokenSupplyUpdatedEvent(IL2Event _l2Event, address eventSource)public{
+        //_l2Event.sendEvent(eventSource, address(0), "TokenSupplyUpdated", "");
+    }
+
+    // TODO
+    function triggerTokenMintAllowedUpdatedEvent(IL2Event _l2Event,address eventSource)public{
+        //_l2Event.sendEvent(eventSource, address(0), "TokenMintAllowedUpdated", "");
+    }
 
     function triggerTokenBurnedEvent(
         IL2Event _l2Event,

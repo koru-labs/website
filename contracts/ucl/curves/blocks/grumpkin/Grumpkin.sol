@@ -169,6 +169,18 @@ library Grumpkin {
     }
 
     /**
+     * @dev Subtracts two points on the Grumpkin curve.
+     * @param p1 The first point to be subtracted.
+     * @param p2 The second point to be subtracted.
+     * @return The result of the subtraction, also on the Grumpkin curve.
+     */
+    function sub(GrumpkinAffinePoint memory p1, GrumpkinAffinePoint memory p2) public
+    view
+    returns (GrumpkinAffinePoint memory) {
+        return add(p1, negate(p2));
+    }
+
+    /**
      * @dev Negates the base point of the Grumpkin curve. This is a specialized case of point negation for the curve's base point.
      * @param scalar The scalar value to be negated.
      * @return The negated base point on the Grumpkin curve.

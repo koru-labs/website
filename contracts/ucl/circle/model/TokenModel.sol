@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../base/BankRegistration.sol";
+import "../base/InstitutionRegistration.sol";
 
 
 library TokenModel {
@@ -29,6 +29,11 @@ library TokenModel {
         uint256 cl_y;
         uint256 cr_x;
         uint256 cr_y;
+    }
+
+    struct Allowance {
+        ElGamal amount;
+        ElGamal backup;
     }
 
     struct AmountInfo {
@@ -64,6 +69,12 @@ library TokenModel {
         uint256 rollbackTokenId;
     }
 
+    struct Account2 {
+        ElGamal balance;
+        mapping(bytes32 => ElGamal) tokens;
+        mapping(address => Allowance) allowances;
+    }
+
     struct Account {
         address addr;
 //        mapping(uint256 => TokenEntity) inBox;
@@ -73,17 +84,20 @@ library TokenModel {
 
         mapping(address=>ElGamal) allowance;
     }
-    
+
     struct BankAllowances {
         mapping(address => ElGamal) allowances;
     }
 
     struct VerifyTokenMintParams {
-        BankRegistration bankRegistration;
+        InstitutionRegistration institutionRegistration;
         address minter;
-        ElGamal initialMinterAllowance;
+        address to;
+        address scOwner;
+        ElGamal initialMinterAllowed;
         ElGamal currentMintAmount;
-        TokenModel.AmountInfo amountInfo;
+        ElGamal supplyIncrease;
+
         bytes proof;
     }
 

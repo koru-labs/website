@@ -12,29 +12,30 @@ library TokenOperationsLib {
         mapping(uint256 => TokenModel.TokenEntity) storage tokensMap,
         address to,
         address toManager,
-        TokenModel.AmountInfo calldata amountInfo
+        uint256 tokenId,
+        TokenModel.ElGamal memory amount,
+        bytes memory issuerEncryptedAmount
     ) public {
         address owner = to;
         require(owner != address(0), "invalid token owner address");
         require(toManager != address(0), "invalid token without manager address");
 
-        require(tokensMap[amountInfo.id].amount.cl_x == 0 && tokensMap[amountInfo.id].amount.cl_y == 0
-        && tokensMap[amountInfo.id].amount.cr_x == 0 && tokensMap[amountInfo.id].amount.cr_y == 0, "token already exists");
-        require(amountInfo.status != TokenModel.TokenStatus.deleted, "new token can't have dead status");
+        require(tokensMap[tokenId].amount.cl_x == 0 && tokensMap[tokenId].amount.cl_y == 0
+        && tokensMap[tokenId].amount.cr_x == 0 && tokensMap[tokenId].amount.cr_y == 0, "token already exists");
 
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: amountInfo.id,
-            tokenType: amountInfo.token_type,
+            id: tokenId,
+            tokenType: 0,
             owner: to,
             manager: toManager,
-            status: amountInfo.status,
-            amount: amountInfo.amount,
-            issuerEncryptedAmount: amountInfo.issuerEncryptedAmount,
+            status: TokenModel.TokenStatus.active,
+            amount: amount,
+            issuerEncryptedAmount: issuerEncryptedAmount,
             approvedSpender: address(0),
             rollbackTokenId: 0
         });
 
-        tokensMap[amountInfo.id] = entity;
+        tokensMap[tokenId] = entity;
         
         return;
     }
