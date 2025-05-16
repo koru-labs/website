@@ -3,7 +3,7 @@
   "devDependencies": {
     "@0xpolygonhermez/zkevm-commonjs": "github:0xPolygonHermez/zkevm-commonjs#develop",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@openzeppelin/contracts": "^4.8.2",
+    "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.5",
     "@openzeppelin/contracts5": "npm:@openzeppelin/contracts@^5.0.0",
     "@openzeppelin/hardhat-upgrades": "^3.2.0",
