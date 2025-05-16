@@ -170,18 +170,7 @@ async function main() {
         console.log("BankRegistration部署到:", bankRegistration.target);
         deployed.contracts.BankRegistration = bankRegistration.target;
 
-        // 调用BankRegistration的register方法
-        console.log("注册银行到BankRegistration合约...");
-        const bankAddress = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB"; 
-        const publicKey = { x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086", y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9" }; 
-        let regTx = await bankRegistration.register(bankAddress, publicKey);
-        await regTx.wait();
-        console.log(`银行 ${bankAddress} 已注册到BankRegistration`);
-        const bankAddress2 = "0x122A4F8848fB5df788340FD07fc7276cc038dC01";
-        const publicKey2 = { x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276", y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24" }; 
-         regTx = await bankRegistration.register(bankAddress2, publicKey2);
-        await regTx.wait();
-        console.log(`银行 ${bankAddress} 已公钥注册到BankRegistration`);
+       await registerBank(bankRegistration);
 
         // 部署代币合约
         console.log("部署PrivateERCToken合约...");
@@ -206,26 +195,11 @@ async function main() {
         deployed.contracts.PrivateERCToken = privateERCToken.target;
 
         console.log("为PrivateERCToken添加银行账户并授予角色...");
-        const MINTER_ROLE_P1 = await privateERCToken.MINTER_ROLE();
-        const BANK_ROLE_P1 = await privateERCToken.BANK_ROLE(); // Assuming BANK_ROLE is also needed or managed by addBankAccount
-
-        let tx;
         const bankAccountsP1 = [
             "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
         ];
-
-        for (const account of bankAccountsP1) {
-            console.log(`Adding bank account ${account} to PrivateERCToken...`);
-            tx = await privateERCToken.addBankAccount(account);
-            await tx.wait();
-            console.log(`Bank account ${account} added to PrivateERCToken.`);
-            
-            console.log(`Granting MINTER_ROLE to ${account} for PrivateERCToken...`);
-            tx = await privateERCToken.grantRole(MINTER_ROLE_P1, account);
-            await tx.wait();
-            console.log(`MINTER_ROLE granted to ${account} for PrivateERCToken.`);
-        }
+        await setupTokenAccountsAndRoles(privateERCToken, bankAccountsP1, "PrivateERCToken");
 
 
         const privateERCToken2 = await PrivateERCTokenFactory.deploy(0, event_address, bankRegistration.target);
@@ -234,26 +208,12 @@ async function main() {
         deployed.contracts.PrivateERCToken2 = privateERCToken2.target;
 
         console.log("为PrivateERCToken2添加银行账户并授予角色...");
-        const MINTER_ROLE_P2 = await privateERCToken2.MINTER_ROLE();
-        const BANK_ROLE_P2 = await privateERCToken2.BANK_ROLE(); // Assuming BANK_ROLE is also needed
-
         const bankAccountsP2 = [
             "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
             "0xb65Ebc891fBE21A42F73f9cf364759fbCF51A56A"
         ];
-
-        for (const account of bankAccountsP2) {
-            console.log(`Adding bank account ${account} to PrivateERCToken2...`);
-            tx = await privateERCToken2.addBankAccount(account);
-            await tx.wait();
-            console.log(`Bank account ${account} added to PrivateERCToken2.`);
-
-            console.log(`Granting MINTER_ROLE to ${account} for PrivateERCToken2...`);
-            tx = await privateERCToken2.grantRole(MINTER_ROLE_P2, account);
-            await tx.wait();
-            console.log(`MINTER_ROLE granted to ${account} for PrivateERCToken2.`);
-        }
+        await setupTokenAccountsAndRoles(privateERCToken2, bankAccountsP2, "PrivateERCToken2");
 
     } catch (error) {
         console.error("业务合约部署失败:", error.message);
@@ -266,6 +226,14 @@ async function main() {
     }
 
     // 5. 保存部署信息
+    await saveDeploymentInfo(deployed, hre, ethers, fs, path);
+
+    console.log("\n部署完成！");
+
+    return deployed;
+}
+
+async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
     console.log("\n=== 保存部署信息 ===");
 
     // 添加部署元数据
@@ -284,10 +252,50 @@ async function main() {
     const filepath = path.join(deploymentsDir, "image9.json");
     fs.writeFileSync(filepath, JSON.stringify(deployed, null, 2));
     console.log(`部署信息已保存到: ${filepath}`);
+}
 
-    console.log("\n部署完成！");
+async function setupTokenAccountsAndRoles(tokenContract, bankAccounts, tokenName) {
+    const MINTER_ROLE = await tokenContract.MINTER_ROLE();
+    // const BANK_ROLE = await tokenContract.BANK_ROLE(); // Assuming BANK_ROLE is also needed or managed by addBankAccount
+    let tx;
 
-    return deployed;
+    for (const account of bankAccounts) {
+        console.log(`Adding bank account ${account} to ${tokenName}...`);
+        tx = await tokenContract.addBankAccount(account);
+        await tx.wait();
+        console.log(`Bank account ${account} added to ${tokenName}.`);
+        
+        console.log(`Granting MINTER_ROLE to ${account} for ${tokenName}...`);
+        tx = await tokenContract.grantRole(MINTER_ROLE, account);
+        await tx.wait();
+        console.log(`MINTER_ROLE granted to ${account} for ${tokenName}.`);
+    }
+}
+
+async function registerBank(bankRegistration) {
+    // 调用BankRegistration的register方法
+    const banks = [
+        {
+            address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+            publicKey: {
+                x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086",
+                y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9"
+            }
+        },
+        {
+            address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
+            publicKey: {
+                x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276",
+                y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24"
+            }
+        }
+    ]
+    for (let i = 0; i < banks.length; i++) {
+        console.log(`注册银行 ${banks[i].address} 到BankRegistration合约...`);
+        let regTx = await bankRegistration.register(banks[i].address, banks[i].publicKey);
+        await regTx.wait();
+        console.log(`银行 ${banks[i].address} 已注册到BankRegistration`);
+    }
 }
 
 // 执行部署
