@@ -237,11 +237,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         addSupply(supplyIncrease);
         // TODO:TokenEventLib.triggerTokenSupplyUpdatedEvent();
 
-        TokenModel.Account2 storage toAccount = accountTokens2[to];
-        bytes32 tokenId = hashElgamal(amount);
-
-        toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, amount);
-        toAccount.tokens[tokenId] = amount;
+        addBalance(to, amount);
 
         // TODO:TokenEventLib.triggerTokenMintedEvent2();
 
@@ -311,8 +307,88 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         return accountTokens[owner].tokens[tokenId];
     }
 
-    function privateTransfer(address to, uint256[] memory amountIds) external {
+    function privateTransfer(bytes32[] memory consumedTokens,
+        address to,
+        TokenModel.ElGamal memory amount,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount,
+        bytes calldata proof) external {
+        require(consumedTokens.length > 0);
+        require(isNotZero(consumedTokensRemainingAmount));
+        require(isNotZero(amount));
+        require(existsAll(msg.sender, consumedTokens));
+        TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
+        TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
+            institutionRegistration: _institutionRegistration,
+            from:msg.sender,
+            to: to,
+            consumedAmount: consumedAmount,
+            amount: amount,
+            remainingAmount: consumedTokensRemainingAmount,
+            proof: proof
+        });
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params);
+        require(isValid, "PrivateERCToken: invalid proof");
 
+        removeBalance(msg.sender, consumedAmount);
+        addBalance(to, amount);
+        // TODO: Event
+    }
+
+    /**
+ * @notice Adds a balance to an address.
+   * @param to The address that will receive the balance.
+   * @param amount The amount to add to the balance.
+   */
+    function addBalance(address to, TokenModel.ElGamal memory amount) internal {
+        TokenModel.Account2 storage toAccount = accountTokens2[to];
+        bytes32 tokenId = hashElgamal(amount);
+
+        toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, amount);
+        toAccount.tokens[tokenId] = amount;
+    }
+
+    function removeBalance(address to, TokenModel.ElGamal memory amount) internal {
+        TokenModel.Account2 storage toAccount = accountTokens2[to];
+        bytes32 tokenId = hashElgamal(amount);
+
+        toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, amount);
+        delete toAccount.tokens[tokenId];
+    }
+
+    function sumTokens(address account, bytes32[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
+        TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            sum = TokenGrumpkinLib.addElGamal(sum, accountTokens2[account].tokens[tokens[i]]);
+        }
+        return sum;
+    }
+
+    function existsAll(address account, bytes32[] memory tokens) internal view returns (bool) {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (isZero(accountTokens2[account].tokens[tokens[i]])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function isZero(TokenModel.ElGamal memory elgamal) internal pure returns (bool) {
+        return elgamal.cl_x == 0 && elgamal.cl_y == 0 && elgamal.cr_x == 0 && elgamal.cr_y == 0;
+    }
+
+    function isNotZero(TokenModel.ElGamal memory elgamal) internal pure returns (bool) {
+        return elgamal.cl_x != 0 || elgamal.cl_y != 0 || elgamal.cr_x != 0 || elgamal.cr_y != 0;
+    }
+
+    function existsAllowance(address owner, address spender, TokenModel.Allowance memory allowance) internal view returns (bool) {
+        return isEqualAllowance(accountTokens2[owner].allowances[spender], allowance);
+    }
+
+    /**
+ * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
+    function isEqualAllowance(TokenModel.Allowance memory a, TokenModel.Allowance memory b) internal pure returns (bool) {
+        return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr1_x == b.cr1_x && a.cr1_y == b.cr1_y && a.cr2_x == b.cr2_x && a.cr2_y == b.cr2_y;
     }
 
     function privateBurn(uint256 amountId) external {

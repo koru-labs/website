@@ -32,8 +32,12 @@ library TokenModel {
     }
 
     struct Allowance {
-        ElGamal amount;
-        ElGamal backup;
+        uint256 cl_x;
+        uint256 cl_y;
+        uint256 cr1_x;
+        uint256 cr1_y;
+        uint256 cr2_x;
+        uint256 cr2_y;
     }
 
     struct AmountInfo {
@@ -98,6 +102,23 @@ library TokenModel {
         ElGamal currentMintAmount;
         ElGamal supplyIncrease;
 
+        bytes proof;
+    }
+    //z0:
+    //0~3 tokens_sum, tokens合并之后的值 transfer_from pk 加密的
+    //4～5 transfer_from——pk
+    //6~7 to_pk
+    //zn:
+    //0~3 token_for_to, 给to的， receiver pk 加密的
+    //4~7 token_remainning， tokens_sum 减去 token_for_to 后的 amount， transfer_From pk 加密的
+    //8~11 （没用了）backup token， amount和token_for_tor一样，transfer_From pk 加密的
+    struct VerifyTokenTransferParams {
+        InstitutionRegistration institutionRegistration;
+        address from;
+        address to;
+        ElGamal consumedAmount;
+        ElGamal amount;
+        ElGamal remainingAmount;
         bytes proof;
     }
 

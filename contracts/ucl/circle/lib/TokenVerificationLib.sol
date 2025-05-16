@@ -165,6 +165,70 @@ library TokenVerificationLib {
         return (true, result, znValues);
     }
 
+    // verifyTokenTransfer
+    //z0:
+    //0~3 tokens_sum, tokens合并之后的值 transfer_from pk 加密的
+    //4～5 transfer_from——pk
+    //6~7 to_pk
+    //zn:
+    //0~3 token_for_to, 给to的， receiver pk 加密的
+    //4~7 token_remainning， tokens_sum 减去 token_for_to 后的 amount， transfer_From pk 加密的
+    //8~11 （没用了）backup token， amount和token_for_tor一样，transfer_From pk 加密的
+    function verifyTokenTransfer(TokenModel.VerifyTokenTransferParams calldata params) public view returns (bool, uint, uint256[] memory) {
+        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
+
+        // z0 verify
+        uint256[] memory z0Values = new uint256[](10);
+        z0Values[0] = Fr.unwrap(z0[0]);
+        z0Values[1] = Fr.unwrap(z0[1]);
+        z0Values[2] = Fr.unwrap(z0[2]);
+        z0Values[3] = Fr.unwrap(z0[3]);
+        z0Values[4] = Fr.unwrap(z0[4]);
+        z0Values[5] = Fr.unwrap(z0[5]);
+        z0Values[6] = Fr.unwrap(z0[6]);
+        z0Values[7] = Fr.unwrap(z0[7]);
+        z0Values[8] = Fr.unwrap(z0[8]);
+        z0Values[9] = Fr.unwrap(z0[9]);
+
+        //  verify consumedAmount 0-3
+        TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
+        require(consumedAmount.cl_x == z0Values[0] && consumedAmount.cl_y == z0Values[1] && consumedAmount.cr_x == z0Values[2] && consumedAmount.cr_y == z0Values[3], "consumedAmount not match");
+
+        // verify from 4-5
+        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getInstitutionGrumpkinPublicKey(params.from);
+        require(from.x == z0Values[4] && from.y == z0Values[5], "from public key not match");
+
+        // verify to 6-7
+        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getInstitutionGrumpkinPublicKey(params.to);
+        require(to.x == z0Values[6] && to.y == z0Values[7], "to public key not match");
+
+        // zn verify
+        uint256[] memory znValues = new uint256[](12);
+        znValues[0] = Fr.unwrap(zn[0]);
+        znValues[1] = Fr.unwrap(zn[1]);
+        znValues[2] = Fr.unwrap(zn[2]);
+        znValues[3] = Fr.unwrap(zn[3]);
+        znValues[4] = Fr.unwrap(zn[4]);
+        znValues[5] = Fr.unwrap(zn[5]);
+        znValues[6] = Fr.unwrap(zn[6]);
+        znValues[7] = Fr.unwrap(zn[7]);
+        znValues[8] = Fr.unwrap(zn[8]);
+        znValues[9] = Fr.unwrap(zn[9]);
+        znValues[10] = Fr.unwrap(zn[10]);
+        znValues[11] = Fr.unwrap(zn[11]);
+
+        // verify amount 0-3
+        TokenModel.ElGamal memory amount = params.amount;
+        require(amount.cl_x == znValues[0] && amount.cl_y == znValues[1] && amount.cr_x == znValues[2] && amount.cr_y == znValues[3], "amount not match");
+
+        // verify remainingAmount 4-7
+        TokenModel.ElGamal memory remainingAmount = params.remainingAmount;
+        require(remainingAmount.cl_x == znValues[4] && remainingAmount.cl_y == znValues[5] && remainingAmount.cr_x == znValues[6] && remainingAmount.cr_y == znValues[7], "remainingAmount not match");
+
+        return (true, result, znValues);
+    }
+
 
 
 }

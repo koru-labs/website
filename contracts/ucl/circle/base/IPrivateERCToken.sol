@@ -47,7 +47,11 @@ interface IPrivateERCToken {
   function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory);
 
   // ERC: function transfer(address to, uint256 value) external returns (bool);
-  function privateTransfer(address to, uint256[] memory amountIds) external;
+  function privateTransfer(bytes32[] memory consumedTokens,
+    address to,
+    TokenModel.ElGamal memory amount,
+    TokenModel.ElGamal memory consumedTokensRemainingAmount,
+    bytes calldata proof) external;
 
   // ERC: function burn(uint256 amount) external;
   function privateBurn(uint256 amountId) external;
