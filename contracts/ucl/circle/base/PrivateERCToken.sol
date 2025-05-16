@@ -312,10 +312,10 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
         bytes calldata proof) external {
-        require(consumedTokens.length > 0);
-        require(isNotZero(consumedTokensRemainingAmount));
-        require(isNotZero(amount));
-        require(existsAll(msg.sender, consumedTokens));
+        require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
+        require(isNotZero(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
+        require(isNotZero(amount),  "PrivateERCToken: amount is zero");
+        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
         TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
         TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
             institutionRegistration: _institutionRegistration,
