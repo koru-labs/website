@@ -1,0 +1,30 @@
+{
+  "libraries": {
+    "Library": "0x46de824aB40A545f9e5084B901Db580EFb758450",
+    "Fr": "0xE8DCD2b9add26785E01f518e84bf8DeEa5665496",
+    "Fq": "0x7168C5e0F7bAEF2c98D217b53d7676Cf026ec024",
+    "RelaxedR1CSSNARKForSMLib": "0x7f35C7fF6835d52aFD1f2E12b3472Fd3ED878Ca5",
+    "BatchedRelaxedR1CSSNARKLib": "0x4A98e6CE920d83F91F354a9ca6EF180F45EbBba9",
+    "Field": "0x062A2dE97D328a215667B2dbD46fC5c2139550b5",
+    "Grumpkin": "0x1999E30781740eaAc6b5346413ef448257397e92",
+    "ZkVerifier": "0x2976c67361b5656ea32061800EF354E7E9C3F2d9",
+    "TokenGrumpkinLib": "0x45b41AE71f81571eD629Fc50e4C9D79E5941b6c6",
+    "TokenVerificationLib": "0x5B7A92857aa5B73a4942fc8F138405DCDe0B7Eb3",
+    "TokenEventLib": "0x5427B893ae2353e823e5C152786AbC9e83F75c7f"
+  },
+  "contracts": {
+    "HamsaL2Event": "0x04b928681F55E28861f685d875ba6597E19D5F7C",
+    "InstitutionRegistration": "0x0bd2E76a3C9543BF88aEBc3b13cfc7Dae405a477",
+    "PrivateERCToken": "0x02A6B9E413766D7489AF8D1efaB8749663cF823B",
+    "PrivateERCToken2": "0x4c5263331D4c43728e68DE3C799540175Dee900d"
+  },
+  "accounts": {
+    "node3_institution_admin_address": "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+    "node4_institution_admin_address": "0x122A4F8848fB5df788340FD07fc7276cc038dC01"
+  },
+  "metadata": {
+    "timestamp": "2025-05-16T10:37:14.872Z",
+    "network": "ucl_node2",
+    "chainId": "1337"
+  }
+}

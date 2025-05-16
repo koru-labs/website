@@ -112,6 +112,17 @@ async function main() {
     // 3. 部署Poseidon相关库
     console.log("\n=== 部署TokenSc相关库 ===");
 
+    console.log("部署TokenGrumpkinLib库...");
+    try {
+        const TokenGrumpkinLibFactory = await ethers.getContractFactory("TokenGrumpkinLib");
+        const tokenGrumpkinLib = await TokenGrumpkinLibFactory.deploy();
+        await tokenGrumpkinLib.waitForDeployment();
+        console.log("TokenGrumpkinLib部署到:", tokenGrumpkinLib.target);
+        deployed.libraries.TokenGrumpkinLib = tokenGrumpkinLib.target;
+    } catch (error) {
+        console.error("TokenGrumpkinLib部署失败:", error.message);
+    }
+
     console.log("部署TokenVerificationLib库...");
     try {
         const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
@@ -126,17 +137,6 @@ async function main() {
         deployed.libraries.TokenVerificationLib = tokenVerificationLib.target;
     } catch (error) {
         console.error("TokenVerificationLib部署失败:", error.message);
-    }
-
-    console.log("部署TokenOperationsLib库...");
-    try {
-        const TokenOperationsLibFactory = await ethers.getContractFactory("TokenOperationsLib");
-        const tokenOperationsLib = await TokenOperationsLibFactory.deploy();
-        await tokenOperationsLib.waitForDeployment();
-        console.log("TokenOperationsLib部署到:", tokenOperationsLib.target);
-        deployed.libraries.TokenOperationsLib = tokenOperationsLib.target;
-    } catch (error) {
-        console.error("TokenOperationsLib部署失败:", error.message);
     }
 
     console.log("部署TokenEventLib库...");
@@ -163,66 +163,66 @@ async function main() {
         deployed.contracts.HamsaL2Event = hamsaL2Event.target;
 
         // 部署银行注册合约
-        console.log("部署BankRegistration合约...");
-        const BankRegistrationFactory = await ethers.getContractFactory("BankRegistration");
-        const bankRegistration = await BankRegistrationFactory.deploy();
-        await bankRegistration.waitForDeployment();
-        console.log("BankRegistration部署到:", bankRegistration.target);
-        deployed.contracts.BankRegistration = bankRegistration.target;
+        console.log("部署InstitutionRegistration合约...");
+        const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration");
+        const institutionRegistration = await InstitutionRegistrationFactory.deploy();
+        await institutionRegistration.waitForDeployment();
+        console.log("InstitutionRegistration部署到:", institutionRegistration.target);
+        deployed.contracts.InstitutionRegistration = institutionRegistration.target;
 
-       await registerBank(bankRegistration);
+        await registerInstitution(institutionRegistration);
 
         // 部署代币合约
         console.log("部署PrivateERCToken合约...");
         const PrivateERCTokenFactory = await ethers.getContractFactory("PrivateERCToken", {
             libraries: {
+                "TokenEventLib": deployed.libraries.TokenEventLib,
                 "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
-                "TokenOperationsLib": deployed.libraries.TokenOperationsLib,
-                "TokenEventLib": deployed.libraries.TokenEventLib
+                "Grumpkin": deployed.libraries.Grumpkin
             }
         });
         const event_address = hamsaL2Event.target;
-        // 检查所有库和BankRegistration合约是否已成功部署
-        if (!deployed.libraries.TokenVerificationLib ||
-            !deployed.libraries.TokenOperationsLib ||
-            !deployed.libraries.TokenEventLib ||
-            !bankRegistration.target) {
-            throw new Error("部分库或BankRegistration合约部署失败，无法部署PrivateERCToken合约");
+        // 检查所有库和InstitutionRegistration合约是否已成功部署
+        if (!deployed.libraries.TokenEventLib ||
+            !deployed.libraries.TokenVerificationLib ||
+            !deployed.libraries.Grumpkin ||
+            !institutionRegistration.target) {
+            throw new Error("部分库或InstitutionRegistration合约部署失败，无法部署PrivateERCToken合约");
         }
-        const privateERCToken = await PrivateERCTokenFactory.deploy(0, event_address, bankRegistration.target);
+        const privateERCToken = await PrivateERCTokenFactory.deploy(0, event_address, institutionRegistration.target);
         await privateERCToken.waitForDeployment();
         console.log("PrivateERCToken部署到:", privateERCToken.target);
         deployed.contracts.PrivateERCToken = privateERCToken.target;
 
         console.log("为PrivateERCToken添加银行账户并授予角色...");
-        const bankAccountsP1 = [
+        const institutionAccountsP1 = [
             "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
         ];
-        await setupTokenAccountsAndRoles(privateERCToken, bankAccountsP1, "PrivateERCToken");
+        await setupTokenAccountsAndRoles(privateERCToken, institutionAccountsP1, "PrivateERCToken");
 
 
-        const privateERCToken2 = await PrivateERCTokenFactory.deploy(0, event_address, bankRegistration.target);
+        const privateERCToken2 = await PrivateERCTokenFactory.deploy(0, event_address, institutionRegistration.target);
         await privateERCToken2.waitForDeployment();
         console.log("PrivateERCToken2部署到:", privateERCToken2.target);
         deployed.contracts.PrivateERCToken2 = privateERCToken2.target;
 
         console.log("为PrivateERCToken2添加银行账户并授予角色...");
-        const bankAccountsP2 = [
+        const institutionAccountsP2 = [
             "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
             "0xb65Ebc891fBE21A42F73f9cf364759fbCF51A56A"
         ];
-        await setupTokenAccountsAndRoles(privateERCToken2, bankAccountsP2, "PrivateERCToken2");
+        await setupTokenAccountsAndRoles(privateERCToken2, institutionAccountsP2, "PrivateERCToken2");
 
     } catch (error) {
         console.error("业务合约部署失败:", error.message);
     }
 
-    //include bank admin address
+    //include institution admin address
     deployed.accounts = {
-        node3_bank_admin_address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-        node4_bank_admin_address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01"
+        node3_institution_admin_address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+        node4_institution_admin_address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01"
     }
 
     // 5. 保存部署信息
@@ -254,16 +254,16 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
     console.log(`部署信息已保存到: ${filepath}`);
 }
 
-async function setupTokenAccountsAndRoles(tokenContract, bankAccounts, tokenName) {
+async function setupTokenAccountsAndRoles(tokenContract, institutionAccounts, tokenName) {
     const MINTER_ROLE = await tokenContract.MINTER_ROLE();
-    // const BANK_ROLE = await tokenContract.BANK_ROLE(); // Assuming BANK_ROLE is also needed or managed by addBankAccount
+    // const BANK_ROLE = await tokenContract.BANK_ROLE(); // Assuming BANK_ROLE is also needed or managed by addInstitutionAccount
     let tx;
 
-    for (const account of bankAccounts) {
-        console.log(`Adding bank account ${account} to ${tokenName}...`);
-        tx = await tokenContract.addBankAccount(account);
+    for (const account of institutionAccounts) {
+        console.log(`Adding institution account ${account} to ${tokenName}...`);
+        tx = await tokenContract.addInstitutionAccount(account);
         await tx.wait();
-        console.log(`Bank account ${account} added to ${tokenName}.`);
+        console.log(`Institution account ${account} added to ${tokenName}.`);
         
         console.log(`Granting MINTER_ROLE to ${account} for ${tokenName}...`);
         tx = await tokenContract.grantRole(MINTER_ROLE, account);
@@ -272,9 +272,9 @@ async function setupTokenAccountsAndRoles(tokenContract, bankAccounts, tokenName
     }
 }
 
-async function registerBank(bankRegistration) {
-    // 调用BankRegistration的register方法
-    const banks = [
+async function registerInstitution(institutionRegistration) {
+    // 调用InstitutionRegistration的register方法
+    const institutions = [
         {
             address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
             publicKey: {
@@ -290,11 +290,11 @@ async function registerBank(bankRegistration) {
             }
         }
     ]
-    for (let i = 0; i < banks.length; i++) {
-        console.log(`注册银行 ${banks[i].address} 到BankRegistration合约...`);
-        let regTx = await bankRegistration.register(banks[i].address, banks[i].publicKey);
+    for (let i = 0; i < institutions.length; i++) {
+        console.log(`注册银行 ${institutions[i].address} 到InstitutionRegistration合约...`);
+        let regTx = await institutionRegistration.register(institutions[i].address, institutions[i].publicKey);
         await regTx.wait();
-        console.log(`银行 ${banks[i].address} 已注册到BankRegistration`);
+        console.log(`银行 ${institutions[i].address} 已注册到InstitutionRegistration`);
     }
 }
 

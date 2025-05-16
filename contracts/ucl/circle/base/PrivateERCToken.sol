@@ -25,7 +25,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
 
-    mapping(address => bool) public isBankAccount;
+    mapping(address => bool) public isInstitutionAccount;
     mapping(address => bool) public blacklisted;
     
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
@@ -59,25 +59,25 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         blacklisted[account] = false;
     }
     
-    function addBankAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        isBankAccount[account] = true;
+    function addInstitutionAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isInstitutionAccount[account] = true;
         _grantRole(BANK_ROLE, account);
     }
 
-    function removeBankAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        isBankAccount[account] = false;
+    function removeInstitutionAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isInstitutionAccount[account] = false;
         _revokeRole(BANK_ROLE, account);
     }
     
   
-    function setBankAllowance(address bank, TokenModel.ElGamal calldata allowanceAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
-        privateMinterAllowed[bank] = allowanceAmount;
+    function setInstitutionAllowance(address institution, TokenModel.ElGamal calldata allowanceAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
+        privateMinterAllowed[institution] = allowanceAmount;
     }
     
-    function removeBankAllowance(address bank) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
-        delete privateMinterAllowed[bank];
+    function removeInstitutionAllowance(address institution) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
+        delete privateMinterAllowed[institution];
     }
     
     modifier notBlacklisted(address account) {
@@ -85,8 +85,8 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         _;
     }
     
-    modifier onlyBankAccount() {
-        require(hasRole(BANK_ROLE, msg.sender), "PrivateERCToken: caller is not a bank account");
+    modifier onlyInstitutionAccount() {
+        require(hasRole(BANK_ROLE, msg.sender), "PrivateERCToken: caller is not a institution account");
         _;
     }
     
@@ -207,7 +207,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         onlyRole(MINTER_ROLE)
         notBlacklisted(msg.sender)
         notBlacklisted(to) 
-        onlyBankAccount
+        onlyInstitutionAccount
         returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -302,9 +302,9 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         });
     }
     
-    function getBankAllowance(address bank) external view returns (TokenModel.ElGamal memory) {
-        require(isBankAccount[bank], "PrivateERCToken: address is not a bank account");
-        return privateMinterAllowed[bank];
+    function getInstitutionAllowance(address institution) external view returns (TokenModel.ElGamal memory) {
+        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
+        return privateMinterAllowed[institution];
     }
 
     function getAccountTokenEntity(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory) {
