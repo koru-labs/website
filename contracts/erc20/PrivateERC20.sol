@@ -15,21 +15,21 @@ import './ElGamal.sol';
  * @title PrivateERC20
  * @author Aldenio
  * @notice This contract implements a private ERC20 token.
- * @dev This contract extends the FiatTokenV2_2 contract from Circle.
  */
-contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
+contract PrivateERC20 is IPrivateERC20 {
+
+  struct Account {
+    ElGamal balance;
+    mapping(bytes32 => ElGamal) tokens;
+    mapping(address => Allowance) allowances;
+  }
+
   // suplly related fields
   address _supplyAuthority;
   uint256 _publicTotalSupply;
   ElGamal _privateTotalSupply;
-  ElGamal[] _supllyCredits;
-  ElGamal[] _supllyDebits;
+  uint256 _numberOfTotalSupplyChanges;
 
-  struct Account {
-    ElGamal balance;
-    ElGamal[] inBox;
-    mapping(address => Allowance) outBox;
-  }
 
   // private accounts
   mapping(address => Account) private _accounts;
@@ -39,12 +39,6 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
    */
   function privateTotalSupply() external view returns (ElGamal memory) {
     ElGamal memory consolidatedSupply = _privateTotalSupply;
-    for (uint256 i = 0; i < _supllyCredits.length; i++) {
-      consolidatedSupply = addElGamal(consolidatedSupply, _supllyCredits[i]);
-    }
-    for (uint256 i = 0; i < _supllyDebits.length; i++) {
-      consolidatedSupply = substractElGamal(consolidatedSupply, _supllyDebits[i]);
-    }
     return consolidatedSupply;
   }
 
@@ -82,11 +76,7 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
    * @dev Returns the cyphered value of tokens owned by `account`.
    */
   function privateBalanceOf(address account) external view returns (ElGamal memory) {
-    ElGamal memory accountBalance = _accounts[account].balance;
-    for (uint256 i = 0; i < _accounts[account].inBox.length; i++) {
-      accountBalance = addElGamal(accountBalance, _accounts[account].inBox[i]);
-    }
-    return accountBalance;
+    return _accounts[account].balance;
   }
 
   /**
@@ -124,10 +114,11 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
     ElGamal memory amount,
     ElGamal memory supply,
     bytes calldata proof
-  ) external whenNotPaused onlyMinters notBlacklisted(msg.sender) notBlacklisted(to) returns (bool) {
+  ) external returns (bool) {
     require(verifyMintProof(to, amount, _supplyAuthority, supply, proof)); //TODO check the minterAllowance
-    _supllyCredits.push(supply);
-    _accounts[to].inBox.push(amount);
+    _supllyCredits.push(supply); //TODO change
+    _accounts[to].balance = addElGamal(_accounts[to].balance, amount); // this is the merge!!!
+    _accounts[to].tokens[hashElgamal(amount)] = amount;
     emit PrivateMint(to, amount);
     return true;
   }
@@ -148,15 +139,22 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
   }
 
   function privateTransfer(
-    ElGamal memory oldBalance,
-    ElGamal memory newBalance,
+    bytes32[] memory consumedTokens,
     address to,
     ElGamal memory amount,
+    ElGamal memory consumedTokensRemainingAmount,
     bytes calldata proof
   ) external returns (bool) {
-    require(verifyTransferProof(msg.sender, oldBalance, newBalance, to, amount, proof));
-    require(updateBalance(msg.sender, oldBalance, newBalance));
-    _accounts[to].inBox.push(amount);
+    ElGamal memory consumedAmount = ElGamal(0, 0, 0, 0);
+    for (uint256 i = 0; i < consumedTokens.length; i++) {
+      require(_accounts[msg.sender].tokens[consumedTokens[i]] != 0);
+      consumedAmount = addElGamal(consumedAmount, _accounts[msg.sender].tokens[consumedTokens[i]]);
+    }    
+    require(verifyTransferProof(msg.sender, consumedAmount, consumedTokensRemainingAmount, to, amount, proof));
+    _accounts[msg.sender].balance = substractElGamal(_accounts[msg.sender].balance, consumedAmount);
+    for (uint256 i = 0; i < consumedTokens.length; i++) {
+      delete _accounts[msg.sender].tokens[consumedTokens[i]];
+    }    
     emit PrivateTransfer(msg.sender, to, amount);
     return true;
   }
@@ -344,6 +342,12 @@ contract PrivateERC20 is IPrivateERC20, FiatTokenV2_2 {
    */
   function addAllowance(Allowance memory a, Allowance memory b) internal pure returns (Allowance memory) {
     return Allowance({amount: addElGamal(a.amount, b.amount), backup: addElGamal(a.backup, b.backup)});
+  }
+ /**
+   * @dev THIS FUNCTION SHOULD BELONG TO AN ELGAMAL LIBRARY
+   */
+  function hashElgamal(ElGamal memory elgamal) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(elgamal));
   }
 
   /**
