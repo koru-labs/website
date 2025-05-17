@@ -322,9 +322,10 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         require(isValid, "PrivateERCToken: invalid proof");
 
         removeTokens(msg.sender, consumedTokens);
+        returnUnspentAllowance(msg.sender, spender);
         addToken(msg.sender, consumedTokensRemainingAmount);
         addAllowance(msg.sender,spender, allowance);
-        returnUnspentAllowance(msg.sender, spender);
+
     }
 
     function addAllowance(address account,address spender, TokenModel.Allowance memory allowance) internal {
