@@ -115,6 +115,15 @@ library TokenModel {
         bytes proof;
     }
 
+    struct VerifyTokenBurnParams{
+        InstitutionRegistration institutionRegistration;
+        address from;
+        ElGamal consumedAmount;
+        ElGamal amount;
+        ElGamal remainingAmount;
+        bytes proof;
+    }
+
     //VerifyApproveParams
     struct VerifyTokenApproveParams {
         InstitutionRegistration institutionRegistration;

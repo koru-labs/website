@@ -398,6 +398,32 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         // TODO: Event
     }
 
+    function privateBurn(bytes32[] memory consumedTokens,
+        TokenModel.ElGamal memory amount,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount,
+        bytes calldata proof) external {
+        require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
+        require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
+        require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
+        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+        TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
+        TokenModel.VerifyTokenBurnParams memory params = TokenModel.VerifyTokenBurnParams({
+            institutionRegistration: _institutionRegistration,
+            from:msg.sender,
+            consumedAmount: consumedAmount,
+            amount: amount,
+            remainingAmount: consumedTokensRemainingAmount,
+            proof: proof
+        });
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);
+        require(isValid, "PrivateERCToken: invalid proof");
+
+        removeTokens(msg.sender, consumedTokens);
+        addToken(msg.sender, consumedTokensRemainingAmount);
+        // TODO: Event
+    }
+
+
     function addToken(address to, TokenModel.ElGamal memory amount) internal {
         TokenModel.Account2 storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
@@ -453,20 +479,5 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
    */
     function isEqualAllowance(TokenModel.Allowance memory a, TokenModel.Allowance memory b) internal pure returns (bool) {
         return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr1_x == b.cr1_x && a.cr1_y == b.cr1_y && a.cr2_x == b.cr2_x && a.cr2_y == b.cr2_y;
-    }
-
-    function privateBurn(uint256 amountId) external {
-//        address owner = msg.sender;
-//        TokenModel.Account storage ownerAccount = accountTokens[owner];
-//        TokenModel.TokenEntity memory entity = findTokenById(ownerAccount, amountId);
-//
-//        if (entity.id == 0) {
-//            return;
-//        }
-//
-//        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.InBox, amountId);
-//        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.OutBox, amountId);
-//        deleteTokenInBox(ownerAccount, TokenModel.TokenBox.ApvBox, amountId);
-//        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), entity);
     }
 }

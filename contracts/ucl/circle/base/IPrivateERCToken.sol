@@ -58,7 +58,10 @@ interface IPrivateERCToken {
     bytes calldata proof) external;
 
   // ERC: function burn(uint256 amount) external;
-  function privateBurn(uint256 amountId) external;
+  function privateBurn(bytes32[] memory consumedTokens,
+    TokenModel.ElGamal memory amount,
+    TokenModel.ElGamal memory consumedTokensRemainingAmount,
+    bytes calldata proof) external;
 
   //circle-v2
   //    function increaseAllowance(address spender, uint256 increment) external;
