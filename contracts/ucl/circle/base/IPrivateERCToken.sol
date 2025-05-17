@@ -38,7 +38,11 @@ interface IPrivateERCToken {
   function privateBalanceOf(address owner, uint256 token_type) external returns (TokenModel.ElGamal memory);
 
   // ERC: function approve(address spender, uint256 value) external;
-  function privateApprove(address spender, uint256[] memory amountIds) external; // first split which will put amount in out-box. call this function to move from out-box to apv-box
+  function privateApprove(bytes32[] memory consumedTokens,
+    address spender,
+    TokenModel.Allowance memory allowance,
+    TokenModel.ElGamal memory consumedTokensRemainingAmount,
+    bytes calldata proof) external; // first split which will put amount in out-box. call this function to move from out-box to apv-box
 
   // ERC: function transferFrom( address from, address to, uint256 value) external returns (bool);
   function privateTransferFrom(address from, address to, uint256[] memory amountIds) external;
