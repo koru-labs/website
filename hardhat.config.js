@@ -235,6 +235,9 @@ module.exports = {
             // url: "http://18.144.171.202:8545", // dev,ucl-node2,v1
             url: "http://54.219.188.82:8545", //gpu,ucl-node2,v2
             accounts: [
+                "35c285cae6a13a0e13ef7db25776e60b02745922da3b39513b94114c2c5d9add", //57829d5E80730D06B1364A2b05342F44bFB70E8f
+                "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",//approve
+                "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787",//mint
                 "32ef95df4ea8de4f6b5518106e97dbb3e5b97cdbb4a33adfeaa9f14e729f51eb", //fAdb253d9AD9b2d6D37471fA80F398f76D8347B8
                 "e047c057b8b11153322c91f2d5474b73d691fa4351d053148582f07462ad1ae1", //b3C711A69B3DeAC4441904932Ca98E09e9068284
                 "a8ee6be3949318b57fbdfefdc86cd3a9033b8946789cb33db209e0c623c45cb5", //8c8af239FfB9A6e93AC4b434C71a135572A1021C

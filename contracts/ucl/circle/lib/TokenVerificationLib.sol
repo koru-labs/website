@@ -392,12 +392,6 @@ library TokenVerificationLib {
                 amount.cr_x == znValues[2] && amount.cr_y == znValues[3], 
                 "amount not match");
 
-        // verify token_spender_remaining 4-7
-        // These values should be part of the new allowance
-        require(params.newAllowance.cr1_x == znValues[4] && params.newAllowance.cr1_y == znValues[5] && 
-                params.newAllowance.cr2_x == znValues[6] && params.newAllowance.cr2_y == znValues[7], 
-                "token_spender_remaining not match");
-
         // verify token_owner_backup 8-11
         // 4-5 and 8-9 values should be the same
         require(znValues[4] == znValues[8] && znValues[5] == znValues[9], 

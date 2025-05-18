@@ -28,6 +28,7 @@
     "protobufjs": "^7.5.0"
   },
   "scripts": {
-    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_node2"
+    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_node2",
+    "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_node2"
   }
 }

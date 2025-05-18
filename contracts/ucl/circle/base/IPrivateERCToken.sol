@@ -35,7 +35,7 @@ interface IPrivateERCToken {
   function privateSetTotalSupply(uint256 totalSupply) external;
 
   // ERC: function balanceOf(address account) external view returns (uint256);
-  function privateBalanceOf(address owner, uint256 token_type) external returns (TokenModel.ElGamal memory);
+  function privateBalanceOf(address owner) external returns (TokenModel.ElGamal memory);
 
   // ERC: function approve(address spender, uint256 value) external;
   function privateApprove(bytes32[] memory consumedTokens,

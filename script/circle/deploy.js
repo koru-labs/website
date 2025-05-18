@@ -114,7 +114,11 @@ async function main() {
 
     console.log("部署TokenGrumpkinLib库...");
     try {
-        const TokenGrumpkinLibFactory = await ethers.getContractFactory("TokenGrumpkinLib");
+        const TokenGrumpkinLibFactory = await ethers.getContractFactory("TokenGrumpkinLib",{
+            libraries: {
+                "Grumpkin": deployed.libraries.Grumpkin,
+            }
+        });
         const tokenGrumpkinLib = await TokenGrumpkinLibFactory.deploy();
         await tokenGrumpkinLib.waitForDeployment();
         console.log("TokenGrumpkinLib部署到:", tokenGrumpkinLib.target);
@@ -128,7 +132,7 @@ async function main() {
         const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
             libraries: {
                 "ZkVerifier": deployed.libraries.ZkVerifier,
-                "Grumpkin": deployed.libraries.Grumpkin
+                // "Grumpkin": deployed.libraries.Grumpkin
             }
         });
         const tokenVerificationLib = await TokenVerificationLibFactory.deploy();
@@ -178,7 +182,7 @@ async function main() {
             libraries: {
                 "TokenEventLib": deployed.libraries.TokenEventLib,
                 "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
-                "Grumpkin": deployed.libraries.Grumpkin
+                "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
             }
         });
         const event_address = hamsaL2Event.target;
@@ -197,10 +201,18 @@ async function main() {
         console.log("为PrivateERCToken添加银行账户并授予角色...");
         const institutionAccountsP1 = [
             "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-            "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
+            "0x627306090abaB3A6e1400e9345bC60c78a8BEf57",
+            "0xb65Ebc891fBE21A42F73f9cf364759fbCF51A56A"
         ];
         await setupTokenAccountsAndRoles(privateERCToken, institutionAccountsP1, "PrivateERCToken");
 
+        const amount =   {
+            "cl_x": ethers.toBigInt("0x1109596d367157eba09903ef4b20674c3c63f8fb18ed184c1d4795bcd0cd2541"),
+            "cl_y": ethers.toBigInt("0x2f40198c786fffc711dffebea979facc21b7fb3ffe43a6bb3ac884137e0b7a24"),
+            "cr_x": ethers.toBigInt("0x24ba4d7eba5319e531f4c41635f10818abc76c11daa23f471fbf4d72b721d302"),
+            "cr_y": ethers.toBigInt("0x19ea03f1b2f6537ff3c7a3fc89c0887f99b2b3a7f210a2ac1e6590bcc93e4494"),
+        }
+        const result = await privateERCToken.setInstitutionAllowance('0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb',amount);
 
         const privateERCToken2 = await PrivateERCTokenFactory.deploy(0, event_address, institutionRegistration.target);
         await privateERCToken2.waitForDeployment();
@@ -214,7 +226,13 @@ async function main() {
             "0xb65Ebc891fBE21A42F73f9cf364759fbCF51A56A"
         ];
         await setupTokenAccountsAndRoles(privateERCToken2, institutionAccountsP2, "PrivateERCToken2");
-
+        const amount1 =   {
+            "cl_x": ethers.toBigInt("0x1109596d367157eba09903ef4b20674c3c63f8fb18ed184c1d4795bcd0cd2541"),
+            "cl_y": ethers.toBigInt("0x2f40198c786fffc711dffebea979facc21b7fb3ffe43a6bb3ac884137e0b7a24"),
+            "cr_x": ethers.toBigInt("0x24ba4d7eba5319e531f4c41635f10818abc76c11daa23f471fbf4d72b721d302"),
+            "cr_y": ethers.toBigInt("0x19ea03f1b2f6537ff3c7a3fc89c0887f99b2b3a7f210a2ac1e6590bcc93e4494"),
+        }
+         await privateERCToken2.setInstitutionAllowance('0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb',amount1);
     } catch (error) {
         console.error("业务合约部署失败:", error.message);
     }
@@ -286,6 +304,28 @@ async function registerInstitution(institutionRegistration) {
         {
             address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
             name: "Institution 2",
+            publicKey: {
+                x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276",
+                y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24"
+            }
+        }
+        ,{
+            address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
+            name: "Institution 3",
+            publicKey: {
+                x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276",
+                y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24"
+            }
+        },{
+            address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
+            name: "Institution 4",
+            publicKey: {
+                x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086",
+                y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9"
+            }
+        },{
+            address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
+            name: "Institution 5",
             publicKey: {
                 x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276",
                 y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24"

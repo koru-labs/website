@@ -29,7 +29,7 @@ library TokenGrumpkinLib {
         return (0, 0, 0, 0);
     }
 
-    function addElGamal(TokenModel.ElGamal memory a, TokenModel.ElGamal memory b) internal view returns (TokenModel.ElGamal memory) {
+    function addElGamal(TokenModel.ElGamal memory a, TokenModel.ElGamal memory b) public view returns (TokenModel.ElGamal memory) {
         // Add the two ElGamal ciphertexts using Grumpkin curve point addition
         GrumpkinAlgorithmLib.Grumpkin.GrumpkinAffinePoint memory cl_sum = GrumpkinAlgorithmLib.Grumpkin.add(
             GrumpkinAlgorithmLib.Grumpkin.GrumpkinAffinePoint(a.cl_x, a.cl_y),
@@ -49,7 +49,7 @@ library TokenGrumpkinLib {
         });
     }
 
-    function subElGamal(TokenModel.ElGamal memory a, TokenModel.ElGamal memory b) internal view returns (TokenModel.ElGamal memory) {
+    function subElGamal(TokenModel.ElGamal memory a, TokenModel.ElGamal memory b) public view returns (TokenModel.ElGamal memory) {
         // Subtract the two ElGamal ciphertexts using Grumpkin curve point subtraction
         GrumpkinAlgorithmLib.Grumpkin.GrumpkinAffinePoint memory cl_diff = GrumpkinAlgorithmLib.Grumpkin.sub(
             GrumpkinAlgorithmLib.Grumpkin.GrumpkinAffinePoint(a.cl_x,a.cl_y),
