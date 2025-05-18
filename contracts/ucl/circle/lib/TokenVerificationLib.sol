@@ -341,6 +341,75 @@ library TokenVerificationLib {
         return (true, result, znValues);
     }
 
+    //TransferFrom
+    //zn:
+    //0~3 token_for_receiver, 给receiver的， receiver pk 加密的
+    //4~7 token_spender_remaining， spender的 pk 加密的
+    //8~11 token_owner_backup  ownerpk 加密的， 45 和 89 值一样，（4，5，6，7，10，11）组成新的allowance
+    //z0:
+    //0~5 初始alllowance owner的 pk 加密的
+    //6～7 spender pk
+    //8~9 receiver_pk
+    //10～11  owner的 pk
+    function verifyTokenTransferFrom(TokenModel.VerifyTokenTransferFromParams calldata params) public view returns (bool, uint, uint256[] memory) {
+        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
+        // z0 verify
+        uint256[] memory z0Values = new uint256[](12);
+        for (uint i = 0; i < 12; i++) {
+            z0Values[i] = Fr.unwrap(z0[i]);
+        }
+
+        // verify initialAllowance 0-5
+        TokenModel.Allowance memory oldAllowance = params.oldAllowance;
+        require(oldAllowance.cl_x == z0Values[0] && oldAllowance.cl_y == z0Values[1] && 
+                oldAllowance.cr1_x == z0Values[2] && oldAllowance.cr1_y == z0Values[3] && 
+                oldAllowance.cr2_x == z0Values[4] && oldAllowance.cr2_y == z0Values[5], 
+                "oldAllowance not match");
+
+        // verify spender public key 6-7
+        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getInstitutionGrumpkinPublicKey(params.spender);
+        require(spender.x == z0Values[6] && spender.y == z0Values[7], "spender public key not match");
+
+        // verify receiver public key 8-9
+        TokenModel.GrumpkinPublicKey memory receiver = institutionRegistration.getInstitutionGrumpkinPublicKey(params.receiver);
+        require(receiver.x == z0Values[8] && receiver.y == z0Values[9], "receiver public key not match");
+
+        // verify owner public key 10-11
+        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getInstitutionGrumpkinPublicKey(params.owner);
+        require(owner.x == z0Values[10] && owner.y == z0Values[11], "owner public key not match");
+
+        // zn verify
+        uint256[] memory znValues = new uint256[](12);
+        for (uint i = 0; i < 12; i++) {
+            znValues[i] = Fr.unwrap(zn[i]);
+        }
+
+        // verify token_for_receiver 0-3
+        TokenModel.ElGamal memory amount = params.amount;
+        require(amount.cl_x == znValues[0] && amount.cl_y == znValues[1] && 
+                amount.cr_x == znValues[2] && amount.cr_y == znValues[3], 
+                "amount not match");
+
+        // verify token_spender_remaining 4-7
+        // These values should be part of the new allowance
+        require(params.newAllowance.cr1_x == znValues[4] && params.newAllowance.cr1_y == znValues[5] && 
+                params.newAllowance.cr2_x == znValues[6] && params.newAllowance.cr2_y == znValues[7], 
+                "token_spender_remaining not match");
+
+        // verify token_owner_backup 8-11
+        // 4-5 and 8-9 values should be the same
+        require(znValues[4] == znValues[8] && znValues[5] == znValues[9], 
+                "token_spender_remaining and token_owner_backup x,y values don't match");
+                
+        // Check if 4,5,6,7,10,11 form the new allowance
+        require(params.newAllowance.cl_x == znValues[4] && params.newAllowance.cl_y == znValues[5] && 
+                params.newAllowance.cr1_x == znValues[6] && params.newAllowance.cr1_y == znValues[7] && 
+                params.newAllowance.cr2_x == znValues[10] && params.newAllowance.cr2_y == znValues[11], 
+                "newAllowance not correctly formed from token values");
+
+        return (true, result, znValues);
+    }
 
 }

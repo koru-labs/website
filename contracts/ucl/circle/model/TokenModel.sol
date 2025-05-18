@@ -135,6 +135,18 @@ library TokenModel {
         bytes proof;
     }
 
+    //VerifyTransferFromParams
+    struct VerifyTokenTransferFromParams {
+        InstitutionRegistration institutionRegistration;
+        address owner;
+        address spender;
+        address receiver;
+        Allowance oldAllowance;
+        Allowance newAllowance;
+        ElGamal amount;
+        bytes proof;
+    }
+
     struct GrumpkinPublicKey {
         uint256 x;
         uint256 y;

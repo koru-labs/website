@@ -44,8 +44,13 @@ interface IPrivateERCToken {
     TokenModel.ElGamal memory consumedTokensRemainingAmount,
     bytes calldata proof) external; // first split which will put amount in out-box. call this function to move from out-box to apv-box
 
-  // ERC: function transferFrom( address from, address to, uint256 value) external returns (bool);
-  function privateTransferFrom(address from, address to, uint256[] memory amountIds) external;
+  function privateTransferFrom(      address from,
+        TokenModel.Allowance memory oldAllowance,
+        TokenModel.Allowance memory newAllowance,
+        address to,
+        TokenModel.ElGamal memory value,
+        bytes calldata proof
+    ) external returns (bool);
 
   // ERC: function allowance(owner, spender) external view returns(uint256);
   function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory);
