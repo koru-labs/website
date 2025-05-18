@@ -165,7 +165,7 @@ library Grumpkin {
      * @return The negated point, also on the Grumpkin curve.
      */
     function negate(GrumpkinAffinePoint memory point) public pure returns (GrumpkinAffinePoint memory) {
-        return GrumpkinAffinePoint(point.x, P_MOD - (point.y % P_MOD));
+        return GrumpkinAffinePoint(point.x, R_MOD - (point.y % R_MOD));
     }
 
     /**
