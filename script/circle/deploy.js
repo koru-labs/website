@@ -277,6 +277,7 @@ async function registerInstitution(institutionRegistration) {
     const institutions = [
         {
             address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+            name: "Institution 1",
             publicKey: {
                 x: "0x27f3ab05685e52314069bdddd0979f04b941f2252eda57d9d0de26dc6e96c086",
                 y: "0x2f71df388898be1e711469a5aaf9937f3ab8d7741b8327aef741083b9df723d9"
@@ -284,6 +285,7 @@ async function registerInstitution(institutionRegistration) {
         },
         {
             address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
+            name: "Institution 2",
             publicKey: {
                 x: "0x1c3be47d32cc829ae0814313d59917ae97b47b753f1f73ce866623f9e16b0276",
                 y: "0x01048275bfe07fc21516331a733d33fdd64c46bccf91ff54953db5cb192c4f24"
@@ -292,9 +294,21 @@ async function registerInstitution(institutionRegistration) {
     ]
     for (let i = 0; i < institutions.length; i++) {
         console.log(`注册银行 ${institutions[i].address} 到InstitutionRegistration合约...`);
-        let regTx = await institutionRegistration.register(institutions[i].address, institutions[i].publicKey);
+        let regTx = await institutionRegistration.registerInstitution(
+            institutions[i].address, 
+            institutions[i].name, 
+            institutions[i].publicKey
+        );
         await regTx.wait();
         console.log(`银行 ${institutions[i].address} 已注册到InstitutionRegistration`);
+        
+        // Register the institution also as a user under itself as manager
+        let userRegTx = await institutionRegistration.registerUser(
+            institutions[i].address,
+            institutions[i].address
+        );
+        await userRegTx.wait();
+        console.log(`银行 ${institutions[i].address} 已作为用户注册到其自己的管理下`);
     }
 }
 
