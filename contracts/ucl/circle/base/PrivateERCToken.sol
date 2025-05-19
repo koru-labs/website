@@ -232,14 +232,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
             cr_y: znValues[7]
         });
         privateMinterAllowed[msg.sender] = newAllowed;
-        // TODO:TokenEventLib.triggerTokenMintAllowedUpdatedEvent();
+        TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, privateMinterAllowed[msg.sender], newAllowed);
 
         addSupply(supplyIncrease);
-        // TODO:TokenEventLib.triggerTokenSupplyUpdatedEvent();
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, _privateTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease));
 
         addToken(to, amount);
-
-        // TODO:TokenEventLib.triggerTokenMintedEvent();
+        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
         return true;
     }

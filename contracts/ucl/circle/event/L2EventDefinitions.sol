@@ -88,3 +88,22 @@ import "../model/TokenModel.sol";
         TokenModel.TokenStatus status;
         bytes issuerEncryptedAmount;
     }
+
+    struct TokenMintAllowedUpdatedEvent {
+        address institution;          
+        TokenModel.ElGamal oldAmount; 
+        TokenModel.ElGamal newAmount;
+    }
+
+    struct TokenSupplyUpdatedEvent {
+        TokenModel.ElGamal oldSupply;   
+        TokenModel.ElGamal increaseAmount; 
+        TokenModel.ElGamal decreaseAmount;
+        TokenModel.ElGamal newSupply;
+    }
+
+    struct TokenMintedEvent {
+        address to;                    
+        TokenModel.ElGamal amount;     
+        address minter;             
+    }

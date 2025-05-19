@@ -23,14 +23,56 @@ library TokenEventLib {
         _l2Event.sendEvent(tokenSCAddress, address(0), "TokenSCCreated", body);
     }
 
-    // TODO
-    function triggerTokenSupplyUpdatedEvent(IL2Event _l2Event, address eventSource)public{
-        //_l2Event.sendEvent(eventSource, address(0), "TokenSupplyUpdated", "");
+    function triggerTokenSupplyUpdatedEvent(
+        IL2Event _l2Event, 
+        address eventSource,
+        address msgSender,
+        TokenModel.ElGamal memory oldSupply,
+        TokenModel.ElGamal memory increaseAmount,
+        TokenModel.ElGamal memory decreaseAmount,
+        TokenModel.ElGamal memory newSupply
+    ) public {
+        TokenSupplyUpdatedEvent memory eventData = TokenSupplyUpdatedEvent({
+            oldSupply: oldSupply,
+            increaseAmount: increaseAmount,
+            decreaseAmount: decreaseAmount,
+            newSupply: newSupply
+        });
+        bytes memory eventBody = abi.encode(eventData);
+        _l2Event.sendEvent(eventSource, msgSender, "TokenSupplyUpdated", eventBody);
     }
 
-    // TODO
-    function triggerTokenMintAllowedUpdatedEvent(IL2Event _l2Event,address eventSource)public{
-        //_l2Event.sendEvent(eventSource, address(0), "TokenMintAllowedUpdated", "");
+    function triggerTokenMintAllowedUpdatedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address msgSender,
+        address institution,
+        TokenModel.ElGamal memory oldAmount,
+        TokenModel.ElGamal memory newAmount
+    ) public {
+        TokenMintAllowedUpdatedEvent memory eventData = TokenMintAllowedUpdatedEvent({
+            institution: institution,
+            oldAmount: oldAmount,
+            newAmount: newAmount
+        });
+        bytes memory eventBody = abi.encode(eventData);
+        _l2Event.sendEvent(eventSource, msgSender, "TokenMintAllowedUpdated", eventBody);
+    }
+
+    function triggerTokenMintedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address to,
+        TokenModel.ElGamal memory amount,
+        address minter
+    ) public {
+        TokenMintedEvent memory eventData = TokenMintedEvent({
+            to: to,
+            amount: amount,
+            minter: minter
+        });
+        bytes memory eventBody = abi.encode(eventData);
+        _l2Event.sendEvent(eventSource, minter, "TokenMinted", eventBody);
     }
 
     function triggerTokenSplitEvent(
