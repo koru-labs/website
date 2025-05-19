@@ -237,7 +237,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         addSupply(supplyIncrease);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, _privateTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease));
 
-        addToken(to, amount);
+        addTokenWithBalance(to, amount);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
         return true;
@@ -312,7 +312,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
         removeTokensWoChangeBalance(msg.sender, consumedTokens);
         returnUnspentAllowance(msg.sender, spender);
-        addTokenWoChangeBalance(msg.sender, consumedTokensRemainingAmount);
+        addToken(msg.sender, consumedTokensRemainingAmount);
         addAllowance(msg.sender,spender, allowance);
 
     }
@@ -387,7 +387,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
                 cr_x: allowance.cr2_x,
                 cr_y: allowance.cr2_y
             });
-            addToken(accountAddress, token);
+            addTokenWithBalance(accountAddress, token);
             delete account.allowances[spender];
         }
     }
@@ -432,9 +432,9 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
-        removeTokens(msg.sender, consumedTokens);
-        addToken(msg.sender, consumedTokensRemainingAmount);
-        addToken(to, amount);
+        removeTokensWithBalance(msg.sender, consumedTokens);
+        addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
+        addTokenWithBalance(to, amount);
         // TODO: Event
     }
 
@@ -458,13 +458,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
-        removeTokens(msg.sender, consumedTokens);
-        addToken(msg.sender, consumedTokensRemainingAmount);
+        removeTokensWithBalance(msg.sender, consumedTokens);
+        addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
         // TODO: Event
     }
 
 
-    function addToken(address to, TokenModel.ElGamal memory amount) internal {
+    function addTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
         TokenModel.Account2 storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
 
@@ -472,13 +472,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         toAccount.tokens[tokenId] = amount;
     }
 
-    function addTokenWoChangeBalance(address to, TokenModel.ElGamal memory amount) internal {
+    function addToken(address to, TokenModel.ElGamal memory amount) internal {
         TokenModel.Account2 storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
         toAccount.tokens[tokenId] = amount;
     }
 
-    function removeTokens(address to, bytes32[] memory amount) internal {
+    function removeTokensWithBalance(address to, bytes32[] memory amount) internal {
         TokenModel.Account2 storage toAccount = accounts[to];
 
         for (uint256 i = 0; i < amount.length; i++) {
