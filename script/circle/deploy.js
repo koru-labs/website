@@ -168,8 +168,12 @@ async function main() {
 
         // 部署银行注册合约
         console.log("部署InstitutionRegistration合约...");
-        const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration");
-        const institutionRegistration = await InstitutionRegistrationFactory.deploy();
+        const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration",{
+            libraries: {
+               "TokenEventLib": deployed.libraries.TokenEventLib,
+            }
+        });
+        const institutionRegistration = await InstitutionRegistrationFactory.deploy(hamsaL2Event.target);
         await institutionRegistration.waitForDeployment();
         console.log("InstitutionRegistration部署到:", institutionRegistration.target);
         deployed.contracts.InstitutionRegistration = institutionRegistration.target;
