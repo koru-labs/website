@@ -57,6 +57,7 @@ contract InstitutionRegistration {
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
             address(this),
+            owner,
             institutionAddress,
             name,
             publicKey
@@ -81,6 +82,7 @@ contract InstitutionRegistration {
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
             address(this),
+            owner,
             userAddress,
             managerAddress
         );

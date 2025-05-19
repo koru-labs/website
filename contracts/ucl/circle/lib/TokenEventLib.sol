@@ -73,6 +73,7 @@ library TokenEventLib {
     function triggerInstitutionRegisteredEvent(
         IL2Event _l2Event,
         address eventSource,
+        address owner,
         address institutionAddress,
         string memory name,
         TokenModel.GrumpkinPublicKey memory publicKey
@@ -83,12 +84,13 @@ library TokenEventLib {
             publicKey: publicKey
         });
         bytes memory body = abi.encode(e);
-        _l2Event.sendEvent(eventSource, institutionAddress, "InstitutionRegistered", body);
+        _l2Event.sendEvent(eventSource, owner, "InstitutionRegistered", body);
     }
 
     function triggerUserRegisteredEvent(
         IL2Event _l2Event,
         address eventSource,
+        address owner,
         address userAddress,
         address managerAddress
     ) public {
@@ -97,6 +99,6 @@ library TokenEventLib {
             managerAddress: managerAddress
         });
         bytes memory body = abi.encode(e);
-        _l2Event.sendEvent(eventSource, managerAddress, "UserRegistered", body);
+        _l2Event.sendEvent(eventSource, owner, "UserRegistered", body);
     }
 } 
