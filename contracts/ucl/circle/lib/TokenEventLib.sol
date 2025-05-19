@@ -23,34 +23,6 @@ library TokenEventLib {
         _l2Event.sendEvent(tokenSCAddress, address(0), "TokenSCCreated", body);
     }
 
-    function triggerTokenMintedEvent(
-        IL2Event _l2Event,
-        address eventSource,
-        TokenModel.TokenEntity memory token
-    ) public {
-        TokenMintBurnBody memory eventData = TokenMintBurnBody({
-        id: token.id,
-        tokenSCAddress: eventSource,
-        tokenType: token.tokenType,
-        owner: token.owner,
-        manager: token.manager,
-        status: token.status,
-        issuerEncryptedAmount: token.issuerEncryptedAmount
-        });
-        bytes memory eventBody = abi.encode(eventData);
-        _l2Event.sendEvent(eventSource, token.manager, "TokenMinted", eventBody);
-    }
-
-    function triggerTokenMintedEvent2(
-        IL2Event _l2Event,
-        address eventSource,
-        uint256 tokenID,
-        TokenModel.ElGamal memory amount,
-        address to
-    )public{
-        //TODO
-    }
-
     // TODO
     function triggerTokenSupplyUpdatedEvent(IL2Event _l2Event, address eventSource)public{
         //_l2Event.sendEvent(eventSource, address(0), "TokenSupplyUpdated", "");
@@ -60,25 +32,6 @@ library TokenEventLib {
     function triggerTokenMintAllowedUpdatedEvent(IL2Event _l2Event,address eventSource)public{
         //_l2Event.sendEvent(eventSource, address(0), "TokenMintAllowedUpdated", "");
     }
-
-    function triggerTokenBurnedEvent(
-        IL2Event _l2Event,
-        address eventSource,
-        TokenModel.TokenEntity memory token
-    ) public {
-        TokenMintBurnBody memory eventData = TokenMintBurnBody({
-        id: token.id,
-        tokenSCAddress: eventSource,
-        tokenType: token.tokenType,
-        owner: token.owner,
-        manager: token.manager,
-        status: token.status,
-        issuerEncryptedAmount: token.issuerEncryptedAmount
-        });
-        bytes memory eventBody = abi.encode(eventData);
-        _l2Event.sendEvent(eventSource, token.manager, "TokenBurned", eventBody);
-    }
-
 
     function triggerTokenSplitEvent(
         IL2Event _l2Event,
@@ -115,5 +68,35 @@ library TokenEventLib {
         });
         bytes memory eventBody = abi.encode(eventData);
         _l2Event.sendEvent(eventSource,  token.manager, "TokenRemoved", eventBody);
+    }
+
+    function triggerInstitutionRegisteredEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address institutionAddress,
+        string memory name,
+        TokenModel.GrumpkinPublicKey memory publicKey
+    ) public {
+        InstitutionRegisteredEvent memory e = InstitutionRegisteredEvent({
+            institutionAddress: institutionAddress,
+            name: name,
+            publicKey: publicKey
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, institutionAddress, "InstitutionRegistered", body);
+    }
+
+    function triggerUserRegisteredEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address userAddress,
+        address managerAddress
+    ) public {
+        UserRegisteredEvent memory e = UserRegisteredEvent({
+            userAddress: userAddress,
+            managerAddress: managerAddress
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, managerAddress, "UserRegistered", body);
     }
 } 

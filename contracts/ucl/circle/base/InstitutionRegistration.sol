@@ -1,9 +1,12 @@
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
+import "../lib/TokenEventLib.sol";
+import "../event/IL2Event.sol";
 
 contract InstitutionRegistration {
     address public owner;
+    IL2Event public l2Event;
     
     // institution:
     // name
@@ -29,24 +32,14 @@ contract InstitutionRegistration {
     mapping(address => address) public userToManager;
     mapping(address => address[]) public managerToUsers;
     
-    event InstitutionRegistered(address indexed institutionAddress, TokenModel.GrumpkinPublicKey indexed publicKey);
-    event UserRegistered(address indexed userAddress, address indexed managerAddress);
-    
-    constructor() {
+    constructor(address _l2Event) {
         owner = msg.sender;
+        l2Event = IL2Event(_l2Event);
     }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
         _;
-    }
-    
-    function register(address institutionAddress, TokenModel.GrumpkinPublicKey memory publicKey) external onlyOwner {
-        require(institutionAddress != address(0), "Invalid address");
-
-        institutionPublicKey[institutionAddress] = publicKey;
-        
-        emit InstitutionRegistered(institutionAddress, publicKey);
     }
     
     function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey) external onlyOwner {
@@ -61,7 +54,13 @@ contract InstitutionRegistration {
         institutions[institutionAddress] = institution;
         institutionPublicKey[institutionAddress] = publicKey;
         
-        emit InstitutionRegistered(institutionAddress, publicKey);
+        TokenEventLib.triggerInstitutionRegisteredEvent(
+            l2Event,
+            address(this),
+            institutionAddress,
+            name,
+            publicKey
+        );
     }
     
     function registerUser(address userAddress, address managerAddress) external onlyOwner {
@@ -79,7 +78,12 @@ contract InstitutionRegistration {
         userToManager[userAddress] = managerAddress;
         managerToUsers[managerAddress].push(userAddress);
         
-        emit UserRegistered(userAddress, managerAddress);
+        TokenEventLib.triggerUserRegisteredEvent(
+            l2Event,
+            address(this),
+            userAddress,
+            managerAddress
+        );
     }
     
     function getUserManager(address userAddress) public view returns (address) {

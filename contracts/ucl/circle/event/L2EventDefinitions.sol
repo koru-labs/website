@@ -10,6 +10,16 @@ import "../model/TokenModel.sol";
         ERC1155
     }
 
+    struct InstitutionRegisteredEvent {
+        address institutionAddress;
+        string name;
+        TokenModel.GrumpkinPublicKey publicKey;
+    }
+
+    struct UserRegisteredEvent {
+        address userAddress;
+        address managerAddress;
+    }
 
     struct TokenSCCreatedEvent {
         address TokenSCAddress;
@@ -74,7 +84,7 @@ import "../model/TokenModel.sol";
         address tokenSCAddress;
         uint256 tokenType;
         address owner;
-        address manager;
+        address msgSender;
         TokenModel.TokenStatus status;
         bytes issuerEncryptedAmount;
     }

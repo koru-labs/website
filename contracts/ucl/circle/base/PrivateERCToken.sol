@@ -239,7 +239,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
         addToken(to, amount);
 
-        // TODO:TokenEventLib.triggerTokenMintedEvent2();
+        // TODO:TokenEventLib.triggerTokenMintedEvent();
 
         return true;
     }
