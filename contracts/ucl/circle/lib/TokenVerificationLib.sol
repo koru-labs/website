@@ -128,15 +128,15 @@ library TokenVerificationLib {
 
         InstitutionRegistration institutionRegistration = params.institutionRegistration;
         // verify minter pk 4-5
-        TokenModel.GrumpkinPublicKey memory minter = institutionRegistration.getInstitutionGrumpkinPublicKey(params.minter);
+        TokenModel.GrumpkinPublicKey memory minter = institutionRegistration.getUserInstGrumpkinPubKey(params.minter);
         require(minter.x == z0Values[4] && minter.y == z0Values[5], "minter public key not match");
 
         // verify to pk 6-7
-        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getInstitutionGrumpkinPublicKey(params.to);
+        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
         require(to.x == z0Values[6] && to.y == z0Values[7], "receiver public key not match");
 
         // verify scOwner pk 8-9
-        TokenModel.GrumpkinPublicKey memory scOwner = institutionRegistration.getInstitutionGrumpkinPublicKey(params.scOwner);
+        TokenModel.GrumpkinPublicKey memory scOwner = institutionRegistration.getInstGrumpkinPubKey(params.scOwner);
         require(scOwner.x == z0Values[8] && scOwner.y == z0Values[9], "scOwner public key not match");
 
         // zn verify
@@ -188,11 +188,11 @@ library TokenVerificationLib {
         require(consumedAmount.cl_x == z0Values[0] && consumedAmount.cl_y == z0Values[1] && consumedAmount.cr_x == z0Values[2] && consumedAmount.cr_y == z0Values[3], "consumedAmount not match");
 
         // verify from 4-5
-        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getInstitutionGrumpkinPublicKey(params.from);
+        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
         require(from.x == z0Values[4] && from.y == z0Values[5], "from public key not match");
 
         // verify to 6-7
-        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getInstitutionGrumpkinPublicKey(params.to);
+        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
         require(to.x == z0Values[6] && to.y == z0Values[7], "to public key not match");
 
         // zn verify
@@ -243,7 +243,7 @@ library TokenVerificationLib {
         require(consumedAmount.cl_x == z0Values[0] && consumedAmount.cl_y == z0Values[1] && consumedAmount.cr_x == z0Values[2] && consumedAmount.cr_y == z0Values[3], "consumedAmount not match");
 
         // verify from 4-5
-        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getInstitutionGrumpkinPublicKey(params.from);
+        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
         require(from.x == z0Values[4] && from.y == z0Values[5], "from public key not match");
 
         // zn verify
@@ -305,11 +305,11 @@ library TokenVerificationLib {
         require(consumedAmount.cl_x == z0Values[0] && consumedAmount.cl_y == z0Values[1] && consumedAmount.cr_x == z0Values[2] && consumedAmount.cr_y == z0Values[3], "consumedAmount not match");
 
         // verify owner 4-5
-        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getInstitutionGrumpkinPublicKey(params.owner);
+        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
         require(owner.x == z0Values[4] && owner.y == z0Values[5], "owner public key not match");
 
         // verify spender 6-7
-        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getInstitutionGrumpkinPublicKey(params.spender);
+        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getUserInstGrumpkinPubKey(params.spender);
         require(spender.x == z0Values[6] && spender.y == z0Values[7], "spender public key not match");
 
         // zn verify
@@ -369,15 +369,15 @@ library TokenVerificationLib {
                 "oldAllowance not match");
 
         // verify spender public key 6-7
-        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getInstitutionGrumpkinPublicKey(params.spender);
+        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getUserInstGrumpkinPubKey(params.spender);
         require(spender.x == z0Values[6] && spender.y == z0Values[7], "spender public key not match");
 
         // verify receiver public key 8-9
-        TokenModel.GrumpkinPublicKey memory receiver = institutionRegistration.getInstitutionGrumpkinPublicKey(params.receiver);
+        TokenModel.GrumpkinPublicKey memory receiver = institutionRegistration.getUserInstGrumpkinPubKey(params.receiver);
         require(receiver.x == z0Values[8] && receiver.y == z0Values[9], "receiver public key not match");
 
         // verify owner public key 10-11
-        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getInstitutionGrumpkinPublicKey(params.owner);
+        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
         require(owner.x == z0Values[10] && owner.y == z0Values[11], "owner public key not match");
 
         // zn verify

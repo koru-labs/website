@@ -105,7 +105,13 @@ contract InstitutionRegistration {
         owner = newOwner;
     }
 
-    function getInstitutionGrumpkinPublicKey(address institutionAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
+    function getInstGrumpkinPubKey(address institutionAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
         return institutionPublicKey[institutionAddress];
     }
+
+    function getUserInstGrumpkinPubKey(address userAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
+        address institutionAddress = getUserManager(userAddress);
+        return institutionPublicKey[institutionAddress];
+    }
+
 }
