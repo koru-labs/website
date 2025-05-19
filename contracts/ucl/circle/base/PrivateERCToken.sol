@@ -95,98 +95,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         _;
     }
 
-    function privateReserveAmount(address owner, TokenModel.ParentTokens memory parentTokens, TokenModel.AmountInfo[] memory reservedAmounts,
-        bytes calldata proof) external {
-
-        TokenModel.Account storage ownerAccount = accountTokens[owner];
-
-
-
-        // create all child tokens
-        for (uint256 i = 0; i < reservedAmounts.length; i++) {
-            TokenModel.AmountInfo memory child = reservedAmounts[i];
-
-            TokenModel.TokenEntity memory childEntity = TokenModel.TokenEntity({
-            id : child.id,
-            tokenType : child.token_type,
-            owner : child.owner,
-            manager : child.manager,
-            status : child.status,
-
-            amount : child.amount,
-            issuerEncryptedAmount : child.issuerEncryptedAmount,
-
-            approvedSpender : address(0),
-            rollbackTokenId : 0
-            });
-
-            ownerAccount.tokens[child.id] = childEntity;
-            TokenEventLib.triggerTokenSplitEvent(_l2Event, address(this), childEntity);
-        }
-        
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(ownerAccount, parentTokens, reservedAmounts, proof);
-        require(isValid, "PrivateERCToken: invalid proof");
-
-        //delete all parent tokens
-        for (uint i = 0; i < parentTokens.parentIds.length; i++) {
-            uint256 pid = parentTokens.parentIds[i];
-            TokenModel.TokenEntity memory parentEntity = ownerAccount.tokens[pid];
-
-            TokenEventLib.triggerTokenRemovedEvent(_l2Event, address(this), parentEntity);
-            delete ownerAccount.tokens[pid];
-        }
-    }
-
-    function deleteTokenInBox(TokenModel.Account storage ownerAccount, TokenModel.TokenBox box, uint256 tokenId) internal {
-//        if (box == TokenModel.TokenBox.InBox) {
-//            delete ownerAccount.inBox[tokenId];
-//        } else if (box ==  TokenModel.TokenBox.OutBox) {
-//            delete  ownerAccount.outBox[tokenId];
-//        } else if (box ==  TokenModel.TokenBox.ApvBox) {
-//            delete  ownerAccount.apvBox[tokenId];
-//        }
-    }
-
-//    function findTokenById(TokenModel.Account storage ownerAccount,  uint256 tokenId) internal
-//        returns (TokenModel.TokenEntity memory) {
-//
-//        TokenModel.TokenEntity memory entity = ownerAccount.inBox[tokenId];
-//        if (entity.id !=0) {
-//            return entity;
-//        }
-//
-//        entity= ownerAccount.outBox[tokenId];
-//        if (entity.id != 0) {
-//            return entity;
-//        }
-//
-//        return ownerAccount.apvBox[tokenId];
-//    }
-
-//    function saveTokenInBox(TokenModel.Account storage ownerAccount, TokenModel.TokenBox box, TokenModel.TokenEntity memory entity) internal {
-//        uint256 tokenId = entity.id;
-//
-//        if (box == TokenModel.TokenBox.InBox) {
-//            ownerAccount.inBox[tokenId] = entity;
-//
-//        } else if (box ==  TokenModel.TokenBox.OutBox) {
-//            ownerAccount.outBox[tokenId] = entity;
-//
-//        } else if (box ==  TokenModel.TokenBox.ApvBox) {
-//            ownerAccount.apvBox[tokenId] = entity;
-//        }
-//    }
-
-
-    function privateSplitApproval(address owner, TokenModel.AmountInfo memory approvedAmount,
-        TokenModel.AmountInfo[] memory splitAmounts, bytes calldata proof) external {
-
-    }
-
-    function privateRollbackAmount(uint256 amountId) external {
-
-    }
-
     /**
      * @notice Mints private fiat tokens to an address and updates the total supply.
        * @param to The address that will receive the minted tokens.
@@ -243,12 +151,14 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         return true;
     }
 
+    // for debug
     function getAccountToken(address account,  TokenModel.ElGamal memory amount) external view returns (TokenModel.ElGamal memory) {
         bytes32 tokenId = hashElgamal(amount);
         TokenModel.Account2 storage account2 = accounts[account];
         return account2.tokens[tokenId];
     }
 
+    // for debug
     function getAccountAllowance(address account, address spender) external view returns (TokenModel.Allowance memory) {
         TokenModel.Account2 storage account2 = accounts[account];
         return account2.allowances[spender];
@@ -267,16 +177,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         return keccak256(abi.encode(elgamal));
     }
 
-
-
-//    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
-//        return TokenModel.ElGamal( {
-//            cl_x: 0,
-//            cl_y: 0,
-//            cr_x: 0,
-//            cr_y: 0
-//        });
-//    }
 
     function privateSetTotalSupply(uint256 totalSupply) onlySCOwner external {
         privateTotalSupply = totalSupply;
