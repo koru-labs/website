@@ -135,10 +135,6 @@ library TokenVerificationLib {
         TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
         require(to.x == z0Values[6] && to.y == z0Values[7], "receiver public key not match");
 
-        // verify scOwner pk 8-9
-        TokenModel.GrumpkinPublicKey memory scOwner = institutionRegistration.getInstGrumpkinPubKey(params.scOwner);
-        require(scOwner.x == z0Values[8] && scOwner.y == z0Values[9], "scOwner public key not match");
-
         // zn verify
         uint256[] memory znValues = new uint256[](12);
         znValues[0] = Fr.unwrap(zn[0]);

@@ -124,7 +124,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
             institutionRegistration: _institutionRegistration,
             minter: msg.sender,
             to: to,
-            scOwner: scOwner,
             initialMinterAllowed: privateMinterAllowed[msg.sender],
             currentMintAmount: amount,
             supplyIncrease : supplyIncrease,

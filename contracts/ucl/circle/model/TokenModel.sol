@@ -97,7 +97,6 @@ library TokenModel {
         InstitutionRegistration institutionRegistration;
         address minter;
         address to;
-        address scOwner;
         ElGamal initialMinterAllowed;
         ElGamal currentMintAmount;
         ElGamal supplyIncrease;
