@@ -142,8 +142,9 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         privateMinterAllowed[msg.sender] = newAllowed;
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, privateMinterAllowed[msg.sender], newAllowed);
 
+        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
         addSupply(supplyIncrease);
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, _privateTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease));
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply);
 
         addTokenWithBalance(to, amount);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);

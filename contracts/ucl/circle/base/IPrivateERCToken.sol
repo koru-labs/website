@@ -6,24 +6,6 @@ import '../model/TokenModel.sol';
 interface IPrivateERCToken {
   // hamsa-ucl public functions
 
-  //doc: function privateReserveAmount(address owner, TokenModel.ElGamal memory currentBalance, TokenModel.ElGamal memory newBalance,
-  //   TokenModel.AmountInfo[] memory reservedAmounts, bytes calldata proof) external;
-  function privateReserveAmount(
-    address owner,
-    TokenModel.ParentTokens memory parentTokens,
-    TokenModel.AmountInfo[] memory reservedAmounts,
-    bytes calldata proof
-  ) external;
-
-  function privateSplitApproval(
-    address owner,
-    TokenModel.AmountInfo memory approvedAmount,
-    TokenModel.AmountInfo[] memory splitAmounts,
-    bytes calldata proof
-  ) external;
-
-  function privateRollbackAmount(uint256 amountId) external; //move amount from out-box/apv-box back into in-box
-
   //circle- v1
 
   // ERC: function mint(address _to, uint256 _amount) external;
