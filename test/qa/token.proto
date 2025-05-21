@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package tokenproof.v1;
+
+option go_package = "./token_grpc";
+
+// Token service interface
+service TokenService {
+  rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
+  rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
+  rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
+  rpc GetTransferProof        (ProofRequest)                 returns (TransferProofResponse);
+  rpc GetApproveProof         (ProofRequest)                 returns (ApproveProofResponse);
+  rpc GetTransferFromProof    (ProofRequest)                 returns (TransferFromProofResponse);
+  rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
+}
+
+// Token action status enum
+enum TokenActionStatusEnum {
+  TOKEN_ACTION_STATUS_PENDING = 0;
+  TOKEN_ACTION_STATUS_PROVE_SUC = 1;
+  TOKEN_ACTION_STATUS_SUC = 2;
+  TOKEN_ACTION_STATUS_CALL_L1 = 3;
+  TOKEN_ACTION_STATUS_FAIL = 4;
+  TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
+  TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
+}
+
+message ProofRequest {
+  string requestId = 1;
+}
+
+message ElGamal {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr_x = 3;
+  string cr_y = 4;
+}
+
+message Allowance {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr1_x = 5;
+  string cr1_y = 6;
+  string cr2_x = 7;
+  string cr2_y = 8;
+}
+
+message MintProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal supply_amount = 6;
+  ElGamal amount = 7;
+  string  proof = 8;
+  TokenActionStatusEnum status = 9;
+}
+
+message TransferProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal old_balance = 6;
+  ElGamal new_balance = 7;
+  ElGamal amount = 8;
+  string proof =9;
+  TokenActionStatusEnum status = 10;
+}
+
+
+message ApproveProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal old_balance = 6;
+  ElGamal new_balance = 7;
+  Allowance allowance = 8;
+  string proof = 9;
+  TokenActionStatusEnum status = 10;
+}
+
+message TransferFromProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  Allowance old_allowance = 6;
+  Allowance new_allowance = 7;
+  ElGamal amount = 8;
+  string proof = 9;
+  TokenActionStatusEnum status = 10;
+}
+
+message BurnProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+
+  ElGamal old_balance =6;
+  ElGamal new_balance =7;
+  ElGamal amount = 8;
+  ElGamal supply_amount = 9;
+  ElGamal proof =10;
+  TokenActionStatusEnum status = 11;
+}
+
+message GenerateProofRequest {
+  string sc_address =1;
+  uint64 token_type =2;
+  string from_address =3;
+  string to_address =4;
+  string allowance_cancel_address =5;
+  uint64 amount = 6;
+}
+
+message GenerateProofResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}
