@@ -3,16 +3,9 @@ const { ethers } = hre;
 const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
-
+const accounts = require("../../deployments/account.json");
 
 const ADDRESSES = {
-    
-    OWNER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-    MASTER_MINTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-    PAUSER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-    BLACKLISTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-    MINTER: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: "0x0b82178c50Ca1414C1B048f2E507c18Fca1d59aC"
 };
@@ -206,9 +199,10 @@ async function main() {
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
     await signatureChecker.waitForDeployment()
+    deployed.libraries.SignatureChecker = signatureChecker.target;
 
     console.log("Deploy PrivateERCToken smart contract...");
-    const PrivateERCTokenFactory = await ethers.getContractFactory("HamsaUSDC", {
+    const HamsaUSDCFactory = await ethers.getContractFactory("HamsaUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
             "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
@@ -225,22 +219,22 @@ async function main() {
         throw new Error("Deployment of HamsaUSDC failed");
     }
 
-    const privateERCToken = await PrivateERCTokenFactory.deploy();
-    await privateERCToken.waitForDeployment();
-    console.log("PrivateERCToken is deployed at :", privateERCToken.target);
-    deployed.contracts.PrivateERCToken = privateERCToken.target;
+    const hamsaUSDC = await HamsaUSDCFactory.deploy();
+    await hamsaUSDC.waitForDeployment();
+    console.log("PrivateERCToken is deployed at :", hamsaUSDC.target);
+    deployed.contracts.PrivateERCToken = hamsaUSDC.target;
 
     
     console.log("Initializing PrivateERCToken...");
-    const initTx = await privateERCToken.initialize(
+    const initTx = await hamsaUSDC.initialize(
         "Private ERC Token", 
         "PET", 
         "USD", 
         6, 
-        ADDRESSES.MASTER_MINTER,
-        ADDRESSES.PAUSER,
-        ADDRESSES.BLACKLISTER,
-        ADDRESSES.OWNER,
+        accounts.MasterMinter,
+        accounts.Pauser,
+        accounts.BlackLister,
+        accounts.Owner,
         event_address,
         institutionRegistration.target
     );
@@ -253,9 +247,12 @@ async function main() {
         "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
         "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
     }
-    await privateERCToken.configurePrivacyMinter(ADDRESSES.MINTER,minterAllowedAmount);
-    await saveDeploymentInfo(deployed, hre, ethers, fs, path);
+    await hamsaUSDC.configureMinter(accounts.Minter, 1000);
+    await hamsaUSDC.configurePrivacyMinter(accounts.Minter,minterAllowedAmount);
+    let tx = await hamsaUSDC.blacklist(accounts.BlockedAccount);
+    await tx.wait();
 
+    await saveDeploymentInfo(deployed, hre, ethers, fs, path);
     console.log("\nDeployment is done ！");
     return deployed;
 }
