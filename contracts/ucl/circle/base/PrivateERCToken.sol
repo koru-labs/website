@@ -9,22 +9,19 @@ import "./IPrivateERCToken.sol";
 import "../lib/TokenVerificationLib.sol";
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
 
-import { Ownable } from "./Ownable.sol";
-import { Pausable } from "./Pausable.sol";
-import { Blacklistable } from "./Blacklistable.sol";
 
-contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
+import { Pausable } from "../../../usdc/v1/Pausable.sol";
+import { Blacklistable } from "../../../usdc/v1/Blacklistable.sol";
+import { Ownable } from "../../../usdc/v1/Ownable.sol";
+import { Mintable } from "../../../usdc/v1/Mintable.sol";
+
+
+abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable{
     // FiatTokenV1 compatible fields
-    string public name;
-    string public symbol;
-    uint8 public decimals;
-    string public currency;
-    address public masterMinter;
-    bool internal initialized;
+    bool private initialized;
 
     InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
     TokenModel.ElGamal _privateTotalSupply;
@@ -32,65 +29,25 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     uint256 _numberOfTotalSupplyChanges;// TODO: What is the purpose of this variable?
     uint256 public decryptedTotalSupply;
 
-    mapping(address => bool) internal minters;
-
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
     event PrivateApproval(address indexed owner, address indexed spender, TokenModel.Allowance value);
 
     // Compatible with FiatTokenV1 contracts
-    function initialize(
-        string memory tokenName,
-        string memory tokenSymbol,
-        string memory tokenCurrency,
-        uint8 tokenDecimals,
-        address newMasterMinter,
-        address newPauser,
-        address newBlacklister,
-        address newOwner,
+    function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
         InstitutionRegistration institutionRegistration
     ) public {
         require(!initialized, "FiatToken: contract is already initialized");
-        require(
-            newMasterMinter != address(0),
-            "FiatToken: new masterMinter is the zero address"
-        );
-        require(
-            newPauser != address(0),
-            "FiatToken: new pauser is the zero address"
-        );
-        require(
-            newBlacklister != address(0),
-            "FiatToken: new blacklister is the zero address"
-        );
-        require(
-            newOwner != address(0),
-            "FiatToken: new owner is the zero address"
-        );
 
-        name = tokenName;
-        symbol = tokenSymbol;
-        currency = tokenCurrency;
-        decimals = tokenDecimals;
-        masterMinter = newMasterMinter;
-        pauser = newPauser;
-        blacklister = newBlacklister;
-        setOwner(newOwner);
         initialized = true;
 
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
 
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    modifier onlyMinters() {
-        require(minters[msg.sender], "FiatToken: caller is not a minter");
-        _;
     }
 
     function privateMint(
@@ -158,7 +115,6 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
             amount: amount,
             remainingAmount: consumedTokensRemainingAmount,
             supplyDecrease: supplyDecrease,
-//            owner: owner,
             proof: proof
         });
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);
@@ -382,6 +338,27 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         emit PrivateTransfer(msg.sender, to, amount);
     }
 
+    function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
+        external whenNotPaused onlyMasterMinter returns (bool) {
+        privateMinterAllowed[minter] = privateAllowedAmount;
+        return true;
+    }
+
+    function removePrivacyMinter(address minter) external onlyMasterMinter returns (bool)  {
+        privateMinterAllowed[minter] = TokenModel.ElGamal({
+            cl_x:0,
+            cl_y:0,
+            cr_x:0,
+            cr_y:0
+        });
+        return true;
+    }
+
+
+    function updateDecryptedTotalSupply(uint256 _decryptedTotalSupply) external {
+        decryptedTotalSupply = _decryptedTotalSupply;
+    }
+
     function addTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
         TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
@@ -404,6 +381,15 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
             delete toAccount.tokens[amount[i]];
         }
     }
+
+    function subTokens(TokenModel.ElGamal memory amount,TokenModel.ElGamal memory amount1) external view returns (TokenModel.ElGamal memory) {
+        return TokenGrumpkinLib.subElGamal(amount, amount1);
+    }
+
+    function addTokens(TokenModel.ElGamal memory amount,TokenModel.ElGamal memory amount1) external view returns (TokenModel.ElGamal memory) {
+        return TokenGrumpkinLib.addElGamal(amount, amount1);
+    }
+
 
     function removeTokensWoChangeBalance(address to, bytes32[] memory amount) internal {
         TokenModel.Account storage toAccount = accounts[to];
@@ -451,75 +437,5 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
    */
     function isEqualAllowance(TokenModel.Allowance memory a, TokenModel.Allowance memory b) internal pure returns (bool) {
         return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr1_x == b.cr1_x && a.cr1_y == b.cr1_y && a.cr2_x == b.cr2_x && a.cr2_y == b.cr2_y;
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    modifier onlyMasterMinter() {
-        require(
-            msg.sender == masterMinter,
-            "FiatToken: caller is not the masterMinter"
-        );
-        _;
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function isMinter(address account) external view returns (bool) {
-        return minters[account];
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function configureMinter(address minter, TokenModel.ElGamal memory minterAllowedAmount)
-    external
-    whenNotPaused
-    onlyMasterMinter
-    returns (bool)
-    {
-        minters[minter] = true;
-        privateMinterAllowed[minter] = minterAllowedAmount;
-        return true;
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function removeMinter(address minter)
-    external
-    onlyMasterMinter
-    returns (bool)
-    {
-        minters[minter] = false;
-        privateMinterAllowed[minter] = TokenModel.ElGamal(0, 0, 0, 0);
-        return true;
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function _blacklist(address _account) internal override {
-        _setBlacklistState(_account, true);
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function _unBlacklist(address _account) internal override {
-        _setBlacklistState(_account, false);
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function _setBlacklistState(address _account, bool _shouldBlacklist)
-    internal
-    virtual
-    {
-        _deprecatedBlacklisted[_account] = _shouldBlacklist;
-    }
-
-    // Compatible with FiatTokenV1 contracts
-    function _isBlacklisted(address _account)
-    internal
-    virtual
-    override
-    view
-    returns (bool)
-    {
-        return _deprecatedBlacklisted[_account];
-    }
-    
-    function updateDecryptedTotalSupply(uint256 _decryptedTotalSupply) external {
-        decryptedTotalSupply = _decryptedTotalSupply;
     }
 }
