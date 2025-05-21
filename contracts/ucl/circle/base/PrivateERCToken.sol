@@ -461,7 +461,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     returns (bool)
     {
         minters[minter] = false;
-        minterAllowed[minter] = 0;
+        privateMinterAllowed[minter] = TokenModel.ElGamal(0, 0, 0, 0);
         return true;
     }
 
