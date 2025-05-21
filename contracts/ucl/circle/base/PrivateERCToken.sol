@@ -250,13 +250,13 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         emit PrivateApproval(msg.sender, spender, allowance);
     }
 
-    function getAllowance(address account,address spender) internal returns (TokenModel.Allowance memory) {
-        TokenModel.Account storage account = accounts[account];
+    function getAllowance(address accountAddress,address spender) internal returns (TokenModel.Allowance memory) {
+        TokenModel.Account storage account = accounts[accountAddress];
         return account.allowances[spender];
     }
 
-    function addAllowance(address account,address spender, TokenModel.Allowance memory allowance) internal {
-        TokenModel.Account storage account = accounts[account];
+    function addAllowance(address accountAddress,address spender, TokenModel.Allowance memory allowance) internal {
+        TokenModel.Account storage account = accounts[accountAddress];
         account.allowances[spender] = allowance;
     }
 
