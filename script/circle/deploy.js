@@ -13,8 +13,8 @@ const ADDRESSES = {
     BLACKLISTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
     MINTER: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
     
-    TOKEN_EVENT_LIB: "",
-    HAMSAL2EVENT: ""
+    TOKEN_EVENT_LIB: "0xd71aa4A6D758eA7E1915D88cd6EDEec631349279",
+    HAMSAL2EVENT: "0x0b82178c50Ca1414C1B048f2E507c18Fca1d59aC"
 };
 
 async function main() {
@@ -169,6 +169,9 @@ async function main() {
         } catch (error) {
             console.error("TokenEventLib部署失败:", error.message);
         }
+    } else {
+        console.log("使用已部署的TokenEventLib库:", ADDRESSES.TOKEN_EVENT_LIB);
+        deployed.libraries.TokenEventLib = ADDRESSES.TOKEN_EVENT_LIB;
     }
 
     
@@ -183,6 +186,9 @@ async function main() {
         await hamsaL2Event.waitForDeployment();
         console.log("HamsaL2Event部署到:", hamsaL2Event.target);
         deployed.contracts.HamsaL2Event = hamsaL2Event.target;
+    } else {
+        console.log("使用已部署的HamsaL2Event合约:", ADDRESSES.HAMSAL2EVENT);
+        deployed.contracts.HamsaL2Event = ADDRESSES.HAMSAL2EVENT;
     }
 
     
@@ -241,14 +247,6 @@ async function main() {
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
 
-    const minterAllowedAmount =   {
-        "cl_x": ethers.toBigInt("0x0674c295e0f0892fbf309a316af3adacf8023d5e597bf55533806bd0362170c6"),
-        "cl_y": ethers.toBigInt("0x0cb84b5c84cadfa88f4edf89d2fcf051c100aa015a80c202f517a008296c0359"),
-        "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
-        "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
-    }
-    await privateERCToken.configureMinter(ADDRESSES.MINTER,minterAllowedAmount);
-    
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
 
     console.log("\n部署完成！");
