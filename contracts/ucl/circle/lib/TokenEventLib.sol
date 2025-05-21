@@ -63,16 +63,14 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address to,
-        TokenModel.ElGamal memory amount,
-        address minter
+        TokenModel.ElGamal memory amount
     ) public {
         TokenMintedEvent memory eventData = TokenMintedEvent({
             to: to,
-            amount: amount,
-            minter: minter
+            amount: amount
         });
         bytes memory eventBody = abi.encode(eventData);
-        _l2Event.sendEvent(eventSource, minter, "TokenMinted", eventBody);
+        _l2Event.sendEvent(eventSource, to, "TokenMinted", eventBody);
     }
 
     function triggerTokenSplitEvent(
@@ -142,5 +140,37 @@ library TokenEventLib {
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, owner, "UserRegistered", body);
+    }
+
+    //triggerTokenDeletedEvent
+    function triggerTokenDeletedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        bytes32[] memory consumedTokens,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount
+    )public{
+        TokenDeletedEvent memory e = TokenDeletedEvent({
+            consumedTokensRemainingAmount: consumedTokensRemainingAmount,
+            consumedTokens: consumedTokens
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
+    }
+
+    //triggerTokenReceivedEvent
+    function triggerTokenReceivedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        TokenModel.ElGamal memory amount,
+        address from
+    )public{
+        TokenReceivedEvent memory e = TokenReceivedEvent({
+            amount: amount,
+            from: from
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
     }
 } 

@@ -104,6 +104,15 @@ import "../model/TokenModel.sol";
 
     struct TokenMintedEvent {
         address to;                    
-        TokenModel.ElGamal amount;     
-        address minter;             
+        TokenModel.ElGamal amount;
+    }
+
+    struct TokenDeletedEvent{
+        TokenModel.ElGamal consumedTokensRemainingAmount;
+        bytes32[] consumedTokens;
+    }
+
+    struct TokenReceivedEvent {
+        TokenModel.ElGamal amount;
+        address from;
     }

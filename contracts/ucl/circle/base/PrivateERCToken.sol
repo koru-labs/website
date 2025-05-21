@@ -24,13 +24,17 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
     InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-    mapping(address=>TokenModel.Account) accounts;
 
+    mapping(address=>TokenModel.Account) accounts;
+    mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
     TokenModel.ElGamal _privateTotalSupply;
+
     uint256 _numberOfTotalSupplyChanges;
 
     mapping(address => bool) internal minters;
-    mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
+
+    event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
+
 
     // Compatible with FiatTokenV1 contracts
     function initialize(
@@ -127,8 +131,9 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply);
 
         addTokenWithBalance(to, amount);
-        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
+        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount);
 
+        // todo emit PrivateMint(to, amount);
         return true;
     }
 
@@ -191,6 +196,12 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         addToken(msg.sender, consumedTokensRemainingAmount);
         addAllowance(msg.sender,spender, allowance);
 
+        // todo event
+//        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
+//        TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), msg.sender, allowance);
+
+//        emit PrivateApproval(msg.sender, spender, allowance);
+
     }
 
     function addAllowance(address account,address spender, TokenModel.Allowance memory allowance) internal {
@@ -236,6 +247,11 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         accounts[from].allowances[msg.sender] = newAllowance;
 
         // TODO:event
+
+//        TokenEventLib.triggerAllowanceUpdatedEvent(_l2Event, address(this), from, oldAllowance, TokenModel.ElGamal(0,0,0,0), spentAmount, newAllowance, msg.sender);
+//        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, value, msg.sender);
+
+        emit PrivateTransfer(from, to, value);
         return true;
     }
 
@@ -307,7 +323,10 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         removeTokensWithBalance(msg.sender, consumedTokens);
         addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
         addTokenWithBalance(to, amount);
-        // TODO: Event
+
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, msg.sender);
+        emit PrivateTransfer(msg.sender, to, amount);
     }
 
     function privateBurn(bytes32[] memory consumedTokens,
@@ -332,7 +351,12 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
         removeTokensWithBalance(msg.sender, consumedTokens);
         addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
+        // todo supply change
         // TODO: Event
+//        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply);
+//        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), to, consumedTokens, consumedTokensRemainingAmount, msg.sender);
+
+        // todo emit PrivateBurn(msg.sender, amount);
     }
 
 
