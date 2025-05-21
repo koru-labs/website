@@ -22,10 +22,8 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     address public masterMinter;
     bool internal initialized;
 
-
     InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-    mapping(address=>TokenModel.Account) accountTokens;
     mapping(address=>TokenModel.Account2) accounts;
 
     TokenModel.ElGamal _privateTotalSupply;
@@ -277,10 +275,6 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         cr_x: 0,
         cr_y: 0
         });
-    }
-
-    function getAccountTokenEntity(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory) {
-        return accountTokens[owner].tokens[tokenId];
     }
 
     function privateTransfer(bytes32[] memory consumedTokens,
