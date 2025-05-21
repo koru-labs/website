@@ -1,26 +1,25 @@
 {
   "libraries": {
-    "Library": "0x84473D2Aa112bc3626afEeAdcC06b29f7A4A4136",
-    "Fr": "0x6e3F8A2344eefa4Fa0f7Ecc2543E52A00Ec2234B",
-    "Fq": "0xC955A856804F6EEf580c37a026e2478A9e886E2D",
-    "RelaxedR1CSSNARKForSMLib": "0xe48BdFc986EcdfE1595e56687CD9175334365aCf",
-    "BatchedRelaxedR1CSSNARKLib": "0xAC82C17ee9D52BC34d0275287DAa764038F5461B",
-    "Field": "0x3F96F39E6b16A217d37Fd27cD10F4AfB30bf96e1",
-    "Grumpkin": "0x89015e7C207e048Bae6454EDa99Cd4C77B8731dF",
-    "ZkVerifier": "0x61A1f563D6D33ff403f4C2981CE203b3bF918B65",
-    "TokenGrumpkinLib": "0xBa0877C074e41695527Aea3685b01226F323FaA8",
-    "TokenEventLib": "0x70E18ea153c6e3814013418BBf18b675955099D9"
+    "Library": "0x1747B1E9d320489bdA0fdd6227e6816245d112e1",
+    "Fr": "0x65E58239DE711b50BBa5b9A838a99F6DB752680D",
+    "Fq": "0x445eEDdB5d5F7B1A7952Bc1a70217a2BF4490305",
+    "RelaxedR1CSSNARKForSMLib": "0x30f5b6ac519C86d39a78945341e3D13b203260f0",
+    "BatchedRelaxedR1CSSNARKLib": "0x07a6eC0b657EDbb61F939F1DBe8a0EA9429241b0",
+    "Field": "0xa1cCB5aC2207F54779E86C0ecc77D7F63ADBBf1d",
+    "Grumpkin": "0x18a0a58728A3Ebd82492Ab03aEdc634B097d30A1",
+    "ZkVerifier": "0xA49C2dF8Ea0A494823B4f4aaB2a30aF3b8Dd9777",
+    "TokenGrumpkinLib": "0x48D5830F521ff7aB3EC15fA3B3DB6a5E3C38f0e6",
+    "TokenVerificationLib": "0x1711244157D3E122236e250644B2464FA48c40D9",
+    "TokenEventLib": "0xF095607a8569a6A7bAbAF33efE960f8F944207eB"
   },
   "contracts": {
-    "HamsaL2Event": "0x573C3cdA8eD3ae499571E6934de295E4F8d6bD93",
-    "InstitutionRegistration": "0x41bA1b721B0E575Bab442Bfc14332c7a304EEF54"
+    "HamsaL2Event": "0xD09B004e3E42421755419231D74B6d3e6791Bf66",
+    "InstitutionRegistration": "0x81be1dAB94ba8D106a9F657EBE8DE81cb5E64eec",
+    "PrivateERCToken": "0x64ef38CF6F8Df84aD92c9Ee3C26D260E722DB9Ab"
   },
-  "accounts": {
-    "node3_institution_admin_address": "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-    "node4_institution_admin_address": "0x122A4F8848fB5df788340FD07fc7276cc038dC01"
-  },
+  "accounts": {},
   "metadata": {
-    "timestamp": "2025-05-18T01:51:44.531Z",
+    "timestamp": "2025-05-21T07:50:01.827Z",
     "network": "ucl_node2",
     "chainId": "1337"
   }
