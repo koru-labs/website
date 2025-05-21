@@ -115,7 +115,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             amount: amount,
             remainingAmount: consumedTokensRemainingAmount,
             supplyDecrease: supplyDecrease,
-//            owner: owner,
             proof: proof
         });
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);

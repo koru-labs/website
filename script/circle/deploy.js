@@ -18,7 +18,7 @@ const ADDRESSES = {
 };
 
 async function main() {
-    console.log("部署UCL Image9合约...");
+    console.log("Deploy UCL SandBox smart contracts...");
 
     
     let deployed = {
@@ -28,74 +28,74 @@ async function main() {
     };
 
     
-    console.log("\n=== 部署基础库 ===");
+    console.log("\n=== Deploy libraries ===");
 
-    console.log("部署Library库...");
-    try {
-        const LibraryFactory = await ethers.getContractFactory("testLibrary");
-        const library = await LibraryFactory.deploy();
-        await library.waitForDeployment();
-        console.log("Library部署到:", library.target);
-        deployed.libraries.Library = library.target;
-    } catch (error) {
-        console.error("Library部署失败:", error.message);
-    }
+    // console.log("部署Library库...");
+    // try {
+    //     const LibraryFactory = await ethers.getContractFactory("testLibrary");
+    //     const library = await LibraryFactory.deploy();
+    //     await library.waitForDeployment();
+    //     console.log("Library部署到:", library.target);
+    //     deployed.libraries.Library = library.target;
+    // } catch (error) {
+    //     console.error("Library部署失败:", error.message);
+    // }
 
-    console.log("部署Fr库...");
+    console.log("Deploy Fr Lib...");
     try {
         const FrFactory = await ethers.getContractFactory("FrOps");
         const fr = await FrFactory.deploy();
         await fr.waitForDeployment();
-        console.log("Fr部署到:", fr.target);
+        console.log("Fr Lib is deployed at :", fr.target);
         deployed.libraries.Fr = fr.target;
     } catch (error) {
-        console.error("Fr部署失败:", error.message);
+        console.error("Fr deployment failed:", error.message);
     }
 
-    console.log("部署Fq库...");
+    console.log("Deploy Fq Lib...");
     try {
         const FqFactory = await ethers.getContractFactory("FqOps");
         const fq = await FqFactory.deploy();
         await fq.waitForDeployment();
-        console.log("Fq部署到:", fq.target);
+        console.log("Fq is deployed at :", fq.target);
         deployed.libraries.Fq = fq.target;
     } catch (error) {
-        console.error("Fq部署失败:", error.message);
+        console.error("Fq deployment failed:", error.message);
     }
 
     
-    console.log("\n=== 部署Nova相关库 ===");
+    console.log("\n=== Deploy Nova Libs ===");
 
-    console.log("部署RelaxedR1CSSNARKForSMLib库...");
+    console.log("Deploy RelaxedR1CSSNARKForSMLib...");
     try {
         const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
         const relaxedR1CSSNARKForSMLib = await RelaxedR1CSSNARKForSMLibFactory.deploy();
         await relaxedR1CSSNARKForSMLib.waitForDeployment();
-        console.log("RelaxedR1CSSNARKForSMLib部署到:", relaxedR1CSSNARKForSMLib.target);
+        console.log("RelaxedR1CSSNARKForSMLib is deployed at :", relaxedR1CSSNARKForSMLib.target);
         deployed.libraries.RelaxedR1CSSNARKForSMLib = relaxedR1CSSNARKForSMLib.target;
     } catch (error) {
-        console.error("RelaxedR1CSSNARKForSMLib部署失败:", error.message);
+        console.error("RelaxedR1CSSNARKForSMLib deployment failed:", error.message);
     }
 
-    console.log("部署BatchedRelaxedR1CSSNARKLib库...");
+    console.log("Deploy BatchedRelaxedR1CSSNARKLib...");
     try {
         const BatchedRelaxedR1CSSNARKLibFactory = await ethers.getContractFactory("BatchedRelaxedR1CSSNARKLib");
         const batchedRelaxedR1CSSNARKLib = await BatchedRelaxedR1CSSNARKLibFactory.deploy();
         await batchedRelaxedR1CSSNARKLib.waitForDeployment();
-        console.log("BatchedRelaxedR1CSSNARKLib部署到:", batchedRelaxedR1CSSNARKLib.target);
+        console.log("BatchedRelaxedR1CSSNARKLib is deployed at :", batchedRelaxedR1CSSNARKLib.target);
         deployed.libraries.BatchedRelaxedR1CSSNARKLib = batchedRelaxedR1CSSNARKLib.target;
     } catch (error) {
-        console.error("BatchedRelaxedR1CSSNARKLib部署失败:", error.message);
+        console.error("BatchedRelaxedR1CSSNARKLib deployment failed:", error.message);
     }
 
-    console.log("部署Field库...");
+    console.log("Deploy Field Lib...");
     const Field = await ethers.getContractFactory("Field");
     const field = await Field.deploy();
     await field.waitForDeployment();
-    console.log("Field部署到:", field.target);
+    console.log("Field is deployed at :", field.target);
     deployed.libraries.Field = field.target;
 
-    console.log("部署Grumpkin库...");
+    console.log("Deploy Grumpkin Lib...");
     const Grumpkin = await ethers.getContractFactory("Grumpkin", {
         libraries: {
             "Field": field.target,
@@ -104,10 +104,10 @@ async function main() {
     });
     const grumpkin = await Grumpkin.deploy();
     await grumpkin.waitForDeployment();
-    console.log("Grumpkin部署到:", grumpkin.target);
+    console.log("Grumpkin is deployed at :", grumpkin.target);
     deployed.libraries.Grumpkin = grumpkin.target;
 
-    console.log("部署ZkVerifier库...");
+    console.log("Deploy ZkVerifier Lib...");
     try {
         const ZkVerifierFactory = await ethers.getContractFactory("ZkVerifier", {
             libraries: {
@@ -117,16 +117,15 @@ async function main() {
         });
         const zkVerifier = await ZkVerifierFactory.deploy();
         await zkVerifier.waitForDeployment();
-        console.log("ZkVerifier部署到:", zkVerifier.target);
+        console.log("ZkVerifier is deployed at:", zkVerifier.target);
         deployed.libraries.ZkVerifier = zkVerifier.target;
     } catch (error) {
-        console.error("ZkVerifier部署失败:", error.message);
+        console.error("ZkVerifier deployment failed:", error.message);
     }
 
     
-    console.log("\n=== 部署TokenSc相关库 ===");
-
-    console.log("部署TokenGrumpkinLib库...");
+    console.log("\n=== Deploy TokenSc Libs ===");
+    console.log("Deploy TokenGrumpkinLib...");
     try {
         const TokenGrumpkinLibFactory = await ethers.getContractFactory("TokenGrumpkinLib", {
             libraries: {
@@ -135,63 +134,62 @@ async function main() {
         });
         const tokenGrumpkinLib = await TokenGrumpkinLibFactory.deploy();
         await tokenGrumpkinLib.waitForDeployment();
-        console.log("TokenGrumpkinLib部署到:", tokenGrumpkinLib.target);
+        console.log("TokenGrumpkinLib is deployed at :", tokenGrumpkinLib.target);
         deployed.libraries.TokenGrumpkinLib = tokenGrumpkinLib.target;
     } catch (error) {
-        console.error("TokenGrumpkinLib部署失败:", error.message);
+        console.error("TokenGrumpkinLib deployment failed:", error.message);
     }
 
-    console.log("部署TokenVerificationLib库...");
+    console.log("Deploy TokenVerificationLib...");
     try {
         const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
             libraries: {
                 "ZkVerifier": deployed.libraries.ZkVerifier,
-                
             }
         });
         const tokenVerificationLib = await TokenVerificationLibFactory.deploy();
         await tokenVerificationLib.waitForDeployment();
-        console.log("TokenVerificationLib部署到:", tokenVerificationLib.target);
+        console.log("TokenVerificationLib is deployed at :", tokenVerificationLib.target);
         deployed.libraries.TokenVerificationLib = tokenVerificationLib.target;
     } catch (error) {
-        console.error("TokenVerificationLib部署失败:", error.message);
+        console.error("TokenVerificationLib deployment failed:", error.message);
     }
 
     if (ADDRESSES.TOKEN_EVENT_LIB == "") {
-        console.log("部署TokenEventLib库...");
+        console.log("Deploy TokenEventLib...");
         try {
             const TokenEventLibFactory = await ethers.getContractFactory("TokenEventLib");
             const tokenEventLib = await TokenEventLibFactory.deploy();
             await tokenEventLib.waitForDeployment();
-            console.log("TokenEventLib部署到:", tokenEventLib.target);
+            console.log("TokenEventLib is deployed at :", tokenEventLib.target);
             deployed.libraries.TokenEventLib = tokenEventLib.target;
 
         } catch (error) {
-            console.error("TokenEventLib部署失败:", error.message);
+            console.error("TokenEventLib deployment failed:", error.message);
         }
     } else {
-        console.log("使用已部署的TokenEventLib库:", ADDRESSES.TOKEN_EVENT_LIB);
+        console.log("Use already deployed TokenEventLib:", ADDRESSES.TOKEN_EVENT_LIB);
         deployed.libraries.TokenEventLib = ADDRESSES.TOKEN_EVENT_LIB;
     }
 
     
-    console.log("\n=== 部署业务合约 ===");
+    console.log("\n=== Deploy business smart contracts ===");
 
     
     if (ADDRESSES.HAMSAL2EVENT == "") {
-        console.log("部署HamsaL2Event合约...");
+        console.log("Deploy HamsaL2Event...");
 
         const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
         const hamsaL2Event = await HamsaL2EventFactory.deploy();
         await hamsaL2Event.waitForDeployment();
-        console.log("HamsaL2Event部署到:", hamsaL2Event.target);
+        console.log("HamsaL2Event is deploy at :", hamsaL2Event.target);
         deployed.contracts.HamsaL2Event = hamsaL2Event.target;
     } else {
         deployed.contracts.HamsaL2Event = ADDRESSES.HAMSAL2EVENT
     }
 
     
-    console.log("部署InstitutionRegistration合约...");
+    console.log("Deploy InstitutionRegistration smart contract ...");
     const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
@@ -209,7 +207,7 @@ async function main() {
     const signatureChecker = await SignatureChecker.deploy();
     await signatureChecker.waitForDeployment()
 
-    console.log("部署PrivateERCToken合约...");
+    console.log("Deploy PrivateERCToken smart contract...");
     const PrivateERCTokenFactory = await ethers.getContractFactory("HamsaUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
@@ -224,12 +222,12 @@ async function main() {
         !deployed.libraries.TokenVerificationLib ||
         !deployed.libraries.Grumpkin ||
         !institutionRegistration.target) {
-        throw new Error("部分库或InstitutionRegistration合约部署失败，无法部署PrivateERCToken合约");
+        throw new Error("Deployment of HamsaUSDC failed");
     }
 
     const privateERCToken = await PrivateERCTokenFactory.deploy();
     await privateERCToken.waitForDeployment();
-    console.log("PrivateERCToken部署到:", privateERCToken.target);
+    console.log("PrivateERCToken is deployed at :", privateERCToken.target);
     deployed.contracts.PrivateERCToken = privateERCToken.target;
 
     
@@ -258,13 +256,12 @@ async function main() {
     await privateERCToken.configurePrivacyMinter(ADDRESSES.MINTER,minterAllowedAmount);
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
 
-    console.log("\n部署完成！");
-
+    console.log("\nDeployment is done ！");
     return deployed;
 }
 
 async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
-    console.log("\n=== 保存部署信息 ===");
+    console.log("\n=== Save deployment information ===");
 
     deployed.metadata = {
         timestamp: new Date().toISOString(),
@@ -280,7 +277,7 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 
     const filepath = path.join(deploymentsDir, "image9.json");
     fs.writeFileSync(filepath, JSON.stringify(deployed, null, 2));
-    console.log(`部署信息已保存到: ${filepath}`);
+    console.log(`deployment information is saved to : ${filepath}`);
 }
 
 
@@ -339,14 +336,14 @@ async function registerInstitution(institutionRegistration) {
         }
     ]
     for (let i = 0; i < institutions.length; i++) {
-        console.log(`注册银行 ${institutions[i].address} 到InstitutionRegistration合约...`);
+        console.log(`Register institution ${institutions[i].address} in InstitutionRegistration smart contract...`);
         let regTx = await institutionRegistration.registerInstitution(
             institutions[i].address,
             institutions[i].name,
             institutions[i].publicKey
         );
         await regTx.wait();
-        console.log(`银行 ${institutions[i].address} 已注册到InstitutionRegistration`);
+        console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionRegistration`);
 
         
         let userRegTx = await institutionRegistration.registerUser(
@@ -354,7 +351,7 @@ async function registerInstitution(institutionRegistration) {
             institutions[i].address
         );
         await userRegTx.wait();
-        console.log(`银行 ${institutions[i].address} 已作为用户注册到其自己的管理下`);
+        console.log(`Registered user ${institutions[i].address} under under Bank ${institutions[i].address}`);
     }
 }
 
@@ -362,6 +359,6 @@ async function registerInstitution(institutionRegistration) {
 main()
     .then(() => process.exit(0))
     .catch((error) => {
-        console.error("部署过程中发生错误:", error);
+        console.error("Deployment failed: ", error);
         process.exit(1);
     });
