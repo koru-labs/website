@@ -294,7 +294,12 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         address to,
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external {
+        bytes calldata proof)
+        external
+        whenNotPaused
+        notBlacklisted(msg.sender)
+        notBlacklisted(to)
+    {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
@@ -439,14 +444,14 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     }
 
     // Compatible with FiatTokenV1 contracts
-    function configureMinter(address minter, uint256 minterAllowedAmount)
+    function configureMinter(address minter, TokenModel.ElGamal memory minterAllowedAmount)
     external
     whenNotPaused
     onlyMasterMinter
     returns (bool)
     {
         minters[minter] = true;
-        minterAllowed[minter] = minterAllowedAmount;
+        privateMinterAllowed[minter] = minterAllowedAmount;
         return true;
     }
 
