@@ -32,7 +32,6 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     uint256 _numberOfTotalSupplyChanges;
 
     mapping(address => bool) internal minters;
-    mapping(address => uint256) internal minterAllowed;
     
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
 
