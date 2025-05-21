@@ -252,7 +252,11 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
     function getAllowance(address accountAddress,address spender) internal returns (TokenModel.Allowance memory) {
         TokenModel.Account storage account = accounts[accountAddress];
-        return account.allowances[spender];
+        TokenModel.Allowance memory allowance = account.allowances[spender];
+        if (!isNotZeroAllowance(allowance)) {
+            return TokenModel.Allowance(0, 0, 0, 0, 0, 0);
+        }
+        return allowance;
     }
 
     function addAllowance(address accountAddress,address spender, TokenModel.Allowance memory allowance) internal {
