@@ -514,4 +514,8 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     {
         return _deprecatedBlacklisted[_account];
     }
+    
+    function updateDecryptedTotalSupply(uint256 _decryptedTotalSupply) external {
+        decryptedTotalSupply = _decryptedTotalSupply;
+    }
 }
