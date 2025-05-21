@@ -2,6 +2,7 @@ const hre = require("hardhat");
 const { ethers } = hre;
 const fs = require("fs");
 const path = require("path");
+const {address} = require("hardhat/internal/core/config/config-validation");
 
 
 const ADDRESSES = {
@@ -10,7 +11,7 @@ const ADDRESSES = {
     MASTER_MINTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
     PAUSER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
     BLACKLISTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-
+    MINTER: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
     
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: ""
@@ -241,30 +242,13 @@ async function main() {
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
 
-    
-    const privateERCToken2 = await PrivateERCTokenFactory.deploy();
-    await privateERCToken2.waitForDeployment();
-    console.log("PrivateERCToken2 deployed to:", privateERCToken2.target);
-    deployed.contracts.PrivateERCToken2 = privateERCToken2.target;
-
-    
-    console.log("Initializing PrivateERCToken2...");
-    const initTx2 = await privateERCToken2.initialize(
-        "Private ERC Token 2", 
-        "PET2", 
-        "USD", 
-        6, 
-        ADDRESSES.MASTER_MINTER,
-        ADDRESSES.PAUSER,
-        ADDRESSES.BLACKLISTER,
-        ADDRESSES.OWNER,
-        0, 
-        event_address,
-        institutionRegistration.target
-    );
-    await initTx2.wait();
-    console.log("PrivateERCToken2 initialized successfully");
-
+    const minterAllowedAmount =   {
+        "cl_x": ethers.toBigInt("0x0674c295e0f0892fbf309a316af3adacf8023d5e597bf55533806bd0362170c6"),
+        "cl_y": ethers.toBigInt("0x0cb84b5c84cadfa88f4edf89d2fcf051c100aa015a80c202f517a008296c0359"),
+        "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
+        "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
+    }
+    await privateERCToken.configureMinter(ADDRESSES.MINTER,minterAllowedAmount);
     
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
 
