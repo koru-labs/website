@@ -13,8 +13,8 @@ const ADDRESSES = {
     BLACKLISTER: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
     MINTER: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
     
-    TOKEN_EVENT_LIB: "",
-    HAMSAL2EVENT: ""
+    TOKEN_EVENT_LIB: "0xc46957982F6420848f9f1db0b6C3F5228a6842c4",
+    HAMSAL2EVENT: "0x9aC39b00eE839E8D11718C68D40eCF29fAD8769a"
 };
 
 async function main() {
@@ -165,7 +165,6 @@ async function main() {
             await tokenEventLib.waitForDeployment();
             console.log("TokenEventLib部署到:", tokenEventLib.target);
             deployed.libraries.TokenEventLib = tokenEventLib.target;
-
 
         } catch (error) {
             console.error("TokenEventLib部署失败:", error.message);
