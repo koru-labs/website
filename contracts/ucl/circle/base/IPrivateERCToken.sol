@@ -12,10 +12,6 @@ interface IPrivateERCToken {
   //  doc: function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external;
   function privateMint(address to, TokenModel.ElGamal memory amount, TokenModel.ElGamal memory supply, bytes calldata proof) external returns (bool);
 
-  // ERC: function totalSupply() external  view returns (uint256);
-  //    function privateTotalSupply() external view returns (TokenModel.ElGamal memory);
-  function privateSetTotalSupply(uint256 totalSupply) external;
-
   // ERC: function balanceOf(address account) external view returns (uint256);
   function privateBalanceOf(address owner) external returns (TokenModel.ElGamal memory);
 

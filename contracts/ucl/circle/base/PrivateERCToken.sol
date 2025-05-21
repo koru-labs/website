@@ -27,12 +27,11 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     IL2Event _l2Event;
     mapping(address=>TokenModel.Account) accountTokens;
     mapping(address=>TokenModel.Account2) accounts;
-    uint256 public privateTotalSupply;
+
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
 
     mapping(address => bool) internal minters;
-    
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
 
     // Compatible with FiatTokenV1 contracts
@@ -159,11 +158,6 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
     function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
         return keccak256(abi.encode(elgamal));
-    }
-
-
-    function privateSetTotalSupply(uint256 totalSupply) external {
-        privateTotalSupply = totalSupply;
     }
 
     function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
