@@ -29,7 +29,8 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
     TokenModel.ElGamal _privateTotalSupply;
 
-    uint256 _numberOfTotalSupplyChanges;
+    uint256 _numberOfTotalSupplyChanges;// TODO: What is the purpose of this variable?
+    uint256 public decryptedTotalSupply;
 
     mapping(address => bool) internal minters;
 
