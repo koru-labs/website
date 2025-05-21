@@ -8,114 +8,95 @@ import "../lib/TokenEventLib.sol";
 import "./IPrivateERCToken.sol";
 import "../lib/TokenVerificationLib.sol";
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant BANK_ROLE = keccak256("BANK_ROLE");
+import { Ownable } from "./Ownable.sol";
+import { Pausable } from "./Pausable.sol";
+import { Blacklistable } from "./Blacklistable.sol";
+
+contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
+    // FiatTokenV1 compatible fields
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+    string public currency;
+    address public masterMinter;
+    bool internal initialized;
 
     InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-    address scOwner;// For example, it's circle
-    mapping(address=>TokenModel.Account) accountTokens;
-    mapping(address=>TokenModel.Account2) accounts;
-    uint256 public privateTotalSupply;
+    mapping(address=>TokenModel.Account) accounts;
+
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
 
-    mapping(address => bool) public isInstitutionAccount;
-    mapping(address => bool) public blacklisted;
-    
+    mapping(address => bool) internal minters;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
 
-    constructor(TokenModel.TokenSCTypeEnum tokenSCType,IL2Event l2Event, InstitutionRegistration institutionRegistration) {
-        scOwner = msg.sender;
+    // Compatible with FiatTokenV1 contracts
+    function initialize(
+        string memory tokenName,
+        string memory tokenSymbol,
+        string memory tokenCurrency,
+        uint8 tokenDecimals,
+        address newMasterMinter,
+        address newPauser,
+        address newBlacklister,
+        address newOwner,
+        TokenModel.TokenSCTypeEnum tokenSCType,
+        IL2Event l2Event,
+        InstitutionRegistration institutionRegistration
+    ) public {
+        require(!initialized, "FiatToken: contract is already initialized");
+        require(
+            newMasterMinter != address(0),
+            "FiatToken: new masterMinter is the zero address"
+        );
+        require(
+            newPauser != address(0),
+            "FiatToken: new pauser is the zero address"
+        );
+        require(
+            newBlacklister != address(0),
+            "FiatToken: new blacklister is the zero address"
+        );
+        require(
+            newOwner != address(0),
+            "FiatToken: new owner is the zero address"
+        );
+
+        name = tokenName;
+        symbol = tokenSymbol;
+        currency = tokenCurrency;
+        decimals = tokenDecimals;
+        masterMinter = newMasterMinter;
+        pauser = newPauser;
+        blacklister = newBlacklister;
+        setOwner(newOwner);
+        initialized = true;
+
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
 
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
-        
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
-        _grantRole(BANK_ROLE, msg.sender);
-    }
-    
-    function pause() external onlyRole(PAUSER_ROLE) {
-        _pause();
-    }
-    
-    function unpause() external onlyRole(PAUSER_ROLE) {
-        _unpause();
-    }
-    
-    function addToBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        blacklisted[account] = true;
-    }
-    
-    function removeFromBlacklist(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        blacklisted[account] = false;
-    }
-    
-    function addInstitutionAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        isInstitutionAccount[account] = true;
-        _grantRole(BANK_ROLE, account);
     }
 
-    function removeInstitutionAccount(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        isInstitutionAccount[account] = false;
-        _revokeRole(BANK_ROLE, account);
-    }
-    
-  
-    function setInstitutionAllowance(address institution, TokenModel.ElGamal calldata allowanceAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
-        privateMinterAllowed[institution] = allowanceAmount;
-    }
-    
-    function removeInstitutionAllowance(address institution) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
-        delete privateMinterAllowed[institution];
-    }
-    
-    modifier notBlacklisted(address account) {
-        require(!blacklisted[account], "PrivateERCToken: account is blacklisted");
-        _;
-    }
-    
-    modifier onlyInstitutionAccount() {
-        require(hasRole(BANK_ROLE, msg.sender), "PrivateERCToken: caller is not a institution account");
-        _;
-    }
-    
-    modifier onlySCOwner() {
-        require(msg.sender == scOwner, "PrivateERCToken: caller is not the owner");
+    // Compatible with FiatTokenV1 contracts
+    modifier onlyMinters() {
+        require(minters[msg.sender], "FiatToken: caller is not a minter");
         _;
     }
 
-    /**
-     * @notice Mints private fiat tokens to an address and updates the total supply.
-       * @param to The address that will receive the minted tokens.
-       * @param amount The amount of tokens to mint. Must be less than or equal
-       * to the minterAllowance of the caller.
-       * @param supplyIncrease The amount of tokens to increment in total suplly.
-       * @param proof The proof.
-       * @return True if the operation was successful.
-       */
     function privateMint(
         address to,
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory supplyIncrease,
         bytes calldata proof
-    ) 
-        external 
+    )
+        external
         whenNotPaused
-        onlyRole(MINTER_ROLE)
+        onlyMinters
         notBlacklisted(msg.sender)
-        notBlacklisted(to) 
-        onlyInstitutionAccount
+        notBlacklisted(to)
         returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -154,13 +135,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     // for debug
     function getAccountToken(address account,  TokenModel.ElGamal memory amount) external view returns (TokenModel.ElGamal memory) {
         bytes32 tokenId = hashElgamal(amount);
-        TokenModel.Account2 storage account2 = accounts[account];
+        TokenModel.Account storage account2 = accounts[account];
         return account2.tokens[tokenId];
     }
 
     // for debug
     function getAccountAllowance(address account, address spender) external view returns (TokenModel.Allowance memory) {
-        TokenModel.Account2 storage account2 = accounts[account];
+        TokenModel.Account storage account2 = accounts[account];
         return account2.allowances[spender];
     }
 
@@ -175,11 +156,6 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
     function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
         return keccak256(abi.encode(elgamal));
-    }
-
-
-    function privateSetTotalSupply(uint256 totalSupply) onlySCOwner external {
-        privateTotalSupply = totalSupply;
     }
 
     function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
@@ -218,7 +194,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     }
 
     function addAllowance(address account,address spender, TokenModel.Allowance memory allowance) internal {
-        TokenModel.Account2 storage account = accounts[account];
+        TokenModel.Account storage account = accounts[account];
         account.allowances[spender] = allowance;
     }
 
@@ -278,7 +254,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     }
 
     function returnUnspentAllowance(address accountAddress,  address spender) internal {
-        TokenModel.Account2 storage account = accounts[accountAddress];
+        TokenModel.Account storage account = accounts[accountAddress];
         TokenModel.Allowance memory allowance = account.allowances[spender];
         if(isNotZeroAllowance(allowance)){
             TokenModel.ElGamal memory token = TokenModel.ElGamal({
@@ -300,21 +276,17 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
         cr_y: 0
         });
     }
-    
-    function getInstitutionAllowance(address institution) external view returns (TokenModel.ElGamal memory) {
-        require(isInstitutionAccount[institution], "PrivateERCToken: address is not a institution account");
-        return privateMinterAllowed[institution];
-    }
-
-    function getAccountTokenEntity(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory) {
-        return accountTokens[owner].tokens[tokenId];
-    }
 
     function privateTransfer(bytes32[] memory consumedTokens,
         address to,
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external {
+        bytes calldata proof)
+        external
+        whenNotPaused
+        notBlacklisted(msg.sender)
+        notBlacklisted(to)
+    {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
@@ -365,7 +337,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
 
     function addTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
 
         toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, amount);
@@ -373,13 +345,13 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
     }
 
     function addToken(address to, TokenModel.ElGamal memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
         toAccount.tokens[tokenId] = amount;
     }
 
     function removeTokensWithBalance(address to, bytes32[] memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
 
         for (uint256 i = 0; i < amount.length; i++) {
             toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.tokens[amount[i]]);
@@ -397,7 +369,7 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
 
 
     function removeTokensWoChangeBalance(address to, bytes32[] memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
 
         for (uint256 i = 0; i < amount.length; i++) {
             delete toAccount.tokens[amount[i]];
@@ -442,5 +414,71 @@ contract PrivateERCToken is IPrivateERCToken, Pausable, AccessControl {
    */
     function isEqualAllowance(TokenModel.Allowance memory a, TokenModel.Allowance memory b) internal pure returns (bool) {
         return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr1_x == b.cr1_x && a.cr1_y == b.cr1_y && a.cr2_x == b.cr2_x && a.cr2_y == b.cr2_y;
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    modifier onlyMasterMinter() {
+        require(
+            msg.sender == masterMinter,
+            "FiatToken: caller is not the masterMinter"
+        );
+        _;
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function isMinter(address account) external view returns (bool) {
+        return minters[account];
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function configureMinter(address minter, TokenModel.ElGamal memory minterAllowedAmount)
+    external
+    whenNotPaused
+    onlyMasterMinter
+    returns (bool)
+    {
+        minters[minter] = true;
+        privateMinterAllowed[minter] = minterAllowedAmount;
+        return true;
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function removeMinter(address minter)
+    external
+    onlyMasterMinter
+    returns (bool)
+    {
+        minters[minter] = false;
+        privateMinterAllowed[minter] = TokenModel.ElGamal(0, 0, 0, 0);
+        return true;
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function _blacklist(address _account) internal override {
+        _setBlacklistState(_account, true);
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function _unBlacklist(address _account) internal override {
+        _setBlacklistState(_account, false);
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function _setBlacklistState(address _account, bool _shouldBlacklist)
+    internal
+    virtual
+    {
+        _deprecatedBlacklisted[_account] = _shouldBlacklist;
+    }
+
+    // Compatible with FiatTokenV1 contracts
+    function _isBlacklisted(address _account)
+    internal
+    virtual
+    override
+    view
+    returns (bool)
+    {
+        return _deprecatedBlacklisted[_account];
     }
 }

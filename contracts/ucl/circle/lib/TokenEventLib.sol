@@ -20,7 +20,7 @@ library TokenEventLib {
             Deployer: deployer
         });
         bytes memory body = abi.encode(e);
-        _l2Event.sendEvent(tokenSCAddress, address(0), "TokenSCCreated", body);
+        _l2Event.sendEvent(tokenSCAddress, deployer, "TokenSCCreated", body);
     }
 
     function triggerTokenSupplyUpdatedEvent(
