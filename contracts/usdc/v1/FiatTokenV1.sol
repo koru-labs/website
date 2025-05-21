@@ -22,18 +22,18 @@ import { AbstractFiatTokenV1 } from "./AbstractFiatTokenV1.sol";
 import { Ownable } from "./Ownable.sol";
 import { Pausable } from "./Pausable.sol";
 import { Blacklistable } from "./Blacklistable.sol";
+import  {Mintable} from "./Mintable.sol";
 
 /**
  * @title FiatToken
  * @dev ERC20 Token backed by fiat reserves
  */
-contract FiatTokenV1 is AbstractFiatTokenV1, Ownable, Pausable, Blacklistable {
+contract FiatTokenV1 is AbstractFiatTokenV1, Ownable, Pausable, Blacklistable, Mintable {
 
     string public name;
     string public symbol;
     uint8 public decimals;
     string public currency;
-    address public masterMinter;
     bool internal initialized;
 
     /// @dev A mapping that stores the balance and blacklist states for a given address.
@@ -42,8 +42,6 @@ contract FiatTokenV1 is AbstractFiatTokenV1, Ownable, Pausable, Blacklistable {
     mapping(address => uint256) internal balanceAndBlacklistStates;
     mapping(address => mapping(address => uint256)) internal allowed;
     uint256 internal totalSupply_ = 0;
-    mapping(address => bool) internal minters;
-    mapping(address => uint256) internal minterAllowed;
 
     event Mint(address indexed minter, address indexed to, uint256 amount);
     event Burn(address indexed burner, uint256 amount);
@@ -101,13 +99,6 @@ contract FiatTokenV1 is AbstractFiatTokenV1, Ownable, Pausable, Blacklistable {
         initialized = true;
     }
 
-    /**
-     * @dev Throws if called by any account other than a minter.
-     */
-    modifier onlyMinters() {
-        require(minters[msg.sender], "FiatToken: caller is not a minter");
-        _;
-    }
 
     /**
      * @notice Mints fiat tokens to an address.
@@ -141,16 +132,6 @@ contract FiatTokenV1 is AbstractFiatTokenV1, Ownable, Pausable, Blacklistable {
         return true;
     }
 
-    /**
-     * @dev Throws if called by any account other than the masterMinter
-     */
-    modifier onlyMasterMinter() {
-        require(
-            msg.sender == masterMinter,
-            "FiatToken: caller is not the masterMinter"
-        );
-        _;
-    }
 
     /**
      * @notice Gets the minter allowance for an account.
