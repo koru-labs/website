@@ -73,20 +73,10 @@ library TokenModel {
         uint256 rollbackTokenId;
     }
 
-    struct Account2 {
+    struct Account {
         ElGamal balance;
         mapping(bytes32 => ElGamal) tokens;
         mapping(address => Allowance) allowances;
-    }
-
-    struct Account {
-        address addr;
-//        mapping(uint256 => TokenEntity) inBox;
-//        mapping(uint256 => TokenEntity) outBox;
-//        mapping(uint256 => TokenEntity) apvBox;
-        mapping(uint256 => TokenEntity) tokens;
-
-        mapping(address=>ElGamal) allowance;
     }
 
     struct BankAllowances {

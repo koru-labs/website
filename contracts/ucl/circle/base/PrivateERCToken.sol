@@ -24,7 +24,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
     InstitutionRegistration private _institutionRegistration;
     IL2Event _l2Event;
-    mapping(address=>TokenModel.Account2) accounts;
+    mapping(address=>TokenModel.Account) accounts;
 
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
@@ -135,13 +135,13 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     // for debug
     function getAccountToken(address account,  TokenModel.ElGamal memory amount) external view returns (TokenModel.ElGamal memory) {
         bytes32 tokenId = hashElgamal(amount);
-        TokenModel.Account2 storage account2 = accounts[account];
+        TokenModel.Account storage account2 = accounts[account];
         return account2.tokens[tokenId];
     }
 
     // for debug
     function getAccountAllowance(address account, address spender) external view returns (TokenModel.Allowance memory) {
-        TokenModel.Account2 storage account2 = accounts[account];
+        TokenModel.Account storage account2 = accounts[account];
         return account2.allowances[spender];
     }
 
@@ -194,7 +194,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     }
 
     function addAllowance(address account,address spender, TokenModel.Allowance memory allowance) internal {
-        TokenModel.Account2 storage account = accounts[account];
+        TokenModel.Account storage account = accounts[account];
         account.allowances[spender] = allowance;
     }
 
@@ -254,7 +254,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     }
 
     function returnUnspentAllowance(address accountAddress,  address spender) internal {
-        TokenModel.Account2 storage account = accounts[accountAddress];
+        TokenModel.Account storage account = accounts[accountAddress];
         TokenModel.Allowance memory allowance = account.allowances[spender];
         if(isNotZeroAllowance(allowance)){
             TokenModel.ElGamal memory token = TokenModel.ElGamal({
@@ -337,7 +337,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
 
     function addTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
 
         toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, amount);
@@ -345,13 +345,13 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
     }
 
     function addToken(address to, TokenModel.ElGamal memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
         toAccount.tokens[tokenId] = amount;
     }
 
     function removeTokensWithBalance(address to, bytes32[] memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
 
         for (uint256 i = 0; i < amount.length; i++) {
             toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.tokens[amount[i]]);
@@ -369,7 +369,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
 
 
     function removeTokensWoChangeBalance(address to, bytes32[] memory amount) internal {
-        TokenModel.Account2 storage toAccount = accounts[to];
+        TokenModel.Account storage toAccount = accounts[to];
 
         for (uint256 i = 0; i < amount.length; i++) {
             delete toAccount.tokens[amount[i]];
