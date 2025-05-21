@@ -110,6 +110,7 @@ library TokenModel {
         ElGamal consumedAmount;
         ElGamal amount;
         ElGamal remainingAmount;
+        ElGamal supplyDecrease;
         bytes proof;
     }
 

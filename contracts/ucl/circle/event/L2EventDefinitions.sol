@@ -116,3 +116,24 @@ import "../model/TokenModel.sol";
         TokenModel.ElGamal amount;
         address from;
     }
+
+    struct TokenBurnedEvent{
+        bytes32[]  consumedTokens;
+        TokenModel.ElGamal  amount;
+        TokenModel.ElGamal  consumedTokensRemainingAmount;
+    }
+
+    struct AllowanceUpdatedEvent {
+        TokenModel.Allowance oldAllowance;
+        TokenModel.ElGamal increaseAmount;
+        TokenModel.ElGamal decreaseAmount;
+        TokenModel.Allowance newAllowance;
+        address msgSender;
+    }
+
+    struct AllowanceReceivedEvent {
+        address spender;
+        TokenModel.Allowance allowance;
+        TokenModel.Allowance oldAllowance;
+        TokenModel.Allowance newAllowance;
+    }

@@ -173,4 +173,65 @@ library TokenEventLib {
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
     }
+
+    // triggerTokenBurnedEvent
+    function triggerTokenBurnedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        bytes32[] memory consumedTokens,
+        TokenModel.ElGamal memory amount,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount
+    )public{
+        TokenBurnedEvent memory e = TokenBurnedEvent({
+            consumedTokens: consumedTokens,
+            amount: amount,
+            consumedTokensRemainingAmount: consumedTokensRemainingAmount
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenBurned", body);
+    }
+
+    // triggerAllowanceUpdatedEvent
+    function triggerAllowanceUpdatedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        TokenModel.Allowance memory oldAllowance,
+        TokenModel.ElGamal memory increaseAmount,
+        TokenModel.ElGamal memory decreaseAmount,
+        TokenModel.Allowance memory newAllowance,
+        address msgSender
+    )public{
+        AllowanceUpdatedEvent memory e = AllowanceUpdatedEvent({
+            oldAllowance: oldAllowance,
+            increaseAmount: increaseAmount,
+            decreaseAmount: decreaseAmount,
+            newAllowance: newAllowance,
+            msgSender: msgSender
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "AllowanceUpdated", body);
+    }
+
+    // triggerAllowanceReceivedEvent
+    function triggerAllowanceReceivedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        address spender,
+        TokenModel.Allowance memory allowance,
+        TokenModel.Allowance memory oldAllowance,
+        TokenModel.Allowance memory newAllowance
+    ) public{
+        AllowanceReceivedEvent memory e = AllowanceReceivedEvent({
+            spender: spender,
+            allowance: allowance,
+            oldAllowance: oldAllowance,
+            newAllowance: newAllowance
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "AllowanceReceived", body);
+    }
+
 } 
