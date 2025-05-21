@@ -148,6 +148,7 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
         require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+
         TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
         TokenModel.VerifyTokenBurnParams memory params = TokenModel.VerifyTokenBurnParams({
             institutionRegistration: _institutionRegistration,
@@ -155,7 +156,8 @@ contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable{
             consumedAmount: consumedAmount,
             amount: amount,
             remainingAmount: consumedTokensRemainingAmount,
-            supplyDecrease: supplyDecrease,// todo verify
+            supplyDecrease: supplyDecrease,
+//            owner: owner,
             proof: proof
         });
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);

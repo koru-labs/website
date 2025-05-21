@@ -242,6 +242,10 @@ library TokenVerificationLib {
         TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
         require(from.x == z0Values[4] && from.y == z0Values[5], "from public key not match");
 
+        // verify owner 6-7
+//        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
+//        require(owner.x == z0Values[6] && owner.y == z0Values[7], "owner public key not match");
+
         // zn verify
         uint256[] memory znValues = new uint256[](12);
         znValues[0] = Fr.unwrap(zn[0]);
@@ -257,13 +261,17 @@ library TokenVerificationLib {
         znValues[10] = Fr.unwrap(zn[10]);
         znValues[11] = Fr.unwrap(zn[11]);
 
-        // verify amount 0-3
-        TokenModel.ElGamal memory amount = params.amount;
-        require(amount.cl_x == znValues[0] && amount.cl_y == znValues[1] && amount.cr_x == znValues[2] && amount.cr_y == znValues[3], "amount not match");
+        // verify supplyDecrease 0-3
+        TokenModel.ElGamal memory supplyDecrease = params.supplyDecrease;
+        require(supplyDecrease.cl_x == znValues[0] && supplyDecrease.cl_y == znValues[1] && supplyDecrease.cr_x == znValues[2] && supplyDecrease.cr_y == znValues[3], "supplyDecrease not match");
 
         // verify remainingAmount 4-7
         TokenModel.ElGamal memory remainingAmount = params.remainingAmount;
         require(remainingAmount.cl_x == znValues[4] && remainingAmount.cl_y == znValues[5] && remainingAmount.cr_x == znValues[6] && remainingAmount.cr_y == znValues[7], "remainingAmount not match");
+
+        // verify amount 8-11
+        TokenModel.ElGamal memory amount = params.amount;
+        require(amount.cl_x == znValues[8] && amount.cl_y == znValues[9] && amount.cr_x == znValues[10] && amount.cr_y == znValues[11], "amount not match");
 
         return (true, result, znValues);
     }

@@ -111,6 +111,7 @@ library TokenModel {
         ElGamal amount;
         ElGamal remainingAmount;
         ElGamal supplyDecrease;
+//        address owner;
         bytes proof;
     }
 
