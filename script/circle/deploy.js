@@ -247,7 +247,7 @@ async function main() {
     if (!deployed.libraries.TokenEventLib ||
         !deployed.libraries.TokenVerificationLib ||
         !deployed.libraries.Grumpkin ||
-        !institutionRegistration.target) {
+        !deployed.contracts.InstitutionRegistration.target) {
         throw new Error("Deployment of HamsaUSDC failed");
     }
 
@@ -268,7 +268,7 @@ async function main() {
         accounts.BlackLister,
         accounts.Owner,
         event_address,
-        institutionRegistration.target
+        deployed.contracts.InstitutionRegistration
     );
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
