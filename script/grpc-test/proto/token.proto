@@ -1,0 +1,282 @@
+syntax = "proto3";
+
+package tokenproof.v1;
+
+option go_package = "./token_grpc";
+
+// Token service interface
+service TokenService {
+  rpc MintToken               (MintTokenRequest)             returns (MintTokenResponse);
+  rpc MintTokenWithAuth       (MintTokenRequest)             returns (MintTokenResponse);
+  rpc SplitToken              (SplitTokenRequest)            returns (SplitTokenResponse);
+  rpc CreateDummyToken        (DummyTokenRequest)            returns (SplitTokenResponse);
+  rpc GenerateDvpTokenProof   (DvpTokenProofRequest)         returns (DvpTokenProofResponse);
+  rpc MergeToken              (MergeTokenRequest)            returns (MergeTokenResponse);
+  rpc GetActionStatus         (ActionStatusRequest)          returns (ActionStatusResponse);
+  rpc GetDvpInfos             (DvpInfoRequest)               returns (DvpInfoResponse);
+  rpc GetAddressBalance       (AddressBalanceRequest)        returns (AddressBalanceResponse);
+  rpc GetTokenInfos           (TokenInfoRequest)             returns (TokenInfoResponse);
+  rpc GetTokenProof           (TokenProofRequest)            returns (TokenProofResponse);
+  rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
+  rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
+  rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
+  rpc GetTransferProof        (ProofRequest)                 returns (TransferProofResponse);
+  rpc GetApproveProof         (ProofRequest)                 returns (ApproveProofResponse);
+  rpc GetTransferFromProof    (ProofRequest)                 returns (TransferFromProofResponse);
+  rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
+}
+
+// Request to generate DVP token proof
+message DvpTokenProofRequest {
+  string  hex_sig = 1;
+  string  owner_address = 2;
+  string  owner_manager_address = 3;
+  string  token_sc_address = 4;
+  string  token_type = 5;
+  uint64  amount = 6;
+  string  receiver_address = 7;
+  string  receiver_manager_address = 8;
+  uint64  deadline = 12;
+  string  bundle_hash = 13;
+  string  approved_spender_address = 14;
+}
+
+
+message DvpTokenProofResponse {
+  string                  request_id = 1;
+  string                  bundle_hash = 2;
+  TokenActionStatusEnum   status = 3;
+}
+
+message AddressBalanceRequest {
+  string tokenType = 1;
+  string ownerAddress = 2;
+  string tokenScAddress = 3;
+}
+message AddressBalanceResponse {
+  uint64 balance = 1;
+}
+
+// Request and response for getting token details
+message TokenInfoRequest {
+  repeated string token_id = 1;
+}
+
+message TokenInfoResponse {
+  repeated TokenInfo token_infos = 1;
+}
+
+message TokenInfo {
+  string token_id = 1;
+  uint64 amount = 2;
+  string clx = 5;
+  string cly = 6;
+  string crx = 7;
+  string cry = 8;
+  string token_status = 9;
+  string owner_address = 10;
+  string manager_address = 11;
+  string token_type = 12;
+  string type = 13;
+}
+message ActionStatusRequest {
+  string request_id = 1;
+}
+
+message DvpInfoRequest {
+  string request_id = 1;
+  string bundle_hash = 2;
+}
+
+message ActionStatusResponse {
+  string                  request_id = 1;
+  TokenActionStatusEnum   status = 2;
+  string                  receiver_token_id = 3;
+  string                  change_token_id = 4;
+  string                  rollback_token_id = 5;
+}
+
+message DvpInfoResponse {
+  string                  bundle_hash = 1;
+  repeated TokenActionInfo       token_info = 2;
+}
+
+message TokenActionInfo {
+  string                  request_id = 1;
+  TokenActionStatusEnum   status = 2;
+  string tx_hash = 3;
+  repeated TokenInfo token_infos = 4;
+}
+
+// Mint token request
+message MintTokenRequest {
+  string token_sc_address = 1;
+  string token_type = 2;
+  uint64 amount = 3;
+  string to_address = 4;
+  string hex_sig = 5;
+  string msg = 6;
+}
+// Merge token request
+message MergeTokenRequest {
+  string token_sc_address = 1;
+  string token_type = 2;
+  string owner_address = 3;
+  string manager_address = 4;
+}
+
+// Token splitting request
+message SplitTokenRequest {
+  string token_sc_address = 1;
+  string token_type = 2;
+  uint64 amount = 3;
+  string from_address = 4;
+  string to_address = 5;
+  string to_bank_admin_address = 6;
+}
+
+// Token splitting request
+message DummyTokenRequest {
+  string token_sc_address = 1;
+  string token_type = 2;
+  string from_address = 3;
+  string to_address = 4;
+  string to_bank_admin_address = 5;
+}
+
+
+message MintTokenResponse {
+  string                  request_id = 1;
+  TokenActionStatusEnum   status = 2;
+}
+
+message SplitTokenResponse {
+  string                  request_id = 1;
+  TokenActionStatusEnum   status = 2;
+}
+
+message MergeTokenResponse {
+  string                  request_id = 1;
+  TokenActionStatusEnum   status = 2;
+}
+message TokenProofRequest {
+  string request_id = 1;
+}
+
+message TokenProofResponse {
+  string pub_key_x = 1;
+  string pub_key_y = 2;
+  uint64 amount = 3;
+  string receiver_randomness = 4;
+  string cl_x = 5;
+  string cl_y = 6;
+  string cr_x = 7;
+  string cr_y = 8;
+  string h_x = 9;
+  string h_y = 10;
+  string receiver_token_id = 11;
+}
+// Token action status enum
+enum TokenActionStatusEnum {
+  TOKEN_ACTION_STATUS_PENDING = 0;
+  TOKEN_ACTION_STATUS_PROVE_SUC = 1;
+  TOKEN_ACTION_STATUS_SUC = 2;
+  TOKEN_ACTION_STATUS_CALL_L1 = 3;
+  TOKEN_ACTION_STATUS_FAIL = 4;
+  TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
+  TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
+}
+
+
+message ProofRequest {
+  string requestId = 1;
+}
+
+message ElGamal {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr_x = 3;
+  string cr_y = 4;
+}
+
+message MintProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal supply_amount = 6;
+  ElGamal amount = 7;
+  string  proof = 8;
+  TokenActionStatusEnum status = 9;
+}
+
+message TransferProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+
+  ElGamal old_balance = 6;
+  ElGamal new_balance = 7;
+  ElGamal amount = 8;
+  string proof =9;
+  TokenActionStatusEnum status = 10;
+}
+
+
+message ApproveProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal old_balance = 6;
+  ElGamal new_balance = 7;
+  ElGamal allowance = 8;
+  string proof = 9;
+}
+
+message TransferFromProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  ElGamal old_allowance = 6;
+  ElGamal new_allowance = 7;
+  ElGamal amount = 8;
+  string proof = 9;
+}
+
+message BurnProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+
+  ElGamal old_balance =6;
+  ElGamal new_balance =7;
+  ElGamal amount = 8;
+  ElGamal supply_amount = 9;
+  ElGamal proof =10;
+}
+
+message GenerateProofRequest {
+  string sc_address =1;
+  uint64 token_type =2;
+  string from_address =3;
+  string to_address =4;
+  string allowance_cancel_address =5;
+  uint64 amount = 6;
+}
+
+message GenerateProofResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}

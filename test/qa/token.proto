@@ -67,11 +67,12 @@ message TransferProofResponse {
   uint64 token_type = 3;
   string from_address = 4;
   string to_address = 5;
-  ElGamal old_balance = 6;
-  ElGamal new_balance = 7;
-  ElGamal amount = 8;
-  string proof =9;
-  TokenActionStatusEnum status = 10;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  ElGamal amount = 9;
+  string proof =10;
+  TokenActionStatusEnum status = 11;
 }
 
 
@@ -81,11 +82,12 @@ message ApproveProofResponse {
   uint64 token_type = 3;
   string from_address = 4;
   string to_address = 5;
-  ElGamal old_balance = 6;
-  ElGamal new_balance = 7;
-  Allowance allowance = 8;
-  string proof = 9;
-  TokenActionStatusEnum status = 10;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  Allowance allowance = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
 }
 
 message TransferFromProofResponse {
@@ -107,12 +109,11 @@ message BurnProofResponse {
   uint64 token_type = 3;
   string from_address = 4;
   string to_address = 5;
-
-  ElGamal old_balance =6;
-  ElGamal new_balance =7;
-  ElGamal amount = 8;
-  ElGamal supply_amount = 9;
-  ElGamal proof =10;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance =7;
+  ElGamal new_balance =8;
+  ElGamal amount = 9;
+  string proof =10;
   TokenActionStatusEnum status = 11;
 }
 

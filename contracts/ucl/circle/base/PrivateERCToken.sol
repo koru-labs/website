@@ -340,6 +340,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
         external whenNotPaused onlyMasterMinter returns (bool) {
+        minters[minter] = true;
         privateMinterAllowed[minter] = privateAllowedAmount;
         return true;
     }
