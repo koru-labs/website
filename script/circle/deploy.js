@@ -7,7 +7,8 @@ const accounts = require("../../deployments/account.json");
 
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
-    HAMSAL2EVENT: ""
+    HAMSAL2EVENT: "",
+    INSTITUTION_REGISTRATION: ""
 };
 
 // Add function to check existing deployments
@@ -207,20 +208,25 @@ async function main() {
         deployed.contracts.HamsaL2Event = ADDRESSES.HAMSAL2EVENT
     }
 
-    
-    console.log("Deploy InstitutionRegistration smart contract ...");
-    const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const institutionRegistration = await InstitutionRegistrationFactory.deploy(deployed.contracts.HamsaL2Event);
-    await institutionRegistration.waitForDeployment();
+    console.log("Checking InstitutionRegistration smart contract...");
+    if (ADDRESSES.INSTITUTION_REGISTRATION == "") {
+        console.log("Deploying new InstitutionRegistration contract...");
+        const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration", {
+            libraries: {
+                "TokenEventLib": deployed.libraries.TokenEventLib,
+            }
+        });
+        const institutionRegistration = await InstitutionRegistrationFactory.deploy(deployed.contracts.HamsaL2Event);
+        await institutionRegistration.waitForDeployment();
 
-    console.log("InstitutionRegistration deployed to:", institutionRegistration.target);
-    deployed.contracts.InstitutionRegistration = institutionRegistration.target;
+        console.log("InstitutionRegistration deployed to:", institutionRegistration.target);
+        deployed.contracts.InstitutionRegistration = institutionRegistration.target;
+    } else {
+        console.log("Reusing existing InstitutionRegistration at:", ADDRESSES.INSTITUTION_REGISTRATION);
+        deployed.contracts.InstitutionRegistration = ADDRESSES.INSTITUTION_REGISTRATION;
+    }
 
-    await registerInstitution(institutionRegistration);
+    await registerInstitution(deployed.contracts.InstitutionRegistration);
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
