@@ -273,6 +273,14 @@ async function main() {
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
 
+    const minterAllowedAmount =   {
+        "cl_x": ethers.toBigInt("0x0674c295e0f0892fbf309a316af3adacf8023d5e597bf55533806bd0362170c6"),
+        "cl_y": ethers.toBigInt("0x0cb84b5c84cadfa88f4edf89d2fcf051c100aa015a80c202f517a008296c0359"),
+        "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
+        "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
+    }
+    await hamsaUSDC.configurePrivacyMinter(accounts.Minter,minterAllowedAmount);
+
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
     console.log("\nDeployment is done ！");
     return deployed;
