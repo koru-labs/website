@@ -247,7 +247,7 @@ async function main() {
     if (!deployed.libraries.TokenEventLib ||
         !deployed.libraries.TokenVerificationLib ||
         !deployed.libraries.Grumpkin ||
-        !deployed.contracts.InstitutionRegistration.target) {
+        !deployed.contracts.InstitutionRegistration) {
         throw new Error("Deployment of HamsaUSDC failed");
     }
 
@@ -299,7 +299,8 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 }
 
 
-async function registerInstitution(institutionRegistration) {
+async function registerInstitution(institutionRegistrationAddress) {
+    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", institutionRegistrationAddress);
     
     const institutions = [
         {
