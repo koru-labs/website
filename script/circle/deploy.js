@@ -7,101 +7,130 @@ const accounts = require("../../deployments/account.json");
 
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
-    HAMSAL2EVENT: "0x0b82178c50Ca1414C1B048f2E507c18Fca1d59aC"
+    HAMSAL2EVENT: ""
 };
+
+// Add function to check existing deployments
+async function loadExistingDeployments() {
+    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const filepath = path.join(deploymentsDir, "image9.json");
+    
+    if (fs.existsSync(filepath)) {
+        const data = fs.readFileSync(filepath, 'utf8');
+        const existingDeployments = JSON.parse(data);
+        
+        // Get current network info
+        const currentNetwork = hre.network.name;
+        const currentChainId = (await ethers.provider.getNetwork()).chainId.toString();
+        
+        // Check if network matches
+        if (existingDeployments.metadata?.network === currentNetwork && 
+            existingDeployments.metadata?.chainId === currentChainId) {
+            console.log(`Found existing deployments for network: ${currentNetwork} (chainId: ${currentChainId})`);
+            return existingDeployments;
+        } else {
+            console.log(`Network mismatch detected. Previous deployment was on ${existingDeployments.metadata?.network} (chainId: ${existingDeployments.metadata?.chainId}), current network is ${currentNetwork} (chainId: ${currentChainId})`);
+            console.log("Removing previous deployment information...");
+            fs.unlinkSync(filepath);
+            return null;
+        }
+    }
+    return null;
+}
 
 async function main() {
     console.log("Deploy UCL SandBox smart contracts...");
 
-    
     let deployed = {
         libraries: {},
         contracts: {},
         accounts: {},
     };
 
-    
-    console.log("\n=== Deploy libraries ===");
-
-    // console.log("部署Library库...");
-    // try {
-    //     const LibraryFactory = await ethers.getContractFactory("testLibrary");
-    //     const library = await LibraryFactory.deploy();
-    //     await library.waitForDeployment();
-    //     console.log("Library部署到:", library.target);
-    //     deployed.libraries.Library = library.target;
-    // } catch (error) {
-    //     console.error("Library部署失败:", error.message);
-    // }
-
-    console.log("Deploy Fr Lib...");
-    try {
-        const FrFactory = await ethers.getContractFactory("FrOps");
-        const fr = await FrFactory.deploy();
-        await fr.waitForDeployment();
-        console.log("Fr Lib is deployed at :", fr.target);
-        deployed.libraries.Fr = fr.target;
-    } catch (error) {
-        console.error("Fr deployment failed:", error.message);
-    }
-
-    console.log("Deploy Fq Lib...");
-    try {
-        const FqFactory = await ethers.getContractFactory("FqOps");
-        const fq = await FqFactory.deploy();
-        await fq.waitForDeployment();
-        console.log("Fq is deployed at :", fq.target);
-        deployed.libraries.Fq = fq.target;
-    } catch (error) {
-        console.error("Fq deployment failed:", error.message);
-    }
-
+    // Load existing deployments
+    const existingDeployments = await loadExistingDeployments();
     
     console.log("\n=== Deploy Nova Libs ===");
 
-    console.log("Deploy RelaxedR1CSSNARKForSMLib...");
-    try {
+    // Function to deploy or reuse a library
+    async function deployOrReuseLib(name, deployFn) {
+        if (existingDeployments?.libraries?.[name]) {
+            console.log(`Reusing existing ${name} at: ${existingDeployments.libraries[name]}`);
+            deployed.libraries[name] = existingDeployments.libraries[name];
+            return;
+        }
+        
+        try {
+            const result = await deployFn();
+            deployed.libraries[name] = result.target;
+            console.log(`${name} is deployed at: ${result.target}`);
+        } catch (error) {
+            console.error(`${name} deployment failed:`, error.message);
+        }
+    }
+
+    // Deploy or reuse Fr Lib
+    console.log("Checking Fr Lib...");
+    await deployOrReuseLib("Fr", async () => {
+        const FrFactory = await ethers.getContractFactory("FrOps");
+        const fr = await FrFactory.deploy();
+        await fr.waitForDeployment();
+        return fr;
+    });
+
+    // Deploy or reuse Fq Lib
+    console.log("Checking Fq Lib...");
+    await deployOrReuseLib("Fq", async () => {
+        const FqFactory = await ethers.getContractFactory("FqOps");
+        const fq = await FqFactory.deploy();
+        await fq.waitForDeployment();
+        return fq;
+    });
+
+    // Deploy or reuse RelaxedR1CSSNARKForSMLib
+    console.log("Checking RelaxedR1CSSNARKForSMLib...");
+    await deployOrReuseLib("RelaxedR1CSSNARKForSMLib", async () => {
         const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
         const relaxedR1CSSNARKForSMLib = await RelaxedR1CSSNARKForSMLibFactory.deploy();
         await relaxedR1CSSNARKForSMLib.waitForDeployment();
-        console.log("RelaxedR1CSSNARKForSMLib is deployed at :", relaxedR1CSSNARKForSMLib.target);
-        deployed.libraries.RelaxedR1CSSNARKForSMLib = relaxedR1CSSNARKForSMLib.target;
-    } catch (error) {
-        console.error("RelaxedR1CSSNARKForSMLib deployment failed:", error.message);
-    }
+        return relaxedR1CSSNARKForSMLib;
+    });
 
-    console.log("Deploy BatchedRelaxedR1CSSNARKLib...");
-    try {
+    // Deploy or reuse BatchedRelaxedR1CSSNARKLib
+    console.log("Checking BatchedRelaxedR1CSSNARKLib...");
+    await deployOrReuseLib("BatchedRelaxedR1CSSNARKLib", async () => {
         const BatchedRelaxedR1CSSNARKLibFactory = await ethers.getContractFactory("BatchedRelaxedR1CSSNARKLib");
         const batchedRelaxedR1CSSNARKLib = await BatchedRelaxedR1CSSNARKLibFactory.deploy();
         await batchedRelaxedR1CSSNARKLib.waitForDeployment();
-        console.log("BatchedRelaxedR1CSSNARKLib is deployed at :", batchedRelaxedR1CSSNARKLib.target);
-        deployed.libraries.BatchedRelaxedR1CSSNARKLib = batchedRelaxedR1CSSNARKLib.target;
-    } catch (error) {
-        console.error("BatchedRelaxedR1CSSNARKLib deployment failed:", error.message);
-    }
-
-    console.log("Deploy Field Lib...");
-    const Field = await ethers.getContractFactory("Field");
-    const field = await Field.deploy();
-    await field.waitForDeployment();
-    console.log("Field is deployed at :", field.target);
-    deployed.libraries.Field = field.target;
-
-    console.log("Deploy Grumpkin Lib...");
-    const Grumpkin = await ethers.getContractFactory("Grumpkin", {
-        libraries: {
-            "Field": field.target,
-            "CommonUtilities": field.target,
-        }
+        return batchedRelaxedR1CSSNARKLib;
     });
-    const grumpkin = await Grumpkin.deploy();
-    await grumpkin.waitForDeployment();
-    console.log("Grumpkin is deployed at :", grumpkin.target);
-    deployed.libraries.Grumpkin = grumpkin.target;
 
-    console.log("Deploy ZkVerifier Lib...");
-    try {
+    // Deploy or reuse Field Lib
+    console.log("Checking Field Lib...");
+    await deployOrReuseLib("Field", async () => {
+        const Field = await ethers.getContractFactory("Field");
+        const field = await Field.deploy();
+        await field.waitForDeployment();
+        return field;
+    });
+
+    // Deploy or reuse Grumpkin Lib
+    console.log("Checking Grumpkin Lib...");
+    await deployOrReuseLib("Grumpkin", async () => {
+        const Grumpkin = await ethers.getContractFactory("Grumpkin", {
+            libraries: {
+                "Field": deployed.libraries.Field,
+                "CommonUtilities": deployed.libraries.Field,
+            }
+        });
+        const grumpkin = await Grumpkin.deploy();
+        await grumpkin.waitForDeployment();
+        return grumpkin;
+    });
+
+    // Deploy or reuse ZkVerifier Lib
+    console.log("Checking ZkVerifier Lib...");
+    await deployOrReuseLib("ZkVerifier", async () => {
         const ZkVerifierFactory = await ethers.getContractFactory("ZkVerifier", {
             libraries: {
                 "RelaxedR1CSSNARKForSMLib": deployed.libraries.RelaxedR1CSSNARKForSMLib,
@@ -110,11 +139,8 @@ async function main() {
         });
         const zkVerifier = await ZkVerifierFactory.deploy();
         await zkVerifier.waitForDeployment();
-        console.log("ZkVerifier is deployed at:", zkVerifier.target);
-        deployed.libraries.ZkVerifier = zkVerifier.target;
-    } catch (error) {
-        console.error("ZkVerifier deployment failed:", error.message);
-    }
+        return zkVerifier;
+    });
 
     
     console.log("\n=== Deploy TokenSc Libs ===");
