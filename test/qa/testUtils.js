@@ -341,7 +341,7 @@ async function getTransferFromProofAndCallL1(requestId) {
     const result1 = await contract.privateTransferFrom(result.from_address,oldAllowance,newAllowance,result.to_address, amount,proofData);
     console.log("Result:", result1);
     await result1.wait();
-    const token2 = await contract.getAccountAllowance(result.from_address, result.to_address);
+    const token2 = await contract.getAccountAllowance(result.from_address, spender);
     console.log(`Result ${requestId}:`, token2);
 }
 function convertParentTokenIds(parentTokenIds) {
@@ -383,10 +383,10 @@ async function testMint() {
 // tranferToken(1).then()
 // burnToken(1).then()
 // approveToken(10).then()
-transferFromToken(1).then()
+// transferFromToken(1).then()
 
 // getMintTokenAndCallL1('e5fb1cb6d751fa0c2d7c9f641d3c3f6264760509bc4569ae4eb590e4049dcdb').then()
-// getTransferTokenAndCallL1('b6c3f49cc2c064d9b7e812f11e6649f55ea3006183a7a918458848be3bd3095d').then()
+// getTransferTokenAndCallL1('5a3b4f9c455dbc15492b2ddc2fad14dc3fb1c238cbf4e5e9b80656f69cf3702e').then() //todo
 // getApproveTokenAndCallL1('ad17895f4559f4b02b1bbc0ffdf4c4a9fe2cc90b85a238a425097a6213d44c0a').then()
 // getBurnProofAndCallL1('8600301a87c04f80b37a5b0122a21dda6239370655eaf2ce9f2241b5e91d42f1').then()
 // getTransferFromProofAndCallL1('2727c0f1d9e32301c3161f52acf124fe121bb03f67593ff10f972d8d3011daf2').then()

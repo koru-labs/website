@@ -221,12 +221,13 @@ async function main() {
 
         console.log("InstitutionRegistration deployed to:", institutionRegistration.target);
         deployed.contracts.InstitutionRegistration = institutionRegistration.target;
+
+
+        await registerInstitution(deployed.contracts.InstitutionRegistration);
     } else {
         console.log("Reusing existing InstitutionRegistration at:", ADDRESSES.INSTITUTION_REGISTRATION);
         deployed.contracts.InstitutionRegistration = ADDRESSES.INSTITUTION_REGISTRATION;
     }
-
-    await registerInstitution(deployed.contracts.InstitutionRegistration);
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
