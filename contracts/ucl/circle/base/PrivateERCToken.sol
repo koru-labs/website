@@ -24,10 +24,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     IL2Event _l2Event;
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
-    TokenModel.ElGamal _privateTotalSupply;
 
-    uint256 _numberOfTotalSupplyChanges;// TODO: What is the purpose of this variable?
-    uint256 public decryptedTotalSupply;
+    TokenModel.ElGamal _privateTotalSupply;
+    uint256 _publicTotalSupply;
+    uint256 _numberOfTotalSupplyChanges;
+    uint256 public decryptedTotalSupply;  //this is wrong
 
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
@@ -355,9 +356,20 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
+    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
+        TokenModel.ElGamal memory consolidatedSupply = _privateTotalSupply;
+        return consolidatedSupply;
+    }
 
-    function updateDecryptedTotalSupply(uint256 _decryptedTotalSupply) external {
-        decryptedTotalSupply = _decryptedTotalSupply;
+    function publicTotalSupply() external view returns (uint256, bool) {
+        return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
+    }
+
+    /**
+      need to add proof logic
+    **/
+    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) external {
+        _publicTotalSupply = publicTotalSupply;
     }
 
     function addTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
