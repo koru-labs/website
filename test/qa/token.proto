@@ -110,7 +110,7 @@ message BurnProofResponse {
   string from_address = 4;
   string to_address = 5;
   repeated string parentTokenId = 6;
-  ElGamal old_balance =7;
+  ElGamal supply_decrease =7;
   ElGamal new_balance =8;
   ElGamal amount = 9;
   string proof =10;

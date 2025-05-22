@@ -89,7 +89,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
         addSupply(supplyIncrease);
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply,_numberOfTotalSupplyChanges);
 
         addTokenWithBalance(to, amount);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount);
@@ -127,7 +127,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
         subSupply( supplyDecrease);
 
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply,_numberOfTotalSupplyChanges);
         TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, consumedTokens, amount, consumedTokensRemainingAmount);
 
         emit PrivateBurn(msg.sender, amount);

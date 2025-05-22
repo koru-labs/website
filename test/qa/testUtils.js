@@ -6,27 +6,28 @@ const config = require('./../../deployments/image9.json');
 const {createClient} = require('../qa/token_grpc')
 const {getBurnProof} = require("./token_grpc");
 
-const amount1 =   {
-    "cl_x": ethers.toBigInt("0x0d029eb41b5625e223245a725edc6e5423f6f5e724d2fe4d032c9236417e3669"),
-    "cl_y": ethers.toBigInt("0x2c82bb1c78c69d653b7a69036c51fa519410cae862406409b2d04d21d90c2775"),
-    "cr_x": ethers.toBigInt("0x265836014f928100c4b529a96e88fb90e04dd5dce9bab6cc943acbb41d0439a0"),
-    "cr_y": ethers.toBigInt("0x127652b20a9c8eb19634fd64c1f75f9d18ffbece57c71e14879ed66d9f4b6d3d"),
-}
+const l1CustomNetwork = {
+    name: "BESU",
+    chainId: 1337
+};
+const options = {
+    batchMaxCount: 1,
+    staticNetwork: true
+};
 
-const amount2 =   {
-    "cl_x": ethers.toBigInt("0x17118a9fa7718e08b6df8b152df1d466efdb462db3527bec11ce0b99e313a03e"),
-    "cl_y": ethers.toBigInt("0x2551993d77f3a77cb033b52165cfc83ab3600b460b605caf2cd59ffe21431cc7"),
-    "cr_x": ethers.toBigInt("0x1cd89d45c98f78c5c2cb3a66ba1a5c047b15faac6130c75585dfe03adeab7fce"),
-    "cr_y": ethers.toBigInt("0x2639e268d5bb43de0f07fa7fb809591d7edad099267118970eece9c70b73358e"),
-}
+const provider = new ethers.JsonRpcProvider(hardhatConfig.networks.ucl_node2.url, l1CustomNetwork, options)
+const masterMinterWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[1], provider);
+const minterWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[2], provider);
+const spenderWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[3], provider);
+
 const rpcUrl ='aa4db6db10866450fb6685fb175e72f9-423262944.us-west-1.elb.amazonaws.com:50051'
-// const rpcUrl ='localhost:50051'
 const client = createClient(rpcUrl)
 
 const scAddress = config.contracts.PrivateERCToken;
 const minter = '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8'
-const to = '0x57829d5E80730D06B1364A2b05342F44bFB70E8f'
 const spender = '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73'
+const to = '0x57829d5E80730D06B1364A2b05342F44bFB70E8f'
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -151,7 +152,7 @@ async function getMintTokenAndCallL1(requestId){
     let result = await client.getMintProof(requestId)
     // console.log("Mint Proof Result:", result);
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,masterMinterWallet)
     const amount = {
         cl_x: ethers.toBigInt(result.amount.cl_x),
         cl_y: ethers.toBigInt(result.amount.cl_y),
@@ -205,7 +206,7 @@ async function getTransferTokenAndCallL1(requestId){
 async function getTransferTokenAndCallL1(requestId){
     let result = await client.getTransferProof(requestId)
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,minterWallet)
 
     const consumedTokens = convertParentTokenIds(result.parentTokenId);
     const transferAmount = {
@@ -236,7 +237,7 @@ async function getApproveTokenAndCallL1(requestId){
     let result = await client.getApproveProof(requestId)
     console.log("Approve Proof Result:", result);
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,minterWallet)
 
     const consumedTokens = convertParentTokenIds(result.parentTokenId);
     const transferAmount = {
@@ -276,7 +277,7 @@ async function getBurnProofAndCallL1(requestId) {
     let result = await client.getBurnProof(requestId)
     console.log("Approve Proof Result:", result);
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,minterWallet)
 
     const consumedTokens = convertParentTokenIds(result.parentTokenId);
     const amount = {
@@ -312,7 +313,7 @@ async function getTransferFromProofAndCallL1(requestId) {
     let result = await client.getTransferFromProof(requestId)
     console.log("Approve Proof Result:", result);
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,spenderWallet)
     const oldAllowance = {
         "cl_x": ethers.toBigInt(result.old_allowance.cl_x),
         "cl_y": ethers.toBigInt(result.old_allowance.cl_y),
@@ -378,15 +379,13 @@ async function testMint() {
 }
 
 
-mintToken(100).then()
-tranferToken(1).then()
-burnToken(1).then()
-approveToken(10).then()
+// mintToken(100).then()
+// tranferToken(1).then()
+// burnToken(1).then()
+// approveToken(10).then()
 transferFromToken(1).then()
 
 // getMintTokenAndCallL1('e5fb1cb6d751fa0c2d7c9f641d3c3f6264760509bc4569ae4eb590e4049dcdb').then()
-// testMint().then()
-// getToken().then()
 // getTransferTokenAndCallL1('b6c3f49cc2c064d9b7e812f11e6649f55ea3006183a7a918458848be3bd3095d').then()
 // getApproveTokenAndCallL1('ad17895f4559f4b02b1bbc0ffdf4c4a9fe2cc90b85a238a425097a6213d44c0a').then()
 // getBurnProofAndCallL1('8600301a87c04f80b37a5b0122a21dda6239370655eaf2ce9f2241b5e91d42f1').then()

@@ -6,9 +6,9 @@ const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
 
 const ADDRESSES = {
-    TOKEN_EVENT_LIB: "",
-    HAMSAL2EVENT: "",
-    INSTITUTION_REGISTRATION: ""
+    TOKEN_EVENT_LIB: "0x537905ed604CFa66760D8511e42677538206e3aA",
+    HAMSAL2EVENT: "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA",
+    INSTITUTION_REGISTRATION: "0xA2E1352bb3190319B336E835e18e8CBcd9588062"
 };
 
 // Add function to check existing deployments

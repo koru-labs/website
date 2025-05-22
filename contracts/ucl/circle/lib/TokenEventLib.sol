@@ -30,7 +30,8 @@ library TokenEventLib {
         TokenModel.ElGamal memory oldSupply,
         TokenModel.ElGamal memory increaseAmount,
         TokenModel.ElGamal memory decreaseAmount,
-        TokenModel.ElGamal memory newSupply
+        TokenModel.ElGamal memory newSupply,
+        uint256 _numberOfTotalSupplyChanges
     ) public {
         if (_numberOfTotalSupplyChanges %5 !=0) {
             return;
