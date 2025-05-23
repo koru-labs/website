@@ -51,6 +51,17 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
+
+
+    /**
+     * @dev Mints private fiat tokens to an address and updates the total supply.
+     * @param to The address that will receive the minted tokens.
+     * @param amount The amount of tokens to mint. Must be less than or equal
+     * to the minterAllowance of the caller.
+     * @param supplyIncrease The amount of tokens to increment in total suplly.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
     function privateMint(
         address to,
         TokenModel.ElGamal memory amount,
@@ -98,6 +109,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
+    /**
+     * @dev Burns private fiat tokens from an address and updates the total supply.
+     * @param consumedTokens The array of tokens to burn.
+     * @param amount The amount of tokens to burn.
+     * @param consumedTokensRemainingAmount The remaining amount of tokens to burn.
+     * @param supplyDecrease The amount of tokens to decrement in total supply.
+     * @param proof The proof.
+     */
     function privateBurn(bytes32[] memory consumedTokens,
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
@@ -169,6 +188,17 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
 
+
+    /**
+     * @dev Approves a private `value` amount of tokens to be spent by `spender` from the caller's account.
+     *
+     * Emits a {PrivateApproval} event.
+     * @param consumedTokens The tokens that will be consumed.
+     * @param spender The address that will be approved to spend the tokens.
+     * @param allowance The allowance to be approved.
+     * @param consumedTokensRemainingAmount The remaining amount from the tokens that will be consumed.
+     * @param proof The proof.
+     */
     function privateApprove(bytes32[] memory consumedTokens,
         address spender,
         TokenModel.Allowance memory allowance,
@@ -202,7 +232,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.Allowance memory newAllowance = getAllowance(msg.sender,spender);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
-        TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), msg.sender,spender, allowance, oldAllowance, newAllowance);
+        TokenEventLib.triggerAllowanceCreatedEvent(_l2Event, address(this), msg.sender,spender, allowance, oldAllowance, newAllowance);
+        TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), spender, msg.sender, allowance);
 
         emit PrivateApproval(msg.sender, spender, allowance);
     }
@@ -221,9 +252,29 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         account.allowances[spender] = allowance;
     }
 
+    /**
+     * @dev Moves a private `value` amount of tokens from `from` to `to`.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+
+     to do:  need to consider the scenario that the owner and spender belong to two banks.
+      // whenever allowance is spent, we need to update allowance and rollback at both side
+
+     *
+     *
+     *
+     * Emits a {PrivateTransferFrom} event.
+     * @param from The address that will transfer the tokens.
+     * @param oldAllowance The allowance before the transfer.
+     * @param newAllowance The allowance after the transfer.
+     * @param to The address that will receive the transferred tokens.
+     * @param value The amount of tokens to transfer.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
     function privateTransferFrom(
         address from,
-        TokenModel.Allowance memory oldAllowance,
+        TokenModel.Allowance memory oldAllowance, // TODO remove this param. use the current allowance from the contract storage
         TokenModel.Allowance memory newAllowance,
         address to,
         TokenModel.ElGamal memory value,
@@ -294,7 +345,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
-    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory) {
+    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory) { 
+        //TODO complete this function.
         return TokenModel.ElGamal( {
         cl_x: 0,
         cl_y: 0,
@@ -303,6 +355,58 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         });
     }
 
+    /**
+     * @dev Decreases the allowance of the spender by the given amount.
+     *
+     * Emits a {PrivateApproval} event.
+     * @param spender The address that will be approved to spend the tokens.
+     * @param newAllowance The new decreased allowance.
+     * @param decrement The amount to decrease the allowance by.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
+    function privateDecreaseAllowance(address spender, 
+        TokenModel.Allowance memory newAllowance, 
+        TokenModel.ElGamal memory decrement, 
+        bytes calldata proof) external returns (bool){ 
+        //TODO complete this function, following the ERC20 standard behavior for decreaseAllowance privacy.
+    }
+
+
+    /**
+     * @dev Increases the allowance of the spender by the given amount.
+     *
+     * Emits a {PrivateApproval} event.
+     * @param spender The address approved to spend the tokens.
+     * @param newAllowance The new allowance.
+     * @param consumedTokens The tokens that will be consumed to increase the allowance.
+     * @param consumedTokensRemainingAmount The remaining amount from the consumed tokens.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
+    function privateIncreaseAllowance(address spender, 
+        TokenModel.Allowance memory newAllowance, 
+        bytes32[] memory consumedTokens,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount,
+        bytes calldata proof) external returns (bool){ 
+        //TODO complete this function, following the ERC20 standard behavior for increaseAllowance privacy.
+
+        return true;
+    }
+    
+    /**
+     * @dev Moves a private `value` amount of tokens from the caller's account to `to`.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {PrivateTransfer} event.
+     * @param consumedTokens The tokens that will be consumed.
+     * @param to The address that will receive the transferred tokens.
+     * @param amount The amount of tokens to transfer.
+     * @param consumedTokensRemainingAmount The remaining amount from the tokens that will be consumed.
+     * @param proof The proof.
+     * @return True if the operation was successful.
+     */
     function privateTransfer(bytes32[] memory consumedTokens,
         address to,
         TokenModel.ElGamal memory amount,
@@ -312,6 +416,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         whenNotPaused
         notBlacklisted(msg.sender)
         notBlacklisted(to)
+        returns (bool)
     {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
@@ -337,6 +442,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, msg.sender);
         emit PrivateTransfer(msg.sender, to, amount);
+        return true;
     }
 
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)

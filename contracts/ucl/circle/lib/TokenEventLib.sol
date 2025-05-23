@@ -220,7 +220,7 @@ library TokenEventLib {
     }
 
     // triggerAllowanceReceivedEvent
-    function triggerAllowanceReceivedEvent(
+    function triggerAllowanceCreatedEvent(
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
@@ -229,11 +229,28 @@ library TokenEventLib {
         TokenModel.Allowance memory oldAllowance,
         TokenModel.Allowance memory newAllowance
     ) public{
-        AllowanceReceivedEvent memory e = AllowanceReceivedEvent({
+        AllowanceCreatedEvent memory e = AllowanceCreatedEvent({
             spender: spender,
             allowance: allowance,
             oldAllowance: oldAllowance,
             newAllowance: newAllowance
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "AllowanceCreated", body);
+    }
+
+    function triggerAllowanceReceivedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        address owner,
+        TokenModel.Allowance memory allowance
+    ) public{
+        AllowanceReceivedEvent memory e = AllowanceReceivedEvent({
+            tokenType: 0,
+            owner: owner,
+            spender: eventAccount,
+            allowance: allowance
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "AllowanceReceived", body);

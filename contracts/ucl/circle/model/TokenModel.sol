@@ -75,8 +75,9 @@ library TokenModel {
 
     struct Account {
         ElGamal balance;
-        mapping(bytes32 => ElGamal) tokens;
+        mapping(bytes32 => ElGamal) tokens; //TODO change this name to assets
         mapping(address => Allowance) allowances;
+        //TODO add here "mapping(bytes32 => ElGamal) reservations;"
     }
 
     struct BankAllowances {
