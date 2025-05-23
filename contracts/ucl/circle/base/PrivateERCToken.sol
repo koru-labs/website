@@ -356,11 +356,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @param newAllowance The new decreased allowance.
      * @param decrement The amount to decrease the allowance by.
      * @param proof The proof.
+     * @return True if the operation was successful.
      */
-    function decreaseAllowance(address spender, 
+    function privateDecreaseAllowance(address spender, 
         TokenModel.Allowance memory newAllowance, 
         TokenModel.ElGamal memory decrement, 
-        bytes calldata proof) external { 
+        bytes calldata proof) external returns (bool){ 
         //TODO complete this function, following the ERC20 standard behavior for decreaseAllowance privacy.
     }
 
@@ -374,12 +375,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @param consumedTokens The tokens that will be consumed to increase the allowance.
      * @param consumedTokensRemainingAmount The remaining amount from the consumed tokens.
      * @param proof The proof.
+     * @return True if the operation was successful.
      */
-    function increaseAllowance(address spender, 
+    function privateIncreaseAllowance(address spender, 
         TokenModel.Allowance memory newAllowance, 
         bytes32[] memory consumedTokens,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external { 
+        bytes calldata proof) external returns (bool){ 
         //TODO complete this function, following the ERC20 standard behavior for increaseAllowance privacy.
     }
     
@@ -394,6 +396,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @param amount The amount of tokens to transfer.
      * @param consumedTokensRemainingAmount The remaining amount from the tokens that will be consumed.
      * @param proof The proof.
+     * @return True if the operation was successful.
      */
     function privateTransfer(bytes32[] memory consumedTokens,
         address to,
@@ -404,6 +407,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         whenNotPaused
         notBlacklisted(msg.sender)
         notBlacklisted(to)
+        // TODO this function should returns (bool)
     {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
