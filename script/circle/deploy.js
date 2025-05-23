@@ -6,7 +6,7 @@ const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
 
 const ADDRESSES = {
-    TOKEN_EVENT_LIB: "0x537905ed604CFa66760D8511e42677538206e3aA",
+    TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA",
     INSTITUTION_REGISTRATION: ""
 };
@@ -270,7 +270,7 @@ async function main() {
         "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
         "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
     }
-    await hamsaUSDC.configurePrivacyMinter(accounts.Minter,minterAllowedAmount);
+    await hamsaUSDC.configurePrivacyMinter(accounts.Minter,  minterAllowedAmount);
 
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
     console.log("\nDeployment is done ！");
@@ -304,62 +304,68 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     const institutions = [
 
         {
-            address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
-            name: "Institution 2",
-            publicKey: {
-                x: "0x0da58bc89e5e79370d284b950e9787b0a415c7eb924f7ad878ae02f1c1cbf08d",
-                y: "0x09a199d04bf1f4edd076b04fac483e355ccc7cda5f7a3730fab21fdaf06772d2",
-                s: "0x2b03804fc6cb37b4a024d9bfcccf4ee5b39aa2f05083804f707cc9ea2b9e17b8"
-            },
-            userAddresses: []
-        }
-        , {
-            address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
-            name: "Institution 3",
-            publicKey: {
-                x: "0x07d1f17c69afc61219c3ef99c2b5f2ad95652f9a5a742d9f41507c39b1f60cc6",
-                y: "0x223c436026d084b482180d0a35415a95b7e01b7f932478ad469f084e03fb1883",
-                s: "0x04c3c1afa2f7989e7eccc561e6e691fed49fe11b07b07ba9e43134bb0e522129"
-            },
-            userAddresses: [
-                
-            ]
-        }, {
-            address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
-            name: "Institution 4",
-            publicKey: {
-                x: "0x2e02198276673e31c219dc599124d1f9a7c5b501b50e54f0bf13434a945dd0d8",
-                y: "0x1b784dce213ce92d2d95b6cf8adcc408c43fe2466d477896c17535509d7a634d",
-                s: "0x1c5c6569eb1fb54371b7a251f27c0ebfed2b56d55a58cd5ac90b4feb670264cd"
-            },
-            userAddresses: [
-                
-            ]
-        }, {
-            address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
-            name: "Institution 5",
-            publicKey: {
-                x: "0x1a8757f7c321d2c4a61d00d32f8aa82ac8d393aebfad7cc90c724912244fbaa9",
-                y: "0x1c12bca19f23c212b8b50d3df6274f909057496aa7e776196325fe3f37ae1e51",
-                s: "0x0cdf05cb547361ca0f6cc94e0aa58da2df8eb2f8922b595fbe04345c8d6e34cc"
-            },
-            userAddresses: [
-                
-            ]
-        }, {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-            name: "node3",
+            name: "Node3",
             publicKey: {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
                 y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
             },
             userAddresses: [
-                '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
-                '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
-                '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
-                '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
+                "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+                "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+                "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766",
+                "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C",
+                "0x4312488937D47A007De24d48aB82940C809EEb2b",
+                "0x57829d5E80730D06B1364A2b05342F44bFB70E8f"
             ]
         }
+        // , {
+        //     address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
+        //     name: "Institution 3",
+        //     publicKey: {
+        //         x: "0x07d1f17c69afc61219c3ef99c2b5f2ad95652f9a5a742d9f41507c39b1f60cc6",
+        //         y: "0x223c436026d084b482180d0a35415a95b7e01b7f932478ad469f084e03fb1883",
+        //         s: "0x04c3c1afa2f7989e7eccc561e6e691fed49fe11b07b07ba9e43134bb0e522129"
+        //     },
+        //     userAddresses: [
+        //
+        //     ]
+        // }, {
+        //     address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
+        //     name: "Institution 4",
+        //     publicKey: {
+        //         x: "0x2e02198276673e31c219dc599124d1f9a7c5b501b50e54f0bf13434a945dd0d8",
+        //         y: "0x1b784dce213ce92d2d95b6cf8adcc408c43fe2466d477896c17535509d7a634d",
+        //         s: "0x1c5c6569eb1fb54371b7a251f27c0ebfed2b56d55a58cd5ac90b4feb670264cd"
+        //     },
+        //     userAddresses: [
+        //
+        //     ]
+        // }, {
+        //     address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
+        //     name: "Institution 5",
+        //     publicKey: {
+        //         x: "0x1a8757f7c321d2c4a61d00d32f8aa82ac8d393aebfad7cc90c724912244fbaa9",
+        //         y: "0x1c12bca19f23c212b8b50d3df6274f909057496aa7e776196325fe3f37ae1e51",
+        //         s: "0x0cdf05cb547361ca0f6cc94e0aa58da2df8eb2f8922b595fbe04345c8d6e34cc"
+        //     },
+        //     userAddresses: [
+        //
+        //     ]
+        // }, {
+        //     address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+        //     name: "node3",
+        //     publicKey: {
+        //         x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
+        //         y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
+        //     },
+        //     userAddresses: [
+        //         '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
+        //         '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
+        //         '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
+        //         '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
+        //     ]
+        // }
     ]
 
     for (let i = 0; i < institutions.length; i++) {
