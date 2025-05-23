@@ -49,7 +49,7 @@ const accountAddress=config.accounts
 
 
 async function checkDeployedUSDC() {
-    const HamsaUSDCFactory = await ethers.getContractFactory("HamsaUSDC", {
+    const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": config.libraries.TokenEventLib,
             "TokenVerificationLib": config.libraries.TokenVerificationLib,
@@ -58,19 +58,19 @@ async function checkDeployedUSDC() {
         }
     });
 
-    const hamsaUSDC = await HamsaUSDCFactory.attach(config.contracts.PrivateERCToken);
+    const privateUSDC = await PrivateUSDCFactory.attach(config.contracts.PrivateERCToken);
 
     //validate basic properties
-    let name= await hamsaUSDC.name();
-    let symbol = await hamsaUSDC.symbol();
-    let decimals = await hamsaUSDC.decimals();
-    let currency = await hamsaUSDC.currency();
+    let name= await privateUSDC.name();
+    let symbol = await privateUSDC.symbol();
+    let decimals = await privateUSDC.decimals();
+    let currency = await privateUSDC.currency();
     console.log("(name, symbol, decimals, currency)", name, symbol, decimals, currency);
     assert.equal(decimals.toString(), "6")
 
     // validate minters
-    let masterMinter= await hamsaUSDC.masterMinter();
-    let isMinter = await hamsaUSDC.isMinter(accounts.Minter);
+    let masterMinter= await privateUSDC.masterMinter();
+    let isMinter = await privateUSDC.isMinter(accounts.Minter);
 
     console.log("masterMinter: ", masterMinter)
     console.log("isMinter: ", isMinter)
@@ -78,15 +78,15 @@ async function checkDeployedUSDC() {
     assert.equal(isMinter, true)
 
     // validate pauser
-    let pauser = await hamsaUSDC.pauser();
-    let paused= await hamsaUSDC.paused();
+    let pauser = await privateUSDC.pauser();
+    let paused= await privateUSDC.paused();
     console.log("(pauser, paused)", pauser, paused);
     assert.equal(paused, false)
 
 
     //validate blackList
-    let blacklister = await hamsaUSDC.blacklister();
-    let is_blackedListed = await hamsaUSDC.isBlacklisted(accounts.BlockedAccount)
+    let blacklister = await privateUSDC.blacklister();
+    let is_blackedListed = await privateUSDC.isBlacklisted(accounts.BlockedAccount)
     console.log("blacklister", blacklister);
     console.log(`${accounts.BlockedAccount} is blackedListed:`, is_blackedListed);
     assert.equal(is_blackedListed, true)

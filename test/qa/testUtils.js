@@ -382,11 +382,11 @@ async function testMint() {
 }
 
 
-// mintToken(100).then()
+mintToken(100).then()
 // tranferToken(1).then()
 // burnToken(1).then()
 // approveToken(10).then()
-transferFromToken(1).then()
+// transferFromToken(1).then()
 
 // getMintTokenAndCallL1('e5fb1cb6d751fa0c2d7c9f641d3c3f6264760509bc4569ae4eb590e4049dcdb').then()
 // getTransferTokenAndCallL1('5a3b4f9c455dbc15492b2ddc2fad14dc3fb1c238cbf4e5e9b80656f69cf3702e').then() //todo
