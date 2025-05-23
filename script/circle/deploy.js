@@ -304,17 +304,14 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     const institutions = [
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-            name: "Node3",
+            name: "Institution 1",
             publicKey: {
                 x: "0x12cb22204290ed3f7d00cc703bceffdb09d0e3667acec8b3e95d867b2b977139",
                 y: "0x245a12e0241b5503fec50ce02e2e63c38f1ad751a2540cae9b7008553256227d",
                 s:"0x289c5b8affebd596657c547ddd273f41a6ea39c0f0a93aea766f9b457b00babb",
             },
             userAddresses: [
-                '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
-                '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
-                '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
-                '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
+
             ]
         },
         {
@@ -329,14 +326,17 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
         }
         , {
             address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
-            name: "Institution 3",
+            name: "Node3",
             publicKey: {
                 x: "0x07d1f17c69afc61219c3ef99c2b5f2ad95652f9a5a742d9f41507c39b1f60cc6",
                 y: "0x223c436026d084b482180d0a35415a95b7e01b7f932478ad469f084e03fb1883",
                 s: "0x04c3c1afa2f7989e7eccc561e6e691fed49fe11b07b07ba9e43134bb0e522129"
             },
             userAddresses: [
-                
+                '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
+                '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
+                '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
+                '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
             ]
         }, {
             address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
