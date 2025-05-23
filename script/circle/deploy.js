@@ -303,7 +303,7 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     
     const institutions = [
         {
-            address: "f0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+            address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             name: "Node3",
             publicKey: {
                 x: "0x12cb22204290ed3f7d00cc703bceffdb09d0e3667acec8b3e95d867b2b977139",
@@ -389,7 +389,7 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
                 institutions[i].address
             );
             await userRegTx.wait();
-            console.log(`Registered user ${institutions[i].userAddresses[j]} under under Bank ${institutions[i].address}`);
+            console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);
         }
     }
 }
