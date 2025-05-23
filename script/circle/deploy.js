@@ -8,7 +8,7 @@ const accounts = require("../../deployments/account.json");
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "0x537905ed604CFa66760D8511e42677538206e3aA",
     HAMSAL2EVENT: "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA",
-    INSTITUTION_REGISTRATION: "0xA2E1352bb3190319B336E835e18e8CBcd9588062"
+    INSTITUTION_REGISTRATION: ""
 };
 
 // Add function to check existing deployments
@@ -53,85 +53,69 @@ async function main() {
     
     console.log("\n=== Deploy Nova Libs ===");
 
-    // Function to deploy or reuse a library
-    async function deployOrReuseLib(name, deployFn) {
-        if (existingDeployments?.libraries?.[name]) {
-            console.log(`Reusing existing ${name} at: ${existingDeployments.libraries[name]}`);
-            deployed.libraries[name] = existingDeployments.libraries[name];
-            return;
-        }
-        
-        try {
-            const result = await deployFn();
-            deployed.libraries[name] = result.target;
-            console.log(`${name} is deployed at: ${result.target}`);
-        } catch (error) {
-            console.error(`${name} deployment failed:`, error.message);
-        }
-    }
+    // Check if all Nova libraries are already deployed
+    const novaLibraries = [
+        "Fr",
+        "Fq",
+        "RelaxedR1CSSNARKForSMLib",
+        "BatchedRelaxedR1CSSNARKLib",
+        "Field",
+        "Grumpkin",
+        "ZkVerifier"
+    ];
+    const allNovaLibsDeployed = novaLibraries.every(lib => existingDeployments?.libraries?.[lib]);
 
-    // Deploy or reuse Fr Lib
-    console.log("Checking Fr Lib...");
-    await deployOrReuseLib("Fr", async () => {
+    if (!allNovaLibsDeployed) {
+        console.log("Deploying all Nova libraries...");
+        
+        // Deploy Fr Lib
         const FrFactory = await ethers.getContractFactory("FrOps");
         const fr = await FrFactory.deploy();
         await fr.waitForDeployment();
-        return fr;
-    });
+        console.log("Fr Lib is deployed at :", fr.target);
+        deployed.libraries.Fr = fr.target;
 
-    // Deploy or reuse Fq Lib
-    console.log("Checking Fq Lib...");
-    await deployOrReuseLib("Fq", async () => {
+        // Deploy Fq Lib
         const FqFactory = await ethers.getContractFactory("FqOps");
         const fq = await FqFactory.deploy();
         await fq.waitForDeployment();
-        return fq;
-    });
+        console.log("Fq is deployed at :", fq.target);
+        deployed.libraries.Fq = fq.target;
 
-    // Deploy or reuse RelaxedR1CSSNARKForSMLib
-    console.log("Checking RelaxedR1CSSNARKForSMLib...");
-    await deployOrReuseLib("RelaxedR1CSSNARKForSMLib", async () => {
-        const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
-        const relaxedR1CSSNARKForSMLib = await RelaxedR1CSSNARKForSMLibFactory.deploy();
-        await relaxedR1CSSNARKForSMLib.waitForDeployment();
-        return relaxedR1CSSNARKForSMLib;
-    });
-
-    // Deploy or reuse BatchedRelaxedR1CSSNARKLib
-    console.log("Checking BatchedRelaxedR1CSSNARKLib...");
-    await deployOrReuseLib("BatchedRelaxedR1CSSNARKLib", async () => {
-        const BatchedRelaxedR1CSSNARKLibFactory = await ethers.getContractFactory("BatchedRelaxedR1CSSNARKLib");
-        const batchedRelaxedR1CSSNARKLib = await BatchedRelaxedR1CSSNARKLibFactory.deploy();
-        await batchedRelaxedR1CSSNARKLib.waitForDeployment();
-        return batchedRelaxedR1CSSNARKLib;
-    });
-
-    // Deploy or reuse Field Lib
-    console.log("Checking Field Lib...");
-    await deployOrReuseLib("Field", async () => {
+        // Deploy Field first as it's a dependency
         const Field = await ethers.getContractFactory("Field");
         const field = await Field.deploy();
         await field.waitForDeployment();
-        return field;
-    });
+        console.log("Field is deployed at :", field.target);
+        deployed.libraries.Field = field.target;
 
-    // Deploy or reuse Grumpkin Lib
-    console.log("Checking Grumpkin Lib...");
-    await deployOrReuseLib("Grumpkin", async () => {
+        // Deploy Grumpkin
         const Grumpkin = await ethers.getContractFactory("Grumpkin", {
             libraries: {
-                "Field": deployed.libraries.Field,
-                "CommonUtilities": deployed.libraries.Field,
+                "Field": field.target,
+                "CommonUtilities": field.target,
             }
         });
         const grumpkin = await Grumpkin.deploy();
         await grumpkin.waitForDeployment();
-        return grumpkin;
-    });
+        console.log("Grumpkin is deployed at :", grumpkin.target);
+        deployed.libraries.Grumpkin = grumpkin.target;
 
-    // Deploy or reuse ZkVerifier Lib
-    console.log("Checking ZkVerifier Lib...");
-    await deployOrReuseLib("ZkVerifier", async () => {
+        // Deploy RelaxedR1CSSNARKForSMLib
+        const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
+        const relaxedR1CSSNARKForSMLib = await RelaxedR1CSSNARKForSMLibFactory.deploy();
+        await relaxedR1CSSNARKForSMLib.waitForDeployment();
+        console.log("RelaxedR1CSSNARKForSMLib is deployed at :", relaxedR1CSSNARKForSMLib.target);
+        deployed.libraries.RelaxedR1CSSNARKForSMLib = relaxedR1CSSNARKForSMLib.target;
+
+        // Deploy BatchedRelaxedR1CSSNARKLib
+        const BatchedRelaxedR1CSSNARKLibFactory = await ethers.getContractFactory("BatchedRelaxedR1CSSNARKLib");
+        const batchedRelaxedR1CSSNARKLib = await BatchedRelaxedR1CSSNARKLibFactory.deploy();
+        await batchedRelaxedR1CSSNARKLib.waitForDeployment();
+        console.log("BatchedRelaxedR1CSSNARKLib is deployed at :", batchedRelaxedR1CSSNARKLib.target);
+        deployed.libraries.BatchedRelaxedR1CSSNARKLib = batchedRelaxedR1CSSNARKLib.target;
+
+        // Deploy ZkVerifier
         const ZkVerifierFactory = await ethers.getContractFactory("ZkVerifier", {
             libraries: {
                 "RelaxedR1CSSNARKForSMLib": deployed.libraries.RelaxedR1CSSNARKForSMLib,
@@ -140,10 +124,16 @@ async function main() {
         });
         const zkVerifier = await ZkVerifierFactory.deploy();
         await zkVerifier.waitForDeployment();
-        return zkVerifier;
-    });
+        console.log("ZkVerifier is deployed at:", zkVerifier.target);
+        deployed.libraries.ZkVerifier = zkVerifier.target;
+    } else {
+        console.log("All Nova libraries are already deployed, reusing existing deployments");
+        novaLibraries.forEach(lib => {
+            deployed.libraries[lib] = existingDeployments.libraries[lib];
+            console.log(`Reusing ${lib} at: ${existingDeployments.libraries[lib]}`);
+        });
+    }
 
-    
     console.log("\n=== Deploy TokenSc Libs ===");
     console.log("Deploy TokenGrumpkinLib...");
     try {
@@ -223,7 +213,7 @@ async function main() {
         deployed.contracts.InstitutionRegistration = institutionRegistration.target;
 
 
-        await registerInstitution(deployed.contracts.InstitutionRegistration);
+        await registerInstitutionAndUser(deployed.contracts.InstitutionRegistration);
     } else {
         console.log("Reusing existing InstitutionRegistration at:", ADDRESSES.INSTITUTION_REGISTRATION);
         deployed.contracts.InstitutionRegistration = ADDRESSES.INSTITUTION_REGISTRATION;
@@ -308,7 +298,7 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 }
 
 
-async function registerInstitution(institutionRegistrationAddress) {
+async function registerInstitutionAndUser(institutionRegistrationAddress) {
     const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", institutionRegistrationAddress);
     
     const institutions = [
@@ -319,7 +309,8 @@ async function registerInstitution(institutionRegistrationAddress) {
                 x: "0x12cb22204290ed3f7d00cc703bceffdb09d0e3667acec8b3e95d867b2b977139",
                 y: "0x245a12e0241b5503fec50ce02e2e63c38f1ad751a2540cae9b7008553256227d",
                 s:"0x289c5b8affebd596657c547ddd273f41a6ea39c0f0a93aea766f9b457b00babb",
-            }
+            },
+            userAddresses: []
         },
         {
             address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
@@ -328,7 +319,8 @@ async function registerInstitution(institutionRegistrationAddress) {
                 x: "0x0da58bc89e5e79370d284b950e9787b0a415c7eb924f7ad878ae02f1c1cbf08d",
                 y: "0x09a199d04bf1f4edd076b04fac483e355ccc7cda5f7a3730fab21fdaf06772d2",
                 s: "0x2b03804fc6cb37b4a024d9bfcccf4ee5b39aa2f05083804f707cc9ea2b9e17b8"
-            }
+            },
+            userAddresses: []
         }
         , {
             address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
@@ -337,7 +329,10 @@ async function registerInstitution(institutionRegistrationAddress) {
                 x: "0x07d1f17c69afc61219c3ef99c2b5f2ad95652f9a5a742d9f41507c39b1f60cc6",
                 y: "0x223c436026d084b482180d0a35415a95b7e01b7f932478ad469f084e03fb1883",
                 s: "0x04c3c1afa2f7989e7eccc561e6e691fed49fe11b07b07ba9e43134bb0e522129"
-            }
+            },
+            userAddresses: [
+                
+            ]
         }, {
             address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
             name: "Institution 4",
@@ -345,7 +340,10 @@ async function registerInstitution(institutionRegistrationAddress) {
                 x: "0x2e02198276673e31c219dc599124d1f9a7c5b501b50e54f0bf13434a945dd0d8",
                 y: "0x1b784dce213ce92d2d95b6cf8adcc408c43fe2466d477896c17535509d7a634d",
                 s: "0x1c5c6569eb1fb54371b7a251f27c0ebfed2b56d55a58cd5ac90b4feb670264cd"
-            }
+            },
+            userAddresses: [
+                
+            ]
         }, {
             address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
             name: "Institution 5",
@@ -353,16 +351,23 @@ async function registerInstitution(institutionRegistrationAddress) {
                 x: "0x1a8757f7c321d2c4a61d00d32f8aa82ac8d393aebfad7cc90c724912244fbaa9",
                 y: "0x1c12bca19f23c212b8b50d3df6274f909057496aa7e776196325fe3f37ae1e51",
                 s: "0x0cdf05cb547361ca0f6cc94e0aa58da2df8eb2f8922b595fbe04345c8d6e34cc"
-            }
+            },
+            userAddresses: [
+                
+            ]
         }, {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             name: "Institution 5",
             publicKey: {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
                 y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf"
-            }
+            },
+            userAddresses: [
+                
+            ]
         }
     ]
+
     for (let i = 0; i < institutions.length; i++) {
         console.log(`Register institution ${institutions[i].address} in InstitutionRegistration smart contract...`);
         let regTx = await institutionRegistration.registerInstitution(
@@ -373,13 +378,14 @@ async function registerInstitution(institutionRegistrationAddress) {
         await regTx.wait();
         console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionRegistration`);
 
-        
-        let userRegTx = await institutionRegistration.registerUser(
-            institutions[i].address,
-            institutions[i].address
-        );
-        await userRegTx.wait();
-        console.log(`Registered user ${institutions[i].address} under under Bank ${institutions[i].address}`);
+        for (let j = 0; j < institutions[i].userAddresses.length; j++) {
+            let userRegTx = await institutionRegistration.registerUser(
+                institutions[i].userAddresses[j],
+                institutions[i].address
+            );
+            await userRegTx.wait();
+            console.log(`Registered user ${institutions[i].userAddresses[j]} under under Bank ${institutions[i].address}`);
+        }
     }
 }
 
