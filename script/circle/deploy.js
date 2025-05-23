@@ -302,21 +302,7 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", institutionRegistrationAddress);
     
     const institutions = [
-        {
-            address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-            name: "Node3",
-            publicKey: {
-                x: "0x12cb22204290ed3f7d00cc703bceffdb09d0e3667acec8b3e95d867b2b977139",
-                y: "0x245a12e0241b5503fec50ce02e2e63c38f1ad751a2540cae9b7008553256227d",
-                s:"0x289c5b8affebd596657c547ddd273f41a6ea39c0f0a93aea766f9b457b00babb",
-            },
-            userAddresses: [
-                '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
-                '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
-                '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
-                '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
-            ]
-        },
+
         {
             address: "0x122A4F8848fB5df788340FD07fc7276cc038dC01",
             name: "Institution 2",
@@ -365,10 +351,13 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
             name: "Institution 5",
             publicKey: {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
-                y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf"
+                y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
             },
             userAddresses: [
-                
+                '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
+                '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
+                '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
+                '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
             ]
         }
     ]

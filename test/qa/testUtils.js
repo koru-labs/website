@@ -379,7 +379,7 @@ async function testMint() {
 }
 
 
-// mintToken(100).then()
+mintToken(100).then()
 // tranferToken(1).then()
 // burnToken(1).then()
 // approveToken(10).then()
