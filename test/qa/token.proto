@@ -16,6 +16,7 @@ service TokenService {
   rpc GetApproveProof         (ProofRequest)                 returns (ApproveProofResponse);
   rpc GetTransferFromProof    (ProofRequest)                 returns (TransferFromProofResponse);
   rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
+  rpc GetAddressBalance       (DecodeBalanceRequest)        returns (AddressBalanceResponse);
 }
 
 // Token action status enum
@@ -129,4 +130,13 @@ message GenerateProofRequest {
 message GenerateProofResponse {
   string request_id = 1;
   TokenActionStatusEnum status = 2;
+}
+
+message DecodeBalanceRequest {
+  string owner_address = 1;
+  ElGamal balance = 2;
+}
+
+message AddressBalanceResponse {
+  string balance = 1;
 }

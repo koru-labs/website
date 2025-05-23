@@ -82,6 +82,17 @@ function createClient(url) {
         return promisify(client.GetActionStatus.bind(client), request);
     };
 
+    client.getAccountBalance = async function(ownerAddress, balance) {
+        const request = {
+            owner_address: ownerAddress,
+            balance
+        };
+        console.log("request", request);
+
+
+        return promisify(client.GetAddressBalance.bind(client), request);
+    };
+
     client.waitForProofCompletion = async function(requestId, interval = 2000) {
         return new Promise(async (resolve, reject) => {
             while (true) {

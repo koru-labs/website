@@ -39,6 +39,8 @@ async function mintToken(amount){
         to_address:minter,
         amount: amount
     };
+    await  displayBalance("Before mint ", "minter", minter);
+
     let result = await client.generateMintProof(generateRequest);
     console.log("Generate Mint Proof Result:", result);
     const requestId = result.request_id;
@@ -51,6 +53,8 @@ async function mintToken(amount){
             break;
         }
     }
+
+    await  displayBalance("After mint ", "minter", minter);
 }
 
 async function tranferToken(amount){
@@ -61,6 +65,8 @@ async function tranferToken(amount){
         to_address:to,
         amount: amount
     };
+
+    await  displayBalance("Before transfer ", "receiver", to);
 
     let result = await client.generateTransferProof(generateRequest);
     console.log("Generate transfer Proof Result:", result);
@@ -74,6 +80,8 @@ async function tranferToken(amount){
             break;
         }
     }
+
+    await  displayBalance("After transfer ", "receiver", to);
 }
 
 async function burnToken(amount){
@@ -83,6 +91,8 @@ async function burnToken(amount){
         from_address:minter,
         amount: amount
     };
+
+    await displayBalance("Before burn", "minter", minter);
 
     let result = await client.generateBurnProof(generateRequest);
     console.log("Generate burn Proof Result:", result);
@@ -96,6 +106,8 @@ async function burnToken(amount){
             break;
         }
     }
+
+    await displayBalance("Before burn", "minter", minter);
 }
 
 
@@ -107,6 +119,8 @@ async function approveToken(amount){
         to_address:spender,
         amount: amount
     };
+
+    await displayBalance("Before approve", "owner", minter);
 
     let result = await client.generateApproveProof(generateRequest);
     console.log("Generate approve Proof Result:", result);
@@ -120,6 +134,8 @@ async function approveToken(amount){
             break;
         }
     }
+
+    await displayBalance("Before approve", "owner", minter);
 }
 
 
@@ -133,6 +149,9 @@ async function transferFromToken(amount){
         amount: amount
     };
 
+    await displayBalance("Before transferFrom", "owner", minter);
+
+
     let result = await client.generateTransferFromProof(generateRequest);
     console.log("Generate transferFrom Proof Result:", result);
     const requestId = result.request_id;
@@ -145,6 +164,8 @@ async function transferFromToken(amount){
             break;
         }
     }
+
+    await displayBalance("After transferFrom", "owner", minter);
 }
 
 
@@ -378,6 +399,24 @@ async function testMint() {
     }
 }
 
+async function displayBalance(scenario, role, address) {
+    return
+    let result = await client.getAccountBalance(config.contracts.PrivateERCToken, address);
+    console.log(`${scenario}: the balance of role ${role} (${address}) `, result);
+}
+
+
+async function testGetBalance() {
+    let result = await client.getAccountBalance(minter, {
+        cl_x:0,
+        cl_y:0,
+        cr_x:0,
+        cr_y:0
+    });
+    console.log("result", result);
+}
+
+// testGetBalance().then()
 
 // mintToken(100).then()
 // tranferToken(1).then()
