@@ -236,8 +236,8 @@ module.exports = {
             url: "http://54.219.188.82:8545", //gpu,ucl-node2,v2
             accounts: [
                 "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
-                "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732
-                "32ef95df4ea8de4f6b5518106e97dbb3e5b97cdbb4a33adfeaa9f14e729f51eb", //from 0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8 // node3 manager address
+                "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732 //// node3 manager address
+                "32ef95df4ea8de4f6b5518106e97dbb3e5b97cdbb4a33adfeaa9f14e729f51eb", //from 0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8
                 "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",//approve 0xfe3b557e8fb62b89f4916b721be55ceb828dbd73
                 "35c285cae6a13a0e13ef7db25776e60b02745922da3b39513b94114c2c5d9add", //to 57829d5E80730D06B1364A2b05342F44bFB70E8f
                 "e047c057b8b11153322c91f2d5474b73d691fa4351d053148582f07462ad1ae1", //b3C711A69B3DeAC4441904932Ca98E09e9068284
