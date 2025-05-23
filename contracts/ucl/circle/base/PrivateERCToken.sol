@@ -256,6 +256,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @dev Moves a private `value` amount of tokens from `from` to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
+
+     to do:  need to consider the scenario that the owner and spender belong to two banks.
+      // whenever allowance is spent, we need to update allowance and rollback at both side
+
+     *
+     *
      *
      * Emits a {PrivateTransferFrom} event.
      * @param from The address that will transfer the tokens.
