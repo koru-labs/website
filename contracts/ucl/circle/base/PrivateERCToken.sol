@@ -232,7 +232,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.Allowance memory newAllowance = getAllowance(msg.sender,spender);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
-        TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), msg.sender,spender, allowance, oldAllowance, newAllowance);
+        TokenEventLib.triggerAllowanceCreatedEvent(_l2Event, address(this), msg.sender,spender, allowance, oldAllowance, newAllowance);
+        TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), spender, msg.sender, allowance);
 
         emit PrivateApproval(msg.sender, spender, allowance);
     }
@@ -255,6 +256,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @dev Moves a private `value` amount of tokens from `from` to `to`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
+
+     to do:  need to consider the scenario that the owner and spender belong to two banks.
+      // whenever allowance is spent, we need to update allowance and rollback at both side
+
+     *
+     *
      *
      * Emits a {PrivateTransferFrom} event.
      * @param from The address that will transfer the tokens.
@@ -383,6 +390,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
         bytes calldata proof) external returns (bool){ 
         //TODO complete this function, following the ERC20 standard behavior for increaseAllowance privacy.
+
+        return true;
     }
     
     /**
@@ -407,7 +416,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         whenNotPaused
         notBlacklisted(msg.sender)
         notBlacklisted(to)
-        // TODO this function should returns (bool)
+        returns (bool)
     {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
@@ -433,6 +442,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, msg.sender);
         emit PrivateTransfer(msg.sender, to, amount);
+        return true;
     }
 
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)

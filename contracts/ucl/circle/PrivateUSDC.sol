@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "./base/PrivateERCToken.sol";
 import "../../usdc/v2/FiatTokenV2.sol";
 
-contract HamsaUSDC is PrivateERCToken, FiatTokenV2 {
+contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
 
     function initialize(
         string memory tokenName,

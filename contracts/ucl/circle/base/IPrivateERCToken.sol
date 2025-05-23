@@ -38,7 +38,7 @@ interface IPrivateERCToken {
     address to,
     TokenModel.ElGamal memory amount,
     TokenModel.ElGamal memory consumedTokensRemainingAmount,
-    bytes calldata proof) external;
+    bytes calldata proof) external returns (bool);
 
   // ERC: function burn(uint256 amount) external;
   function privateBurn(bytes32[] memory consumedTokens,

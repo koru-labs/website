@@ -131,9 +131,16 @@ import "../model/TokenModel.sol";
         address msgSender;
     }
 
-    struct AllowanceReceivedEvent {
+    struct AllowanceCreatedEvent {
         address spender;
         TokenModel.Allowance allowance;
         TokenModel.Allowance oldAllowance;
         TokenModel.Allowance newAllowance;
+    }
+
+    struct AllowanceReceivedEvent {
+        uint256 tokenType;
+        address owner;
+        address spender;
+        TokenModel.Allowance allowance;
     }

@@ -235,7 +235,7 @@ async function main() {
     deployed.libraries.SignatureChecker = signatureChecker.target;
 
     console.log("Deploy PrivateERCToken smart contract...");
-    const HamsaUSDCFactory = await ethers.getContractFactory("HamsaUSDC", {
+    const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
             "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
@@ -249,17 +249,17 @@ async function main() {
         !deployed.libraries.TokenVerificationLib ||
         !deployed.libraries.Grumpkin ||
         !deployed.contracts.InstitutionRegistration) {
-        throw new Error("Deployment of HamsaUSDC failed");
+        throw new Error("Deployment of PrivateUSDC failed");
     }
 
-    const hamsaUSDC = await HamsaUSDCFactory.deploy();
-    await hamsaUSDC.waitForDeployment();
-    console.log("PrivateERCToken is deployed at :", hamsaUSDC.target);
-    deployed.contracts.PrivateERCToken = hamsaUSDC.target;
+    const privateUSDC = await PrivateUSDCFactory.deploy();
+    await privateUSDC.waitForDeployment();
+    console.log("PrivateERCToken is deployed at :", privateUSDC.target);
+    deployed.contracts.PrivateERCToken = privateUSDC.target;
 
     
     console.log("Initializing PrivateERCToken...");
-    const initTx = await hamsaUSDC.initialize(
+    const initTx = await privateUSDC.initialize(
         "Private ERC Token", 
         "PET", 
         "USD", 
@@ -280,7 +280,7 @@ async function main() {
         "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
         "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
     }
-    await hamsaUSDC.configurePrivacyMinter(accounts.Minter,minterAllowedAmount);
+    await privateUSDC.configurePrivacyMinter(accounts.Minter,minterAllowedAmount);
 
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
     console.log("\nDeployment is done ！");

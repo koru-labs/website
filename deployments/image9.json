@@ -7,19 +7,19 @@
     "Field": "0xda9536c26B261154De13aE494f1eD13aD932e013",
     "Grumpkin": "0x1E73F7e14cecc7Db23047bEE7BD7647e9e9727e4",
     "ZkVerifier": "0x83069ec53338a4c425a7271E861f3010e1eC2244",
-    "TokenGrumpkinLib": "0x84901617b01B37c6571f40c459aE3C0ee1b16e14",
-    "TokenVerificationLib": "0xc0a913B3C5148c7eF93A05C587C534A73F7d917b",
+    "TokenGrumpkinLib": "0xDb35c17e224E895764c04FE22ba085a2BfB7c5B3",
+    "TokenVerificationLib": "0xe27A88a955823d7b08dA808Bb1a19a30f9eA1fC1",
     "TokenEventLib": "0x537905ed604CFa66760D8511e42677538206e3aA",
-    "SignatureChecker": "0x2f7dE2C5112496C9c24F3F7FcdA41B004506F94E"
+    "SignatureChecker": "0x7Cd22Fa5C8817AF22E700e8E1e42cCD49bd89dD6"
   },
   "contracts": {
     "HamsaL2Event": "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA",
     "InstitutionRegistration": "0xA2E1352bb3190319B336E835e18e8CBcd9588062",
-    "PrivateERCToken": "0x3Cb21b5218DD40C194479b04D21dcb047Afc3409"
+    "PrivateERCToken": "0x4d94b90D0135a6E4e5B6ED4Ba6928596878639D6"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-05-22T10:40:21.340Z",
+    "timestamp": "2025-05-23T17:22:43.708Z",
     "network": "ucl_node2",
     "chainId": "1337"
   }
