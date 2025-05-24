@@ -3,6 +3,7 @@ const hre = require("hardhat");
 const { ethers } = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
+const accounts= require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 const {getBurnProof} = require("./token_grpc");
 
@@ -16,17 +17,15 @@ const options = {
 };
 
 const provider = new ethers.JsonRpcProvider(hardhatConfig.networks.ucl_node2.url, l1CustomNetwork, options)
-const masterMinterWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[1], provider);
-const minterWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[2], provider);
-const spenderWallet = new ethers.Wallet(hardhatConfig.networks.ucl_node2.accounts[3], provider);
+const masterMinterWallet = new ethers.Wallet("555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", provider);
+const minterWallet = new ethers.Wallet("ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", provider);
+const spenderWallet = new ethers.Wallet("a8ee6be3949318b57fbdfefdc86cd3a9033b8946789cb33db209e0c623c45cb5", provider);
 
-const rpcUrl ='aa4db6db10866450fb6685fb175e72f9-423262944.us-west-1.elb.amazonaws.com:50051'
+const rpcUrl ='a479e77ec92e94a85994bbe0f50241cb-959891535.us-west-1.elb.amazonaws.com:50051'
 const client = createClient(rpcUrl)
 
 const scAddress = config.contracts.PrivateERCToken;
-const minter = '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8'
-const spender = '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73'
-const to = '0x57829d5E80730D06B1364A2b05342F44bFB70E8f'
+
 
 
 function sleep(ms) {
@@ -36,11 +35,9 @@ async function mintToken(amount){
     const generateRequest = {
         sc_address: scAddress,
         token_type: '0',
-        to_address:minter,
+        to_address: accounts.Minter,
         amount: amount
     };
-    await  displayBalance("Before mint ", "minter", minter);
-
     let result = await client.generateMintProof(generateRequest);
     console.log("Generate Mint Proof Result:", result);
     const requestId = result.request_id;
@@ -53,46 +50,42 @@ async function mintToken(amount){
             break;
         }
     }
-
-    await  displayBalance("After mint ", "minter", minter);
 }
 
 async function tranferToken(amount){
     const generateRequest = {
         sc_address: scAddress,
         token_type: '0',
-        from_address:minter,
-        to_address:to,
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
         amount: amount
     };
-
-    await  displayBalance("Before transfer ", "receiver", to);
 
     let result = await client.generateTransferProof(generateRequest);
     console.log("Generate transfer Proof Result:", result);
     const requestId = result.request_id;
+    var proof;
     for (let i = 0; i < 300; i++) {
         await sleep(10000);
         result = await client.getTransferProof(requestId)
-        console.log("Transfer Proof Result:", result.status);
+        console.log("proof generation status: ", result.status);
         if (result.proof !== "") {
-            await getTransferTokenAndCallL1(requestId)
-            break;
+            proof= result
+            break
         }
     }
 
-    await  displayBalance("After transfer ", "receiver", to);
+    console.log("proof: ", proof);
+    await getTransferTokenAndCallL1(requestId)
 }
 
 async function burnToken(amount){
     const generateRequest = {
         sc_address: scAddress,
         token_type: '0',
-        from_address:minter,
+        from_address: accounts.Minter,
         amount: amount
     };
-
-    await displayBalance("Before burn", "minter", minter);
 
     let result = await client.generateBurnProof(generateRequest);
     console.log("Generate burn Proof Result:", result);
@@ -106,8 +99,6 @@ async function burnToken(amount){
             break;
         }
     }
-
-    await displayBalance("Before burn", "minter", minter);
 }
 
 
@@ -115,12 +106,10 @@ async function approveToken(amount){
     const generateRequest = {
         sc_address: scAddress,
         token_type: '0',
-        from_address:minter,
-        to_address:spender,
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
         amount: amount
     };
-
-    await displayBalance("Before approve", "owner", minter);
 
     let result = await client.generateApproveProof(generateRequest);
     console.log("Generate approve Proof Result:", result);
@@ -134,8 +123,6 @@ async function approveToken(amount){
             break;
         }
     }
-
-    await displayBalance("Before approve", "owner", minter);
 }
 
 
@@ -143,14 +130,11 @@ async function transferFromToken(amount){
     const generateRequest = {
         sc_address: scAddress,
         token_type: '0',
-        from_address:spender,
-        to_address:to,
-        allowance_cancel_address:minter,
+        from_address: accounts.Minter,
+        to_address: accounts.To2,
+        allowance_cancel_address: accounts.Spender1,
         amount: amount
     };
-
-    await displayBalance("Before transferFrom", "owner", minter);
-
 
     let result = await client.generateTransferFromProof(generateRequest);
     console.log("Generate transferFrom Proof Result:", result);
@@ -164,8 +148,6 @@ async function transferFromToken(amount){
             break;
         }
     }
-
-    await displayBalance("After transferFrom", "owner", minter);
 }
 
 
@@ -173,7 +155,7 @@ async function getMintTokenAndCallL1(requestId){
     let result = await client.getMintProof(requestId)
     // console.log("Mint Proof Result:", result);
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress,masterMinterWallet)
+    const contract = await hre.ethers.getContractAt("PrivateERCToken",scAddress, minterWallet)
     const amount = {
         cl_x: ethers.toBigInt(result.amount.cl_x),
         cl_y: ethers.toBigInt(result.amount.cl_y),
@@ -362,7 +344,7 @@ async function getTransferFromProofAndCallL1(requestId) {
     const result1 = await contract.privateTransferFrom(result.from_address,oldAllowance,newAllowance,result.to_address, amount,proofData);
     console.log("Result:", result1);
     await result1.wait();
-    const token2 = await contract.getAccountAllowance(result.from_address, spender);
+    const token2 = await contract.getAccountAllowance(result.from_address, accounts.Spender1);
     console.log(`Result ${requestId}:`, token2);
 }
 function convertParentTokenIds(parentTokenIds) {
@@ -399,26 +381,8 @@ async function testMint() {
     }
 }
 
-async function displayBalance(scenario, role, address) {
-    return
-    let result = await client.getAccountBalance(config.contracts.PrivateERCToken, address);
-    console.log(`${scenario}: the balance of role ${role} (${address}) `, result);
-}
 
-
-async function testGetBalance() {
-    let result = await client.getAccountBalance(minter, {
-        cl_x:0,
-        cl_y:0,
-        cr_x:0,
-        cr_y:0
-    });
-    console.log("result", result);
-}
-
-// testGetBalance().then()
-
-// mintToken(100).then()
+mintToken(100).then()
 // tranferToken(1).then()
 // burnToken(1).then()
 // approveToken(10).then()
