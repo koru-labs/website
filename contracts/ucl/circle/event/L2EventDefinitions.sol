@@ -144,3 +144,9 @@ import "../model/TokenModel.sol";
         address spender;
         TokenModel.Allowance allowance;
     }
+
+    struct MinterAllowedSetEvent  {
+        address setter;
+        address account;
+        TokenModel.ElGamal limit;
+    }

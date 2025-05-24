@@ -256,4 +256,16 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, eventAccount, "AllowanceReceived", body);
     }
 
+    function triggerMinterAllowedSetEvent(IL2Event _l2Event, address eventSource, address eventAccount,
+        address setter, TokenModel.ElGamal memory limit) internal {
+
+        MinterAllowedSetEvent memory e = MinterAllowedSetEvent({
+            setter: setter,
+            account: eventAccount,
+            limit: limit
+        });
+
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "MinterAllowedSet", body);
+    }
 } 
