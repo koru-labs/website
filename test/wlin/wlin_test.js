@@ -96,7 +96,7 @@ async function generateMintProof() {
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
-        to_address:accountAddress,
+        to_address:accounts.To2,
         amount: amount
     };
     let result = await client.generateMintProof(generateRequest);
@@ -108,5 +108,5 @@ async function generateMintProof() {
 }
 
 
-// generateMintProof().then()
-checkDeployedUSDC().then();
+generateMintProof().then()
+// checkDeployedUSDC().then();
