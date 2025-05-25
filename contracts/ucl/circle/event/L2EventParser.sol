@@ -19,4 +19,5 @@ contract L2EventParser {
 
     function parseTokenMeta(TokenMetaBody memory e) public view { }
     function parseTokenRemovedEvent(TokenRemovedEvent memory e) public view { }
+    function parseMinterAllowedSet(MinterAllowedSetEvent memory e) public view {}
 }
