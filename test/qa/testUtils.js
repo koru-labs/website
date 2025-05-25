@@ -21,7 +21,7 @@ const masterMinterWallet = new ethers.Wallet("555332672ce947d150d23a36bf38470782
 const minterWallet = new ethers.Wallet("ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", provider);
 const spenderWallet = new ethers.Wallet("a8ee6be3949318b57fbdfefdc86cd3a9033b8946789cb33db209e0c623c45cb5", provider);
 
-const rpcUrl ='a479e77ec92e94a85994bbe0f50241cb-959891535.us-west-1.elb.amazonaws.com:50051'
+const rpcUrl ='ac365b5fc227f46c5850d8590ddb0357-2076305457.us-west-1.elb.amazonaws.com:50051'
 const client = createClient(rpcUrl)
 
 const scAddress = config.contracts.PrivateERCToken;
@@ -381,8 +381,8 @@ async function testMint() {
     }
 }
 
-
-mintToken(100).then()
+//
+// mintToken(100).then()
 // tranferToken(1).then()
 // burnToken(1).then()
 // approveToken(10).then()
