@@ -93,22 +93,16 @@ function createClient(url) {
         return promisify(client.GetAddressBalance.bind(client), request);
     };
 
-    client.waitForProofCompletion = async function(requestId, interval = 2000) {
+    client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
-                    const response = await client.getActionStatus(requestId);
-                    console.log(`Request ${requestId} status: ${TokenActionStatusEnum[response.status]}`);
+                    const result = await callBack(requestId);
 
-                    if (response.status === TokenActionStatusEnum.TOKEN_ACTION_STATUS_CALL_L1_SUC ||
-                        response.status === TokenActionStatusEnum.TOKEN_ACTION_STATUS_SUC) {
-                        resolve(response);
-                        return;
-                    }
-
-                    if (response.status === TokenActionStatusEnum.TOKEN_ACTION_STATUS_FAIL) {
-                        reject(new Error(`Request ${requestId} failed`));
-                        return;
+                    if (result.proof !== "") {
+                        resolve(result)
+                    } else {
+                        console.log("wait for proof. status = ", result.status)
                     }
 
                     await sleep(interval);
