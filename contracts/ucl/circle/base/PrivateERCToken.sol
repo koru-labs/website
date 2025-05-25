@@ -449,6 +449,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         external whenNotPaused onlyMasterMinter returns (bool) {
         minters[minter] = true;
         privateMinterAllowed[minter] = privateAllowedAmount;
+
+        TokenEventLib.triggerMinterAllowedSetEvent(_l2Event, address(this), minter, msg.sender, privateAllowedAmount);
         return true;
     }
 
