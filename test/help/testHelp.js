@@ -2,7 +2,7 @@ const {ethers} = require("hardhat")
 
 
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
-    const contract = (await ethers.getContractAt("PrivateERCToken", scAddress)).attach(minterWallet);
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const amount = {
         cl_x: ethers.toBigInt(proofResult.amount.cl_x),
         cl_y: ethers.toBigInt(proofResult.amount.cl_y),
@@ -16,13 +16,13 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
         cr_y: ethers.toBigInt(proofResult.supply_amount.cr_y)
     };
     const proofData = Buffer.from(proofResult.proof, "hex");
-    const mintResult = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proofData);
-    let receipt = await mintResult.wait();
+    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proofData);
+    let receipt = await tx.wait();
     return receipt;
 }
 
 async function callPrivateTransfer(scAddress, proofResult, senderWallet){
-    const contract = (await ethers.getContractAt("PrivateERCToken", scAddress)).attach(senderWallet)
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, senderWallet)
     const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
 
     const transferAmount = {
@@ -39,15 +39,15 @@ async function callPrivateTransfer(scAddress, proofResult, senderWallet){
     }
     const proofData = Buffer.from(proofResult.proof, "hex");
 
-    const result = await contract.privateTransfer(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
-    let receipt = await result.wait();
+    const tx = await contract.privateTransfer(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
+    let receipt = await tx.wait();
     return receipt
 }
 
 
 
 async function callPrivateApprove(scAddress, proofResult, ownerWallet){
-    const contract = (await ethers.getContractAt("PrivateERCToken", scAddress)).attach(ownerWallet);
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, ownerWallet);
 
     const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
     const transferAmount = {
@@ -67,15 +67,14 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 
     const proofData = Buffer.from(proofResult.proof, "hex");
 
-    const result = await contract.privateApprove(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
-    console.log("Result:", result);
-    let receipt = await result.wait();
+    const tx = await contract.privateApprove(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
+    let receipt = await tx.wait();
     return receipt
 }
 
 
 async function callPrivateBurn(scAddress, proofResult, accountWallet) {
-    const contract = (await ethers.getContractAt("PrivateERCToken", scAddress)).attach(accountWallet)
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, accountWallet)
     const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
 
     const amount = {
@@ -98,16 +97,16 @@ async function callPrivateBurn(scAddress, proofResult, accountWallet) {
     }
     const proofData = Buffer.from(proofResult.proof, "hex");
 
-    const result = await contract.privateBurn(consumedTokens,amount,consumedTokensRemainingAmount,supplyDecrease,proofData);
-    console.log("Result:", result);
-    let receipt = await result.wait();
+    const tx = await contract.privateBurn(consumedTokens,amount,consumedTokensRemainingAmount,supplyDecrease,proofData);
+    console.log("Result:", tx);
+    let receipt = await tx.wait();
     return receipt
 }
 
 
 
 async function callPrivateTransferFrom(scAddress, proofResult, spenderWallet) {
-    const contract = (await ethers.getContractAt("PrivateERCToken", scAddress)).attach(spenderWallet)
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, spenderWallet)
     const oldAllowance = {
         "cl_x": ethers.toBigInt(proofResult.old_allowance.cl_x),
         "cl_y": ethers.toBigInt(proofResult.old_allowance.cl_y),
@@ -132,11 +131,31 @@ async function callPrivateTransferFrom(scAddress, proofResult, spenderWallet) {
     }
     const proofData = Buffer.from(proofResult.proof, "hex");
 
-    const result = await contract.privateTransferFrom(proofResult.from_address,oldAllowance,newAllowance,proofResult.to_address, amount,proofData);
-    console.log("Result:", result);
-    let receipt = await result.wait();
+    const tx = await contract.privateTransferFrom(proofResult.from_address,oldAllowance,newAllowance,proofResult.to_address, amount,proofData);
+    let receipt = await tx.wait();
     return receipt
 }
+
+
+async function getAddressBalance(grpcClient, scAddress, account) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.privateBalanceOf(account)
+
+
+    let balance=  {
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
+    let result = await grpcClient.getAccountBalance(scAddress, account, balance)
+    return result
+}
+
+function convertBigInt2Hex(number) {
+    return ethers.toBigInt(number).toString(16)
+}
+
 
 function convertParentTokenIds(parentTokenIds) {
     return parentTokenIds.map(id => {
@@ -162,5 +181,6 @@ module.exports =  {
     callPrivateTransfer,
     callPrivateBurn,
     callPrivateApprove,
-    callPrivateTransferFrom
+    callPrivateTransferFrom,
+    getAddressBalance
 }

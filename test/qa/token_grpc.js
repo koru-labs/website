@@ -82,14 +82,13 @@ function createClient(url) {
         return promisify(client.GetActionStatus.bind(client), request);
     };
 
-    client.getAccountBalance = async function(ownerAddress, balance) {
+    client.getAccountBalance = async function(scAddress, ownerAddress, balance) {
         const request = {
+            sc_address: scAddress,
             owner_address: ownerAddress,
             balance
         };
         console.log("request", request);
-
-
         return promisify(client.GetAddressBalance.bind(client), request);
     };
 
