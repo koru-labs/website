@@ -1,29 +1,23 @@
 const assert = require('node:assert');
 
-const hre = require("hardhat");
-const { ethers } = require('hardhat');
+const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
-const accounts =require('./../../deployments/account.json');
-
+const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-const amount1 =   {
-    "cl_x": ethers.toBigInt("0x0d029eb41b5625e223245a725edc6e5423f6f5e724d2fe4d032c9236417e3669"),
-    "cl_y": ethers.toBigInt("0x2c82bb1c78c69d653b7a69036c51fa519410cae862406409b2d04d21d90c2775"),
-    "cr_x": ethers.toBigInt("0x265836014f928100c4b529a96e88fb90e04dd5dce9bab6cc943acbb41d0439a0"),
-    "cr_y": ethers.toBigInt("0x127652b20a9c8eb19634fd64c1f75f9d18ffbece57c71e14879ed66d9f4b6d3d"),
-}
 
-const amount2 =   {
-    "cl_x": ethers.toBigInt("0x17118a9fa7718e08b6df8b152df1d466efdb462db3527bec11ce0b99e313a03e"),
-    "cl_y": ethers.toBigInt("0x2551993d77f3a77cb033b52165cfc83ab3600b460b605caf2cd59ffe21431cc7"),
-    "cr_x": ethers.toBigInt("0x1cd89d45c98f78c5c2cb3a66ba1a5c047b15faac6130c75585dfe03adeab7fce"),
-    "cr_y": ethers.toBigInt("0x2639e268d5bb43de0f07fa7fb809591d7edad099267118970eece9c70b73358e"),
-}
-const rpcUrl ='aa4db6db10866450fb6685fb175e72f9-423262944.us-west-1.elb.amazonaws.com:50051'
+const rpcUrl = 'ac365b5fc227f46c5850d8590ddb0357-2076305457.us-west-1.elb.amazonaws.com:50051'
 const client = createClient(rpcUrl)
 
+const {
+    callPrivateMint,
+    callPrivateTransfer,
+    callPrivateBurn,
+    callPrivateApprove,
+    callPrivateTransferFrom,
+    getAddressBalance
+} = require("../help/testHelp")
 
 const l1CustomNetwork = {
     name: "BESU",
@@ -38,14 +32,10 @@ const options = {
 const L1Url = hardhatConfig.networks.ucl_node2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
-const L1Minter = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
-const L1MinterWallet = new ethers.Wallet(L1Minter, l1Provider);
+const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
+const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 
-const L1Sender = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
-const L1SenderWallet = new ethers.Wallet(L1Minter, l1Provider);
-
-const amount =1;
-const accountAddress=config.accounts
+const amount = 1;
 
 
 async function checkDeployedUSDC() {
@@ -61,7 +51,7 @@ async function checkDeployedUSDC() {
     const privateUSDC = await PrivateUSDCFactory.attach(config.contracts.PrivateERCToken);
 
     //validate basic properties
-    let name= await privateUSDC.name();
+    let name = await privateUSDC.name();
     let symbol = await privateUSDC.symbol();
     let decimals = await privateUSDC.decimals();
     let currency = await privateUSDC.currency();
@@ -69,17 +59,17 @@ async function checkDeployedUSDC() {
     assert.equal(decimals.toString(), "6")
 
     // validate minters
-    let masterMinter= await privateUSDC.masterMinter();
+    let masterMinter = await privateUSDC.masterMinter();
     let isMinter = await privateUSDC.isMinter(accounts.Minter);
 
     console.log("masterMinter: ", masterMinter)
     console.log("isMinter: ", isMinter)
-    assert.equal(masterMinter,accounts.MasterMinter);
+    assert.equal(masterMinter, accounts.MasterMinter);
     assert.equal(isMinter, true)
 
     // validate pauser
     let pauser = await privateUSDC.pauser();
-    let paused= await privateUSDC.paused();
+    let paused = await privateUSDC.paused();
     console.log("(pauser, paused)", pauser, paused);
     assert.equal(paused, false)
 
@@ -92,21 +82,138 @@ async function checkDeployedUSDC() {
     assert.equal(is_blackedListed, true)
 }
 
-async function generateMintProof() {
+async function mintForStart() {
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
-        to_address:accounts.To2,
-        amount: amount
+        to_address: accounts.Minter,
+        amount: 10
     };
-    let result = await client.generateMintProof(generateRequest);
-    console.log("Generate Mint Proof Result:", result);
-    const requestId = result.request_id;
+    let response = await client.generateMintProof(generateRequest);
+    console.log("Generate Mint Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
 
-    result = await client.getMintProof(requestId)
-    console.log("Mint Proof Result:", result);
+    console.log("Mint Proof Result:", proofResult);
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance: ", balance)
 }
 
 
-generateMintProof().then()
+async function testMint() {
+    const generateRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        to_address: accounts.To2,
+        amount: amount
+    };
+    let response = await client.generateMintProof(generateRequest);
+    console.log("Generate Mint Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
+
+    console.log("Mint Proof Result:", proofResult);
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
+    console.log("balance: ", balance)
+}
+
+
+async function testTransfer() {
+    const transferRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount
+    };
+    let response = await client.generateTransferProof(transferRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getTransferProof, response.request_id)
+
+    console.log("Transfer Proof Result:", proofResult);
+    let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
+    console.log("balance: ", balance)
+}
+
+async function testBurn() {
+    const burnRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        amount: amount
+    };
+    let response = await client.generateBurnProof(burnRequest);
+    console.log("Generate burn Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getBurnProof, response.request_id)
+
+    console.log("Burn Proof Result:", proofResult);
+    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance: ", balance)
+}
+
+
+async function testApprove() {
+    const approveRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
+        amount: amount
+    };
+    let response = await client.generateApproveProof(approveRequest);
+    console.log("Generate Approve Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getApproveProof, response.request_id)
+
+    console.log("Burn Proof Result:", proofResult);
+    let receipt = await callPrivateApprove(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance: ", balance)
+}
+
+async function testTransferFrom() {
+    const transferFromRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To2,
+        allowance_cancel_address: accounts.Spender1,
+        amount: amount
+    };
+    let response = await client.generateTransferFromProof(transferFromRequest);
+    console.log("Generate TransformFrom Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getTransferFromProof, response.request_id)
+
+    console.log("Burn Proof Result:", proofResult);
+    let receipt = await callPrivateTransferFrom(config.contracts.PrivateERCToken, proofResult, spender1Wallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Spender1)
+    console.log("spender1 balance: ", balance)
+
+    balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
+    console.log("To2 balance: ", balance)
+}
+
+
 // checkDeployedUSDC().then();
+
+
+// mintForStart().then()
+// testMint().then()
+// testTransfer().then();
+// testBurn().then();
+
+// testApprove().then();
+testTransferFrom().then();
