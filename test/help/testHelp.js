@@ -152,6 +152,36 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     return result
 }
 
+async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
+    // const contract = await ethers.getContractAt("PrivateERCToken", scAddress);
+    // let contractAllowance = await contract.getAccountAllowance(owner, spender);
+    //
+    // const contractAllowanceAmount = {
+    //     cl_x: convertBigInt2Hex(contractAllowance[0]),
+    //     cl_y: convertBigInt2Hex(contractAllowance[1]),
+    //     cr1_x: convertBigInt2Hex(contractAllowance[2]),
+    //     cr1_y: convertBigInt2Hex(contractAllowance[3]),
+    //     cr2_x: convertBigInt2Hex(contractAllowance[4]),
+    //     cr2_y: convertBigInt2Hex(contractAllowance[5])
+    // };
+
+    const grpcResult = await grpcClient.getAddressAllowance(owner, spender, scAddress);
+    const grpcAllowanceAmount = Number(grpcResult.amount);
+
+    // if (contractAllowanceAmount.cl_x !== grpcAllowanceAmount.cl_x ||
+    //     contractAllowanceAmount.cl_y !== grpcAllowanceAmount.cl_y ||
+    //     contractAllowanceAmount.cr1_x !== grpcAllowanceAmount.cr1_x ||
+    //     contractAllowanceAmount.cr1_y !== grpcAllowanceAmount.cr1_y ||
+    //     contractAllowanceAmount.cr2_x !== grpcAllowanceAmount.cr2_x ||
+    //     contractAllowanceAmount.cr2_y !== grpcAllowanceAmount.cr2_y) {
+    //     throw new Error(`Allowance mismatch: contract returned ${JSON.stringify(contractAllowanceAmount)}, gRPC returned ${JSON.stringify(grpcAllowanceAmount)}`);
+    // }
+
+    return grpcAllowanceAmount;
+}
+
+
+
 function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(16)
 }
@@ -182,5 +212,6 @@ module.exports =  {
     callPrivateBurn,
     callPrivateApprove,
     callPrivateTransferFrom,
-    getAddressBalance
+    getAddressBalance,
+    getAllowanceBalance
 }

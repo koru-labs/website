@@ -92,6 +92,15 @@ function createClient(url) {
         return promisify(client.GetAddressBalance.bind(client), request);
     };
 
+    client.getAddressAllowance  = async function(ownerAddress, spenderAddress,scAddress) {
+        const request = {
+            owner_address: ownerAddress,
+            spender_address: spenderAddress,
+            sc_address: scAddress
+        };
+        return promisify(client.GetAddressAllowance.bind(client), request);
+    };
+
     client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
