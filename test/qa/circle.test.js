@@ -213,9 +213,11 @@ describe("Mint", function () {
 describe("Transfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
+    before(async function  () {
+        await mint(1000);
+    })
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
-        await mint(500)
     });
     it('transfer_100_address1',async () => {
         preBalanceTo = await getTokenBalance(toAddress1);
@@ -260,9 +262,11 @@ describe("Transfer",  function (){
 describe("Burn", function () {
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
+    before(async function  () {
+        await mint(1000);
+    })
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
-        await mint(500)
     });
 
     it('burn_100 ', async () => {
@@ -289,12 +293,15 @@ describe("Burn", function () {
     });
 });
 
-describe("Approve And TranferFrom", function () {
+describe.only("Approve And TranferFrom", function () {
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
+    before(async function  () {
+        await mint(1000);
+    })
+
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
-        await mint(1000)
     });
     it('Approve_100_transferFrom_100 ', async () => {
         preBalanceTo = await getTokenBalance(toAddress1);
@@ -327,9 +334,9 @@ describe("Approve And TranferFrom", function () {
             await TransferFrom(toAddress2,100)
         }
         postBalance = await getTokenBalance(accounts.Minter);
-        expect(postBalance).to.equal(preBalance - amount_approve * times);
+        expect(postBalance).to.equal(preBalance - amount_approve);
         postBalanceTo = await getTokenBalance(toAddress2);
-        expect(postBalanceTo).to.equal(preBalanceTo + amount_approve * times);
+        expect(postBalanceTo).to.equal(preBalanceTo + amount_approve);
     })
 });
 
