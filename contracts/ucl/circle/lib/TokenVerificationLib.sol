@@ -18,62 +18,6 @@ library TokenVerificationLib {
     }
 
 
-    //this validation has problem. we need to check that reservedAmounts is bound to Zn
-    // how many tokens we have for a split
-    function verifyTokenSplit(TokenModel.Account storage ownerAccount, TokenModel.ParentTokens memory parentTokens,
-        TokenModel.AmountInfo[] memory reservedAmounts, bytes calldata proof) public returns (bool, uint, uint256[] memory) {
-//
-//        address owner = ownerAccount.addr;
-//        (uint result, Fr[] memory z0, Fr[] memory zn) = verify(proof);
-//
-//        uint256[] memory znValues = new uint256[](4);
-//        znValues[0] = Fr.unwrap(zn[0]);
-//        znValues[1] = Fr.unwrap(zn[1]);
-//        znValues[2] = Fr.unwrap(zn[2]);
-//        znValues[3] = Fr.unwrap(zn[3]);
-//
-//        (uint256 sum_clx,uint256 sum_cly,uint256 sum_crx,uint256 sum_cry) = TokenGrumpkinLib.sumTokenAmountsLogic(ownerAccount, parentTokens.parentIds);
-//        require((parentTokens.parentTotal.cl_x == sum_clx && parentTokens.parentTotal.cl_y == sum_cly &&
-//        parentTokens.parentTotal.cr_x == sum_crx && parentTokens.parentTotal.cr_y == sum_cry), "invalid parentTokenUpdate amount");
-//
-//        require(verifySplitInputsAgainstZ0(parentTokens.parentTotal, z0), "verifyParentToken error");
-//
-//        uint256 rollbackTokenId;
-//        uint256 receiverTokenId;
-//        uint256 changeTokenId;
-//
-//        for (uint256 i = 0; i < reservedAmounts.length; i++) {
-//            if (reservedAmounts[i].rollbackTokenId != 0) {
-//                rollbackTokenId = reservedAmounts[i].rollbackTokenId;
-//                receiverTokenId = reservedAmounts[i].id;
-//                continue;
-//            }
-//        }
-//
-//        require(rollbackTokenId!=0, "rollbackToken not found");
-//        require(receiverTokenId!=0, "receiverToken not found");
-//
-//
-//        for (uint256 i = 0; i < reservedAmounts.length; i++) {
-//            if (reservedAmounts[i].id != rollbackTokenId && reservedAmounts[i].id!= receiverTokenId) {
-//                changeTokenId = reservedAmounts[i].id;
-//            }
-//        }
-//        require(changeTokenId!=0, "changeToken not found");
-//
-//        TokenModel.TokenEntity memory rollbackTokenEntity = ownerAccount.tokens[rollbackTokenId];
-//        require(verifySplitRollbackToken(zn, rollbackTokenEntity), "verifyDVPRollbackToken error");
-//
-//        TokenModel.TokenEntity memory receiverTokenEntity = ownerAccount.tokens[receiverTokenId];
-//        require(verifySplitReceiverToken(zn, receiverTokenEntity), "verifyDVPReceiverToken error");
-//
-//        TokenModel.TokenEntity memory changeTokenEntity = ownerAccount.tokens[changeTokenId];
-//        require(verifySplitChangeToken(zn, changeTokenEntity), "verifyDVPChangeToken error");
-//        return (true, result, znValues);
-        return (true, 0, new uint256[](0));
-    }
-
-
     function verifySplitRollbackToken(Fr[] memory zn, TokenModel.TokenEntity memory rollbackToken) public pure returns (bool) {
         return rollbackToken.amount.cl_x == Fr.unwrap(zn[8]) &&
         rollbackToken.amount.cl_y == Fr.unwrap(zn[9]) &&
@@ -159,6 +103,62 @@ library TokenVerificationLib {
         require(supplyIncrease.cl_x == znValues[8] && supplyIncrease.cl_y == znValues[9] && supplyIncrease.cr_x == znValues[10] && supplyIncrease.cr_y == znValues[11], "supplyIncrease not match");
 
         return (true, result, znValues);
+    }
+
+    function verifyTokenSplit(TokenModel.VerifyTokenSplitParams calldata params) public view returns (bool, uint, uint256[] memory) {
+        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
+
+        uint256[] memory znValues = new uint256[](12);
+        znValues[0] = Fr.unwrap(zn[0]);
+        znValues[1] = Fr.unwrap(zn[1]);
+        znValues[2] = Fr.unwrap(zn[2]);
+        znValues[3] = Fr.unwrap(zn[3]);
+        znValues[4] = Fr.unwrap(zn[4]);
+        znValues[5] = Fr.unwrap(zn[5]);
+        znValues[6] = Fr.unwrap(zn[6]);
+        znValues[7] = Fr.unwrap(zn[7]);
+        znValues[8] = Fr.unwrap(zn[8]);
+        znValues[9] = Fr.unwrap(zn[9]);
+        znValues[10] = Fr.unwrap(zn[10]);
+        znValues[11] = Fr.unwrap(zn[11]);
+
+        //  verify consumedAmount 0-3
+        TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
+//        require(consumedAmount.cl_x == z0[0] && consumedAmount.cl_y == z0[1] && consumedAmount.cr_x == z0[2] && consumedAmount.cr_y == z0[3], "consumedAmount not match");
+
+        // verify remaining amount
+        require(verifyChangeToken(zn, params.remainingAmount), "invalid change token");
+
+        // verify transferAmount
+        require(verifyTransferToken(zn, params.amount), "invalid transfer token");
+
+        // verify rollbackAmount
+        require(verifyRollbackToken(zn, params.rollbackAmount), "invalid rollback token");
+
+
+        return (true, 0, znValues);
+    }
+
+    function verifyChangeToken(Fr[] memory zn, TokenModel.ElGamal memory changeToken) public pure returns (bool) {
+        return changeToken.cl_x == Fr.unwrap(zn[4]) &&
+        changeToken.cl_y == Fr.unwrap(zn[5]) &&
+        changeToken.cr_x == Fr.unwrap(zn[6]) &&
+        changeToken.cr_y == Fr.unwrap(zn[7]);
+    }
+
+    function verifyTransferToken(Fr[] memory zn, TokenModel.ElGamal memory token) public pure returns (bool) {
+        return token.cl_x == Fr.unwrap(zn[0]) &&
+        token.cl_y == Fr.unwrap(zn[1]) &&
+        token.cr_x == Fr.unwrap(zn[2]) &&
+        token.cr_y == Fr.unwrap(zn[3]);
+    }
+
+    function verifyRollbackToken(Fr[] memory zn, TokenModel.ElGamal memory rollbackToken) public pure returns (bool) {
+        return rollbackToken.cl_x == Fr.unwrap(zn[8]) &&
+        rollbackToken.cl_y == Fr.unwrap(zn[9]) &&
+        rollbackToken.cr_x == Fr.unwrap(zn[10]) &&
+        rollbackToken.cr_y == Fr.unwrap(zn[11]);
     }
 
     // verifyTokenTransfer
