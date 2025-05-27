@@ -179,6 +179,10 @@ library Grumpkin {
     function sub(GrumpkinAffinePoint memory p1, GrumpkinAffinePoint memory p2) public
     view
     returns (GrumpkinAffinePoint memory) {
+        // if p1 and p2 are the same, return identity element (zero point)
+        if (p1.x == p2.x && p1.y == p2.y) {
+            return Identity();
+        }
         return add(p1, negate(p2));
     }
 
