@@ -28,7 +28,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _publicTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
-    uint256 public decryptedTotalSupply;  //this is wrong
 
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
@@ -68,12 +67,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory supplyIncrease,
         bytes calldata proof
     )
-        external
-        whenNotPaused
-        onlyMinters
-        notBlacklisted(msg.sender)
-        notBlacklisted(to)
-        returns (bool)
+    external
+    whenNotPaused
+    onlyMinters
+    notBlacklisted(msg.sender)
+    notBlacklisted(to)
+    returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
 
@@ -265,7 +264,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      *
      * Emits a {PrivateTransferFrom} event.
      * @param from The address that will transfer the tokens.
-     * @param oldAllowance The allowance before the transfer.
      * @param newAllowance The allowance after the transfer.
      * @param to The address that will receive the transferred tokens.
      * @param value The amount of tokens to transfer.
@@ -274,7 +272,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      */
     function privateTransferFrom(
         address from,
-        TokenModel.Allowance memory oldAllowance, // TODO remove this param. use the current allowance from the contract storage
         TokenModel.Allowance memory newAllowance,
         address to,
         TokenModel.ElGamal memory value,
@@ -283,9 +280,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(from != address(0), "PrivateERCToken: transfer from the zero address");
         require(to != address(0), "PrivateERCToken: transfer to the zero address");
         require(isNotZeroElGamal(value), "PrivateERCToken: transfer zero value");
+        require(existsAllowance(from, msg.sender), "PrivateERCToken: allowance does not exist");
+
+        TokenModel.Allowance memory oldAllowance = getAllowance(from,msg.sender);
         require(isNotZeroAllowance(oldAllowance), "PrivateERCToken: zero allowance");
-        require(existsAllowance( from,msg.sender, oldAllowance), "PrivateERCToken: allowance does not exist");
-        
+
         TokenModel.VerifyTokenTransferFromParams memory params = TokenModel.VerifyTokenTransferFromParams({
             institutionRegistration: _institutionRegistration,
             owner: from,
@@ -296,7 +295,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             amount: value,
             proof: proof
         });
-        
+
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransferFrom(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
@@ -345,33 +344,55 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
-    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory) { 
+    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory) {
         //TODO complete this function.
         return TokenModel.ElGamal( {
-        cl_x: 0,
-        cl_y: 0,
-        cr_x: 0,
-        cr_y: 0
+            cl_x: 0,
+            cl_y: 0,
+            cr_x: 0,
+            cr_y: 0
         });
     }
 
     /**
-     * @dev Decreases the allowance of the spender by the given amount.
+    * MARK: Decrease Allowance
+
+    * @dev Decreases the allowance of the spender by the given amount.
      *
      * Emits a {PrivateApproval} event.
      * @param spender The address that will be approved to spend the tokens.
      * @param newAllowance The new decreased allowance.
-     * @param decrement The amount to decrease the allowance by.
      * @param proof The proof.
      * @return True if the operation was successful.
      */
-    function privateDecreaseAllowance(address spender, 
-        TokenModel.Allowance memory newAllowance, 
-        TokenModel.ElGamal memory decrement, 
-        bytes calldata proof) external returns (bool){ 
-        //TODO complete this function, following the ERC20 standard behavior for decreaseAllowance privacy.
-    }
+    function privateDecreaseAllowance(
+        address spender,
+        TokenModel.ElGamal memory decreaseAmount,
+        TokenModel.Allowance memory newAllowance,
+        bytes calldata proof
+    ) external returns (bool) {
+        require(isNotZeroAllowance(newAllowance), "PrivateERCToken: zero allowance");
+        require(isNotZeroElGamal(decreaseAmount), "PrivateERCToken: zero decrease amount");
+        require(spender != address(0), "PrivateERCToken: spender is the zero address");
+        require(existsAllowance(msg.sender, spender), "PrivateERCToken: allowance does not exist");
 
+        //TODO uncomment code below and build the verifyUpdateAllowance related functions
+        // TokenModel.Allowance memory oldAllowance = accounts[msg.sender].allowances[spender];
+        // TokenModel.VerifyUpdateAllowanceParams memory params = TokenModel.VerifyUpdateAllowanceParams({
+        //     institutionRegistration: _institutionRegistration, //I realy don't know why are we using institutionRegistration here!
+        //     owner: msg.sender,
+        //     spender: spender,
+        //     decreaseAmount: decreaseAmount,
+        //     oldAllowance: oldAllowance,
+        //     newAllowance: newAllowance,
+        //     proof: proof
+        // });
+        // (bool isValid, , ) = TokenVerificationLib.verifyDecreaseAllowance(params);
+        // require(isValid, "PrivateERCToken: invalid proof");
+        _privateApprove(msg.sender, spender, newAllowance);
+        addToken(msg.sender, decreaseAmount);
+        return true;
+    }
 
     /**
      * @dev Increases the allowance of the spender by the given amount.
@@ -384,16 +405,40 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @param proof The proof.
      * @return True if the operation was successful.
      */
-    function privateIncreaseAllowance(address spender, 
-        TokenModel.Allowance memory newAllowance, 
+    function privateIncreaseAllowance(
+        address spender,
+        TokenModel.Allowance memory newAllowance,
         bytes32[] memory consumedTokens,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external returns (bool){ 
-        //TODO complete this function, following the ERC20 standard behavior for increaseAllowance privacy.
+        bytes calldata proof
+    ) external returns (bool) {
+        require(isNotZeroAllowance(newAllowance), "PrivateERCToken: zero allowance");
+        require(isNotZeroElGamal(consumedTokensRemainingAmount), "PrivateERCToken: zero decrease amount");
+        require(spender != address(0), "PrivateERCToken: spender is the zero address");
+        require(existsAllowance(msg.sender, spender), "PrivateERCToken: allowance does not exist");
+        require(existsAll(msg.sender, consumedTokens), "PrivateERCToken: consumedTokens does not exist");
 
+        //TODO uncomment code below and build the verifyUpdateAllowance related functions
+        // TokenModel.Allowance memory oldAllowance = accounts[msg.sender].allowances[spender];
+        // TokenModel.VerifyTokenIncreaseAllowanceParams memory params = TokenModel.VerifyTokenIncreaseAllowanceParams({
+        //     institutionRegistration: _institutionRegistration,
+        //     owner: msg.sender,
+        //     spender: spender,
+        //     newAllowance: newAllowance,
+        //     oldAllowance: oldAllowance,
+        //     consumedTokens: consumedTokens,
+        //     consumedTokensRemainingAmount: consumedTokensRemainingAmount,
+        //     proof: proof
+        // });
+        // (bool isValid, , ) = TokenVerificationLib.verifyTokenIncreaseAllowance(params);
+        // require(isValid, "PrivateERCToken: invalid proof");
+
+        _privateApprove(msg.sender, spender, newAllowance);
+        removeTokensWithBalance(msg.sender, consumedTokens);
+        addToken(msg.sender, consumedTokensRemainingAmount);
         return true;
     }
-    
+
     /**
      * @dev Moves a private `value` amount of tokens from the caller's account to `to`.
      *
@@ -412,11 +457,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
         bytes calldata proof)
-        external
-        whenNotPaused
-        notBlacklisted(msg.sender)
-        notBlacklisted(to)
-        returns (bool)
+    external
+    whenNotPaused
+    notBlacklisted(msg.sender)
+    notBlacklisted(to)
+    returns (bool)
     {
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
@@ -446,7 +491,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
-        external whenNotPaused onlyMasterMinter returns (bool) {
+    external whenNotPaused onlyMasterMinter returns (bool) {
         minters[minter] = true;
         privateMinterAllowed[minter] = privateAllowedAmount;
 
@@ -494,6 +539,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         toAccount.tokens[tokenId] = amount;
     }
 
+    function removeTokenWithBalance(address to, TokenModel.ElGamal memory amount) internal {
+        bytes32 tokenId = hashElgamal(amount);
+        require(isNotZeroElGamal(accounts[to].tokens[tokenId]), "PrivateERCToken: token does not exist");
+        accounts[to].balance = TokenGrumpkinLib.subElGamal(accounts[to].balance, amount);
+        delete accounts[to].tokens[tokenId];
+    }
+
     function removeTokensWithBalance(address to, bytes32[] memory amount) internal {
         TokenModel.Account storage toAccount = accounts[to];
 
@@ -502,6 +554,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             delete toAccount.tokens[amount[i]];
         }
     }
+
 
     function subTokens(TokenModel.ElGamal memory amount,TokenModel.ElGamal memory amount1) external view returns (TokenModel.ElGamal memory) {
         return TokenGrumpkinLib.subElGamal(amount, amount1);
@@ -549,8 +602,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return allowance.cl_x != 0 && allowance.cl_y != 0 && allowance.cr1_x != 0 && allowance.cr1_y != 0 && allowance.cr2_x != 0 && allowance.cr2_y != 0;
     }
 
-    function existsAllowance(address owner, address spender, TokenModel.Allowance memory allowance) internal view returns (bool) {
-        return isEqualAllowance(accounts[owner].allowances[spender], allowance);
+    /**
+     * @notice Checks if an allowance exists for a given owner and spender.
+     * @param owner The address of the owner.
+     * @param spender The address of the spender.
+     * @return True if the allowance exists, false otherwise.
+     */
+    function existsAllowance(address owner, address spender) internal view returns (bool) {
+        return isNotZeroAllowance(accounts[owner].allowances[spender]);
     }
 
     /**
@@ -558,5 +617,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
    */
     function isEqualAllowance(TokenModel.Allowance memory a, TokenModel.Allowance memory b) internal pure returns (bool) {
         return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr1_x == b.cr1_x && a.cr1_y == b.cr1_y && a.cr2_x == b.cr2_x && a.cr2_y == b.cr2_y;
+    }
+
+    function _privateApprove(address owner, address spender, TokenModel.Allowance memory newAllowance) internal {
+        TokenModel.Allowance memory oldAllowance = accounts[owner].allowances[spender];
+        if (isNotZeroAllowance(oldAllowance)) {
+            removeTokenWithBalance(owner, backupAmount(oldAllowance));
+        }
+        addToken(owner, backupAmount(newAllowance));
+        accounts[owner].allowances[spender] = newAllowance;
+        emit PrivateApproval(owner, spender, newAllowance);
     }
 }
