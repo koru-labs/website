@@ -130,6 +130,7 @@ async function ApproveWithWallet(fromWallet,amount) {
         to_address: accounts.Spender1,
         amount: amount
     };
+
     let response = await client.generateApproveProof(approveRequest);
     console.log("Generate Approve Proof response:", response);
     let proofResult = await client.waitForProofCompletion(client.getApproveProof, response.request_id)
@@ -149,6 +150,25 @@ async function TransferFrom(toAddress,amount) {
         allowance_cancel_address: accounts.Spender1,
         amount: amount
     };
+    let response = await client.generateTransferFromProof(transferFromRequest);
+    console.log("Generate TransformFrom Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getTransferFromProof, response.request_id)
+
+    console.log("TransferFrom Proof Result:", proofResult);
+    let receipt = await callPrivateTransferFrom(config.contracts.PrivateERCToken, proofResult, spender1Wallet)
+    console.log("receipt", receipt)
+}
+
+async function TransferFromOther(fromAddress,toAddress,amount) {
+    const transferFromRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: fromAddress,
+        to_address: toAddress,
+        allowance_cancel_address: accounts.Spender1,
+        amount: amount
+    };
+    console.log("transferFromRequest:", transferFromRequest)
     let response = await client.generateTransferFromProof(transferFromRequest);
     console.log("Generate TransformFrom Proof response:", response);
     let proofResult = await client.waitForProofCompletion(client.getTransferFromProof, response.request_id)
@@ -382,11 +402,11 @@ describe("Check address balance", function () {
     });
 });
 
-describe.only("check contract totalSupply", function () {
+describe("check contract totalSupply", function () {
     this.timeout(120000);
     let totalSupplyPre,totalSupplyPost;
     before(async function  () {
-        await mint(100);
+        await mint(200);
     })
     it('check_contract_totalSupply', async () => {
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
@@ -403,11 +423,21 @@ describe.only("check contract totalSupply", function () {
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
     });
-    it('totalSupply_keep_same_after_transfer ',async () => {
+    it('totalSupply_keep_same_after_transfer',async () => {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         const minterBalance = await getTokenBalance(accounts.Minter);
         if(minterBalance>=100){
             await Transfer(toAddress1,100);
+            totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+            expect(totalSupplyPost).to.equal(totalSupplyPre);
+        }
+    });
+    it('totalSupply_keep_same_after_transferFrom',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        const minterBalance = await getTokenBalance(accounts.Minter);
+        if(minterBalance>=100){
+            await Approve(100);
+            await TransferFrom(toAddress1,100);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
             expect(totalSupplyPost).to.equal(totalSupplyPre);
         }
@@ -443,4 +473,20 @@ describe("approve and check allowance", function () {
         console.log("allowanced is ",allowanced)
         // expect(allowanced).to.equal(0);
     });
+    it.only("approve for toAddress2",async()=>{
+        const userWallet = new ethers.Wallet('35c285cae6a13a0e13ef7db25776e60b02745922da3b39513b94114c2c5d9add',l1Provider)
+        const userBalancePre = await getTokenBalance(userWallet.address);
+        if (userBalancePre>=100){
+
+            await ApproveWithWallet(userWallet,100)
+            let allowanced = await getTokenAllowance(userWallet.address);
+            console.log("allowanced is ",allowanced)
+            expect(allowanced).to.equal(100);
+            await TransferFromOther(userWallet.address,toAddress1,100);
+            allowanced = await getTokenAllowance(userWallet.address);
+            expect(allowanced).to.equal(0);
+        }else {
+            console.log("user balance is not enough")
+        }
+    })
 });

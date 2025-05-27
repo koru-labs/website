@@ -176,8 +176,17 @@ function hexToDecimal(hexString) {
     // Remove the '0x' prefix if present
     const hex = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
 
-    // Convert to decimal (BigInt handles very large numbers)
-    return BigInt('0x' + hex).toString();
+    // Convert to BigInt first
+    const bigIntValue = BigInt('0x' + hex);
+
+    // Safely convert to Number (with range check)
+    if (bigIntValue <= Number.MAX_SAFE_INTEGER) {
+        return Number(bigIntValue);
+    } else {
+        // For numbers beyond safe range, return as string or throw error
+        return bigIntValue.toString();
+        // Alternatively: throw new Error("Value exceeds safe integer range");
+    }
 }
 function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(16)
