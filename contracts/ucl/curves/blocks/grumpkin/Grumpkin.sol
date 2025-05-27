@@ -49,14 +49,16 @@ library Grumpkin {
         }
 
         if (is_identity(p1)) {
-            self_x = 0;
-            self_y = 1;
-            self_z = 0;
+            // self_x = 0;
+            // self_y = 1;
+            // self_z = 0;
+            return p2;
         }
         if (is_identity(p2)) {
-            rhs_x = 0;
-            rhs_y = 1;
-            rhs_z = 0;
+            // rhs_x = 0;
+            // rhs_y = 1;
+            // rhs_z = 0;
+            return p1;
         }
 
         // t0, t1, t2, t3, t4, t5
