@@ -23,7 +23,6 @@ interface IPrivateERCToken {
         bytes calldata proof) external; // first split which will put amount in out-box. call this function to move from out-box to apv-box
 
     function privateTransferFrom(      address from,
-        TokenModel.Allowance memory oldAllowance,
         TokenModel.Allowance memory newAllowance,
         address to,
         TokenModel.ElGamal memory value,
