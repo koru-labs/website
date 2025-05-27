@@ -25,14 +25,11 @@ library TokenOperationsLib {
 
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
             id: tokenId,
-            tokenType: 0,
             owner: to,
-            manager: toManager,
             status: TokenModel.TokenStatus.active,
             amount: amount,
-            issuerEncryptedAmount: issuerEncryptedAmount,
-            approvedSpender: address(0),
-            rollbackTokenId: 0
+            to: address(0),
+           rollbackTokenId: 0
         });
 
         tokensMap[tokenId] = entity;

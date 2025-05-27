@@ -78,42 +78,7 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, to, "TokenMinted", eventBody);
     }
 
-    function triggerTokenSplitEvent(
-        IL2Event _l2Event,
-        address eventSource,
-        TokenModel.TokenEntity memory token
-    ) public {
-        TokenDetailBody memory eventData = TokenDetailBody({
-        id: token.id,
-        tokenSCAddress: eventSource,
-        tokenType: token.tokenType,
-        owner: token.owner,
-        manager: token.manager,
-        cl_x: token.amount.cl_x,
-        cl_y: token.amount.cl_y,
-        cr_x: token.amount.cr_x,
-        cr_y: token.amount.cr_y,
-        amount: token.amount,
-        encryptedAmount: token.issuerEncryptedAmount,
-        status: token.status,
-        parentId: 0
-        });
-        bytes memory eventBody = abi.encode(eventData);
-        _l2Event.sendEvent(eventSource, token.manager, "TokenSplit", eventBody);
-    }
 
-    function triggerTokenRemovedEvent(
-        IL2Event _l2Event,
-        address eventSource,
-        TokenModel.TokenEntity memory token
-    ) public {
-        TokenRemovedEvent memory eventData = TokenRemovedEvent({
-        owner:  token.owner,
-        tokenId: token.id
-        });
-        bytes memory eventBody = abi.encode(eventData);
-        _l2Event.sendEvent(eventSource,  token.manager, "TokenRemoved", eventBody);
-    }
 
     function triggerInstitutionRegisteredEvent(
         IL2Event _l2Event,
