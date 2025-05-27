@@ -152,44 +152,36 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     return result
 }
 
-async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
-    // const contract = await ethers.getContractAt("PrivateERCToken", scAddress);
-    // let contractAllowance = await contract.getAccountAllowance(owner, spender);
-    //
-    // const contractAllowanceAmount = {
-    //     cl_x: convertBigInt2Hex(contractAllowance[0]),
-    //     cl_y: convertBigInt2Hex(contractAllowance[1]),
-    //     cr1_x: convertBigInt2Hex(contractAllowance[2]),
-    //     cr1_y: convertBigInt2Hex(contractAllowance[3]),
-    //     cr2_x: convertBigInt2Hex(contractAllowance[4]),
-    //     cr2_y: convertBigInt2Hex(contractAllowance[5])
-    // };
+async function getTotalSupplyNode3(grpcClient, scAddress) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.privateTotalSupply()
+    let balance=  {
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
+    let result = await grpcClient.getAccountBalance(scAddress,'0xf17f52151EbEF6C7334FAD080c5704D77216b732', balance)
+    const decimalValue = hexToDecimal(result.decryptBalance)
+    return decimalValue
+}
 
+async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     const grpcResult = await grpcClient.getAddressAllowance(owner, spender, scAddress);
     const grpcAllowanceAmount = Number(grpcResult.amount);
-
-    // if (contractAllowanceAmount.cl_x !== grpcAllowanceAmount.cl_x ||
-    //     contractAllowanceAmount.cl_y !== grpcAllowanceAmount.cl_y ||
-    //     contractAllowanceAmount.cr1_x !== grpcAllowanceAmount.cr1_x ||
-    //     contractAllowanceAmount.cr1_y !== grpcAllowanceAmount.cr1_y ||
-    //     contractAllowanceAmount.cr2_x !== grpcAllowanceAmount.cr2_x ||
-    //     contractAllowanceAmount.cr2_y !== grpcAllowanceAmount.cr2_y) {
-    //     throw new Error(`Allowance mismatch: contract returned ${JSON.stringify(contractAllowanceAmount)}, gRPC returned ${JSON.stringify(grpcAllowanceAmount)}`);
-    // }
-
     return grpcAllowanceAmount;
 }
 
-async function getTotalSupply(scAddress){
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
-    let amount = await contract.privateTotalSupply()
-    return amount
-}
+function hexToDecimal(hexString) {
+    // Remove the '0x' prefix if present
+    const hex = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
 
+    // Convert to decimal (BigInt handles very large numbers)
+    return BigInt('0x' + hex).toString();
+}
 function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(16)
 }
-
 
 function convertParentTokenIds(parentTokenIds) {
     return parentTokenIds.map(id => {
@@ -218,5 +210,5 @@ module.exports =  {
     callPrivateTransferFrom,
     getAddressBalance,
     getAllowanceBalance,
-    getTotalSupply
+    getTotalSupplyNode3
 }
