@@ -180,7 +180,11 @@ async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     return grpcAllowanceAmount;
 }
 
-
+async function getTotalSupply(scAddress){
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.privateTotalSupply()
+    return amount
+}
 
 function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(16)
@@ -213,5 +217,6 @@ module.exports =  {
     callPrivateApprove,
     callPrivateTransferFrom,
     getAddressBalance,
-    getAllowanceBalance
+    getAllowanceBalance,
+    getTotalSupply
 }
