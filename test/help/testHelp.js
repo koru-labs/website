@@ -166,6 +166,12 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
     return decimalValue
 }
 
+async function getPublicTotalSupply(scAddress) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.publicTotalSupply()
+    return amount
+}
+
 async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     const grpcResult = await grpcClient.getAddressAllowance(owner, spender, scAddress);
     const grpcAllowanceAmount = Number(grpcResult.amount);
@@ -219,5 +225,6 @@ module.exports =  {
     callPrivateTransferFrom,
     getAddressBalance,
     getAllowanceBalance,
-    getTotalSupplyNode3
+    getTotalSupplyNode3,
+    getPublicTotalSupply
 }
