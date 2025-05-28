@@ -231,6 +231,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return account2.assets[tokenId];
     }
 
+    function getAccountTokenById(
+        address account,
+        uint256 tokenId
+    ) external view returns (TokenModel.TokenEntity memory) {
+        TokenModel.Account storage account2 = accounts[account];
+        return account2.reservations[tokenId];
+    }
+
     //TODO use this function in your tests, instead of the function above.
     function tokenExists(address account, TokenModel.ElGamal memory amount) external view returns (bool) {
         TokenModel.ElGamal memory token = accounts[account].assets[hashElgamal(amount)];
@@ -546,6 +554,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @return True if the operation was successful.
      */
     function privateDirectTransfer(
+        address from,
         uint256[] memory consumedTokens,
         address to,
         TokenModel.ElGamal memory amount,
@@ -561,11 +570,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
-        require(existsAll2(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
-        TokenModel.ElGamal memory consumedAmount = sumTokens2(msg.sender, consumedTokens);
+        require(existsAll2(from, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+        TokenModel.ElGamal memory consumedAmount = sumTokens2(from, consumedTokens);
         TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
             institutionRegistration: _institutionRegistration,
-            from:msg.sender,
+            from: from,
             to: to,
             consumedAmount: consumedAmount,
             amount: amount,
@@ -575,13 +584,25 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
         require(isValid, "PrivateERCToken: invalid proof");
 
-        removeTokensWithBalance2(msg.sender, consumedTokens);
-        addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
-        addTokenWithBalance(to, amount);
+        removeTokensWithBalance2(from, consumedTokens);
 
-        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, msg.sender);
-        emit PrivateTransfer(msg.sender, to, amount);
+        uint256 changeTokenId = hashElgamal2(consumedTokensRemainingAmount);
+        TokenModel.TokenEntity memory changeTokenEntity =
+            TokenModel.TokenEntity(changeTokenId, from, TokenModel.TokenStatus.active, consumedTokensRemainingAmount, address(0), 0 );
+        addTokenWithBalance2(from, changeTokenEntity);
+
+//        addTokenWithBalance(from, consumedTokensRemainingAmount);
+//        addTokenWithBalance(to, amount);
+
+        uint256 transferTokenId = hashElgamal2(amount);
+        TokenModel.TokenEntity memory transferTokenEntity =
+        TokenModel.TokenEntity(transferTokenId, to, TokenModel.TokenStatus.active, amount, address(0), 0);
+        addTokenWithBalance2(to, transferTokenEntity);
+
+
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, consumedTokensRemainingAmount);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, from);
+        emit PrivateTransfer(from, to, amount);
         return true;
     }
 

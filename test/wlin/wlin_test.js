@@ -16,7 +16,8 @@ const {
     callPrivateBurn,
     callPrivateApprove,
     callPrivateTransferFrom,
-    getAddressBalance
+    getAddressBalance,
+    checkAccountToken
 } = require("../help/testHelp")
 
 const l1CustomNetwork = {
@@ -229,12 +230,16 @@ async function checkBalance(account) {
     console.log("balance: ", balance)
 }
 
+async function checkToken(account, tokenId) {
+    let token = await checkAccountToken(config.contracts.PrivateERCToken, account, tokenId)
+    console.log("token: ", token);
+}
+
 // checkDeployedUSDC().then();
 // testMint().then()
-
+// checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
 // mintForStart().then()
-
 testDirectTransfer().then();
 // checkBalance(accounts.To1).then()
 
