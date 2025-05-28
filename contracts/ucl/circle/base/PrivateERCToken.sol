@@ -115,12 +115,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
 
-    function privateReserveToken(bytes32[] memory consumedAmount, address from, address to, TokenModel.ElGamal[] calldata newAmounts, bytes calldata proof) external
+    function privateReserveToken(uint256[] memory consumedAmount, address from, address to, TokenModel.ElGamal[] calldata newAmounts, bytes calldata proof) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
         require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokens(msg.sender, consumedAmount);
+        TokenModel.ElGamal memory onChainConsumedAmount = sumTokens2(msg.sender, consumedAmount);
         TokenModel.ElGamal memory transferAmount = newAmounts[0];
         TokenModel.ElGamal memory changeAmount  = newAmounts[1];
         TokenModel.ElGamal memory rollBackAmount = newAmounts[2];
@@ -138,10 +138,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(params);
         require(isValid, "failed to validate generated tokens");
 
-        removeTokensWoChangeBalance(from, consumedAmount);
+        removeTokensWoChangeBalance2(from, consumedAmount);
         addToken(from, changeAmount);
 
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedAmount, changeAmount);
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedAmount, changeAmount);
         addReservation(from, TokenModel.TokenEntity({
             id:0,
             owner: from,
@@ -641,6 +641,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         for (uint256 i = 0; i < amount.length; i++) {
             delete toAccount.assets[amount[i]];
+        }
+    }
+
+    function removeTokensWoChangeBalance2(address to, uint256[] memory tokenIds) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            delete toAccount.reservations[tokenIds[i]];
         }
     }
 
