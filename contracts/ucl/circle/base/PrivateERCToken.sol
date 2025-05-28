@@ -344,14 +344,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
-    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory) {
-        //TODO complete this function.
-        return TokenModel.ElGamal( {
-            cl_x: 0,
-            cl_y: 0,
-            cr_x: 0,
-            cr_y: 0
-        });
+    function privateAllowance(address owner, address spender) external view returns (TokenModel.Allowance memory) {
+        return accounts[owner].allowances[spender];
     }
 
     /**

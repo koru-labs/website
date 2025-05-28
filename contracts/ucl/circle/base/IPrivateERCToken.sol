@@ -30,7 +30,7 @@ interface IPrivateERCToken {
     ) external returns (bool);
 
     // ERC: function allowance(owner, spender) external view returns(uint256);
-    function privateAllowance(address owner, address spender) external returns (TokenModel.ElGamal memory);
+    function privateAllowance(address owner, address spender) external returns (TokenModel.Allowance memory);
 
     // ERC: function transfer(address to, uint256 value) external returns (bool);
     function privateTransfer(bytes32[] memory consumedTokens,
