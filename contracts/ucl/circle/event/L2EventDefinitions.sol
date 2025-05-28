@@ -112,6 +112,11 @@ import "../model/TokenModel.sol";
         bytes32[] consumedTokens;
     }
 
+    struct TokenDeletedEvent2{
+        TokenModel.ElGamal consumedTokensRemainingAmount;
+        uint256[] consumedTokens;
+    }
+
     struct TokenReceivedEvent {
         TokenModel.ElGamal amount;
         address from;

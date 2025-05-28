@@ -50,10 +50,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
-
-
-
-
     /**
      * @dev Mints private fiat tokens to an address and updates the total supply.
      * @param to The address that will receive the minted tokens.
@@ -103,7 +99,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         addSupply(supplyIncrease);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply,_numberOfTotalSupplyChanges);
 
-        addTokenWithBalance(to, amount);
+        TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
+            id: hashElgamal2(amount),
+             owner:to,
+             status: TokenModel.TokenStatus.active,
+             amount:  amount,
+             to:  address(0),
+             rollbackTokenId:0
+        });
+        addTokenWithBalance2(to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount);
 
         emit PrivateMint(to, amount);
@@ -228,6 +232,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
     function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
         return keccak256(abi.encode(elgamal));
+    }
+
+    function hashElgamal2(TokenModel.ElGamal memory elgamal) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encode(elgamal)));
     }
 
     function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
@@ -494,7 +502,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @param proof The proof.
      * @return True if the operation was successful.
      */
-    function privateTransfer(bytes32[] memory consumedTokens,
+    function privateDirectTransfer(uint256[] memory consumedTokens,
         address to,
         TokenModel.ElGamal memory amount,
         TokenModel.ElGamal memory consumedTokensRemainingAmount,
@@ -508,8 +516,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
-        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
-        TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
+        require(existsAll2(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+        TokenModel.ElGamal memory consumedAmount = sumTokens2(msg.sender, consumedTokens);
         TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
             institutionRegistration: _institutionRegistration,
             from:msg.sender,
@@ -522,11 +530,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params);
         require(isValid, "PrivateERCToken: invalid proof");
 
-        removeTokensWithBalance(msg.sender, consumedTokens);
+        removeTokensWithBalance2(msg.sender, consumedTokens);
         addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
         addTokenWithBalance(to, amount);
 
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, msg.sender);
         emit PrivateTransfer(msg.sender, to, amount);
         return true;
@@ -575,6 +583,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         toAccount.assets[tokenId] = amount;
     }
 
+    function addTokenWithBalance2(address to, TokenModel.TokenEntity memory entity) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+
+        toAccount.balance = TokenGrumpkinLib.addElGamal(toAccount.balance, entity.amount);
+        toAccount.reservations[entity.id] = entity;
+    }
+
     function addToken(address to, TokenModel.ElGamal memory amount) internal {
         TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
@@ -599,6 +614,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         for (uint256 i = 0; i < amount.length; i++) {
             toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.assets[amount[i]]);
             delete toAccount.assets[amount[i]];
+        }
+    }
+
+    function removeTokensWithBalance2(address to, uint256[] memory tokenIds) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.reservations[tokenIds[i]].amount);
+            delete toAccount.reservations[tokenIds[i]];
         }
     }
 
@@ -628,9 +652,26 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return sum;
     }
 
+    function sumTokens2(address account, uint256[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
+        TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            sum = TokenGrumpkinLib.addElGamal(sum, accounts[account].reservations[tokens[i]].amount);
+        }
+        return sum;
+    }
+
     function existsAll(address account, bytes32[] memory tokens) internal view returns (bool) {
         for (uint256 i = 0; i < tokens.length; i++) {
             if (isZero(accounts[account].assets[tokens[i]])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function existsAll2(address account, uint256[] memory tokens) internal view returns (bool) {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (isZero(accounts[account].reservations[tokens[i]].amount)) {
                 return false;
             }
         }

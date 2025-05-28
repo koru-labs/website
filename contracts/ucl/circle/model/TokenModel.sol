@@ -40,23 +40,15 @@ library TokenModel {
         uint256 cr2_y;
     }
 
-    struct AmountInfo {
+    struct TokenInfo {
         uint256 id;
-        uint256 token_type; //ERC1155 token_type  (for ERC20 token, use 0)
         TokenStatus status;
 
         ElGamal amount;
-        TokenBox location;   //we needs this field before one split will generate multiple tokens, each will be put in different box
 
-        bytes issuerEncryptedAmount;
         address owner;
-        address manager;
+        address to;
         uint256 rollbackTokenId;
-    }
-
-    struct ParentTokens {
-        uint256[] parentIds;
-        ElGamal parentTotal;
     }
 
     struct TokenEntity {

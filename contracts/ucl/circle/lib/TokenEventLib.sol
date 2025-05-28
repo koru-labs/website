@@ -128,6 +128,21 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
     }
 
+    function triggerTokenDeletedEvent2(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        uint256[] memory consumedTokens,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount
+    )public{
+        TokenDeletedEvent2 memory e = TokenDeletedEvent2({
+            consumedTokensRemainingAmount: consumedTokensRemainingAmount,
+            consumedTokens: consumedTokens
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
+    }
+
     //triggerTokenReceivedEvent
     function triggerTokenReceivedEvent(
         IL2Event _l2Event,
