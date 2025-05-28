@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = 'ac365b5fc227f46c5850d8590ddb0357-2076305457.us-west-1.elb.amazonaws.com:50051'
+const rpcUrl = "ae0d1f34ff0504b2380f13432dc74a54-973956847.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -107,7 +107,7 @@ async function testMint() {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: accounts.To2,
-        amount: amount
+        amount: 1
     };
     let response = await client.generateMintProof(generateRequest);
     console.log("Generate Mint Proof response:", response);
@@ -119,6 +119,24 @@ async function testMint() {
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
     console.log("balance: ", balance)
+}
+
+async function testDirectTransfer(){
+    const transferRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount
+    };
+
+    let response = await client.generateDirectTransfer(transferRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
+    console.log(`balance of ${accounts.To1}: `, balance)
+
 }
 
 
@@ -206,14 +224,23 @@ async function testTransferFrom() {
     console.log("To2 balance: ", balance)
 }
 
+async function checkBalance(account) {
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, account)
+    console.log("balance: ", balance)
+}
 
 // checkDeployedUSDC().then();
+// testMint().then()
 
 
 // mintForStart().then()
-// testMint().then()
+
+testDirectTransfer().then();
+// checkBalance(accounts.To1).then()
+
+
 // testTransfer().then();
 // testBurn().then();
 
 // testApprove().then();
-testTransferFrom().then();
+// testTransferFrom().then();

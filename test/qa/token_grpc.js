@@ -29,10 +29,16 @@ const TokenActionStatusEnum = {
 function createClient(url) {
     const client = new TokenService(url, grpc.credentials.createInsecure());
 
+
     // Proof generation methods
     client.generateMintProof = async function(request) {
         return promisify(client.GenerateMintProof.bind(client), request);
     };
+
+    client.generateDirectTransfer = async function(request) {
+        return promisify(client.GenerateDirectTransfer.bind(client), request);
+    };
+
 
     client.generateTransferProof = async function(request) {
         return promisify(client.GenerateTransferProof.bind(client), request);
@@ -123,6 +129,32 @@ function createClient(url) {
         });
     };
 
+    client.waitForActionCompletion = async function(callBack, requestId, interval = 4000) {
+        return new Promise(async (resolve, reject) => {
+            while (true) {
+                try {
+                    const result = await callBack(requestId);
+
+                    if (result.status == "TOKEN_ACTION_STATUS_SUC") {
+                        resolve(result)
+
+                    } else if (result.status=="TOKEN_ACTION_STATUS_FAIL") {
+                        reject(result);
+
+                    } else {
+                        console.log("wait for proof. status = ", result.status)
+                    }
+
+                    await sleep(interval);
+                } catch (error) {
+                    console.error("Failed to query request status", error);
+                    reject(error);
+                    return;
+                }
+            }
+        });
+    };
+
     return client;
 }
 
@@ -150,6 +182,10 @@ async function generateMintProof(client, request) {
 
 async function generateTransferProof(client, request) {
     return client.generateTransferProof(request);
+}
+
+async function generateDirectTransfer(client, request) {
+    return client.generateDirectTransfer(request);
 }
 
 async function generateApproveProof(client, request) {
