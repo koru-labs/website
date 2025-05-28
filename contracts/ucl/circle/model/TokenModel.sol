@@ -61,23 +61,18 @@ library TokenModel {
 
     struct TokenEntity {
         uint256 id;
-        uint256 tokenType;
         address owner;
-        address manager;
         TokenStatus status;
-
         ElGamal amount;
-
-        bytes issuerEncryptedAmount;
-        address approvedSpender;
+        address to;
         uint256 rollbackTokenId;
     }
 
     struct Account {
         ElGamal balance;
-        mapping(bytes32 => ElGamal) tokens; //TODO change this name to assets
+        mapping(bytes32 => ElGamal) assets;
         mapping(address => Allowance) allowances;
-        //TODO add here "mapping(bytes32 => ElGamal) reservations;"
+        mapping(uint256 => TokenEntity) reservations;
     }
 
     struct BankAllowances {
@@ -102,6 +97,17 @@ library TokenModel {
         ElGamal consumedAmount;
         ElGamal amount;
         ElGamal remainingAmount;
+        bytes proof;
+    }
+
+    struct VerifyTokenSplitParams {
+        InstitutionRegistration institutionRegistration;
+        address from;
+        address to;
+        ElGamal consumedAmount;
+        ElGamal amount;
+        ElGamal remainingAmount;
+        ElGamal rollbackAmount;
         bytes proof;
     }
 

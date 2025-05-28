@@ -13,6 +13,7 @@ contract L2EventParser {
     function parseTokenReceived(TokenReceivedEvent memory e) public view {}
     function parseTokenBurned(TokenBurnedEvent memory e) public view {}
     function parseAllowanceUpdated(AllowanceUpdatedEvent memory e) public view {}
+    function parseTokenSupplyUpdated(TokenSupplyUpdatedEvent memory e) public view {}
 
     function parseAllowanceCreated(AllowanceCreatedEvent memory e) public view {}
     function parseAllowanceReceived(AllowanceReceivedEvent memory e) public view {}
