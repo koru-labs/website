@@ -63,9 +63,12 @@ async function main() {
         "Grumpkin",
         "ZkVerifier"
     ];
-    const allNovaLibsDeployed = novaLibraries.every(lib => existingDeployments?.libraries?.[lib]);
 
-    if (!allNovaLibsDeployed) {
+    // const allNovaLibsDeployed = novaLibraries.every(lib => existingDeployments?.libraries?.[lib]);
+
+    // don't do this as it make trouble shooting very difficult
+    // if (!allNovaLibsDeployed)
+    {
         console.log("Deploying all Nova libraries...");
         
         // Deploy Fr Lib
@@ -126,12 +129,6 @@ async function main() {
         await zkVerifier.waitForDeployment();
         console.log("ZkVerifier is deployed at:", zkVerifier.target);
         deployed.libraries.ZkVerifier = zkVerifier.target;
-    } else {
-        console.log("All Nova libraries are already deployed, reusing existing deployments");
-        novaLibraries.forEach(lib => {
-            deployed.libraries[lib] = existingDeployments.libraries[lib];
-            console.log(`Reusing ${lib} at: ${existingDeployments.libraries[lib]}`);
-        });
     }
 
     console.log("\n=== Deploy TokenSc Libs ===");
