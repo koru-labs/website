@@ -8,6 +8,7 @@ option go_package = "./token_grpc";
 service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
   rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
@@ -18,7 +19,8 @@ service TokenService {
   rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
   rpc GetAddressBalance       (DecodeBalanceRequest)        returns (AddressBalanceResponse);
   rpc GetAddressAllowance     (AddressAllowanceRequest)     returns (AddressAllowanceResponse);
-
+  rpc GetMintAllowed          (MintAllowedRequest)          returns (MintAllowedResponse);
+  rpc ElgamalEncodeAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
 }
 
 // Token action status enum
@@ -125,7 +127,7 @@ message GenerateProofRequest {
   uint64 token_type =2;
   string from_address =3;
   string to_address =4;
-  string allowance_cancel_address =5;
+  string spender_address =5;
   uint64 amount = 6;
 }
 
@@ -150,7 +152,21 @@ message AddressAllowanceRequest {
   string spender_address = 2;
   string sc_address = 3;
 }
+message MintAllowedRequest {
+  string sc_address = 3;
+}
 
+message MintAllowedResponse {
+  uint64 amount = 1;
+}
 message AddressAllowanceResponse {
   uint64 amount = 1;
+}
+
+message EncodeAmountRequest {
+  uint64 amount=1;
+}
+
+message EncodeAmountResponse {
+  ElGamal amount =1;
 }
