@@ -130,8 +130,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
 
         TokenModel.ElGamal memory onChainConsumedAmount = sumTokens2(msg.sender, consumedAmount);
-        TokenModel.TokenEntity memory transferToken = newTokens[0]; //TODO MAGIC NUMBERS
-        TokenModel.TokenEntity memory changeToken = newTokens[1];
+        TokenModel.TokenEntity memory changeToken = newTokens[0];
+        TokenModel.TokenEntity memory transferToken = newTokens[1]; //TODO MAGIC NUMBERS
         TokenModel.TokenEntity memory rollBackToken = newTokens[2]; //TODO MAGIC NUMBERS
 
         TokenModel.VerifyTokenSplitParams memory params =  TokenModel.VerifyTokenSplitParams({
