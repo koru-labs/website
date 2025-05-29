@@ -111,6 +111,11 @@ function createClient(url) {
         return promisify(client.GenerateSplitToken.bind(client), request);
     };
 
+    client.getSplitToken = async function(requestId) {
+        const request = { requestId };
+        return promisify(client.GetSplitToken.bind(client), request);
+    };
+
     client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
@@ -148,7 +153,6 @@ function createClient(url) {
                     } else {
                         console.log("wait for proof. status = ", result.status)
                     }
-
                     await sleep(interval);
                 } catch (error) {
                     console.error("Failed to query request status", error);

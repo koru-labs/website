@@ -22,6 +22,7 @@ service TokenService {
   rpc GetAddressAllowance     (AddressAllowanceRequest)     returns (AddressAllowanceResponse);
   rpc GetMintAllowed          (MintAllowedRequest)          returns (MintAllowedResponse);
   rpc ElgamalEncodeAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
+  rpc GetSplitToken           (ProofRequest)                returns (SplitTokenResponse);
 }
 
 // Token action status enum
@@ -170,4 +171,12 @@ message EncodeAmountRequest {
 
 message EncodeAmountResponse {
   ElGamal amount =1;
+}
+
+message SplitTokenResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+  string transfer_token_id = 3;
+  string change_token_id = 4;
+  string backup_token_id = 5;
 }

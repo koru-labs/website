@@ -44,6 +44,20 @@ async function callPrivateTransfer(scAddress, proofResult, senderWallet){
     return receipt
 }
 
+async function callPrivateTransfer2(scAddress, tokenId, to, minterWallet) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
+    const tx = await contract.privateTransfer(tokenId,to);
+    let receipt = await tx.wait();
+    return receipt;
+}
+
+
+async function callPrivateBurn2(scAddress, tokenId, minterWallet) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
+    const tx = await contract.privateBurn(tokenId);
+    let receipt = await tx.wait();
+    return receipt;
+}
 
 
 async function callPrivateApprove(scAddress, proofResult, ownerWallet){
@@ -235,5 +249,7 @@ module.exports =  {
     getAllowanceBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
-    checkAccountToken
+    checkAccountToken,
+    callPrivateTransfer2,
+    callPrivateBurn2
 }

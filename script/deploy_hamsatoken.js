@@ -339,7 +339,7 @@ async function testMSFTPoseidon() {
 }
 async function setBankAllowance() {
     const [deployer,singer,depositor] = await ethers.getSigners()
-    const child = await hre.ethers.getContractAt("PrivateERCToken","0xD339B3F9d821d8f72e54fF0775A9558B207E4f2E")
+    const child = await hre.ethers.getContractAt("PrivateERCToken","0x8B1AbA73F77CeFbB12770AfE19DfA5B5e4931009")
 
 
     const amount =   {
@@ -348,9 +348,7 @@ async function setBankAllowance() {
         "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
         "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
     }
-    let tx = await child.addInstitutionAccount('0xf17f52151EbEF6C7334FAD080c5704D77216b732')
-    await tx.wait()
-    const result = await child.setInstitutionAllowance('0xf17f52151EbEF6C7334FAD080c5704D77216b732',amount);
+    const result = await child.configurePrivacyMinter('0xf17f52151EbEF6C7334FAD080c5704D77216b732',amount);
     console.log("Result:", result);
 
     // let tokenInFrom = await child.userTokenMap('0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73', ethers.toBigInt("0x2c3dd4eca03e677ea07f2a8aeadeb016b99717972c38334af91be3e61192994d"));
@@ -757,11 +755,11 @@ async function testSub() {
         cr_x : 17757512460776380219657411755246141072605895768073319441217657856504494274830n,
         cr_y : 7024255621955662830672270891040662382521562102132890198774145786545283847130n,
     }
-    const result = await child.subTokens(oldBackup,newBackup);
+    const result = await child.subTokens(oldBackup,oldBackup);
     console.log("Result:", result);
 
-    const result1 = await child.addTokens(test1,newBackup);
-    console.log("Result1:", result1);
+    // const result1 = await child.addTokens(test1,newBackup);
+    // console.log("Result1:", result1);
 
 }
 
@@ -831,21 +829,17 @@ function hashElgamal(elgamal) {
 // testToken().then()
 // setBankAllowance().then()
 // register().then()
-// testProof().then()
+testProof().then()
 // testMintToken().then()
 // testMint().then()
 // testMint2().then()
 // InstitutionRegistration().then()
-getToken().then()
+// getToken().then()
 // testTransfer().then()
 // testApprove().then()
 // testBurn().then()
 // testTransferFrom().then()
-// testSub().then()
+testSub().then()
 // testAdd().then()
-//  4316131269954985816891225903094246359937581979192374469338154299632736795129n,
-//   8380061563137343271214860055845416780270737083411878994433664687730108302604n,
-//   15701566849849142178724337216249077510817007211273313038600610231618573705145n,
-//   9609848782600010666631397284701272557216813657477544344312195976672499130432n
 
 
