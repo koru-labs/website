@@ -142,7 +142,7 @@ async function testDirectTransfer(){
 
 }
 
-async function testReserveTokens(){
+async function testReserveTokensAndTransfer(){
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -158,8 +158,28 @@ async function testReserveTokens(){
         console.log("proofResult", proofResult)
         let tokenId = ethers.toBigInt('0x'+proofResult.transfer_token_id)
         console.log("tokenId", tokenId)
-        // let receipt = await callPrivateTransfer2(config.contracts.PrivateERCToken,tokenId,accounts.To1,minterWallet)
-        // console.log("receipt", receipt)
+        let receipt = await callPrivateTransfer2(config.contracts.PrivateERCToken,tokenId,accounts.To1,minterWallet)
+        console.log("receipt", receipt)
+    }
+}
+
+
+async function testReserveTokensAndBurn(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+        console.log("proofResult", proofResult)
+        let tokenId = ethers.toBigInt('0x'+proofResult.transfer_token_id)
+        console.log("tokenId", tokenId)
 
         let receipt = await callPrivateBurn2(config.contracts.PrivateERCToken,tokenId,minterWallet)
         console.log("receipt", receipt)
@@ -266,10 +286,10 @@ async function checkToken(account, tokenId) {
 
 // mintForStart().then()
 // testDirectTransfer().then();
-// checkBalance(accounts.To1).then()
+// checkBalance(accounts.Minter).then()
 
-testReserveTokens().then();
-
+// testReserveTokensAndBurn().then();
+// testReserveTokensAndTransfer().then()
 // testTransfer().then();
 // testBurn().then();
 
