@@ -123,9 +123,7 @@ import "../model/TokenModel.sol";
     }
 
     struct TokenBurnedEvent{
-        bytes32[]  consumedTokens;
-        TokenModel.ElGamal  amount;
-        TokenModel.ElGamal  consumedTokensRemainingAmount;
+        uint256 tokenId;
     }
 
     struct AllowanceUpdatedEvent {

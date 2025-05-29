@@ -162,47 +162,24 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
     /**
      * @dev Burns private fiat tokens from an address and updates the total supply.
-     * @param consumedTokens The array of tokens to burn.
-     * @param amount The amount of tokens to burn.
-     * @param consumedTokensRemainingAmount The remaining amount of tokens to burn.
-     * @param supplyDecrease The amount of tokens to decrement in total supply.
-     * @param proof The proof.
+     * @param tokenId The tokenId to burn.
      */
     function privateBurn(
-        bytes32[] memory consumedTokens,
-        TokenModel.ElGamal memory amount,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        TokenModel.ElGamal memory supplyDecrease,
-        bytes calldata proof
+       uint256 tokenId
     ) external {
-        require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
-        require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
-        require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
-        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(accounts[msg.sender].reservations[tokenId].id != 0, "invalid token");
 
-        TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
-        TokenModel.VerifyTokenBurnParams memory params = TokenModel.VerifyTokenBurnParams({
-            institutionRegistration: _institutionRegistration,
-            from:msg.sender,
-            consumedAmount: consumedAmount,
-            amount: amount,
-            remainingAmount: consumedTokensRemainingAmount,
-            supplyDecrease: supplyDecrease,
-            proof: proof
-        });
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenBurn(params);
-        require(isValid, "PrivateERCToken: invalid proof");
-
-        removeTokensWithBalance(msg.sender, consumedTokens);
-        addTokenWithBalance(msg.sender, consumedTokensRemainingAmount);
-
+        TokenModel.ElGamal memory supplyDecrease = accounts[msg.sender].reservations[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
+
         subSupply( supplyDecrease);
+        removeTokenWithBalance(msg.sender, tokenId);
 
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply,_numberOfTotalSupplyChanges);
-        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, consumedTokens, amount, consumedTokensRemainingAmount);
+        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, tokenId);
 
-        emit PrivateBurn(msg.sender, amount);
+        emit PrivateBurn(msg.sender, supplyDecrease);
     }
 
     // for debug
@@ -671,6 +648,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.assets[amount[i]]);
             delete toAccount.assets[amount[i]];
         }
+    }
+
+    function removeTokenWithBalance(address to, uint256 tokenId) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+
+        toAccount.balance = TokenGrumpkinLib.subElGamal(toAccount.balance, toAccount.reservations[tokenId].amount);
+        delete toAccount.reservations[tokenId];
     }
 
     function removeTokensWithBalance2(address to, uint256[] memory tokenIds) internal {

@@ -164,14 +164,10 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
-        bytes32[] memory consumedTokens,
-        TokenModel.ElGamal memory amount,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount
+        uint256 tokenId
     )public{
         TokenBurnedEvent memory e = TokenBurnedEvent({
-            consumedTokens: consumedTokens,
-            amount: amount,
-            consumedTokensRemainingAmount: consumedTokensRemainingAmount
+            tokenId: tokenId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenBurned", body);
