@@ -163,11 +163,11 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
-        uint256 tokenId,
+        TokenModel.TokenEntity memory token,
         address from
     )public{
         TokenReceivedEvent2 memory e = TokenReceivedEvent2({
-            tokenId: tokenId,
+            token: token,
             from: from
         });
         bytes memory body = abi.encode(e);

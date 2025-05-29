@@ -576,7 +576,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         consumedTokens[0] = tokenEntity.rollbackTokenId;
 
         TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), msg.sender, consumedTokens, 0);
-        TokenEventLib.triggerTokenReceivedEvent2(_l2Event, address(this), to, tokenId, msg.sender);
+        TokenEventLib.triggerTokenReceivedEvent2(_l2Event, address(this), to, tokenEntity, msg.sender);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }

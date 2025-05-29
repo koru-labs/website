@@ -123,7 +123,7 @@ import "../model/TokenModel.sol";
     }
 
     struct TokenReceivedEvent2 {
-        uint256 tokenId;
+        TokenModel.TokenEntity token;
         address from;
     }
 
