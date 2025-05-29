@@ -117,7 +117,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
              rollbackTokenId:0
         });
         addTokenWithBalance2(to, entity);
-        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount);
+        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
         emit PrivateMint(to, amount);
         return true;
@@ -152,7 +152,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         changeToken.status = TokenModel.TokenStatus.active;
         addToken2(from, changeToken);
 
-        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedAmount, changeToken.id);
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedAmount, changeToken.id);
 
         transferToken.rollbackTokenId = rollBackToken.id;
         addToken2(from, transferToken);
@@ -287,7 +287,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         TokenModel.Allowance memory newAllowance = getAllowance(msg.sender,spender);
 
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
+//        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, consumedTokensRemainingAmount);
         TokenEventLib.triggerAllowanceCreatedEvent(_l2Event, address(this), msg.sender,spender, allowance, oldAllowance, newAllowance);
         TokenEventLib.triggerAllowanceReceivedEvent(_l2Event, address(this), spender, msg.sender, allowance);
 
@@ -378,7 +378,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             newAllowance,
             msg.sender
         );
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, value, msg.sender);
+//        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, value, msg.sender);
 
         emit PrivateTransfer(from, to, value);
         return true;
@@ -540,16 +540,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             TokenModel.TokenEntity(changeTokenId, from, TokenModel.TokenStatus.active, consumedTokensRemainingAmount, address(0), 0 );
         addTokenWithBalance2(from, changeTokenEntity);
 
-//        addTokenWithBalance(from, consumedTokensRemainingAmount);
-//        addTokenWithBalance(to, amount);
-
         uint256 transferTokenId = hashElgamal2(amount);
         TokenModel.TokenEntity memory transferTokenEntity =
         TokenModel.TokenEntity(transferTokenId, to, TokenModel.TokenStatus.active, amount, address(0), 0);
         addTokenWithBalance2(to, transferTokenEntity);
 
-        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, changeTokenId);
-        TokenEventLib.triggerTokenReceivedEvent2(_l2Event, address(this), to, transferTokenEntity, from);
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, changeTokenId);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, transferTokenId, address(this), TokenModel.TokenStatus.active, amount);
         emit PrivateTransfer(from, to, amount);
         return true;
     }
