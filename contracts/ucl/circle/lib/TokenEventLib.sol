@@ -159,6 +159,21 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
     }
 
+    function triggerTokenReceivedEvent2(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        uint256 tokenId,
+        address from
+    )public{
+        TokenReceivedEvent2 memory e = TokenReceivedEvent2({
+            tokenId: tokenId,
+            from: from
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
+    }
+
     // triggerTokenBurnedEvent
     function triggerTokenBurnedEvent(
         IL2Event _l2Event,

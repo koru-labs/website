@@ -502,19 +502,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
-    /**
-     * @dev Moves a private `value` amount of tokens from the caller's account to `to`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {PrivateTransfer} event.
-     * @param consumedTokens The tokens that will be consumed.
-     * @param to The address that will receive the transferred tokens.
-     * @param amount The amount of tokens to transfer.
-     * @param consumedTokensRemainingAmount The remaining amount from the tokens that will be consumed.
-     * @param proof The proof.
-     * @return True if the operation was successful.
-     */
     function privateDirectTransfer(
         address from,
         uint256[] memory consumedTokens,
@@ -564,6 +551,33 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, changeTokenId);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, from);
         emit PrivateTransfer(from, to, amount);
+        return true;
+    }
+
+    function privateTransfer(
+        uint256 tokenId,
+        address to
+    )
+    external
+    whenNotPaused
+    notBlacklisted(msg.sender)
+    notBlacklisted(to)
+    returns (bool)
+    {
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(to != address(0), "PrivateERCToken: to is the zero address");
+        TokenModel.TokenEntity memory tokenEntity =  accounts[msg.sender].reservations[tokenId];
+        require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
+
+        removeTokenWithBalance(msg.sender, tokenId);
+        addTokenWithBalance2(tokenEntity.to, tokenEntity);
+
+        uint256[] memory consumedTokens = new uint256[](1);
+        consumedTokens[0] = tokenEntity.rollbackTokenId;
+
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), msg.sender, consumedTokens, 0);
+        TokenEventLib.triggerTokenReceivedEvent2(_l2Event, address(this), to, tokenId, msg.sender);
+        emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
 

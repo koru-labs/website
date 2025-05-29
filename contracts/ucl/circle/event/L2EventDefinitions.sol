@@ -122,6 +122,11 @@ import "../model/TokenModel.sol";
         address from;
     }
 
+    struct TokenReceivedEvent2 {
+        uint256 tokenId;
+        address from;
+    }
+
     struct TokenBurnedEvent{
         uint256 tokenId;
     }
