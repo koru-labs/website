@@ -9,6 +9,7 @@ service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
   rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);

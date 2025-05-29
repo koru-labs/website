@@ -107,6 +107,10 @@ function createClient(url) {
         return promisify(client.GetAddressAllowance.bind(client), request);
     };
 
+    client.generateSplitToken = async function(request) {
+        return promisify(client.GenerateSplitToken.bind(client), request);
+    };
+
     client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {

@@ -140,6 +140,19 @@ async function testDirectTransfer(){
 
 }
 
+async function testReserveTokens(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+}
 
 async function testTransfer() {
     const transferRequest = {
@@ -240,9 +253,10 @@ async function checkToken(account, tokenId) {
 // checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
 // mintForStart().then()
-testDirectTransfer().then();
+// testDirectTransfer().then();
 // checkBalance(accounts.To1).then()
 
+testReserveTokens().then();
 
 // testTransfer().then();
 // testBurn().then();
