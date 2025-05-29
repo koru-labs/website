@@ -549,7 +549,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         addTokenWithBalance2(to, transferTokenEntity);
 
         TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, changeTokenId);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, from);
+        TokenEventLib.triggerTokenReceivedEvent2(_l2Event, address(this), to, transferTokenEntity, from);
         emit PrivateTransfer(from, to, amount);
         return true;
     }
