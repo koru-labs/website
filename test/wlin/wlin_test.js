@@ -35,6 +35,7 @@ const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
 const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
+const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 
 const amount = 1;
 
@@ -137,8 +138,25 @@ async function testDirectTransfer(){
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
     console.log(`balance of ${accounts.To1}: `, balance)
-
 }
+
+async function testDirectTransferPeers(){
+    const transferRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.To1,
+        to_address: accounts.To2,
+        amount: 2
+    };
+
+    let response = await client.generateDirectTransfer(transferRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
+    console.log(`balance of ${accounts.To1}: `, balance)
+}
+
 
 async function testReserveTokens(){
     const splitRequest = {
@@ -254,9 +272,10 @@ async function checkToken(account, tokenId) {
 
 // mintForStart().then()
 // testDirectTransfer().then();
+// testDirectTransferPeers().then();
 // checkBalance(accounts.To1).then()
 
-testReserveTokens().then();
+// testReserveTokens().then();
 
 // testTransfer().then();
 // testBurn().then();

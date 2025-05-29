@@ -15,9 +15,9 @@ library TokenEventLib {
     ) public {
 
         TokenSCCreatedEvent memory e = TokenSCCreatedEvent({
-            TokenSCAddress: tokenSCAddress,
-            TokenSCType: TokenSCType,
-            Deployer: deployer
+            TokenSCAddress : tokenSCAddress,
+            TokenSCType : TokenSCType,
+            Deployer : deployer
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(tokenSCAddress, deployer, "TokenSCCreated", body);
@@ -68,16 +68,17 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address to,
-        TokenModel.ElGamal memory amount
+        TokenModel.ElGamal memory amount,
+        address minter
     ) public {
         TokenMintedEvent memory eventData = TokenMintedEvent({
-            to: to,
-            amount: amount
+            to : to,
+            amount : amount,
+            minter : minter
         });
         bytes memory eventBody = abi.encode(eventData);
         _l2Event.sendEvent(eventSource, to, "TokenMinted", eventBody);
     }
-
 
 
     function triggerInstitutionRegisteredEvent(
@@ -112,63 +113,52 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, owner, "UserRegistered", body);
     }
 
-    //triggerTokenDeletedEvent
     function triggerTokenDeletedEvent(
-        IL2Event _l2Event,
-        address eventSource,
-        address eventAccount,
-        bytes32[] memory consumedTokens,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount
-    )public{
-        TokenDeletedEvent memory e = TokenDeletedEvent({
-            consumedTokensRemainingAmount: consumedTokensRemainingAmount,
-            consumedTokens: consumedTokens
-        });
-        bytes memory body = abi.encode(e);
-        _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
-    }
-
-    function triggerTokenDeletedEvent2(
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
         uint256[] memory consumedTokens,
         uint256 changeTokenId
-    )public{
-        TokenDeletedEvent2 memory e = TokenDeletedEvent2({
-            consumedTokens: consumedTokens,
-            changeTokenId: changeTokenId
+    ) public {
+        TokenDeletedEvent memory e = TokenDeletedEvent({
+            consumedTokens : consumedTokens,
+            changeTokenId : changeTokenId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
     }
 
     //triggerTokenReceivedEvent
+//    function triggerTokenReceivedEvent(
+//        IL2Event _l2Event,
+//        address eventSource,
+//        address eventAccount,
+//        TokenModel.ElGamal memory amount,
+//        address from
+//    ) public {
+//        TokenReceivedEvent memory e = TokenReceivedEvent({
+//        amount : amount,
+//        from : from
+//        });
+//        bytes memory body = abi.encode(e);
+//        _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
+//    }
+
     function triggerTokenReceivedEvent(
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
-        TokenModel.ElGamal memory amount,
-        address from
-    )public{
+        uint256 tokenId,
+        address tokenScAddress,
+        TokenModel.TokenStatus status,
+        TokenModel.ElGamal memory amount
+    ) public {
         TokenReceivedEvent memory e = TokenReceivedEvent({
-            amount: amount,
-            from: from
-        });
-        bytes memory body = abi.encode(e);
-        _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
-    }
-
-    function triggerTokenReceivedEvent2(
-        IL2Event _l2Event,
-        address eventSource,
-        address eventAccount,
-        TokenModel.TokenEntity memory token,
-        address from
-    )public{
-        TokenReceivedEvent2 memory e = TokenReceivedEvent2({
-            token: token,
-            from: from
+            id : tokenId,
+            tokenSCAddress : tokenScAddress,
+            owner : eventAccount,
+            status : status,
+            amount : amount
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenReceived", body);
