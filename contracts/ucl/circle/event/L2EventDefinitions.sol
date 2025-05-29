@@ -113,8 +113,8 @@ import "../model/TokenModel.sol";
     }
 
     struct TokenDeletedEvent2{
-        TokenModel.ElGamal consumedTokensRemainingAmount;
         uint256[] consumedTokens;
+        uint256 changeTokenId;
     }
 
     struct TokenReceivedEvent {

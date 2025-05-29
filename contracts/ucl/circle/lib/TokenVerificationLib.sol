@@ -109,6 +109,32 @@ library TokenVerificationLib {
         InstitutionRegistration institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
+        // z0 verify
+        uint256[] memory z0Values = new uint256[](10);
+        z0Values[0] = Fr.unwrap(z0[0]);
+        z0Values[1] = Fr.unwrap(z0[1]);
+        z0Values[2] = Fr.unwrap(z0[2]);
+        z0Values[3] = Fr.unwrap(z0[3]);
+        z0Values[4] = Fr.unwrap(z0[4]);
+        z0Values[5] = Fr.unwrap(z0[5]);
+        z0Values[6] = Fr.unwrap(z0[6]);
+        z0Values[7] = Fr.unwrap(z0[7]);
+        z0Values[8] = Fr.unwrap(z0[8]);
+        z0Values[9] = Fr.unwrap(z0[9]);
+
+        //  verify consumedAmount 0-3
+        TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
+        require(consumedAmount.cl_x == z0Values[0] && consumedAmount.cl_y == z0Values[1] && consumedAmount.cr_x == z0Values[2] && consumedAmount.cr_y == z0Values[3], "consumedAmount not match");
+
+        // verify from 4-5
+        TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
+        require(from.x == z0Values[4] && from.y == z0Values[5], "from public key not match");
+
+        // verify to 6-7
+        TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
+        require(to.x == z0Values[6] && to.y == z0Values[7], "to public key not match");
+
+        // zn verify
         uint256[] memory znValues = new uint256[](12);
         znValues[0] = Fr.unwrap(zn[0]);
         znValues[1] = Fr.unwrap(zn[1]);
@@ -123,21 +149,20 @@ library TokenVerificationLib {
         znValues[10] = Fr.unwrap(zn[10]);
         znValues[11] = Fr.unwrap(zn[11]);
 
-        //  verify consumedAmount 0-3
-        TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
-//        require(consumedAmount.cl_x == z0[0] && consumedAmount.cl_y == z0[1] && consumedAmount.cr_x == z0[2] && consumedAmount.cr_y == z0[3], "consumedAmount not match");
 
-        // verify remaining amount
-        require(verifyChangeToken(zn, params.remainingAmount), "invalid change token");
+        // verify amount 0-3
+        TokenModel.ElGamal memory amount = params.amount;
+        require(amount.cl_x == znValues[0] && amount.cl_y == znValues[1] && amount.cr_x == znValues[2] && amount.cr_y == znValues[3], "amount not match");
 
-        // verify transferAmount
-        require(verifyTransferToken(zn, params.amount), "invalid transfer token");
+        // verify remainingAmount 4-7
+        TokenModel.ElGamal memory remainingAmount = params.remainingAmount;
+        require(remainingAmount.cl_x == znValues[4] && remainingAmount.cl_y == znValues[5] && remainingAmount.cr_x == znValues[6] && remainingAmount.cr_y == znValues[7], "remainingAmount not match");
 
-        // verify rollbackAmount
-        require(verifyRollbackToken(zn, params.rollbackAmount), "invalid rollback token");
+        // verify rollbackAmount  8-11
+        TokenModel.ElGamal memory rollbackAmount = params.rollbackAmount;
+        require(rollbackAmount.cl_x == znValues[8] && rollbackAmount.cl_y == znValues[9] && rollbackAmount.cr_x == znValues[10] && rollbackAmount.cr_y == znValues[11], "rollbackAmount not match");
 
-
-        return (true, 0, znValues);
+        return (true, result, znValues);
     }
 
     function verifyChangeToken(Fr[] memory zn, TokenModel.ElGamal memory changeToken) public pure returns (bool) {

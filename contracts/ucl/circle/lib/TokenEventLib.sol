@@ -133,11 +133,11 @@ library TokenEventLib {
         address eventSource,
         address eventAccount,
         uint256[] memory consumedTokens,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount
+        uint256 changeTokenId
     )public{
         TokenDeletedEvent2 memory e = TokenDeletedEvent2({
-            consumedTokensRemainingAmount: consumedTokensRemainingAmount,
-            consumedTokens: consumedTokens
+            consumedTokens: consumedTokens,
+            changeTokenId: changeTokenId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);

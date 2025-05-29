@@ -124,55 +124,40 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
 
-    function privateReserveToken(uint256[] memory consumedAmount, address from, address to, TokenModel.ElGamal[] calldata newAmounts, bytes calldata proof) external
+    function privateReserveToken(uint256[] memory consumedAmount, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
         require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
 
         TokenModel.ElGamal memory onChainConsumedAmount = sumTokens2(msg.sender, consumedAmount);
-        TokenModel.ElGamal memory transferAmount = newAmounts[0]; //TODO MAGIC NUMBERS
-        TokenModel.ElGamal memory changeAmount = newAmounts[1]; //TODO MAGIC NUMBERS
-        TokenModel.ElGamal memory rollBackAmount = newAmounts[2]; //TODO MAGIC NUMBERS
+        TokenModel.TokenEntity memory transferToken = newTokens[0]; //TODO MAGIC NUMBERS
+        TokenModel.TokenEntity memory changeToken = newTokens[1];
+        TokenModel.TokenEntity memory rollBackToken = newTokens[2]; //TODO MAGIC NUMBERS
 
         TokenModel.VerifyTokenSplitParams memory params =  TokenModel.VerifyTokenSplitParams({
             institutionRegistration: _institutionRegistration,
             from: from,
             to: to,
             consumedAmount: onChainConsumedAmount,
-            amount: transferAmount,
-            remainingAmount: changeAmount,
-            rollbackAmount: rollBackAmount,
+            amount: transferToken.amount,
+            remainingAmount: changeToken.amount,
+            rollbackAmount: rollBackToken.amount,
             proof: proof
         });
         (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
         require(isValid, "failed to validate generated tokens");
 
         removeTokensWoChangeBalance2(from, consumedAmount);
-        addToken(from, changeAmount);
 
-        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedAmount, changeAmount);
-        addReservation(
-            from,
-            TokenModel.TokenEntity({
-                id: 0,
-                owner: from,
-                status: TokenModel.TokenStatus.inactive,
-                amount: transferAmount,
-                to: to,
-                rollbackTokenId: 0
-            })
-        );
-        addReservation(
-            from,
-            TokenModel.TokenEntity({
-                id: 0,
-                owner: from,
-                to: address(0),
-                status: TokenModel.TokenStatus.inactive,
-                amount: rollBackAmount,
-                rollbackTokenId: 0
-            })
-        );
+        changeToken.status = TokenModel.TokenStatus.active;
+        addToken2(from, changeToken);
+
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedAmount, changeToken.id);
+
+        transferToken.rollbackTokenId = rollBackToken.id;
+        addToken2(from, transferToken);
+
+        addToken2(from, rollBackToken);
     }
 
     /**
@@ -599,8 +584,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.TokenEntity(transferTokenId, to, TokenModel.TokenStatus.active, amount, address(0), 0);
         addTokenWithBalance2(to, transferTokenEntity);
 
-
-        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, consumedTokensRemainingAmount);
+        TokenEventLib.triggerTokenDeletedEvent2(_l2Event, address(this), from, consumedTokens, changeTokenId);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, amount, from);
         emit PrivateTransfer(from, to, amount);
         return true;
@@ -661,6 +645,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.Account storage toAccount = accounts[to];
         bytes32 tokenId = hashElgamal(amount);
         toAccount.assets[tokenId] = amount;
+    }
+
+    function addToken2(address to, TokenModel.TokenEntity memory token) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+        toAccount.reservations[token.id] = token;
     }
 
     function addReservation(address to, TokenModel.TokenEntity memory entity) internal {
