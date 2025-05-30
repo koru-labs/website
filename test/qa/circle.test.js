@@ -84,20 +84,21 @@ async function Transfer(toAddress,amount) {
     // console.log("balance: ", balance)
 }
 
-async function Burn(amount) {
-    const burnRequest = {
+async function ReserveTokensAndBurn(amount) {
+    const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
+        to_address: accounts.Minter,
         amount: amount
     };
-    let response = await client.generateBurnProof(burnRequest);
-    console.log("Generate burn Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getBurnProof, response.request_id)
 
-    console.log("Burn Proof Result:", proofResult);
-    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    console.log("receipt", receipt)
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
+    console.log("privateBurn receipt: ", receipt)
 
     // let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     // console.log("balance: ", balance)
@@ -241,7 +242,7 @@ describe("Mint", function () {
 
 });
 
-describe.only("Direct Transfer",  function (){
+describe("Direct Transfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
     // before(async function  () {
@@ -285,20 +286,29 @@ describe.only("Direct Transfer",  function (){
         const amount = preBalance + 1
         await Transfer(toAddress1,amount)
     })
-    it.skip('transfer_0',async () => {
+    it('transfer_0',async () => {
         const amount = 0;
+        preBalanceTo = await getTokenBalance(toAddress1);
         await Transfer(toAddress1,amount);
+        postBalanceTo = await getTokenBalance(toAddress1);
+        postBalance = await getTokenBalance(accounts.Minter);
+        expect(postBalance).to.equal(preBalance - amount);
+        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
     it.skip('transfer_all_amount',async () => {
         const amount = await getTokenBalance(accounts.Minter);
+        preBalanceTo = await getTokenBalance(toAddress1);
         await Transfer(toAddress1,amount);
+        postBalanceTo = await getTokenBalance(toAddress1);
+        postBalance = await getTokenBalance(accounts.Minter);
+        expect(postBalance).to.equal(preBalance - amount);
+        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
 
 })
 
-describe("Burn", function () {
+describe.only("ReserveTokensAndBurn", function () {
     this.timeout(1200000);
-    let preBalanceTo,postBalanceTo;
     before(async function  () {
         await mint(1000);
     })
@@ -307,7 +317,7 @@ describe("Burn", function () {
     });
 
     it('burn_100 ', async () => {
-        await Burn(amount);
+        await ReserveTokensAndBurn(amount);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount);
 
@@ -315,22 +325,26 @@ describe("Burn", function () {
     it('burn_100_5_times', async () => {
         const times = 5
         for (let i = 0; i < times; i++) {
-            await Burn(amount);
+            await ReserveTokensAndBurn(amount);
         }
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount * times);
     });
     it.skip('burn_amount_larger_than_balance',async ()=>{
         const amount = preBalance + 1
-        await Burn(amount)
+        await ReserveTokensAndBurn(amount)
     })
-    it.skip('burn_0',async () => {
+    it('burn_0',async () => {
         const amount = 0;
-        await Burn(amount);
+        await ReserveTokensAndBurn(amount);
+        postBalance = await getTokenBalance(accounts.Minter);
+        expect(postBalance).to.equal(preBalance - amount);
     });
-    it.skip('burn_all_amount',async () => {
+    it('burn_all_amount',async () => {
         const burn_amount = await getTokenBalance(accounts.Minter);
-        await Burn(burn_amount);
+        await ReserveTokensAndBurn(burn_amount);
+        postBalance = await getTokenBalance(accounts.Minter);
+        expect(postBalance).to.equal(preBalance - burn_amount);
     });
 });
 
@@ -420,7 +434,7 @@ describe("check contract totalSupply", function () {
     });
     it('totalSupply_sub_after_burn ',async () => {
         totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await Burn(100);
+        await ReserveTokensAndBurn(100);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
     });
@@ -454,7 +468,7 @@ describe("check contract totalSupply", function () {
 
         for(let i=0;i<5;i++){
             await mint(200);
-            await Burn(100);
+            await ReserveTokensAndBurn(100);
         }
         const publicTotalSupplyPost = await getPublicTotalSupply(config.contracts.PrivateERCToken);
         const privateTotalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
