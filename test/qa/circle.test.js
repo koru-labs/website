@@ -6,7 +6,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = 'ac365b5fc227f46c5850d8590ddb0357-2076305457.us-west-1.elb.amazonaws.com:50051'
+const rpcUrl = 'a3bd5f10689564cd3b8f07857dcad794-1518118954.us-west-1.elb.amazonaws.com:50051'
 const client = createClient(rpcUrl)
 
 const {
@@ -72,14 +72,13 @@ async function Transfer(toAddress,amount) {
         to_address: toAddress,
         amount: amount
     };
-    console.log("transferRequest:", transferRequest)
-    let response = await client.generateTransferProof(transferRequest);
+    let response = await client.generateDirectTransfer(transferRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getTransferProof, response.request_id)
+    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+    console.log("transfer Proof Result:", proofResult)
 
-    console.log("Transfer Proof Result:", proofResult);
-    let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    console.log("receipt", receipt)
+    // let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    // console.log("receipt", receipt)
 
     // let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
     // console.log("balance: ", balance)
@@ -94,7 +93,7 @@ async function Burn(amount) {
     };
     let response = await client.generateBurnProof(burnRequest);
     console.log("Generate burn Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getBurnProof, response.request_id)
+    let proofResult = await client.waitForActionCompletion(client.getBurnProof, response.request_id)
 
     console.log("Burn Proof Result:", proofResult);
     let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, proofResult, minterWallet)
@@ -210,7 +209,7 @@ describe("Mint", function () {
         expect(postBalance).to.equal(preBalance + amount);
     });
     it('mint_1',async () => {
-        const amount = 50;
+        const amount = 1;
         await mint(amount);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance + amount);
@@ -242,7 +241,7 @@ describe("Mint", function () {
 
 });
 
-describe("Transfer",  function (){
+describe.only("Direct Transfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
     // before(async function  () {
@@ -256,6 +255,7 @@ describe("Transfer",  function (){
         await Transfer(toAddress1,amount);
         postBalanceTo = await getTokenBalance(toAddress1);
         postBalance = await getTokenBalance(accounts.Minter);
+        console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
@@ -448,7 +448,7 @@ describe("check contract totalSupply", function () {
         console.log(await getTotalSupplyNode3(client, config.contracts.PrivateERCToken))
 
     });
-    it.only('public total supply update 5 mint and burn',async () => {
+    it('public total supply update 5 mint and burn',async () => {
         const publicTotalSupplyPre = await getPublicTotalSupply(config.contracts.PrivateERCToken);
         const privateTotalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
 
