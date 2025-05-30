@@ -21,31 +21,9 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
     return receipt;
 }
 
-async function callPrivateTransfer(scAddress, proofResult, senderWallet){
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, senderWallet)
-    const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
 
-    const transferAmount = {
-        "cl_x": ethers.toBigInt(proofResult.amount.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.amount.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.amount.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.amount.cr_y)
-    }
-    const remainingAmount = {
-        "cl_x": ethers.toBigInt(proofResult.new_balance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.new_balance.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.new_balance.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.new_balance.cr_y)
-    }
-    const proofData = Buffer.from(proofResult.proof, "hex");
-
-    const tx = await contract.privateTransfer(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
-    let receipt = await tx.wait();
-    return receipt
-}
-
-async function callPrivateTransfer2(scAddress, tokenId, to, minterWallet) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
+async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
     const tx = await contract.privateTransfer(tokenId,to);
     let receipt = await tx.wait();
     return receipt;
@@ -239,6 +217,14 @@ function uint256ToBytes32(uint256) {
     return bytes32;
 }
 
+async function callPrivateBurn(scAddress, wallet, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    let tx = await contract.privateBurn(tokenId)
+    let receipt = await tx.wait();
+    return receipt;
+}
+
+
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
@@ -250,6 +236,5 @@ module.exports =  {
     getTotalSupplyNode3,
     getPublicTotalSupply,
     checkAccountToken,
-    callPrivateTransfer2,
-    callPrivateBurn2
+    callPrivateBurn2,
 }

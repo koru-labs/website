@@ -169,47 +169,50 @@ async function testReserveTokens(){
 
     let response = await client.generateSplitToken(splitRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
 }
 
-async function testTransfer() {
-    const transferRequest = {
+async function testReserveTokensAndBurn(){
+    const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.To1,
+        to_address: accounts.Minter,
         amount: amount
     };
-    let response = await client.generateTransferProof(transferRequest);
+
+    let response = await client.generateSplitToken(splitRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getTransferProof, response.request_id)
-
-    console.log("Transfer Proof Result:", proofResult);
-    let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    console.log("receipt", receipt)
-
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
-    console.log("balance: ", balance)
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
+    console.log("privateBurn receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance of Minter:", balance)
 }
 
-async function testBurn() {
-    const burnRequest = {
+async function testReserveTokensAndTransfer(){
+    const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
+        to_address: accounts.To2,
         amount: amount
     };
-    let response = await client.generateBurnProof(burnRequest);
-    console.log("Generate burn Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getBurnProof, response.request_id)
 
-    console.log("Burn Proof Result:", proofResult);
-    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    console.log("receipt", receipt)
-
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, accounts.To2, '0x'+tokenResult.transfer_token_id);
+    console.log("privateBurn receipt: ", receipt)
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
-    console.log("balance: ", balance)
+    console.log("balance of Minter:", balance)
 }
+
+
+
 
 
 async function testApprove() {
@@ -266,16 +269,29 @@ async function checkToken(account, tokenId) {
     console.log("token: ", token);
 }
 
+async function testBurnToken() {
+    let tokenId = "61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef"
+    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+ tokenId);
+    console.log("privateBurn receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance of Minter:", balance)
+}
+
 // checkDeployedUSDC().then();
 // testMint().then()
-// checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
+// checkToken(accounts.Minter, '0x61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef').then();
 
 // mintForStart().then()
 // testDirectTransfer().then();
 // testDirectTransferPeers().then();
-// checkBalance(accounts.To1).then()
+// checkBalance(accounts.Minter).then()
 
 // testReserveTokens().then();
+
+// testReserveTokensAndBurn().then();
+testReserveTokensAndTransfer().then();
+
+// testBurnToken().then();
 
 // testTransfer().then();
 // testBurn().then();
