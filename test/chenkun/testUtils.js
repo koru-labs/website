@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "ae0d1f34ff0504b2380f13432dc74a54-973956847.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a3bd5f10689564cd3b8f07857dcad794-1518118954.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -135,7 +135,7 @@ async function testDirectTransfer(){
 
     let response = await client.generateDirectTransfer(transferRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
     console.log(`balance of ${accounts.To1}: `, balance)
@@ -158,7 +158,7 @@ async function testReserveTokensAndTransfer(){
         console.log("proofResult", proofResult)
         let tokenId = ethers.toBigInt('0x'+proofResult.transfer_token_id)
         console.log("tokenId", tokenId)
-        let receipt = await callPrivateTransfer2(config.contracts.PrivateERCToken,tokenId,accounts.To1,minterWallet)
+        let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken,tokenId,accounts.To1,minterWallet)
         console.log("receipt", receipt)
     }
 }
@@ -169,7 +169,7 @@ async function testReserveTokensAndBurn(){
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.To1,
+        to_address: accounts.Owner,
         amount: amount
     };
 
@@ -285,7 +285,7 @@ async function checkToken(account, tokenId) {
 // checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
 // mintForStart().then()
-// testDirectTransfer().then();
+testDirectTransfer().then();
 // checkBalance(accounts.Minter).then()
 
 // testReserveTokensAndBurn().then();

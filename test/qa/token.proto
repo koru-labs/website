@@ -177,6 +177,4 @@ message SplitTokenResponse {
   string request_id = 1;
   TokenActionStatusEnum status = 2;
   string transfer_token_id = 3;
-  string change_token_id = 4;
-  string backup_token_id = 5;
 }

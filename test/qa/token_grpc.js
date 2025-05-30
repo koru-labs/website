@@ -124,6 +124,7 @@ function createClient(url) {
 
                     if (result.proof !== "") {
                         resolve(result)
+                        return
                     } else {
                         console.log("wait for proof. status = ", result.status)
                     }
@@ -146,7 +147,7 @@ function createClient(url) {
 
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)
-
+                        return
                     } else if (result.status=="TOKEN_ACTION_STATUS_FAIL") {
                         reject(result);
 
