@@ -29,16 +29,16 @@
     "protobufjs": "^7.5.0"
   },
   "scripts": {
-    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_node2",
-    "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_node2",
-    "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_node2",
-    "wlin-test": "npx hardhat run test/wlin/wlin_test.js --network ucl_node2",
-    "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_node2",
-    "qa-circle2": "npx hardhat run test/qa/circle.test.js --network ucl_node2",
+    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_L2",
+    "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2",
+    "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_L2",
+    "wlin-test": "npx hardhat run test/wlin/wlin_test.js --network ucl_L2",
+    "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
+    "qa-circle2": "npx hardhat run test/qa/circle.test.js --network ucl_L2",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:sol": "prettier --write \"**/*.sol\"",
     "format:check:sol": "prettier --check \"**/*.sol\"",
-    "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_node2"
+    "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_L2"
   }
 }
