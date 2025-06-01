@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "ae0d1f34ff0504b2380f13432dc74a54-973956847.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a00a8eadc989f4bf7ad9b409797bd430-991768085.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -30,7 +30,7 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.ucl_node2.url;
+const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -213,6 +213,25 @@ async function testReserveTokensAndTransfer(){
 
 
 
+async function testCrossBankReserveTokensAndTransfer(){
+    let toAddress ="0x5a3288A7400B2cd5e0568728E8216D9392094892";
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address:toAddress,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
+    console.log("PrivateTransfer receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance of Minter:", balance)
+}
 
 
 async function testApprove() {
@@ -289,7 +308,9 @@ async function testBurnToken() {
 // testReserveTokens().then();
 
 // testReserveTokensAndBurn().then();
-testReserveTokensAndTransfer().then();
+// testReserveTokensAndTransfer().then();
+
+// testCrossBankReserveTokensAndTransfer().then();
 
 // testBurnToken().then();
 

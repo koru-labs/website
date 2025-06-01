@@ -299,7 +299,30 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", institutionRegistrationAddress);
     
     const institutions = [
-
+         {
+            address: "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127",
+            name: "Node1",
+            publicKey: {
+                x: "0x27c07a015b9e7d73519e8bcfc8ddd6cf760b51f55938e0f83affb2ff7d244220",
+                y: "0x27e09fb8be7b593a38e107cce390183bd2b15eea7b62c4cc8ad7fae388c9b66f",
+            },
+            privateKey: "0x01d5d0f71878b433db00449efa0907786c05ef271b00e85fd0270bd445daa27e",
+            userAddresses: [
+                "0x5a3288A7400B2cd5e0568728E8216D9392094892"
+            ]
+        },
+        {
+            address: "0x03d68e57f1f9939d3FDcf97B5e7a1d0Be995Ec67",
+            name: "Node2",
+            publicKey: {
+                x: "0x0fb17de4db5168ce623d3c5733f3f39273fb43b194018cadcd4653c9b1d65424",
+                y: "0x2a3cfce65fe973a9354834fe93cd430b6480798166e4c33ab50f4c87843194fc",
+            },
+            privateKey: "0x20b4a40e591bedccb987de33572eb4f7cb09671743df43aa8f2b0023dbb6253c",
+            userAddresses: [
+                "0xF8041E1185C7106121952bA9914ff904A4A01c80"
+            ]
+        },
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             name: "Node3",
@@ -307,6 +330,7 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
                 y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
             },
+            privateKey:"0x2fb5b87323812e6fb1ca82c18f7e822403a1076dca78cdb6511fe50e2bcb9610",
             userAddresses: [
                 "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
                 "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
@@ -315,54 +339,19 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
                 "0x4312488937D47A007De24d48aB82940C809EEb2b",
                 "0x57829d5E80730D06B1364A2b05342F44bFB70E8f"
             ]
+        },
+        {
+            address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
+            name: "Node4",
+            publicKey: {
+                x: "0x200617a15d2b14b21e7fcfee20970928fdec8caf78a8395996d39685f4416c55",
+                y: "0x1020c7e93610321fdffa7ac019165450187eeab7188d54f2a251794100c115ed",
+            },
+            privateKey: "0x0a4d3802de2c9bfabe2cabc18f4f3a34141b412093187d7a9958c437c1f7074f",
+            userAddresses: [
+                "0xbA268f776F70caDB087e73020dfE41c7298363Ed"
+            ]
         }
-        // , {
-        //     address: "0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8",
-        //     name: "Institution 3",
-        //     publicKey: {
-        //         x: "0x07d1f17c69afc61219c3ef99c2b5f2ad95652f9a5a742d9f41507c39b1f60cc6",
-        //         y: "0x223c436026d084b482180d0a35415a95b7e01b7f932478ad469f084e03fb1883",
-        //         s: "0x04c3c1afa2f7989e7eccc561e6e691fed49fe11b07b07ba9e43134bb0e522129"
-        //     },
-        //     userAddresses: [
-        //
-        //     ]
-        // }, {
-        //     address: "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73",
-        //     name: "Institution 4",
-        //     publicKey: {
-        //         x: "0x2e02198276673e31c219dc599124d1f9a7c5b501b50e54f0bf13434a945dd0d8",
-        //         y: "0x1b784dce213ce92d2d95b6cf8adcc408c43fe2466d477896c17535509d7a634d",
-        //         s: "0x1c5c6569eb1fb54371b7a251f27c0ebfed2b56d55a58cd5ac90b4feb670264cd"
-        //     },
-        //     userAddresses: [
-        //
-        //     ]
-        // }, {
-        //     address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
-        //     name: "Institution 5",
-        //     publicKey: {
-        //         x: "0x1a8757f7c321d2c4a61d00d32f8aa82ac8d393aebfad7cc90c724912244fbaa9",
-        //         y: "0x1c12bca19f23c212b8b50d3df6274f909057496aa7e776196325fe3f37ae1e51",
-        //         s: "0x0cdf05cb547361ca0f6cc94e0aa58da2df8eb2f8922b595fbe04345c8d6e34cc"
-        //     },
-        //     userAddresses: [
-        //
-        //     ]
-        // }, {
-        //     address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-        //     name: "node3",
-        //     publicKey: {
-        //         x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
-        //         y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
-        //     },
-        //     userAddresses: [
-        //         '0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8',//minter
-        //         '0xfe3b557e8fb62b89f4916b721be55ceb828dbd73',//spender
-        //         '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',//toAddress1
-        //         '0xACFa9A52a0F11E8a1E7DaE8789DD43C58476E5BC'//toAddress2
-        //     ]
-        // }
     ]
 
     for (let i = 0; i < institutions.length; i++) {

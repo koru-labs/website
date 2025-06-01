@@ -568,7 +568,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.TokenEntity memory tokenEntity =  accounts[msg.sender].reservations[tokenId];
         require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
 
-        removeTokenWithBalance(msg.sender, tokenId);
+        removeTokenWithBalance(msg.sender, tokenEntity.rollbackTokenId);
         removeToken(msg.sender, tokenEntity.rollbackTokenId);
 
         uint256[] memory consumedTokens = new uint256[](2);
@@ -578,6 +578,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         tokenEntity.rollbackTokenId =0;
         tokenEntity.owner= to;
+        tokenEntity.status = TokenModel.TokenStatus.active;
+
         addTokenWithBalance2(tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);

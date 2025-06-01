@@ -135,10 +135,10 @@ async function getAddressBalance(grpcClient, scAddress, account) {
 
 
     let balance=  {
-        cl_x: convertBigInt2Hex(amount[0]),
-        cl_y: convertBigInt2Hex(amount[1]),
-        cr_x: convertBigInt2Hex(amount[2]),
-        cr_y: convertBigInt2Hex(amount[3])
+        cl_x: '0x' + convertBigInt2Hex(amount[0]),
+        cl_y: '0x' + convertBigInt2Hex(amount[1]),
+        cr_x: '0x' + convertBigInt2Hex(amount[2]),
+        cr_y: '0x' + convertBigInt2Hex(amount[3])
     }
     let result = await grpcClient.getAccountBalance(scAddress, account, balance)
     return result
