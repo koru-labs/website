@@ -1,25 +1,25 @@
 {
   "libraries": {
-    "Fr": "0xFb0cE70E0b537eEdC16a6659dFbe2BbdDfD6ba46",
-    "Fq": "0x752B839fD55211a42320D0cbeC9B0D86f7B35853",
-    "Field": "0x474c731333DbC73b001be89698eb6FB8768b26f7",
-    "Grumpkin": "0xd193026Be40aB34F1B5C1a584B2531E156009389",
-    "RelaxedR1CSSNARKForSMLib": "0x0A3202Fc41D74942f32cc73D2fC6D65D9aaCaBAB",
-    "BatchedRelaxedR1CSSNARKLib": "0x93416ad26c82010a431C7bBe2E69B9669f95F991",
-    "ZkVerifier": "0xaD2BD8Febace6ded64966D87472D32744EF4F335",
-    "TokenGrumpkinLib": "0xe61fc681B6F5262EdcFBc9eDCe65Af948c437995",
-    "TokenVerificationLib": "0x472AaC5C89BFBD87e0383Fd4239C74737E89bD33",
-    "TokenEventLib": "0xDf550c3cd455F303E8422F4464Cb9E10e25f3044",
-    "SignatureChecker": "0xc5240cD88aFf0FA4a2D2930DE8dec25cFdE15fdF"
+    "Fr": "0xFeb71b9F778Ed077774c06D6c06596d2615E5024",
+    "Fq": "0xC395a2823AbEA76C24B08BC0dDF8a530a97db4c6",
+    "Field": "0x2083bC0DB11D9FdeE1d128E6E88787c51fdb1406",
+    "Grumpkin": "0x627CdCd77f2caCCE002903CC39C50982ceF12C77",
+    "RelaxedR1CSSNARKForSMLib": "0x18E420eA396D5AB965B4339FBAa0A27B6Cef342e",
+    "BatchedRelaxedR1CSSNARKLib": "0x028C333b8959E7b58B2a794db43df84e39f1259f",
+    "ZkVerifier": "0x188ebeB016cf12E080B7b4aaCb05e9C83c3D3D58",
+    "TokenGrumpkinLib": "0xd99e81a492E9CC687056f3b8aC5599c3167ba252",
+    "TokenVerificationLib": "0x544839Eb2AFf91656CB12d36805CB49C304dA53f",
+    "TokenEventLib": "0xfd030c703dA09e882997fb47163817C188992522",
+    "SignatureChecker": "0x1a0551406a72d1c4ceE86529815bd1f654271117"
   },
   "contracts": {
     "HamsaL2Event": "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA",
-    "InstitutionRegistration": "0x1cEc36F92b9D97d8D374A872aC0c57C974B15Ed0",
-    "PrivateERCToken": "0xBDB126E9c570704DD66D9562D7145e90c26b6Ce5"
+    "InstitutionRegistration": "0x03c096952F8225d26089B257761E1e27c4424c32",
+    "PrivateERCToken": "0xe96E08deFa61aBD1829Bbd9743B870cc51FC88fC"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-06-01T03:43:37.643Z",
+    "timestamp": "2025-06-01T06:24:39.653Z",
     "network": "ucl_L2",
     "chainId": "1337"
   }
