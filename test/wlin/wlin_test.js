@@ -99,6 +99,8 @@ async function mintForStart() {
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
     console.log("receipt", receipt)
 
+    await client.waitForActionCompletion(client.getMintProof, response.request_id)
+
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("balance: ", balance)
 }
@@ -207,6 +209,7 @@ async function testReserveTokensAndTransfer(){
     console.log("tokenResult: ", tokenResult)
     let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, accounts.To2, '0x'+tokenResult.transfer_token_id);
     console.log("privateBurn receipt: ", receipt)
+
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("balance of Minter:", balance)
 }
