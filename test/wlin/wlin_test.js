@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "a00a8eadc989f4bf7ad9b409797bd430-991768085.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a31b8f17091f84b9b966146b6032acd3-1561831942.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -212,8 +212,7 @@ async function testReserveTokensAndTransfer(){
 }
 
 
-
-async function testCrossBankReserveTokensAndTransfer(){
+async function testCrossBankReserveTokensAndTransfer2Node1(){
     let toAddress ="0x5a3288A7400B2cd5e0568728E8216D9392094892";
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -233,6 +232,45 @@ async function testCrossBankReserveTokensAndTransfer(){
     console.log("balance of Minter:", balance)
 }
 
+async function testCrossBankReserveTokensAndTransfer2Node2(){
+    let toAddress ="0xF8041E1185C7106121952bA9914ff904A4A01c80";
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address:toAddress,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
+    console.log("PrivateTransfer receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance of Minter:", balance)
+}
+
+async function testCrossBankReserveTokensAndTransfer2Node4(){
+    let toAddress ="0xbA268f776F70caDB087e73020dfE41c7298363Ed";
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address:toAddress,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
+    console.log("PrivateTransfer receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    console.log("balance of Minter:", balance)
+}
 
 async function testApprove() {
     const approveRequest = {
@@ -310,7 +348,10 @@ async function testBurnToken() {
 // testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then();
 
-// testCrossBankReserveTokensAndTransfer().then();
+// testCrossBankReserveTokensAndTransfer2Node1().then();
+// testCrossBankReserveTokensAndTransfer2Node2().then();
+// testCrossBankReserveTokensAndTransfer2Node4().then();
+
 
 // testBurnToken().then();
 
