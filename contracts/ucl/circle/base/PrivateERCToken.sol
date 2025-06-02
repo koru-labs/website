@@ -43,7 +43,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
     event PrivateApproval(address indexed owner, address indexed spender, TokenModel.Allowance value);
 
-    // Compatible with FiatTokenV1 contracts
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
@@ -96,10 +95,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(isValid, "PrivateERCToken: invalid proof");
 
         TokenModel.ElGamal memory newAllowed = TokenModel.ElGamal({
-            cl_x: znValues[4], //TODO MAGIC NUMBERS
-            cl_y: znValues[5], //TODO MAGIC NUMBERS
-            cr_x: znValues[6], //TODO MAGIC NUMBERS
-            cr_y: znValues[7] //TODO MAGIC NUMBERS
+            cl_x: znValues[4],
+            cl_y: znValues[5],
+            cr_x: znValues[6],
+            cr_y: znValues[7]
         });
         privateMinterAllowed[msg.sender] = newAllowed;
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, privateMinterAllowed[msg.sender], newAllowed);
@@ -124,15 +123,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
 
-    function privateReserveToken(uint256[] memory consumedAmount, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
+    function privateSplitToken(uint256[] memory consumedAmount, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
         require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokens2(msg.sender, consumedAmount);
+        TokenModel.ElGamal memory onChainConsumedAmount = sumTokensReservations(msg.sender, consumedAmount);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
-        TokenModel.TokenEntity memory transferToken = newTokens[1]; //TODO MAGIC NUMBERS
-        TokenModel.TokenEntity memory rollBackToken = newTokens[2]; //TODO MAGIC NUMBERS
+        TokenModel.TokenEntity memory transferToken = newTokens[1];
+        TokenModel.TokenEntity memory rollBackToken = newTokens[2];
 
         TokenModel.VerifyTokenSplitParams memory params =  TokenModel.VerifyTokenSplitParams({
             institutionRegistration: _institutionRegistration,
@@ -184,69 +183,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         emit PrivateBurn(msg.sender, supplyDecrease);
     }
 
-    // for debug
-    //TODO debug functions should be inside testing code base, not inside the main code base. By the way, this function could be replaced by the tokenExists function below with the same functionality. That function can stay inside the main code base, because it makes sense.
-    function getAccountToken(
-        address account,
-        TokenModel.ElGamal memory amount
-    ) external view returns (TokenModel.ElGamal memory) {
-        bytes32 tokenId = hashElgamal(amount);
-        TokenModel.Account storage account2 = accounts[account];
-        return account2.assets[tokenId];
-    }
-
-    function getAccountTokenById(
-        address account,
-        uint256 tokenId
-    ) external view returns (TokenModel.TokenEntity memory) {
-        TokenModel.Account storage account2 = accounts[account];
-        return account2.reservations[tokenId];
-    }
-
-    //TODO use this function in your tests, instead of the function above.
-    function tokenExists(address account, TokenModel.ElGamal memory amount) external view returns (bool) {
-        TokenModel.ElGamal memory token = accounts[account].assets[hashElgamal(amount)];
-        return isEqualElGamal(token, amount);
-    }
-
-    // for debug
-    //TODO debug functions should be inside testing code base, not inside the main code base. We have a proper function that does exactly the same thing, its name is privateAllowance.
-    //TODO remove this function and use privateAllowance in your tests!
-    function getAccountAllowance(address account, address spender) external view returns (TokenModel.Allowance memory) {
-        TokenModel.Account storage account2 = accounts[account];
-        return account2.allowances[spender];
-    }
-
     /**
-     * @notice Adds a supply to the total supply.
-     * @param supplyIncrease The amount of tokens to add to the total supply.
-     */
-    function addSupply(TokenModel.ElGamal memory supplyIncrease) internal {
-        _privateTotalSupply = TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease);
-        _numberOfTotalSupplyChanges++;
-    }
-
-    function subSupply(TokenModel.ElGamal memory supplyDecrease) internal {
-        _privateTotalSupply = TokenGrumpkinLib.subElGamal(_privateTotalSupply, supplyDecrease);
-        _numberOfTotalSupplyChanges++;
-    }
-
-    function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
-        return keccak256(abi.encode(elgamal));
-    }
-
-    function hashElgamal2(TokenModel.ElGamal memory elgamal) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encode(elgamal)));
-    }
-
-    function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
-        return accounts[owner].balance;
-    }
-
-
-
-    /**
-     * @dev Approves a private `value` amount of tokens to be spent by `spender` from the caller's account.
+ * @dev Approves a private `value` amount of tokens to be spent by `spender` from the caller's account.
      *
      * Emits a {PrivateApproval} event.
      * @param consumedTokens The tokens that will be consumed.
@@ -265,7 +203,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
         require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
         require(isNotZeroAllowance(allowance),  "PrivateERCToken: allowance is zero");
-        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+//        require(existsAll(msg.sender, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
         TokenModel.ElGamal memory consumedAmount = sumTokens(msg.sender, consumedTokens);
 
         TokenModel.VerifyTokenApproveParams memory params = TokenModel.VerifyTokenApproveParams({
@@ -295,36 +233,90 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         emit PrivateApproval(msg.sender, spender, allowance);
     }
-    // TODO review this function
-    // Dear powerfull programmer, if an allowance is not not zero, so it is zero, and we can return instead of a new recently created zero allowance.
-    // There is a function named privateAllowance that can be used instead of this function.
-    // this is a duplicated code.
-    function getAllowance(address accountAddress, address spender) internal view returns (TokenModel.Allowance memory) {
-        TokenModel.Account storage account = accounts[accountAddress];
-        TokenModel.Allowance memory allowance = account.allowances[spender];
-        if (!isNotZeroAllowance(allowance)) {
-            return TokenModel.Allowance(0, 0, 0, 0, 0, 0);
-        }
-        return allowance;
+
+    function privateDirectTransfer(
+        address from,
+        uint256[] memory consumedTokens,
+        address to,
+        TokenModel.ElGamal memory amount,
+        TokenModel.ElGamal memory consumedTokensRemainingAmount,
+        bytes calldata proof
+    )
+    external
+    whenNotPaused
+    notBlacklisted(msg.sender)
+    notBlacklisted(to)
+    returns (bool)
+    {
+        require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
+        require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
+        require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
+        require(existsAllReservations(from, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
+        TokenModel.ElGamal memory consumedAmount = sumTokensReservations(from, consumedTokens);
+        TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
+            institutionRegistration: _institutionRegistration,
+            from: from,
+            to: to,
+            consumedAmount: consumedAmount,
+            amount: amount,
+            remainingAmount: consumedTokensRemainingAmount,
+            proof: proof
+        });
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
+        require(isValid, "PrivateERCToken: invalid proof");
+
+        removeTokensWithBalance2(from, consumedTokens);
+
+        uint256 changeTokenId = hashElgamal2(consumedTokensRemainingAmount);
+        TokenModel.TokenEntity memory changeTokenEntity =
+                            TokenModel.TokenEntity(changeTokenId, from, TokenModel.TokenStatus.active, consumedTokensRemainingAmount, address(0), 0 );
+        addTokenWithBalance2(from, changeTokenEntity);
+
+        uint256 transferTokenId = hashElgamal2(amount);
+        TokenModel.TokenEntity memory transferTokenEntity =
+                            TokenModel.TokenEntity(transferTokenId, to, TokenModel.TokenStatus.active, amount, address(0), 0);
+        addTokenWithBalance2(to, transferTokenEntity);
+
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, changeTokenId);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, transferTokenId, address(this), TokenModel.TokenStatus.active, amount);
+        emit PrivateTransfer(from, to, amount);
+        return true;
     }
 
-    function addAllowance(address accountAddress,address spender, TokenModel.Allowance memory allowance) internal {
-        TokenModel.Account storage account = accounts[accountAddress];
-        account.allowances[spender] = allowance;
+    function privateTransfer(
+        uint256 tokenId,
+        address to
+    )
+    external
+    whenNotPaused
+    notBlacklisted(msg.sender)
+    notBlacklisted(to)
+    returns (bool)
+    {
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(to != address(0), "PrivateERCToken: to is the zero address");
+        TokenModel.TokenEntity memory tokenEntity =  accounts[msg.sender].reservations[tokenId];
+        require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
+
+        removeTokenWithBalance(msg.sender, tokenEntity.rollbackTokenId);
+        removeToken(msg.sender, tokenEntity.rollbackTokenId);
+
+        uint256[] memory consumedTokens = new uint256[](2);
+        consumedTokens[0] = tokenEntity.id;
+        consumedTokens[1] = tokenEntity.rollbackTokenId;
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+
+        tokenEntity.rollbackTokenId =0;
+        tokenEntity.owner= to;
+        tokenEntity.status = TokenModel.TokenStatus.active;
+
+        addTokenWithBalance2(tokenEntity.to, tokenEntity);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
+        emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+        return true;
     }
 
     /**
-     * @dev Moves a private `value` amount of tokens from `from` to `to`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-
-     to do:  need to consider the scenario that the owner and spender belong to two banks.
-      // whenever allowance is spent, we need to update allowance and rollback at both side
-
-     *
-     *
-     *
-     * Emits a {PrivateTransferFrom} event.
      * @param from The address that will transfer the tokens.
      * @param newAllowance The allowance after the transfer.
      * @param to The address that will receive the transferred tokens.
@@ -386,43 +378,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
-    function removeBalance(address to, TokenModel.ElGamal memory amount) internal {
-        accounts[to].balance = TokenGrumpkinLib.subElGamal(accounts[to].balance, amount);
-        delete accounts[to].assets[hashElgamal(amount)];
-    }
-
-    function backupAmount(TokenModel.Allowance memory allowance) internal pure returns (TokenModel.ElGamal memory) {
-        return TokenModel.ElGamal({cl_x: allowance.cl_x, cl_y: allowance.cl_y, cr_x: allowance.cr2_x, cr_y: allowance.cr2_y});
-    }
-
-    function addBalance(address to, TokenModel.ElGamal memory amount) internal {
-        accounts[to].balance = TokenGrumpkinLib.addElGamal(accounts[to].balance, amount);
-        accounts[to].assets[hashElgamal(amount)] = amount;
-    }
-
-    function returnUnspentAllowance(address accountAddress,  address spender) internal {
-        TokenModel.Account storage account = accounts[accountAddress];
-        TokenModel.Allowance memory allowance = account.allowances[spender];
-        if(isNotZeroAllowance(allowance)){
-            TokenModel.ElGamal memory token = TokenModel.ElGamal({
-                cl_x: allowance.cl_x,
-                cl_y: allowance.cl_y,
-                cr_x: allowance.cr2_x,
-                cr_y: allowance.cr2_y
-            });
-            addTokenWithBalance(accountAddress, token);
-            delete account.allowances[spender];
-        }
-    }
-
-    function privateAllowance(address owner, address spender) external view returns (TokenModel.Allowance memory) {
-        return accounts[owner].allowances[spender];
-    }
-
     /**
-    * MARK: Decrease Allowance
+     * MARK: Decrease Allowance
 
-    * @dev Decreases the allowance of the spender by the given amount.
+     * @dev Decreases the allowance of the spender by the given amount.
      *
      * Emits a {PrivateApproval} event.
      * @param spender The address that will be approved to spend the tokens.
@@ -481,7 +440,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(isNotZeroElGamal(consumedTokensRemainingAmount), "PrivateERCToken: zero decrease amount");
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(existsAllowance(msg.sender, spender), "PrivateERCToken: allowance does not exist");
-        require(existsAll(msg.sender, consumedTokens), "PrivateERCToken: consumedTokens does not exist");
+//        require(existsAll(msg.sender, consumedTokens), "PrivateERCToken: consumedTokens does not exist");
 
         //TODO uncomment code below and build the verifyUpdateAllowance related functions
         // TokenModel.Allowance memory oldAllowance = accounts[msg.sender].allowances[spender];
@@ -504,86 +463,93 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
-    function privateDirectTransfer(
-        address from,
-        uint256[] memory consumedTokens,
-        address to,
-        TokenModel.ElGamal memory amount,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof
-    )
-    external
-    whenNotPaused
-    notBlacklisted(msg.sender)
-    notBlacklisted(to)
-    returns (bool)
-    {
-        require(consumedTokens.length > 0, "PrivateERCToken: consumedTokens is empty");
-        require(isNotZeroElGamal(consumedTokensRemainingAmount),"PrivateERCToken: consumedTokensRemainingAmount is zero");
-        require(isNotZeroElGamal(amount),  "PrivateERCToken: amount is zero");
-        require(existsAll2(from, consumedTokens),  "PrivateERCToken: consumedTokens does not exist");
-        TokenModel.ElGamal memory consumedAmount = sumTokens2(from, consumedTokens);
-        TokenModel.VerifyTokenTransferParams memory params = TokenModel.VerifyTokenTransferParams({
-            institutionRegistration: _institutionRegistration,
-            from: from,
-            to: to,
-            consumedAmount: consumedAmount,
-            amount: amount,
-            remainingAmount: consumedTokensRemainingAmount,
-            proof: proof
-        });
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenTransfer(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
-        require(isValid, "PrivateERCToken: invalid proof");
-
-        removeTokensWithBalance2(from, consumedTokens);
-
-        uint256 changeTokenId = hashElgamal2(consumedTokensRemainingAmount);
-        TokenModel.TokenEntity memory changeTokenEntity =
-            TokenModel.TokenEntity(changeTokenId, from, TokenModel.TokenStatus.active, consumedTokensRemainingAmount, address(0), 0 );
-        addTokenWithBalance2(from, changeTokenEntity);
-
-        uint256 transferTokenId = hashElgamal2(amount);
-        TokenModel.TokenEntity memory transferTokenEntity =
-        TokenModel.TokenEntity(transferTokenId, to, TokenModel.TokenStatus.active, amount, address(0), 0);
-        addTokenWithBalance2(to, transferTokenEntity);
-
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, changeTokenId);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, transferTokenId, address(this), TokenModel.TokenStatus.active, amount);
-        emit PrivateTransfer(from, to, amount);
-        return true;
+    function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
+        return accounts[owner].balance;
     }
 
-    function privateTransfer(
-        uint256 tokenId,
-        address to
-    )
-    external
-    whenNotPaused
-    notBlacklisted(msg.sender)
-    notBlacklisted(to)
-    returns (bool)
-    {
-        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
-        require(to != address(0), "PrivateERCToken: to is the zero address");
-        TokenModel.TokenEntity memory tokenEntity =  accounts[msg.sender].reservations[tokenId];
-        require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
+    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
+        TokenModel.ElGamal memory consolidatedSupply = _privateTotalSupply;
+        return consolidatedSupply;
+    }
 
-        removeTokenWithBalance(msg.sender, tokenEntity.rollbackTokenId);
-        removeToken(msg.sender, tokenEntity.rollbackTokenId);
+    function privateAllowance(address owner, address spender) external view returns (TokenModel.Allowance memory) {
+        return accounts[owner].allowances[spender];
+    }
 
-        uint256[] memory consumedTokens = new uint256[](2);
-        consumedTokens[0] = tokenEntity.id;
-        consumedTokens[1] = tokenEntity.rollbackTokenId;
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+//    // for debug
+//    //TODO debug functions should be inside testing code base, not inside the main code base. By the way, this function could be replaced by the tokenExists function below with the same functionality. That function can stay inside the main code base, because it makes sense.
+//    function getAccountToken(
+//        address account,
+//        TokenModel.ElGamal memory amount
+//    ) external view returns (TokenModel.ElGamal memory) {
+//        bytes32 tokenId = hashElgamal(amount);
+//        TokenModel.Account storage account2 = accounts[account];
+//        return account2.assets[tokenId];
+//    }
 
-        tokenEntity.rollbackTokenId =0;
-        tokenEntity.owner= to;
-        tokenEntity.status = TokenModel.TokenStatus.active;
+    function getAccountTokenById(
+        address account,
+        uint256 tokenId
+    ) external view returns (TokenModel.TokenEntity memory) {
+        TokenModel.Account storage account2 = accounts[account];
+        return account2.reservations[tokenId];
+    }
 
-        addTokenWithBalance2(tokenEntity.to, tokenEntity);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
-        emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
-        return true;
+    /**
+     * @notice Adds a supply to the total supply.
+     * @param supplyIncrease The amount of tokens to add to the total supply.
+     */
+    function addSupply(TokenModel.ElGamal memory supplyIncrease) internal {
+        _privateTotalSupply = TokenGrumpkinLib.addElGamal(_privateTotalSupply, supplyIncrease);
+        _numberOfTotalSupplyChanges++;
+    }
+
+    function subSupply(TokenModel.ElGamal memory supplyDecrease) internal {
+        _privateTotalSupply = TokenGrumpkinLib.subElGamal(_privateTotalSupply, supplyDecrease);
+        _numberOfTotalSupplyChanges++;
+    }
+
+    // TODO wait for delete
+    function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (bytes32) {
+        return keccak256(abi.encode(elgamal));
+    }
+
+    function hashElgamal2(TokenModel.ElGamal memory elgamal) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encode(elgamal)));
+    }
+
+    function addAllowance(address accountAddress,address spender, TokenModel.Allowance memory allowance) internal {
+        TokenModel.Account storage account = accounts[accountAddress];
+        account.allowances[spender] = allowance;
+    }
+
+    function removeBalance(address to, TokenModel.ElGamal memory amount) internal {
+        accounts[to].balance = TokenGrumpkinLib.subElGamal(accounts[to].balance, amount);
+        delete accounts[to].assets[hashElgamal(amount)];
+    }
+
+    function backupAmount(TokenModel.Allowance memory allowance) internal pure returns (TokenModel.ElGamal memory) {
+        return TokenModel.ElGamal({cl_x: allowance.cl_x, cl_y: allowance.cl_y, cr_x: allowance.cr2_x, cr_y: allowance.cr2_y});
+    }
+
+    function addBalance(address to, TokenModel.ElGamal memory amount) internal {
+        accounts[to].balance = TokenGrumpkinLib.addElGamal(accounts[to].balance, amount);
+        accounts[to].assets[hashElgamal(amount)] = amount;
+    }
+
+    function returnUnspentAllowance(address accountAddress,  address spender) internal {
+        TokenModel.Account storage account = accounts[accountAddress];
+        TokenModel.Allowance memory allowance = account.allowances[spender];
+        if(isNotZeroAllowance(allowance)){
+            TokenModel.ElGamal memory token = TokenModel.ElGamal({
+                cl_x: allowance.cl_x,
+                cl_y: allowance.cl_y,
+                cr_x: allowance.cr2_x,
+                cr_y: allowance.cr2_y
+            });
+            addTokenWithBalance(accountAddress, token);
+            delete account.allowances[spender];
+        }
     }
 
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
@@ -603,15 +569,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             cr_y:0
         });
         return true;
-    }
-
-    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
-        TokenModel.ElGamal memory consolidatedSupply = _privateTotalSupply;
-        return consolidatedSupply;
-    }
-
-    function publicTotalSupply() external view returns (uint256, bool) {
-        return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
     }
 
     /**
@@ -692,16 +649,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
-
-    function subTokens(TokenModel.ElGamal memory amount,TokenModel.ElGamal memory amount1) external view returns (TokenModel.ElGamal memory) {
-        return TokenGrumpkinLib.subElGamal(amount, amount1);
-    }
-
-    function addTokens(TokenModel.ElGamal memory amount,TokenModel.ElGamal memory amount1) external view returns (TokenModel.ElGamal memory) {
-        return TokenGrumpkinLib.addElGamal(amount, amount1);
-    }
-
-
     function removeTokensWoChangeBalance(address to, bytes32[] memory amount) internal {
         TokenModel.Account storage toAccount = accounts[to];
 
@@ -718,6 +665,19 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
+    // TODO review this function
+    // Dear powerfull programmer, if an allowance is not not zero, so it is zero, and we can return instead of a new recently created zero allowance.
+    // There is a function named privateAllowance that can be used instead of this function.
+    // this is a duplicated code.
+    function getAllowance(address accountAddress, address spender) internal view returns (TokenModel.Allowance memory) {
+        TokenModel.Account storage account = accounts[accountAddress];
+        TokenModel.Allowance memory allowance = account.allowances[spender];
+        if (!isNotZeroAllowance(allowance)) {
+            return TokenModel.Allowance(0, 0, 0, 0, 0, 0);
+        }
+        return allowance;
+    }
+
     function sumTokens(address account, bytes32[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
         TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -726,9 +686,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return sum;
     }
 
-    // TODO please, could you rename this function to sumTokensReservations.
-    // you can rename the function above to sumTokensAssets either.
-    function sumTokens2(address account, uint256[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
+    function sumTokensReservations(address account, uint256[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
         TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokens.length; i++) {
             sum = TokenGrumpkinLib.addElGamal(sum, accounts[account].reservations[tokens[i]].amount);
@@ -736,18 +694,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return sum;
     }
 
-    function existsAll(address account, bytes32[] memory tokens) internal view returns (bool) {
-        for (uint256 i = 0; i < tokens.length; i++) {
-            if (isZero(accounts[account].assets[tokens[i]])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // TODO please, rename this function to existsAllReservations, at least.
-    // you can rename the funciton above to existsAllAssets either.
-    function existsAll2(address account, uint256[] memory tokens) internal view returns (bool) {
+    function existsAllReservations(address account, uint256[] memory tokens) internal view returns (bool) {
         for (uint256 i = 0; i < tokens.length; i++) {
             if (isZero(accounts[account].reservations[tokens[i]].amount)) {
                 return false;
@@ -756,14 +703,24 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
+    /**
+     * @notice Checks if an allowance exists for a given owner and spender.
+     * @param owner The address of the owner.
+     * @param spender The address of the spender.
+     * @return True if the allowance exists, false otherwise.
+     */
+    function existsAllowance(address owner, address spender) internal view returns (bool) {
+        return isNotZeroAllowance(accounts[owner].allowances[spender]);
+    }
+
+    function publicTotalSupply() external view returns (uint256, bool) {
+        return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
+    }
+
     function isZero(TokenModel.ElGamal memory elgamal) internal pure returns (bool) {
         //TODO look at this code, and fix the function isNotZeroElGamal
         // from basic boolean logi classes, the oposite of a && b is !a || !b
         return elgamal.cl_x == 0 && elgamal.cl_y == 0 && elgamal.cr_x == 0 && elgamal.cr_y == 0;
-    }
-
-    function isEqualElGamal(TokenModel.ElGamal memory a, TokenModel.ElGamal memory b) internal pure returns (bool) {
-        return a.cl_x == b.cl_x && a.cl_y == b.cl_y && a.cr_x == b.cr_x && a.cr_y == b.cr_y;
     }
 
     function isNotZeroElGamal(TokenModel.ElGamal memory elgamal) internal pure returns (bool) {
@@ -775,16 +732,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
     function isNotZeroAllowance(TokenModel.Allowance memory allowance) internal pure returns (bool) {
         return allowance.cl_x != 0 && allowance.cl_y != 0 && allowance.cr1_x != 0 && allowance.cr1_y != 0 && allowance.cr2_x != 0 && allowance.cr2_y != 0;
-    }
-
-    /**
-     * @notice Checks if an allowance exists for a given owner and spender.
-     * @param owner The address of the owner.
-     * @param spender The address of the spender.
-     * @return True if the allowance exists, false otherwise.
-     */
-    function existsAllowance(address owner, address spender) internal view returns (bool) {
-        return isNotZeroAllowance(accounts[owner].allowances[spender]);
     }
 
     /**
