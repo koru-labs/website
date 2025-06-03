@@ -12,104 +12,16 @@ interface IPrivateERCToken {
     //  doc: function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external;
     function privateMint(address to, TokenModel.ElGamal memory amount, TokenModel.ElGamal memory supply, bytes calldata proof) external returns (bool);
 
+    function privateBurn(uint256 tokenId) external;
+
     // ERC: function balanceOf(address account) external view returns (uint256);
     function privateBalanceOf(address owner) external returns (TokenModel.ElGamal memory);
 
-    // ERC: function approve(address spender, uint256 value) external;
-    function privateApprove(bytes32[] memory consumedTokens,
-        address spender,
-        TokenModel.Allowance memory allowance,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external; // first split which will put amount in out-box. call this function to move from out-box to apv-box
+    function privateTransfer(uint256 tokenId, address to) external returns (bool);
 
-    function privateTransferFrom(      address from,
-        TokenModel.Allowance memory newAllowance,
-        address to,
-        TokenModel.ElGamal memory value,
-        bytes calldata proof
-    ) external returns (bool);
+    function privateTotalSupply() external view returns (TokenModel.ElGamal memory);
 
-    // ERC: function allowance(owner, spender) external view returns(uint256);
-    function privateAllowance(address owner, address spender) external returns (TokenModel.Allowance memory);
+    function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount) external returns (bool);
 
-    // ERC: function transfer(address to, uint256 value) external returns (bool);
-    function privateDirectTransfer(
-        address from,
-        uint256[] memory consumedTokens,
-        address to,
-        TokenModel.ElGamal memory amount,
-        TokenModel.ElGamal memory consumedTokensRemainingAmount,
-        bytes calldata proof) external returns (bool);
-
-    // ERC: function burn(uint256 amount) external;
-    function privateBurn(
-        uint256 tokenId
-    ) external;
-
-    //circle-v2
-    //    function increaseAllowance(address spender, uint256 increment) external;
-    //
-    //    function decreaseAllowance(address spender, uint256 decrement) external;
-    //
-    //    function permit(
-    //        address owner,
-    //        address spender,
-    //        uint256 value,
-    //        uint256 deadline,
-    //        uint8 v,
-    //        bytes32 r,
-    //        bytes32 s
-    //    ) external;
-    //
-    //    function transferWithAuthorization(
-    //        address from,
-    //        address to,
-    //        uint256 value,
-    //        uint256 validAfter,
-    //        uint256 validBefore,
-    //        bytes32 nonce,
-    //        uint8 v,
-    //        bytes32 r,
-    //        bytes32 s
-    //    ) external;
-    //
-    //    function receiveWithAuthorization(
-    //        address from,
-    //        address to,
-    //        uint256 value,
-    //        uint256 validAfter,
-    //        uint256 validBefore,
-    //        bytes32 nonce,
-    //        uint8 v,
-    //        bytes32 r,
-    //        bytes32 s
-    //    ) external;
-    //
-    //    function cancelAuthorization(
-    //        address authorizer,
-    //        bytes32 nonce,
-    //        uint8 v,
-    //        bytes32 r,
-    //        bytes32 s
-    //    ) external;
-    //
-    //    function transferWithAuthorization(
-    //        address from,
-    //        address to,
-    //        uint256 value,
-    //        uint256 validAfter,
-    //        uint256 validBefore,
-    //        bytes32 nonce,
-    //        bytes memory signature
-    //    ) external;
-    //
-    //    function receiveWithAuthorization(
-    //        address from,
-    //        address to,
-    //        uint256 value,
-    //        uint256 validAfter,
-    //        uint256 validBefore,
-    //        bytes32 nonce,
-    //        bytes memory signature
-    //    ) external;
+    function removePrivacyMinter(address minter) external returns (bool);
 }
