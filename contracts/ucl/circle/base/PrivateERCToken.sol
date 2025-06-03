@@ -210,6 +210,32 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
+
+    // The test is still ongoing
+    function privateCancelToken(uint256 tokenId) external 
+        whenNotPaused 
+        notBlacklisted(msg.sender) 
+        returns (bool) {
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        
+        TokenModel.TokenEntity memory transferToken = accounts[msg.sender].assets[tokenId];
+        require(transferToken.owner == msg.sender, "token.owner != msg.sender");
+        require(transferToken.status == TokenModel.TokenStatus.inactive, "token is not inactive");
+        require(transferToken.rollbackTokenId != 0, "rollback token does not exist");
+
+        TokenModel.TokenEntity memory rollbackToken = accounts[msg.sender].assets[transferToken.rollbackTokenId];
+        require(rollbackToken.id != 0, "invalid rollback token");
+        rollbackToken.status = TokenModel.TokenStatus.active;
+
+        uint256[] memory transferTokens = new uint256[](1);
+        transferTokens[0] = transferToken.id;
+        removeTokensWithBalance(transferToken.owner, transferTokens);
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), transferToken.owner, transferTokens, 0);
+
+        addTokenWithBalance(msg.sender, rollbackToken);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
+        return true;
+    }
     
     function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
         return accounts[owner].balance;
