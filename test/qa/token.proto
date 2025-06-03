@@ -13,7 +13,8 @@ service TokenService {
   rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse);
   rpc GetMintAllowed          (MintAllowedRequest)           returns (MintAllowedResponse);
   rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse);
-  rpc ElgamalEncodeAmount     (EncodeAmountRequest)         returns (EncodeAmountResponse);
+  rpc ElgamalEncodeAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
+  rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse);
 }
 
 // Token action status enum
@@ -37,13 +38,13 @@ message ElGamal {
   string cr_x = 3;
   string cr_y = 4;
 }
+
 message GenerateProofRequest {
   string sc_address =1;
   uint64 token_type =2;
   string from_address =3;
   string to_address =4;
-  //  string spender_address =5;
-  uint64 amount = 6;
+  uint64 amount = 5;
 }
 
 message GenerateProofResponse {
@@ -101,4 +102,20 @@ message EncodeAmountRequest {
 
 message EncodeAmountResponse {
   ElGamal amount =1;
+}
+
+message SplitTokenListRequest {
+  string owner_address =1;
+  string sc_address =2;
+}
+
+message SplitTokenListResponse {
+  repeated Token split_tokens = 1;
+}
+
+message Token {
+  string token_id = 1;
+  string request_id = 2;
+  string type = 3;
+  uint64 amount = 4;
 }
