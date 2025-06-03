@@ -282,18 +282,9 @@ async function checkToken(account, tokenId) {
     console.log("token: ", token);
 }
 
-// checkDeployedUSDC().then();
-// testMint().then()
-// checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
-// mintForStart().then()
-// testDirectTransfer().then();
+
 // checkBalance(accounts.Minter).then()
-
-testReserveTokensAndBurn().then();
-// testReserveTokensAndTransfer().then()
-// testTransfer().then();
-// testBurn().then();
-
-// testApprove().then();
-// testTransferFrom().then();
+// mintForStart().then()。 //mint
+// testReserveTokensAndBurn().then(); // burn
+// testReserveTokensAndTransfer().then();// transfer
