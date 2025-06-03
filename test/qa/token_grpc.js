@@ -35,51 +35,10 @@ function createClient(url) {
         return promisify(client.GenerateMintProof.bind(client), request);
     };
 
-    client.generateDirectTransfer = async function(request) {
-        return promisify(client.GenerateDirectTransfer.bind(client), request);
-    };
-
-
-    client.generateTransferProof = async function(request) {
-        return promisify(client.GenerateTransferProof.bind(client), request);
-    };
-
-    client.generateApproveProof = async function(request) {
-        return promisify(client.GenerateApproveProof.bind(client), request);
-    };
-
-    client.generateTransferFromProof = async function(request) {
-        return promisify(client.GenerateTransferFromProof.bind(client), request);
-    };
-
-    client.generateBurnProof = async function(request) {
-        return promisify(client.GenerateBurnProof.bind(client), request);
-    };
-
     // Proof retrieval methods
     client.getMintProof = async function(requestId) {
         const request = { requestId };
         return promisify(client.GetMintProof.bind(client), request);
-    };
-
-    client.getTransferProof = async function(requestId) {
-        const request = { requestId };
-        return promisify(client.GetTransferProof.bind(client), request);
-    };
-
-    client.getApproveProof = async function(requestId) {
-        const request = { requestId };
-        return promisify(client.GetApproveProof.bind(client), request);
-    };
-
-    client.getTransferFromProof = async function(requestId) {
-        const request = { requestId };
-        return promisify(client.GetTransferFromProof.bind(client), request);
-    };
-
-    client.getBurnProof = async function(requestId) {
-        const request = { requestId };
-        return promisify(client.GetBurnProof.bind(client), request);
     };
 
     // Status checking and polling methods
@@ -158,7 +117,7 @@ function createClient(url) {
                         return
                     } else if (result.status=="TOKEN_ACTION_STATUS_FAIL") {
                         reject(result);
-
+                        return
                     } else {
                         console.log("wait for proof. status = ", result.status)
                     }
@@ -192,63 +151,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Export all individual methods for direct usage
-async function generateMintProof(client, request) {
-    return client.generateMintProof(request);
-}
-
-async function generateTransferProof(client, request) {
-    return client.generateTransferProof(request);
-}
-
-async function generateDirectTransfer(client, request) {
-    return client.generateDirectTransfer(request);
-}
-
-async function generateApproveProof(client, request) {
-    return client.generateApproveProof(request);
-}
-
-async function generateTransferFromProof(client, request) {
-    return client.generateTransferFromProof(request);
-}
-
-async function generateBurnProof(client, request) {
-    return client.generateBurnProof(request);
-}
-
-async function getMintProof(client, requestId) {
-    return client.getMintProof(requestId);
-}
-
-async function getTransferProof(client, requestId) {
-    return client.getTransferProof(requestId);
-}
-
-async function getApproveProof(client, requestId) {
-    return client.getApproveProof(requestId);
-}
-
-async function getTransferFromProof(client, requestId) {
-    return client.getTransferFromProof(requestId);
-}
-
-async function getBurnProof(client, requestId) {
-    return client.getBurnProof(requestId);
-}
-
 
 module.exports = {
     createClient,
     TokenActionStatusEnum,
-    generateMintProof,
-    generateTransferProof,
-    generateApproveProof,
-    generateTransferFromProof,
-    generateBurnProof,
-    getMintProof,
-    getTransferProof,
-    getApproveProof,
-    getTransferFromProof,
-    getBurnProof
 };

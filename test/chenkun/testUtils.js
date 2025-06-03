@@ -124,7 +124,6 @@ async function testMint() {
     console.log("receipt", receipt)
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
-    console.log("balance: ", balance)
 }
 
 async function testDirectTransfer(){
@@ -287,11 +286,11 @@ async function checkToken(account, tokenId) {
 // testMint().then()
 // checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
-mintForStart().then()
+// mintForStart().then()
 // testDirectTransfer().then();
 // checkBalance(accounts.Minter).then()
 
-// testReserveTokensAndBurn().then();
+testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then()
 // testTransfer().then();
 // testBurn().then();
