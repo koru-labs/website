@@ -171,7 +171,6 @@ async function testReserveTokensAndBurn(){
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.Owner,
         amount: amount
     };
 
@@ -285,6 +284,6 @@ async function checkToken(account, tokenId) {
 
 
 // checkBalance(accounts.Minter).then()
-// mintForStart().then()。 //mint
-// testReserveTokensAndBurn().then(); // burn
+// mintForStart().then() //mint
+testReserveTokensAndBurn().then(); // burn
 // testReserveTokensAndTransfer().then();// transfer
