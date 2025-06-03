@@ -6,8 +6,7 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-
-const rpcUrl = "a3bd5f10689564cd3b8f07857dcad794-1518118954.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a31b8f17091f84b9b966146b6032acd3-1561831942.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -32,7 +31,7 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.ucl_node2.url;
+const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -100,10 +99,14 @@ async function mintForStart() {
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
     console.log("receipt", receipt)
 
+    await sleep(5000)
+
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("balance: ", balance)
 }
-
+ function sleep(ms) {
+     return new Promise(resolve => setTimeout(resolve, ms));
+ }
 
 async function testMint() {
     const generateRequest = {
@@ -284,8 +287,8 @@ async function checkToken(account, tokenId) {
 // testMint().then()
 // checkToken(accounts.Minter, '0x229d74e030744056719a8b813d3fc091da6120e0bee73854e748cabaaaebaca4').then();
 
-// mintForStart().then()
-testDirectTransfer().then();
+mintForStart().then()
+// testDirectTransfer().then();
 // checkBalance(accounts.Minter).then()
 
 // testReserveTokensAndBurn().then();

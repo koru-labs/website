@@ -140,7 +140,10 @@ async function getAddressBalance(grpcClient, scAddress, account) {
         cr_x: '0x' + convertBigInt2Hex(amount[2]),
         cr_y: '0x' + convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.getAccountBalance(scAddress, account, balance)
+    let result = await grpcClient.getAccountBalance(scAddress, account)
+    let decodeAmount = await grpcClient.decodeElgamalAmount(account,balance)
+    console.log("decode block-chain balance", result)
+    console.log("database balance", decodeAmount)
     return result
 }
 

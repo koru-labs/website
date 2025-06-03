@@ -91,11 +91,19 @@ function createClient(url) {
     client.getAccountBalance = async function(scAddress, ownerAddress, balance) {
         const request = {
             sc_address: scAddress,
-            owner_address: ownerAddress,
-            balance
+            owner_address: ownerAddress
         };
         console.log("request", request);
         return promisify(client.GetAddressBalance.bind(client), request);
+    };
+
+    client.decodeElgamalAmount = async function(ownerAddress, balance) {
+        const request = {
+            balance: balance,
+            owner_address: ownerAddress
+        };
+        console.log("request", request);
+        return promisify(client.DecodeElgamalAmount.bind(client), request);
     };
 
     client.getAddressAllowance  = async function(ownerAddress, spenderAddress,scAddress) {
