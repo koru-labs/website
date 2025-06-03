@@ -10,12 +10,6 @@ library TokenModel {
         ERC1155
     }
 
-    enum TokenBox {
-        InBox,
-        OutBox,
-        ApvBox
-    }
-
 
     enum TokenStatus {
         deleted,
@@ -40,17 +34,6 @@ library TokenModel {
         uint256 cr2_y;
     }
 
-    struct TokenInfo {
-        uint256 id;
-        TokenStatus status;
-
-        ElGamal amount;
-
-        address owner;
-        address to;
-        uint256 rollbackTokenId;
-    }
-
     struct TokenEntity {
         uint256 id;
         address owner;
@@ -62,13 +45,7 @@ library TokenModel {
 
     struct Account {
         ElGamal balance;
-        mapping(bytes32 => ElGamal) assets;
-        mapping(address => Allowance) allowances;
-        mapping(uint256 => TokenEntity) reservations;
-    }
-
-    struct BankAllowances {
-        mapping(address => ElGamal) allowances;
+        mapping(uint256 => TokenEntity) assets;
     }
 
     struct VerifyTokenMintParams {
