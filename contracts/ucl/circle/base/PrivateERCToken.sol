@@ -163,9 +163,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         subSupply(supplyDecrease);
 
-        uint256[] memory tokenIds = new uint256[](tokenId);
-        uint256[] memory rollbackTokenIds = new uint256[](entity.rollbackTokenId);
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
         removeTokensWithBalance(msg.sender, tokenIds);
+
+        uint256[] memory rollbackTokenIds = new uint256[](1);
+        rollbackTokenIds[0] = entity.rollbackTokenId;
         removeTokens(msg.sender, rollbackTokenIds);
 
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply,_numberOfTotalSupplyChanges);
@@ -189,7 +192,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.TokenEntity memory tokenEntity =  accounts[msg.sender].assets[tokenId];
         require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
 
-        uint256[] memory rollbackTokens = new uint256[](tokenEntity.rollbackTokenId);
+        uint256[] memory rollbackTokens = new uint256[](1);
+        rollbackTokens[0] = tokenEntity.rollbackTokenId;
         removeTokensWithBalance(msg.sender, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
