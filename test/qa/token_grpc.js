@@ -56,10 +56,9 @@ function createClient(url) {
         return promisify(client.GetAddressBalance.bind(client), request);
     };
 
-    client.decodeElgamalAmount = async function(ownerAddress, balance) {
+    client.decodeElgamalAmount = async function( balance) {
         const request = {
             balance: balance,
-            owner_address: ownerAddress
         };
         console.log("request", request);
         return promisify(client.DecodeElgamalAmount.bind(client), request);
