@@ -1,5 +1,20 @@
 const {ethers} = require("hardhat")
+const config = require('./../../deployments/image9.json');
+const hardhatConfig = require("../../hardhat.config");
+const accounts = require("../../deployments/account.json");
 
+const l1CustomNetwork = {
+    name: "BESU",
+    chainId: 1337
+};
+const options = {
+    batchMaxCount: 1,
+    staticNetwork: true
+};
+
+
+const L1Url = hardhatConfig.networks.ucl_L2.url;
+const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -164,13 +179,14 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
         cr_y: convertBigInt2Hex(amount[3])
     }
     let result = await grpcClient.decodeElgamalAmount(balance)
-    return result
+    return Number(result.balance)
 }
 
 async function getPublicTotalSupply(scAddress) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.publicTotalSupply()
-    return amount
+    console.log("Public Total Supply: ", amount[0])
+    return amount[0]
 }
 
 async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
@@ -232,6 +248,48 @@ async function callPrivateCancel(scAddress, wallet, tokenId) {
     return receipt;
 }
 
+async function registerUser(userAddress) {
+    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
+    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration,onwerWallet);
+    let userRegTx = await institutionRegistration.registerUserByOwner(
+        userAddress,
+        '0xf17f52151EbEF6C7334FAD080c5704D77216b732'
+    );
+    await userRegTx.wait();
+    console.log(`Registered user ${userAddress} under Bank 0xf17f52151EbEF6C7334FAD080c5704D77216b732 `);
+}
+
+async function isBlackList(userAddress) {
+    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    let tx = await contract.isBlacklisted(
+        userAddress
+    );
+    // tx.wait();
+    return tx;
+}
+async function isBlackList(userAddress) {
+    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    let tx = await contract.isBlacklisted(
+        userAddress
+    );
+    // tx.wait();
+    return tx;
+}
+
+async function addToBlackList(userAddress) {
+    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    await contract.blacklist(userAddress)
+}
+
+async function removeFromBlackList(userAddress) {
+    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    await contract.unBlacklist(userAddress)
+}
+
 
 module.exports =  {
     callPrivateMint,
@@ -242,4 +300,8 @@ module.exports =  {
     getTotalSupplyNode3,
     getPublicTotalSupply,
     callPrivateCancel,
+    registerUser,
+    isBlackList,
+    addToBlackList,
+    removeFromBlackList
 }
