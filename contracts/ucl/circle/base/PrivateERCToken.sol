@@ -27,6 +27,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
 
+    uint256 _publicTotalSupply;
+
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
@@ -245,6 +247,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return consolidatedSupply;
     }
 
+    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) external {
+        //TODO add proof logic
+        _publicTotalSupply = publicTotalSupply;
+    }
+
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount) external whenNotPaused onlyMasterMinter returns (bool) {
         minters[minter] = true;
         privateMinterAllowed[minter] = privateAllowedAmount;
@@ -316,5 +323,17 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             sum = TokenGrumpkinLib.addElGamal(sum, accounts[account].assets[tokens[i]].amount);
         }
         return sum;
+    }
+
+    function publicTotalSupply() external view returns (uint256, bool) {
+        return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
+    }
+
+    function getAccountTokenById(
+        address account,
+        uint256 tokenId
+    ) external view returns (TokenModel.TokenEntity memory) {
+        TokenModel.Account storage account = accounts[account];
+        return account.assets[tokenId];
     }
 }
