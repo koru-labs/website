@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./InstitutionRegistration.sol";
+import "./InstitutionUserRegistry.sol";
 import "../event/IL2Event.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
@@ -19,7 +19,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     // FiatTokenV1 compatible fields
     bool private initialized;
 
-    InstitutionRegistration private _institutionRegistration;
+    InstitutionUserRegistry private _institutionRegistration;
     IL2Event _l2Event;
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
@@ -37,7 +37,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
-        InstitutionRegistration institutionRegistration
+        InstitutionUserRegistry institutionRegistration
     ) public {
         require(!initialized, "FiatToken: contract is already initialized");
 

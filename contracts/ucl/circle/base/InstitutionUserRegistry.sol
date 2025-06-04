@@ -4,7 +4,7 @@ import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
 
-contract InstitutionRegistration {
+contract InstitutionUserRegistry {
     address public owner;
     IL2Event public l2Event;
     

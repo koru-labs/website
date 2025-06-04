@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../base/InstitutionRegistration.sol";
+import "../base/InstitutionUserRegistry.sol";
 import "../model/TokenModel.sol";
 import "../nova/sol/fr.sol";
 import "../nova/sol/verifier.sol";
@@ -70,7 +70,7 @@ library TokenVerificationLib {
         TokenModel.ElGamal memory initialMinterAllowed = params.initialMinterAllowed;
         require(initialMinterAllowed.cl_x == z0Values[0] && initialMinterAllowed.cl_y == z0Values[1] && initialMinterAllowed.cr_x == z0Values[2] && initialMinterAllowed.cr_y == z0Values[3], "initialMinterAllowance not match");
 
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         // verify minter pk 4-5
         TokenModel.GrumpkinPublicKey memory minter = institutionRegistration.getUserInstGrumpkinPubKey(params.minter);
         require(minter.x == z0Values[4] && minter.y == z0Values[5], "minter public key not match");
@@ -106,7 +106,7 @@ library TokenVerificationLib {
     }
 
     function verifyTokenSplit(TokenModel.VerifyTokenSplitParams calldata params) public view returns (bool, uint, uint256[] memory) {
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
         // z0 verify
@@ -188,7 +188,7 @@ library TokenVerificationLib {
 
     // verifyTokenTransfer
     function verifyTokenTransfer(TokenModel.VerifyTokenTransferParams calldata params) public view returns (bool, uint, uint256[] memory) {
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
         // z0 verify
@@ -243,7 +243,7 @@ library TokenVerificationLib {
     }
 
     function verifyTokenBurn(TokenModel.VerifyTokenBurnParams calldata params) public view returns (bool, uint, uint256[] memory) {
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
         // z0 verify
@@ -313,7 +313,7 @@ library TokenVerificationLib {
     //4~7 token_owner_remaining， tokens_sum 减去 token_for_spender 后的 amount， owner的 pk 加密的
     //8~11 owner_backup token， amount和token_for_spender一样， owner的 pk 加密的
     function verifyTokenApprove(TokenModel.VerifyTokenApproveParams calldata params) public view returns (bool, uint, uint256[] memory) {
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
         // z0 verify
@@ -381,7 +381,7 @@ library TokenVerificationLib {
     //8~9 receiver_pk
     //10～11  owner的 pk
     function verifyTokenTransferFrom(TokenModel.VerifyTokenTransferFromParams calldata params) public view returns (bool, uint, uint256[] memory) {
-        InstitutionRegistration institutionRegistration = params.institutionRegistration;
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
 
         // z0 verify

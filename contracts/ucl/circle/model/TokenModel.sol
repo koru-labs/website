@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../base/InstitutionRegistration.sol";
+import "../base/InstitutionUserRegistry.sol";
 
 
 library TokenModel {
@@ -49,7 +49,7 @@ library TokenModel {
     }
 
     struct VerifyTokenMintParams {
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address minter;
         address to;
         ElGamal initialMinterAllowed;
@@ -60,7 +60,7 @@ library TokenModel {
     }
 
     struct VerifyTokenTransferParams {
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address from;
         address to;
         ElGamal consumedAmount;
@@ -70,7 +70,7 @@ library TokenModel {
     }
 
     struct VerifyTokenSplitParams {
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address from;
         address to;
         ElGamal consumedAmount;
@@ -81,7 +81,7 @@ library TokenModel {
     }
 
     struct VerifyTokenBurnParams{
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address from;
         ElGamal consumedAmount;
         ElGamal amount;
@@ -93,7 +93,7 @@ library TokenModel {
 
     //VerifyApproveParams
     struct VerifyTokenApproveParams {
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address owner;
         address spender;
         ElGamal consumedAmount;
@@ -104,7 +104,7 @@ library TokenModel {
 
     //VerifyTransferFromParams
     struct VerifyTokenTransferFromParams {
-        InstitutionRegistration institutionRegistration;
+        InstitutionUserRegistry institutionRegistration;
         address owner;
         address spender;
         address receiver;

@@ -15,7 +15,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         address newBlacklister,
         address newOwner,
         IL2Event l2Event,
-        InstitutionRegistration institutionRegistration) external {
+        InstitutionUserRegistry institutionRegistration) external {
 
         initialize(tokenName, tokenSymbol, tokenCurrency, tokenDecimals, newMasterMinter, newPauser, newBlacklister, newOwner);
         initialize_hamsa(TokenModel.TokenSCTypeEnum.ERC20, l2Event, institutionRegistration);
