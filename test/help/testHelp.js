@@ -141,7 +141,7 @@ async function getAddressBalance(grpcClient, scAddress, account) {
         cr_y: convertBigInt2Hex(amount[3])
     }
     let result = await grpcClient.getAccountBalance(scAddress, account)
-    let decodeAmount = await grpcClient.decodeElgamalAmount(account,balance)
+    let decodeAmount = await grpcClient.decodeElgamalAmount(balance)
 
     console.log("===================================================================");
     console.log("Checking Owner Balance");
@@ -154,14 +154,6 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     return result
 }
 
-async function checkAccountToken(scAddress, account, tokenId) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
-    let token = await contract.getAccountTokenById(account, tokenId)
-
-    return token;
-}
-
-
 async function getTotalSupplyNode3(grpcClient, scAddress) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateTotalSupply()
@@ -171,9 +163,8 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.getAccountBalance(scAddress,'0xf17f52151EbEF6C7334FAD080c5704D77216b732', balance)
-    const decimalValue = hexToDecimal(result.decryptBalance)
-    return decimalValue
+    let result = await grpcClient.decodeElgamalAmount(balance)
+    return result
 }
 
 async function getPublicTotalSupply(scAddress) {
@@ -234,17 +225,21 @@ async function callPrivateBurn(scAddress, wallet, tokenId) {
     return receipt;
 }
 
+async function callPrivateCancel(scAddress, wallet, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    let tx = await contract.privateCancelToken(tokenId)
+    let receipt = await tx.wait();
+    return receipt;
+}
+
 
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
     callPrivateBurn,
-    callPrivateApprove,
-    callPrivateTransferFrom,
     getAddressBalance,
     getAllowanceBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
-    checkAccountToken,
-    callPrivateBurn2,
+    callPrivateCancel,
 }
