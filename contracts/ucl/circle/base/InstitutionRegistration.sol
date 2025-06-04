@@ -64,7 +64,7 @@ contract InstitutionRegistration {
         );
     }
     
-    function registerUser(address userAddress, address managerAddress) external onlyOwner {
+    function registerUserByOwner(address userAddress, address managerAddress) external onlyOwner {
         require(userAddress != address(0), "Invalid user address");
         require(managerAddress != address(0), "Invalid manager address");
         require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
@@ -84,6 +84,29 @@ contract InstitutionRegistration {
             address(this),
             owner,
             userAddress,
+            managerAddress
+        );
+    }
+    
+    function registerUser(address managerAddress) external {
+        require(managerAddress != address(0), "Invalid manager address");
+        require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
+        require(userToManager[msg.sender] == address(0), "User already registered");
+        
+        User memory user = User({
+            userAddress: msg.sender,
+            managerAddress: managerAddress
+        });
+        
+        users[msg.sender] = user;
+        userToManager[msg.sender] = managerAddress;
+        managerToUsers[managerAddress].push(msg.sender);
+        
+        TokenEventLib.triggerUserRegisteredEvent(
+            l2Event,
+            address(this),
+            owner,
+            msg.sender,
             managerAddress
         );
     }

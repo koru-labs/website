@@ -211,7 +211,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
-    // The test is still ongoing
     function privateCancelToken(uint256 tokenId) external 
         whenNotPaused 
         notBlacklisted(msg.sender) 
