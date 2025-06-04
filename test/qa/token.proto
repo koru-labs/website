@@ -13,7 +13,7 @@ service TokenService {
   rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse);
   rpc GetMintAllowed          (MintAllowedRequest)           returns (MintAllowedResponse);
   rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse);
-  rpc ElgamalEncodeAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
+  rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
   rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse);
 }
 
@@ -58,8 +58,7 @@ message BalanceRequest {
 }
 
 message DecodeAmountRequest {
-  string owner_address = 1;
-  ElGamal balance = 2;
+  ElGamal balance = 1;
 }
 
 message AddressBalanceResponse {
