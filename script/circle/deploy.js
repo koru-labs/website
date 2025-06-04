@@ -365,7 +365,7 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
         console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionRegistration`);
 
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await institutionRegistration.registerUser(
+            let userRegTx = await institutionRegistration.registerUserByOwner(
                 institutions[i].userAddresses[j],
                 institutions[i].address
             );
