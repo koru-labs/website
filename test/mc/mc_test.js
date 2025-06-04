@@ -59,7 +59,7 @@ async function mintForStart() {
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("Minter balance after mint:", balance);
     
-    assert(balance > 0, "Mint operation should increase balance");
+    assert(parseInt(balance.balance) > 0, "Mint operation should increase balance");
     console.log("✅ Mint completed successfully");
 }
 
@@ -104,118 +104,18 @@ async function testReserveTokens() {
 
 async function testCancel(transferTokenId) {
     console.log("=== Starting Token Cancellation Process ===");
-    console.log("Canceling transfer token:", transferTokenId);
+    console.log("Transfer Token ID to cancel:", transferTokenId);
     
-    // Check balance before cancellation
-    let balanceBefore = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter);
-    console.log("Minter balance before cancellation:", balanceBefore);
+    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+    const tx = await contract.privateCancelToken(transferTokenId);
+    const receipt = await tx.wait();
+    console.log("Cancel receipt:", receipt);
     
-    // Try to get the transfer token details before cancellation
-    let transferTokenBefore = null;
-    let rollbackTokenId = null;
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter);
+    console.log("Minter balance after cancellation:", balance);
     
-    try {
-        transferTokenBefore = await checkAccountToken(config.contracts.PrivateERCToken, accounts.Minter, transferTokenId);
-        console.log("Transfer token before cancellation:", transferTokenBefore);
-        
-        if (transferTokenBefore && transferTokenBefore.rollbackTokenId) {
-            rollbackTokenId = '0x' + transferTokenBefore.rollbackTokenId.toString(16).padStart(64, '0');
-            console.log("Rollback token ID:", rollbackTokenId);
-            
-            let rollbackTokenBefore = await checkAccountToken(config.contracts.PrivateERCToken, accounts.Minter, rollbackTokenId);
-            console.log("Rollback token before cancellation:", rollbackTokenBefore);
-        }
-    } catch (error) {
-        console.log("⚠️ Could not get token details before cancellation:", error.message);
-    }
-    
-    // Call privateCancelToken
-    const PrivateERCTokenFactory = await ethers.getContractFactory("PrivateERCToken", {
-        libraries: {
-            "TokenEventLib": config.libraries.TokenEventLib,
-            "TokenVerificationLib": config.libraries.TokenVerificationLib,
-            "TokenGrumpkinLib": config.libraries.TokenGrumpkinLib,
-            "SignatureChecker": config.libraries.SignatureChecker
-        }
-    });
-    
-    const privateERCToken = await PrivateERCTokenFactory.attach(config.contracts.PrivateERCToken);
-    const tokenContract = privateERCToken.connect(minterWallet);
-    
-    try {
-        console.log("Calling privateCancelToken with tokenId:", transferTokenId);
-        let cancelTx = await tokenContract.privateCancelToken(transferTokenId);
-        let cancelReceipt = await cancelTx.wait();
-        console.log("Cancel transaction hash:", cancelReceipt.transactionHash);
-        console.log("Cancel transaction status:", cancelReceipt.status === 1 ? "SUCCESS" : "FAILED");
-        
-        // Verify the cancellation was successful
-        let balanceAfter = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter);
-        console.log("Minter balance after cancellation:", balanceAfter);
-        
-        // Check that transfer token is deleted (should revert when checking)
-        try {
-            let transferTokenAfter = await checkAccountToken(config.contracts.PrivateERCToken, accounts.Minter, transferTokenId);
-            console.log("Transfer token after cancellation:", transferTokenAfter);
-            
-            // Check if token is marked as deleted or if amounts are zero
-            if (transferTokenAfter && transferTokenAfter.status !== undefined) {
-                if (transferTokenAfter.status.toString() === "0") { // 0 = deleted
-                    console.log("✅ Transfer token is marked as deleted");
-                } else {
-                    console.log("⚠️ Transfer token status after cancellation:", transferTokenAfter.status.toString());
-                }
-            }
-        } catch (error) {
-            console.log("✅ Transfer token successfully deleted (contract reverted as expected)");
-        }
-        
-        // Check that rollback token is now active if we have the ID
-        if (rollbackTokenId) {
-            try {
-                let rollbackTokenAfter = await checkAccountToken(config.contracts.PrivateERCToken, accounts.Minter, rollbackTokenId);
-                console.log("Rollback token after cancellation:", rollbackTokenAfter);
-                
-                if (rollbackTokenAfter && rollbackTokenAfter.status !== undefined) {
-                    if (rollbackTokenAfter.status.toString() === "2") { // 2 = active
-                        console.log("✅ Rollback token is now active");
-                    } else {
-                        console.log("⚠️ Rollback token status:", rollbackTokenAfter.status.toString());
-                    }
-                }
-            } catch (error) {
-                console.log("⚠️ Could not check rollback token after cancellation:", error.message);
-            }
-        }
-        
-        console.log("✅ Token cancellation completed successfully");
-        
-        // Check that transaction events were emitted correctly
-        if (cancelReceipt.logs && cancelReceipt.logs.length > 0) {
-            console.log(`📋 Transaction emitted ${cancelReceipt.logs.length} events`);
-            cancelReceipt.logs.forEach((log, index) => {
-                console.log(`Event ${index}:`, log.topics[0]); // Event signature
-            });
-        }
-        
-    } catch (error) {
-        console.error("❌ Token cancellation failed:", error.message);
-        
-        // Parse error message for specific failures
-        if (error.message.includes("token.owner != msg.sender")) {
-            console.error("❌ Error: Token ownership verification failed");
-        } else if (error.message.includes("token is not inactive")) {
-            console.error("❌ Error: Token is not in inactive status");
-        } else if (error.message.includes("tokenId is zero")) {
-            console.error("❌ Error: Token ID is zero");
-        } else if (error.message.includes("rollback token does not exist")) {
-            console.error("❌ Error: Rollback token does not exist");
-        } else if (error.message.includes("invalid rollback token")) {
-            console.error("❌ Error: Invalid rollback token");
-        }
-        
-        throw error;
-    }
+    assert(parseInt(balance.balance) > 0, "Cancel operation should restore balance");
+    console.log("✅ Cancel completed successfully");
 }
 
 async function runFullCancellationTest() {
