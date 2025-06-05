@@ -6,7 +6,7 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-const rpcUrl = "a31b8f17091f84b9b966146b6032acd3-1561831942.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
 // const rpcUrl = "127.0.0.1:50051"
 const client = createClient(rpcUrl)
 
@@ -56,8 +56,19 @@ async function mintForStart() {
 
     await sleep(5000)
 
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
-    console.log("balance: ", balance)
+    await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+}
+
+async function testDirectMint() {
+    const generateRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        to_address: accounts.Minter,
+        amount: 100
+    };
+    let response = await client.generateDirectMint(generateRequest);
+    console.log("Generate Mint Proof response:", response);
+    await client.waitForProofCompletion(client.getMintProof, response.request_id)
 }
  function sleep(ms) {
      return new Promise(resolve => setTimeout(resolve, ms));
@@ -100,6 +111,33 @@ async function testReserveTokensAndBurn(){
     }
 }
 
+async function testDirectBurn() {
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        amount: amount
+    };
+
+    let response = await client.generateDirectBurn(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+}
+
+async function testDirectTransfer(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address : accounts.To1,
+        amount: amount
+    };
+
+    let response = await client.generateDirectTransfer(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+}
+
 async function testReserveTokensAndCancel(){
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -134,7 +172,7 @@ async function testReserveTokensAndTransfer2(){
         token_type: '0',
         from_address: accounts.To1,
         to_address: accounts.To2,
-        amount: amount
+        amount: 1
     };
 
     let response = await client.generateSplitToken(splitRequest);
@@ -146,10 +184,15 @@ async function testReserveTokensAndTransfer2(){
         console.log("receipt", receipt)
     }
 }
+
+// testDirectMint().then()
+// testDirectBurn().then()
+testDirectTransfer().then()
+
 // mintForStart().then() //mint
 // testReserveTokensAndBurn().then(); // burn
 // testReserveTokensAndTransfer().then();// transfer
 // testReserveTokensAndCancel().then();//cancel
 // checkTotalSupply().then()
-checkBalance(accounts.To2).then()
+// checkBalance(accounts.Minter).then()
 // testReserveTokensAndTransfer2().then()

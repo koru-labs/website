@@ -7,6 +7,9 @@ option go_package = "./token_grpc";
 // Token service interface
 service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectMint      (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectBurn      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
   rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse);
@@ -26,6 +29,8 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_FAIL = 4;
   TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
   TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
+  TOKEN_ACTION_STATUS_DIRECTTX_WAIT = 7;
+  TOKEN_ACTION_STATUS_DIRECT_CALL_L1 = 8;
 }
 
 message ProofRequest {

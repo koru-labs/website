@@ -35,6 +35,10 @@ function createClient(url) {
         return promisify(client.GenerateMintProof.bind(client), request);
     };
 
+    client.generateDirectMint = async function(request) {
+        return promisify(client.GenerateDirectMint.bind(client), request);
+    };
+
     // Proof retrieval methods
     client.getMintProof = async function(requestId) {
         const request = { requestId };
@@ -75,6 +79,14 @@ function createClient(url) {
 
     client.generateSplitToken = async function(request) {
         return promisify(client.GenerateSplitToken.bind(client), request);
+    };
+
+    client.generateDirectTransfer = async function(request) {
+        return promisify(client.GenerateDirectTransfer.bind(client), request);
+    };
+
+    client.generateDirectBurn = async function(request) {
+        return promisify(client.GenerateDirectBurn.bind(client), request);
     };
 
     client.getSplitToken = async function(requestId) {
