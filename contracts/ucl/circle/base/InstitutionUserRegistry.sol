@@ -22,7 +22,6 @@ contract InstitutionUserRegistry {
     mapping(address => Institution) public institutions;
     mapping(address => User) public users;
     mapping(address => address) public userToManager;
-    mapping(address => address[]) public managerToUsers;
     
     constructor(address _l2Event) {
         owner = msg.sender;
