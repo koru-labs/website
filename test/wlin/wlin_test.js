@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "a31b8f17091f84b9b966146b6032acd3-1561831942.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -36,6 +36,11 @@ const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
 const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
+
+
+let newUserPrivateKey = "267d5dc2af7a0ea942834c34bfdf6250d2ce599e3e86c0e4cb59815805cce97a";
+let newUserAddress = "0x9817dBBfBd209CC7B4bF1AC25A4Ca450EAE135BD";
+const newUserWallet = new ethers.Wallet(newUserPrivateKey, l1Provider);
 
 const amount = 1;
 
@@ -125,6 +130,27 @@ async function testMint() {
     console.log("balance: ", balance)
 }
 
+async function testMintForNewUser() {
+    const generateRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        to_address: newUserAddress,
+        amount: 21
+    };
+    let response = await client.generateMintProof(generateRequest);
+    console.log("Generate Mint Proof response:", response);
+    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
+
+    console.log("Mint Proof Result:", proofResult);
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, newUserAddress)
+    console.log("balance: ", balance)
+}
+
+
+
 async function testDirectTransfer(){
     const transferRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -194,6 +220,24 @@ async function testReserveTokensAndBurn(){
     console.log("balance of Minter:", balance)
 }
 
+async function testNewUserSplitTokensAndBurn(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: newUserAddress,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, newUserWallet, '0x'+tokenResult.transfer_token_id);
+    console.log("privateBurn receipt: ", receipt)
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, newUserAddress)
+    console.log("balance of newUser:", balance)
+}
+
 async function testReserveTokensAndTransfer(){
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -212,6 +256,26 @@ async function testReserveTokensAndTransfer(){
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("balance of Minter:", balance)
+}
+
+async function testNewUserSplitTokensAndTransfer(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: newUserAddress,
+        to_address: accounts.To2,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+    console.log("tokenResult: ", tokenResult)
+    let receipt = await callPrivateTransfer(newUserWallet, config.contracts.PrivateERCToken, accounts.To2, '0x'+tokenResult.transfer_token_id);
+    console.log("privateBurn receipt: ", receipt)
+
+    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, newUserAddress)
+    console.log("balance of newUser:", balance)
 }
 
 
@@ -337,6 +401,20 @@ async function testBurnToken() {
     console.log("balance of Minter:", balance)
 }
 
+async function registerNewUserInNode3(){
+    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration, newUserWallet);
+    let tx = await institutionRegistration.registerUser("0xf17f52151EbEF6C7334FAD080c5704D77216b732");
+    let receipt = await tx.wait();
+    console.log("user registration receipt: ", receipt);
+}
+
+async function registerNewUserInNode1(){
+    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration, newUserWallet);
+    let tx = await institutionRegistration.registerUser("0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127");
+    let receipt = await tx.wait();
+    console.log("user registration receipt: ", receipt);
+}
+
 // checkDeployedUSDC().then();
 // testMint().then()
 // checkToken(accounts.Minter, '0x61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef').then();
@@ -350,6 +428,7 @@ async function testBurnToken() {
 
 // testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then();
+// checkBalance(accounts.Minter).then()
 
 // testCrossBankReserveTokensAndTransfer2Node1().then();
 // testCrossBankReserveTokensAndTransfer2Node2().then();
@@ -357,9 +436,19 @@ async function testBurnToken() {
 
 
 // testBurnToken().then();
-
 // testTransfer().then();
 // testBurn().then();
 
 // testApprove().then();
 // testTransferFrom().then();
+// registerNewUserInNode3().then();
+
+/* test register new user in node3 */
+// testMintForNewUser().then();
+// testNewUserSplitTokensAndTransfer().then();
+// testNewUserSplitTokensAndBurn().then()
+// checkBalance(newUserAddress).then()
+
+/* test register new user in node1 */
+// registerNewUserInNode1().then();
+// testMintForNewUser().then();
