@@ -195,25 +195,25 @@ async function main() {
         deployed.contracts.HamsaL2Event = ADDRESSES.HAMSAL2EVENT
     }
 
-    console.log("Checking InstitutionRegistration smart contract...");
+    console.log("Checking InstitutionUserRegistry.sol smart contract...");
     if (ADDRESSES.INSTITUTION_REGISTRATION == "") {
-        console.log("Deploying new InstitutionRegistration contract...");
-        const InstitutionRegistrationFactory = await ethers.getContractFactory("InstitutionRegistration", {
+        console.log("Deploying new InstitutionUserRegistry.sol contract...");
+        const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
             libraries: {
                 "TokenEventLib": deployed.libraries.TokenEventLib,
             }
         });
-        const institutionRegistration = await InstitutionRegistrationFactory.deploy(deployed.contracts.HamsaL2Event);
-        await institutionRegistration.waitForDeployment();
+        const institutionUserRegistry = await InstitutionUserRegistryFactory.deploy(deployed.contracts.HamsaL2Event);
+        await institutionUserRegistry.waitForDeployment();
 
-        console.log("InstitutionRegistration deployed to:", institutionRegistration.target);
-        deployed.contracts.InstitutionRegistration = institutionRegistration.target;
+        console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
+        deployed.contracts.InstitutionUserRegistry = institutionUserRegistry.target;
 
 
-        await registerInstitutionAndUser(deployed.contracts.InstitutionRegistration);
+        await registerInstitutionAndUser(deployed.contracts.InstitutionUserRegistry);
     } else {
-        console.log("Reusing existing InstitutionRegistration at:", ADDRESSES.INSTITUTION_REGISTRATION);
-        deployed.contracts.InstitutionRegistration = ADDRESSES.INSTITUTION_REGISTRATION;
+        console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
+        deployed.contracts.InstitutionUserRegistry = ADDRESSES.INSTITUTION_REGISTRATION;
     }
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
@@ -235,7 +235,7 @@ async function main() {
     if (!deployed.libraries.TokenEventLib ||
         !deployed.libraries.TokenVerificationLib ||
         !deployed.libraries.Grumpkin ||
-        !deployed.contracts.InstitutionRegistration) {
+        !deployed.contracts.InstitutionUserRegistry) {
         throw new Error("Deployment of HamsaUSDC failed");
     }
 
@@ -256,7 +256,7 @@ async function main() {
         accounts.BlackLister,
         accounts.Owner,
         event_address,
-        deployed.contracts.InstitutionRegistration
+        deployed.contracts.InstitutionUserRegistry
     );
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
@@ -295,8 +295,8 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 }
 
 
-async function registerInstitutionAndUser(institutionRegistrationAddress) {
-    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", institutionRegistrationAddress);
+async function registerInstitutionAndUser(institutionUserRegistryAddress) {
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress);
     
     const institutions = [
          {
@@ -355,17 +355,17 @@ async function registerInstitutionAndUser(institutionRegistrationAddress) {
     ]
 
     for (let i = 0; i < institutions.length; i++) {
-        console.log(`Register institution ${institutions[i].address} in InstitutionRegistration smart contract...`);
-        let regTx = await institutionRegistration.registerInstitution(
+        console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
+        let regTx = await institutionUserRegistry.registerInstitution(
             institutions[i].address,
             institutions[i].name,
             institutions[i].publicKey
         );
         await regTx.wait();
-        console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionRegistration`);
+        console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
 
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await institutionRegistration.registerUserByOwner(
+            let userRegTx = await institutionUserRegistry.registerUserByOwner(
                 institutions[i].userAddresses[j],
                 institutions[i].address
             );

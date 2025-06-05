@@ -4,33 +4,24 @@ import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
 
-contract InstitutionRegistration {
+contract InstitutionUserRegistry {
     address public owner;
     IL2Event public l2Event;
-    
-    // institution:
-    // name
-    // managerAddress
-    // publicKey
+
     struct Institution {
         string name;
         address managerAddress;
         TokenModel.GrumpkinPublicKey publicKey;
     }
-    
-    // user:
-    // address
-    // managerAddress
+
     struct User {
         address userAddress;
         address managerAddress;
     }
-    
-    mapping(address => TokenModel.GrumpkinPublicKey) public institutionPublicKey;
+
     mapping(address => Institution) public institutions;
     mapping(address => User) public users;
     mapping(address => address) public userToManager;
-    mapping(address => address[]) public managerToUsers;
     
     constructor(address _l2Event) {
         owner = msg.sender;
@@ -52,7 +43,6 @@ contract InstitutionRegistration {
         });
         
         institutions[institutionAddress] = institution;
-        institutionPublicKey[institutionAddress] = publicKey;
         
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
@@ -77,7 +67,6 @@ contract InstitutionRegistration {
         
         users[userAddress] = user;
         userToManager[userAddress] = managerAddress;
-        managerToUsers[managerAddress].push(userAddress);
         
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
@@ -100,7 +89,6 @@ contract InstitutionRegistration {
         
         users[msg.sender] = user;
         userToManager[msg.sender] = managerAddress;
-        managerToUsers[managerAddress].push(msg.sender);
         
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
@@ -119,22 +107,14 @@ contract InstitutionRegistration {
         return institutions[managerAddress];
     }
     
-    function getManagerUsers(address managerAddress) public view returns (address[] memory) {
-        return managerToUsers[managerAddress];
-    }
-    
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Invalid new owner address");
         owner = newOwner;
     }
 
-    function getInstGrumpkinPubKey(address institutionAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
-        return institutionPublicKey[institutionAddress];
-    }
-
     function getUserInstGrumpkinPubKey(address userAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
         address institutionAddress = getUserManager(userAddress);
-        return institutionPublicKey[institutionAddress];
+        return institutions[institutionAddress].publicKey;
     }
 
 }
