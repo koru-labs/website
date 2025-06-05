@@ -68,7 +68,9 @@ async function testDirectMint() {
     };
     let response = await client.generateDirectMint(generateRequest);
     console.log("Generate Mint Proof response:", response);
-    await client.waitForProofCompletion(client.getMintProof, response.request_id)
+    await client.waitForActionCompletion(client.getMintProof, response.request_id)
+    await sleep(3000)
+    await checkBalance(accounts.Minter)
 }
  function sleep(ms) {
      return new Promise(resolve => setTimeout(resolve, ms));
@@ -121,21 +123,26 @@ async function testDirectBurn() {
 
     let response = await client.generateDirectBurn(splitRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    await sleep(3000)
+    await checkBalance(accounts.Minter)
 }
 
 async function testDirectTransfer(){
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
-        from_address: accounts.Minter,
-        to_address : accounts.To1,
+        from_address: accounts.To1,
+        to_address : accounts.To2,
         amount: amount
     };
 
     let response = await client.generateDirectTransfer(splitRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    await sleep(3000)
+    await checkBalance(accounts.Minter)
+    await checkBalance(accounts.To1)
 }
 
 async function testReserveTokensAndCancel(){
@@ -194,5 +201,5 @@ testDirectTransfer().then()
 // testReserveTokensAndTransfer().then();// transfer
 // testReserveTokensAndCancel().then();//cancel
 // checkTotalSupply().then()
-// checkBalance(accounts.Minter).then()
+// checkBalance(accounts.To2).then()
 // testReserveTokensAndTransfer2().then()
