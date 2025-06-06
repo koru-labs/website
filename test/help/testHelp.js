@@ -195,6 +195,12 @@ async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     return grpcAllowanceAmount;
 }
 
+async function getSplitTokenList(grpcClient,owner, scAddress){
+    const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress);
+    return grpcResult;
+}
+
+
 function hexToDecimal(hexString) {
     // Remove the '0x' prefix if present
     const hex = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
@@ -250,7 +256,7 @@ async function callPrivateCancel(scAddress, wallet, tokenId) {
 
 async function registerUser(userAddress) {
     const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
-    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration,onwerWallet);
+    const institutionRegistration = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstitutionUserRegistry,onwerWallet);
     let userRegTx = await institutionRegistration.registerUserByOwner(
         userAddress,
         '0xf17f52151EbEF6C7334FAD080c5704D77216b732'
@@ -262,19 +268,7 @@ async function registerUser(userAddress) {
 async function isBlackList(userAddress) {
     const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
     const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
-    let tx = await contract.isBlacklisted(
-        userAddress
-    );
-    // tx.wait();
-    return tx;
-}
-async function isBlackList(userAddress) {
-    const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
-    let tx = await contract.isBlacklisted(
-        userAddress
-    );
-    // tx.wait();
+    let tx = await contract.isBlacklisted(userAddress);
     return tx;
 }
 
@@ -290,6 +284,41 @@ async function removeFromBlackList(userAddress) {
     await contract.unBlacklist(userAddress)
 }
 
+async function getEvents(eventName){
+    try {
+        const event_address = config.contracts.PrivateERCToken;
+        const l1Bridge = await ethers.getContractAt("PrivateUSDC", event_address);
+
+
+        const endBlock = await l1Provider.getBlockNumber();  // 最新区块
+        const startBlock = endBlock - 10000;  // 起始区块
+        const batchSize = 1000;  // 每次查询的区块范围
+
+        // 事件名称（确保事件名称正确）
+        // const eventName = "TokenSplitDebugEvent";  // 请根据实际情况修改事件名称
+
+        for (let fromBlock = startBlock; fromBlock <= endBlock; fromBlock += batchSize) {
+            const toBlock = Math.min(fromBlock + batchSize - 1, endBlock);
+
+            console.log(`Fetching events from block ${fromBlock} to ${toBlock}...`);
+
+            // 获取指定事件名称的事件
+            const events = await l1Bridge.queryFilter(eventName, fromBlock, toBlock);
+
+            if (events.length === 0) {
+                console.log(`No events found from block ${fromBlock} to ${toBlock}`);
+            }
+
+            events.forEach(event => {
+                console.log('Event Name:', event.eventName);  // 事件名称
+                console.log('Event Data:', event.args);   // 事件数据
+                console.log('-----------------------------');
+            });
+        }
+    } catch (err) {
+        console.error('Error fetching events:', err);
+    }
+}
 
 module.exports =  {
     callPrivateMint,
@@ -303,5 +332,7 @@ module.exports =  {
     registerUser,
     isBlackList,
     addToBlackList,
-    removeFromBlackList
+    removeFromBlackList,
+    getEvents,
+    getSplitTokenList,
 }

@@ -44,6 +44,16 @@ function createClient(url) {
         const request = { requestId };
         return promisify(client.GetMintProof.bind(client), request);
     };
+    client.generateDirectMint = async function(request) {
+        return promisify(client.GenerateDirectMint.bind(client), request);
+    };
+    client.generateDirectTransfer = async function(request) {
+        return promisify(client.GenerateDirectTransfer.bind(client), request);
+    };
+
+    client.generateDirectBurn = async function(request) {
+        return promisify(client.GenerateDirectBurn.bind(client), request);
+    };
 
     // Status checking and polling methods
     client.getActionStatus = async function(requestId) {
@@ -92,6 +102,17 @@ function createClient(url) {
     client.getSplitToken = async function(requestId) {
         const request = { requestId };
         return promisify(client.GetSplitToken.bind(client), request);
+    };
+
+    client.getMintAllowed = async function(request) {
+        return promisify(client.GetMintAllowed.bind(client), request);
+    };
+    client.getSplitTokenList = async function(owner_address,sc_address) {
+        const request = {
+            owner_address: owner_address,
+            sc_address: sc_address,
+        };
+        return promisify(client.GetSplitTokenList.bind(client), request);
     };
 
     client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {

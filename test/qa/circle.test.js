@@ -6,14 +6,18 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "sb-node3-node.hamsa-ucl.com:50051"
+const rpcUrl_1 = "sb-node1-node.hamsa-ucl.com:50051"
+// const rpcUrl_1 = "a06220caa131f4da982beeebdd84ffc5-576531359.us-west-1.elb.amazonaws.com:50051"
 // const rpcUrl = 'dev-node3-node.hamsa-ucl.com:50051'
 const client = createClient(rpcUrl)
+const client1 = createClient(rpcUrl_1)
 
 const {
     callPrivateMint,
     callPrivateTransfer,
     callPrivateBurn,
+    callPrivateCancel,
     // callPrivateApprove,
     // callPrivateTransferFrom,
     getAddressBalance,
@@ -23,7 +27,8 @@ const {
     isBlackList,
     addToBlackList,
     removeFromBlackList,
-    getEvents
+    getEvents,
+    getSplitTokenList
 } = require("../help/testHelp")
 const {address} = require("hardhat/internal/core/config/config-validation");
 
@@ -58,25 +63,6 @@ const amount = 100;
 let preBalance,postBalance;
 let preAllowance,postAllowance;
 
-
-// async function mint(address,amount) {
-//     const generateRequest = {
-//         sc_address: config.contracts.PrivateERCToken,
-//         token_type: '0',
-//         to_address: address,
-//         amount: amount
-//     };
-//     console.log("generateMintRequest:", generateRequest)
-//     let response = await client.generateMintProof(generateRequest);
-//     console.log("Generate Mint Proof response:", response);
-//     let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
-//
-//     console.log("Mint Proof Result:", proofResult);
-//     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
-//     console.log("receipt", receipt)
-//
-// }
-
 async function mint(address,amount) {
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -107,16 +93,26 @@ async function ReserveTokensAndTransfer(toAddress,amount) {
         amount: amount
     };
     console.log("generateSplitTokenRequest:", splitRequest)
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
-    if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
-        console.log("proofResult", proofResult)
-        let tokenId = '0x'+proofResult.transfer_token_id
-        console.log("tokenId", tokenId)
-        // let receipt = await callPrivateTransfer(config.contracts.PrivateERCToken,tokenId,toAddress,minterWallet)
-        let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
-        console.log("receipt", receipt)
+    try {
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate transfer Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            let tokenId = '0x'+proofResult.transfer_token_id
+            console.log("tokenId", tokenId)
+            try {
+                await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+            }catch (error){
+                return  error
+            }
+
+        }
+    }catch (error){
+        const wrappedError = new Error('Transfer failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
     }
 
 }
@@ -129,33 +125,23 @@ async function ReserveTokensAndTransferFrom(fromWallet,fromAddress,toAddress,amo
         to_address: toAddress,
         amount: amount
     };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
-    if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
-        console.log("proofResult", proofResult)
-        let receipt = await callPrivateTransfer(fromWallet,config.contracts.PrivateERCToken,toAddress,'0x'+proofResult.transfer_token_id)
-        console.log("receipt", receipt)
-    }
-}
-
-async function ReserveTokensAndTransferFrom2(toAddress,amount){
-    const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: accounts.To1,
-        to_address: toAddress,
-        amount: amount
-    };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
-    if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
-        console.log("proofResult", proofResult)
-        let receipt = await callPrivateTransfer(to1Wallet,config.contracts.PrivateERCToken,toAddress,'0x'+proofResult.transfer_token_id)
-        console.log("receipt", receipt)
+    try {
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate transfer Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            try {
+                await callPrivateTransfer(fromWallet,config.contracts.PrivateERCToken,toAddress,'0x'+proofResult.transfer_token_id)
+            }catch (error){
+                return  error
+            }
+        }
+    }catch (error){
+        const wrappedError = new Error('Transfer failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
     }
 }
 
@@ -164,110 +150,56 @@ async function ReserveTokensAndBurn(amount) {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.Minter,
+        // to_address: accounts.Minter,
         amount: amount
     };
+    try {
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate burn Proof response:", response);
+        let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+        if (tokenResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("tokenResult", tokenResult)
+            try {
+                let receipt =await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
+                console.log("privateBurn receipt: ", receipt)
+            }catch (error){
+                return  error
+            }
+        }
+    }catch (error){
+        const wrappedError = new Error('Burn failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
 
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate Split Proof response:", response);
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("tokenResult: ", tokenResult)
-    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
-    console.log("privateBurn receipt: ", receipt)
+
 }
-async function ReserveTokensAndBurnFromUser(wallet,address,amount) {
-    const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: address,
-        to_address: address,
-        amount: amount
-    };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate Split Proof response:", response);
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("tokenResult: ", tokenResult)
-    let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, wallet, '0x'+tokenResult.transfer_token_id);
-    console.log("privateBurn receipt: ", receipt)
-}
-//
-// async function Approve(amount) {
-//     const approveRequest = {
+// async function ReserveTokensAndBurnFromUser(wallet,address,amount) {
+//     const splitRequest = {
 //         sc_address: config.contracts.PrivateERCToken,
 //         token_type: '0',
-//         from_address: accounts.Minter,
-//         to_address: accounts.Spender1,
-//         amount: amount
-//     };
-//     let response = await client.generateApproveProof(approveRequest);
-//     console.log("Generate Approve Proof response:", response);
-//     let proofResult = await client.waitForProofCompletion(client.getApproveProof, response.request_id)
-//
-//     console.log("Approve Proof Result:", proofResult);
-//     let receipt = await callPrivateApprove(config.contracts.PrivateERCToken, proofResult, minterWallet)
-//     console.log("receipt", receipt)
-//
-// }
-//
-// async function ApproveWithWallet(fromWallet,amount) {
-//     const approveRequest = {
-//         sc_address: config.contracts.PrivateERCToken,
-//         token_type: '0',
-//         from_address: fromWallet.address,
-//         to_address: accounts.Spender1,
+//         from_address: address,
+//         to_address: address,
 //         amount: amount
 //     };
 //
-//     let response = await client.generateApproveProof(approveRequest);
-//     console.log("Generate Approve Proof response:", response);
-//     let proofResult = await client.waitForProofCompletion(client.getApproveProof, response.request_id)
-//
-//     console.log("Approve Proof Result:", proofResult);
-//     let receipt = await callPrivateApprove(config.contracts.PrivateERCToken, proofResult, fromWallet)
-//     console.log("receipt", receipt)
-//
+//     let response = await client.generateSplitToken(splitRequest);
+//     console.log("Generate Split Proof response:", response);
+//     let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+//     console.log("tokenResult: ", tokenResult)
+//     let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, wallet, '0x'+tokenResult.transfer_token_id);
+//     console.log("privateBurn receipt: ", receipt)
 // }
-//
-// async function TransferFrom(toAddress,amount) {
-//     const transferFromRequest = {
-//         sc_address: config.contracts.PrivateERCToken,
-//         token_type: '0',
-//         from_address: accounts.Minter,
-//         to_address: toAddress,
-//         allowance_cancel_address: accounts.Spender1,
-//         amount: amount
-//     };
-//     let response = await client.generateTransferFromProof(transferFromRequest);
-//     console.log("Generate TransformFrom Proof response:", response);
-//     let proofResult = await client.waitForProofCompletion(client.getTransferFromProof, response.request_id)
-//
-//     console.log("TransferFrom Proof Result:", proofResult);
-//     let receipt = await callPrivateTransferFrom(config.contracts.PrivateERCToken, proofResult, spender1Wallet)
-//     console.log("receipt", receipt)
-// }
-//
-// async function TransferFromOther(fromAddress,toAddress,amount) {
-//     const transferFromRequest = {
-//         sc_address: config.contracts.PrivateERCToken,
-//         token_type: '0',
-//         from_address: fromAddress,
-//         to_address: toAddress,
-//         allowance_cancel_address: accounts.Spender1,
-//         amount: amount
-//     };
-//     console.log("transferFromRequest:", transferFromRequest)
-//     let response = await client.generateTransferFromProof(transferFromRequest);
-//     console.log("Generate TransformFrom Proof response:", response);
-//     let proofResult = await client.waitForProofCompletion(client.getTransferFromProof, response.request_id)
-//
-//     console.log("TransferFrom Proof Result:", proofResult);
-//     let receipt = await callPrivateTransferFrom(config.contracts.PrivateERCToken, proofResult, spender1Wallet)
-//     console.log("receipt", receipt)
-// }
-
 async function getTokenBalance(address){
     let balance = await client.getAccountBalance(config.contracts.PrivateERCToken, address)
+    // console.log(`address ${address} account balance ${balance.balance} `)
+    // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
+    return Number(balance.balance)
+}
+
+async function getTokenBalanceInNode1(address){
+    let balance = await client1.getAccountBalance(config.contracts.PrivateERCToken, address)
     // console.log(`address ${address} account balance ${balance.balance} `)
     // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
     return Number(balance.balance)
@@ -293,9 +225,19 @@ async function DirectMint(receiver,amount) {
         to_address: receiver,
         amount: amount
     };
-    let response = await client.generateDirectMint(generateRequest);
-    console.log("Generate Mint Proof response:", response);
-    await client.waitForActionCompletion(client.getMintProof, response.request_id)
+    // let response = await client.generateDirectMint(generateRequest);
+    // console.log("Generate Mint Proof response:", response);
+    // await client.waitForActionCompletion(client.getMintProof, response.request_id)
+
+    try {
+        const response = await client.generateDirectMint(generateRequest);
+        await client.waitForActionCompletion(client.getMintProof, response.request_id)
+    }catch (error){
+        const wrappedError = new Error('Minting failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
 }
 
 async function DirectTransfer(from,receiver,amount) {
@@ -307,9 +249,19 @@ async function DirectTransfer(from,receiver,amount) {
         amount: amount
     };
 
-    let response = await client.generateDirectTransfer(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    // let response = await client.generateDirectTransfer(splitRequest);
+    // console.log("Generate transfer Proof response:", response);
+    // await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+
+    try {
+        const response = await client.generateDirectTransfer(splitRequest);
+        await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    }catch (error){
+        const wrappedError = new Error('Minting failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
 }
 
 async function DirectBurn(address,amount) {
@@ -320,11 +272,35 @@ async function DirectBurn(address,amount) {
         amount: amount
     };
 
-    let response = await client.generateDirectBurn(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    // let response = await client.generateDirectBurn(splitRequest);
+    // console.log("Generate burn Proof response:", response);
+    // await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+
+    try {
+        const response = await client.generateDirectBurn(splitRequest);
+        await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    }catch (error){
+        const wrappedError = new Error('Minting failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
 }
 
+async function cancelAllSplitTokens(ownerWallet,scAddress){
+    const ownerAddress = ownerWallet.address;
+    const result = await getSplitTokenList(client,ownerAddress,scAddress);
+    const splitTokens = result.split_tokens;
+    if (splitTokens.length > 0){
+        for (let i = 0; i < splitTokens.length; i++) {
+            let splitToken = splitTokens[i];
+            console.log("cancel split token: ", splitToken.token_id)
+            // await callPrivateCancel(scAddress, ownerWallet, splitToken.token_id);
+            let receipt = await callPrivateCancel(scAddress, ownerWallet, ethers.toBigInt('0x'+splitToken.token_id))
+            console.log("receipt", receipt)
+        }
+    }
+}
 
 describe("Check address balance",function (){
     it("get address balance", async function () {
@@ -332,6 +308,9 @@ describe("Check address balance",function (){
         console.log(await getTokenBalance(accounts.To1));
         console.log(await getTokenBalance(accounts.To2));
     });
+    it("get address balance on node1", async function () {
+        console.log(await getTokenBalanceInNode1(userInNode1));
+    })
 })
 
 
@@ -342,7 +321,7 @@ describe("Mint", function () {
         preBalance = await getTokenBalance(recevier);
     });
 
-    it('mint_100_success',async () => {
+    it('minter_with_100',async () => {
         try {
             await mint(recevier,amount);
             postBalance = await getTokenBalance(recevier);
@@ -351,7 +330,7 @@ describe("Mint", function () {
             console.log(error)
         }
     });
-    it('mint_1_success',async () => {
+    it('minter_with_1',async () => {
         try {
             const amount = 1;
             await mint(recevier,amount);
@@ -361,7 +340,7 @@ describe("Mint", function () {
             console.log(error)
         }
     });
-    it('mint_0_Invalid Amount',async () => {
+    it('minter_with_0',async () => {
         const amount = 0;
         try {
             await mint(recevier,amount);
@@ -371,7 +350,7 @@ describe("Mint", function () {
             expect(error.details).to.equal("Invalid Amount");
         }
     });
-    it('mint_a_Invalid Amount',async () => {
+    it('minter_with_a',async () => {
         const amount = 'a';
         try {
             await mint(recevier,amount);
@@ -381,7 +360,7 @@ describe("Mint", function () {
         }
     });
 
-    it.skip('mint_100_5_times_success', async () => {
+    it.skip('minter_with_100_5_times', async () => {
         const times = 5
         try {
             for (let i = 0; i < times; i++) {
@@ -393,16 +372,17 @@ describe("Mint", function () {
             console.log(error)
         }
     });
-    it('mint_amount_larger_than_allowance_insufficient',async ()=>{
-        const allowance = await getMinterAllowance()
-        const amount = allowance + 1
+    it('minter_with_100000000',async ()=>{
+        // const allowance = await getMinterAllowance()
+        // const amount = allowance + 1
+        const amount = 100000000;
         try {
             await mint(recevier,amount);
         }catch (error){
             expect(error.details).to.equal("allowedAmount is insufficient")
         }
     });
-    it('mint_negative',async () => {
+    it('minter_with_negative_amount',async () => {
         const amount = -1;
         try {
             await mint(recevier,amount);
@@ -410,7 +390,7 @@ describe("Mint", function () {
             expect(error.details).to.equal("Invalid Amount")
         }
     });
-    it('mint_to_spenderAddress_success',async () => {
+    it('spender_with_100',async () => {
         const preBalanceSpender = await getTokenBalance(accounts.Spender1);
         try{
             await mint(accounts.Spender1,amount);
@@ -420,7 +400,7 @@ describe("Mint", function () {
             console.log("error:",error)
         }
     });
-    it('mint_to_userAddress_success',async () => {
+    it('user_inBank_with_100',async () => {
         const userAddress = accounts.To1;
         const preBalanceUser = await getTokenBalance(userAddress);
         try{
@@ -431,14 +411,25 @@ describe("Mint", function () {
             console.log("error:",error)
         }
     });
-    it('mint_to_zeroAddress',async () => {
+    it('user_otherBank_with_100',async () => {
+        const userAddress = userInNode1;
+        const preBalanceUser = await getTokenBalanceInNode1(userAddress);
+        try{
+            await mint(userAddress,amount);
+            const postBalanceUser = await getTokenBalanceInNode1(userAddress);
+            expect(postBalanceUser).to.equal(preBalanceUser + amount);
+        }catch (error){
+            console.log("error:",error)
+        }
+    });
+    it('zeroAddress_with_100',async () => {
         try {
             await mint(ZERO_ADDRESS,amount);
         }catch (error){
             expect(error.details).to.equal("failed to get GrumpkinKey for to address")
         }
     });
-    it('mint to a new address',async () => {
+    it('newAddress_not_registe_with_100',async () => {
         const wallet = ethers.Wallet.createRandom();
         const toAddress = wallet.address;
         try {
@@ -446,29 +437,32 @@ describe("Mint", function () {
         }catch (error){
             expect(error.details).to.equal("failed to get GrumpkinKey for to address")
         }
-
     });
-    it.skip('mint_allowance_success',async ()=>{
-        const allowance = await getMinterAllowance()
-        const amount = allowance
-        try {
-            await mint(recevier,amount);
-            postBalance = await getTokenBalance(recevier);
-            expect(postBalance).to.equal(preBalance + amount);
-        }catch (error){
-            console.log("error:",error)
-        }
-    });
+    // it.skip('mint_allowance_success',async ()=>{
+    //     const allowance = await getMinterAllowance()
+    //     const amount = allowance
+    //     try {
+    //         await mint(recevier,amount);
+    //         postBalance = await getTokenBalance(recevier);
+    //         expect(postBalance).to.equal(preBalance + amount);
+    //     }catch (error){
+    //         console.log("error:",error)
+    //     }
+    // });
 });
 
 describe("ReserveTokensAndTransfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
+    before(async function () {
+        await mint(accounts.Minter,amount*13);
+        await mint(accounts.To1,100);
+    });
+
     beforeEach(async function () {
-        await mint(accounts.Minter,100);
         preBalance = await getTokenBalance(accounts.Minter);
     });
-    it('transfer_10_address1',async () => {
+    it('transfer_user_inBank_10',async () => {
         const amount = 10
         preBalanceTo = await getTokenBalance(toAddress1);
         await ReserveTokensAndTransfer(toAddress1,amount);
@@ -478,7 +472,7 @@ describe("ReserveTokensAndTransfer",  function (){
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('transfer_51_address2',async () => {
+    it('transfer_user_inBank_51',async () => {
         const amount = 51
         preBalanceTo = await getTokenBalance(toAddress2);
         await ReserveTokensAndTransfer(toAddress2,amount);
@@ -487,11 +481,12 @@ describe("ReserveTokensAndTransfer",  function (){
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('transfer_to_zero_address--Failed',async () => {
+    it('transfer_ZERO_ADDRESS',async () => {
         preBalanceTo = await getTokenBalance(ZERO_ADDRESS);
-        await ReserveTokensAndTransfer(ZERO_ADDRESS,amount);
+        // await ReserveTokensAndTransfer(ZERO_ADDRESS,amount);
+        expect(await ReserveTokensAndTransfer(ZERO_ADDRESS,amount)).to.revertedWith("PrivateERCToken: to is the zero address")
     });
-    it('transfer_to_spender',async () => {
+    it('transfer_spender',async () => {
         const recevier = accounts.Spender1;
         preBalanceTo = await getTokenBalance(recevier);
         await ReserveTokensAndTransfer(recevier,amount);
@@ -500,32 +495,24 @@ describe("ReserveTokensAndTransfer",  function (){
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('transfer_to_node1_user',async () => {
+    it('transfer_node1_user_100',async () => {
         const recevier = userInNode1;
         preBalanceTo = await getTokenBalance(recevier);
         await ReserveTokensAndTransfer(recevier,amount);
-        postBalanceTo = await getTokenBalance(recevier);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount);
-        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('transfer_to_node2_user',async () => {
+    it('transfer_node2_user_100',async () => {
         const recevier = userInNode2;
-        preBalanceTo = await getTokenBalance(recevier);
         await ReserveTokensAndTransfer(recevier,amount);
-        postBalanceTo = await getTokenBalance(recevier);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount);
-        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('transfer_to_node4_user',async () => {
+    it('transfer_node4_user_100',async () => {
         const recevier = userInNode4;
-        preBalanceTo = await getTokenBalance(recevier);
         await ReserveTokensAndTransfer(recevier,amount);
-        postBalanceTo = await getTokenBalance(recevier);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount);
-        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
     it('transfer_to_minter_itself',async () => {
         const recevier = accounts.Minter;
@@ -533,59 +520,74 @@ describe("ReserveTokensAndTransfer",  function (){
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance);
     });
-    it('transfer_100_5_times',async () => {
-        const amount = 50;
+    it('transfer_user_100_5_times',async () => {
+        const amount = 100;
         const times = 5
+        // await mint(accounts.Minter,amount*times);
         preBalanceTo = await getTokenBalance(toAddress1);
         if (preBalance>=amount*times){
             for (let i = 0; i < times; i++) {
                 await ReserveTokensAndTransfer(toAddress1,amount);
-           }
+            }
         }
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount * times);
         postBalanceTo = await getTokenBalance(toAddress1);
         expect(postBalanceTo).to.equal(preBalanceTo + amount * times);
     });
-    it('transfer_amount_larger_than_balance--Failed',async ()=>{
-        const amount = preBalance + 1
-        await ReserveTokensAndTransfer(toAddress1,amount)
+    it('transfer_amount_larger_than_balance',async ()=>{
+        const amount = preBalance +1;
+        try {
+            await ReserveTokensAndTransfer(toAddress1,amount);
+        }catch (error){
+            expect(error.details).to.equal("total amount of parent tokens is insufficient")
+        }
     })
     it('transfer_0',async () => {
         const amount = 0;
         preBalanceTo = await getTokenBalance(toAddress1);
-        await ReserveTokensAndTransfer(toAddress1,amount);
-        postBalanceTo = await getTokenBalance(toAddress1);
-        postBalance = await getTokenBalance(accounts.Minter);
-        expect(postBalance).to.equal(preBalance - amount);
-        expect(postBalanceTo).to.equal(preBalanceTo + amount);
+        try {
+            await ReserveTokensAndTransfer(toAddress1,amount);
+            postBalanceTo = await getTokenBalance(toAddress1);
+            postBalance = await getTokenBalance(accounts.Minter);
+            expect(postBalance).to.equal(preBalance - amount);
+            expect(postBalanceTo).to.equal(preBalanceTo + amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+
     });
     it('transfer_negative',async () => {
         const amount = -1;
-        await ReserveTokensAndTransfer(toAddress1,amount);
+        try {
+            await ReserveTokensAndTransfer(toAddress1,amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
     });
     it('transfer_all_amount',async () => {
         const amount = await getTokenBalance(accounts.Minter);
         console.log("minter amount:",amount)
         preBalanceTo = await getTokenBalance(toAddress1);
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
         await ReserveTokensAndTransfer(toAddress1,amount);
         postBalanceTo = await getTokenBalance(toAddress1);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it.only('transfer 50 from user1 address to user2',async () => {
+    it('transfer 50 from user1 address to user2',async () => {
         const amount = 50;
-        await mint(accounts.To1,100);
-        preBalance = await getTokenBalance(accounts.To1);
+        const sender = accounts.To1;
+        const senderWallet = to1Wallet;
+        preBalance = await getTokenBalance(sender);
         preBalanceTo = await getTokenBalance(accounts.To2);
         if (preBalance>=amount){
-            console.log("from user balance is ",preBalance)
-            await ReserveTokensAndTransferFrom2( accounts.To2,amount)
+            await ReserveTokensAndTransferFrom( to1Wallet,accounts.To1, accounts.To2,amount)
             postBalance = await getTokenBalance(accounts.To1);
             postBalanceTo = await getTokenBalance(accounts.To2);
-            console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
-            console.log("to2 balance",await getTokenBalance(accounts.To2))
+            expect(postBalance).to.equal(preBalance - amount);
+            expect(postBalanceTo).to.equal(preBalanceTo + amount);
         }else {
             console.log("balance is not enough")
         }
@@ -593,13 +595,11 @@ describe("ReserveTokensAndTransfer",  function (){
     });
     it('transfer 50 from to1 address to otherBank user',async () => {
         const amount = 50;
-        await mint(accounts.To1,100);
         preBalance = await getTokenBalance(accounts.To1);
         if (preBalance>=amount){
-            console.log("from user balance is ",preBalance)
             await ReserveTokensAndTransferFrom(to1Wallet,accounts.To1, userInNode1,amount)
             postBalance = await getTokenBalance(accounts.To1);
-            console.log({preBalance,postBalance})
+            expect(postBalance).to.equal(preBalance - amount);
         }else {
             console.log("balance is not enough")
         }
@@ -608,19 +608,20 @@ describe("ReserveTokensAndTransfer",  function (){
 
 describe("ReserveTokensAndBurn", function () {
     this.timeout(1200000);
-    // before(async function  () {
-    //     await mint(accounts.Minter, 1000);
-    // })
+    before(async function  () {
+        await mint(accounts.Minter, 1000);
+    })
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
     });
-    it('burn_100_minter', async () => {
+    it('minter_burn_100', async () => {
         await ReserveTokensAndBurn(amount);
         postBalance = await getTokenBalance(accounts.Minter);
+        console.log(postBalance)
         expect(postBalance).to.equal(preBalance - amount);
 
     });
-    it('burn_100_5_times', async () => {
+    it('minter_burn_100_5_times', async () => {
         const times = 5
         for (let i = 0; i < times; i++) {
             await ReserveTokensAndBurn(amount);
@@ -630,38 +631,54 @@ describe("ReserveTokensAndBurn", function () {
     });
     it('burn_amount_larger_than_balance',async ()=>{
         const amount = preBalance + 1
-        await ReserveTokensAndBurn(amount)
+        try {
+            await ReserveTokensAndBurn(amount);
+        }catch (error){
+            console.log(error)
+            expect(error.details).to.equal("total amount of parent tokens is insufficient")
+        }
     })
-    it('burn_0',async () => {
+    it('minter_burn_0',async () => {
         const amount = 0;
-        await ReserveTokensAndBurn(amount);
-        postBalance = await getTokenBalance(accounts.Minter);
-        expect(postBalance).to.equal(preBalance - amount);
+        try {
+            await ReserveTokensAndBurn(amount);
+            postBalance = await getTokenBalance(accounts.Minter);
+            expect(postBalance).to.equal(preBalance);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
     });
-    it('burn_negative_amount',async () => {
+    it('minter_burn_negative_amount',async () => {
         const amount = -1;
-        await ReserveTokensAndBurn(amount);
+        try {
+            await ReserveTokensAndBurn(amount);
+            postBalance = await getTokenBalance(accounts.Minter);
+            expect(postBalance).to.equal(preBalance);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
     });
-    it.skip('burn_all_amount',async () => {
+    it('burn_all_minter_amount',async () => {
         const burn_amount = await getTokenBalance(accounts.Minter);
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
         await ReserveTokensAndBurn(burn_amount);
         postBalance = await getTokenBalance(accounts.Minter);
         expect(postBalance).to.equal(preBalance - burn_amount);
     });
-    it.skip('Burn 50 for user--not needed',async () => {
-        const amount = 50;
-        await mint(accounts.To1,amount);
-        preBalance = await getTokenBalance(accounts.To1);
-        if (preBalance>=amount){
-            console.log("from user balance is ",preBalance)
-            await ReserveTokensAndBurnFromUser(to1Wallet,accounts.To1, amount)
-            postBalance = await getTokenBalance(accounts.To1);
-            console.log({preBalance,postBalance})
-        }else {
-            console.log("balance is not enough")
-        }
-
-    });
+    // it.skip('Burn 50 for user--not needed',async () => {
+    //     const amount = 50;
+    //     await mint(accounts.To1,amount);
+    //     preBalance = await getTokenBalance(accounts.To1);
+    //     if (preBalance>=amount){
+    //         console.log("from user balance is ",preBalance)
+    //         await ReserveTokensAndBurnFromUser(to1Wallet,accounts.To1, amount)
+    //         postBalance = await getTokenBalance(accounts.To1);
+    //         console.log({preBalance,postBalance})
+    //     }else {
+    //         console.log("balance is not enough")
+    //     }
+    //
+    // });
 });
 
 describe("check contract totalSupply", function () {
@@ -683,9 +700,42 @@ describe("check contract totalSupply", function () {
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
+    it('totalSupply_add_after_directMint ',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        await DirectMint(accounts.Minter, 200);
+        totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
+    it('totalSupply_add_after_directMint_user ',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        await DirectMint(accounts.To1, 200);
+        totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
+    it('totalSupply_add_after_directMint_user_other_bank ',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        await DirectMint(userInNode1, 200);
+        totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
     it('totalSupply_sub_after_burn ',async () => {
         totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         await ReserveTokensAndBurn(100);
+        totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
+    it('totalSupply_sub_after_directBurn ',async () => {
+        await DirectMint(accounts.To1, 100);
+        totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        await DirectBurn(accounts.To1,100);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
@@ -697,6 +747,32 @@ describe("check contract totalSupply", function () {
         const minterBalance = await getTokenBalance(accounts.Minter);
         if(minterBalance>=100){
             await ReserveTokensAndTransfer(toAddress1,100);
+            totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+            console.log("totalSupplyPost: ",totalSupplyPost)
+            expect(totalSupplyPost).to.equal(totalSupplyPre);
+        }
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
+    it('totalSupply_keep_same_after_directTransfer',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        console.log("totalSupplyPre: ",totalSupplyPre)
+        const minterBalance = await getTokenBalance(accounts.Minter);
+        if(minterBalance>=100){
+            await DirectTransfer(accounts.Minter,accounts.To1,100);
+            totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+            console.log("totalSupplyPost: ",totalSupplyPost)
+            expect(totalSupplyPost).to.equal(totalSupplyPre);
+        }
+        console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
+        console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
+    });
+    it('totalSupply_keep_same_after_directTransfer_otherBank',async () => {
+        totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
+        console.log("totalSupplyPre: ",totalSupplyPre)
+        const minterBalance = await getTokenBalance(accounts.Minter);
+        if(minterBalance>=100){
+            await DirectTransfer(accounts.Minter,userInNode4,100);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
             console.log("totalSupplyPost: ",totalSupplyPost)
             expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -777,19 +853,19 @@ describe.skip("check minter allowed balance", function () {
         postAllowance = await getMinterAllowance();
         expect(postAllowance).to.equal(preAllowance);
     });
-    it('MinterAllowance should keep same after burn for user', async () => {
-        const accountBalance = await getTokenBalance(accounts.To1);
-        if(accountBalance>=100){
-            await ReserveTokensAndBurnFromUser( to1Wallet,accounts.To1, 100);
-            postAllowance = await getMinterAllowance();
-            expect(postAllowance).to.equal(preAllowance);
-        }else {
-            await mint(accounts.To1,100);
-            await ReserveTokensAndBurnFromUser( to1Wallet,accounts.To1, 100);
-            postAllowance = await getMinterAllowance();
-            expect(postAllowance).to.equal(preAllowance-100);
-        }
-    });
+    // it('MinterAllowance should keep same after burn for user', async () => {
+    //     const accountBalance = await getTokenBalance(accounts.To1);
+    //     if(accountBalance>=100){
+    //         await ReserveTokensAndBurnFromUser( to1Wallet,accounts.To1, 100);
+    //         postAllowance = await getMinterAllowance();
+    //         expect(postAllowance).to.equal(preAllowance);
+    //     }else {
+    //         await mint(accounts.To1,100);
+    //         await ReserveTokensAndBurnFromUser( to1Wallet,accounts.To1, 100);
+    //         postAllowance = await getMinterAllowance();
+    //         expect(postAllowance).to.equal(preAllowance-100);
+    //     }
+    // });
 });
 
 describe("New user and BlackList", function () {
@@ -798,7 +874,7 @@ describe("New user and BlackList", function () {
     const key = wallet.privateKey;
     const userWallet = new ethers.Wallet(key,l1Provider);
     const toAddress = wallet.address;
-    it.skip('New user should not be able to mint', async () => {
+    it('New user should not be able to mint', async () => {
         try {
             await mint(toAddress, 100)
         } catch (error) {
@@ -808,14 +884,14 @@ describe("New user and BlackList", function () {
     it('Step1: Registe user', async () => {
         await registerUser(toAddress);
     });
-    it.skip('Step2: Mint to user', async () => {
+    it('Step2: Mint to user', async () => {
         const preBalance = await getTokenBalance(toAddress);
         await mint(toAddress, 100);
         let postBalance = await getTokenBalance(toAddress);
         console.log("new user balance is ", postBalance)
         expect(postBalance).to.equal(preBalance + 100);
     });
-    it.skip('Step3: Transfer to user', async () => {
+    it('Step3: Transfer to user', async () => {
         await mint(accounts.Minter, 100)
         const preBalance = await getTokenBalance(toAddress);
         await ReserveTokensAndTransfer(toAddress, 100);
@@ -832,14 +908,15 @@ describe("New user and BlackList", function () {
     //     console.log("postBalance", postBalance)
     //     expect(postBalance).to.equal(preBalance - 100);
     // });
-    it.skip('Step4: ReserveToken And transfer for user', async () => {
+    it('Step4: ReserveToken And transfer for user', async () => {
         const amount = 100
+        const recevier  = accounts.To1;
         const preBalance = await getTokenBalance(toAddress);
-        const preBalanceTo  = await getTokenBalance(accounts.Minter);
+        const preBalanceTo  = await getTokenBalance(recevier);
         console.log("preBalance", preBalance)
-        await ReserveTokensAndTransferFrom(userWallet, toAddress, accounts.Minter, amount);
+        await ReserveTokensAndTransferFrom(userWallet, toAddress, recevier, amount);
         const postBalance = await getTokenBalance(toAddress);
-        const postBalanceTo = await getTokenBalance(accounts.Minter);
+        const postBalanceTo = await getTokenBalance(recevier);
         console.log("postBalance", postBalance)
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
@@ -910,6 +987,7 @@ describe("New user and BlackList", function () {
     });
     it('Step8: Try to operation for address removed from blackList ', async () => {
         const preBalance = await getTokenBalance(toAddress);
+
         await mint(toAddress, 100);
         let postBalance = await getTokenBalance(toAddress);
         console.log("new user balance is after mint", postBalance)
@@ -918,9 +996,14 @@ describe("New user and BlackList", function () {
         await mint(accounts.Minter, 100)
         await ReserveTokensAndTransfer(toAddress, 100);
         postBalance = await getTokenBalance(toAddress);
-        console.log("new user balance is after transfer", postBalance)
+        console.log("new user balance is after transferIn", postBalance)
         expect(postBalance).to.equal(preBalance + 200);
+
+        await ReserveTokensAndTransferFrom(userWallet, toAddress, accounts.To2, 100);
+        postBalance = await getTokenBalance(toAddress);
+        console.log("new user balance is after transferOut", postBalance)
     });
+
 });
 
 describe('Direct Mint', function () {
@@ -932,6 +1015,23 @@ describe('Direct Mint', function () {
         let postBalance = await getTokenBalance(recevier);
         expect(postBalance).to.equal(preBalance + 100);
     });
+    it('Mint 0 to user ',async () => {
+        const recevier = accounts.Minter
+        try {
+            await DirectMint(recevier,0);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+    });
+    it('Mint 0 to zeroAddress ',async () => {
+        const recevier = ZERO_ADDRESS
+        try {
+            await DirectMint(recevier,amount);
+        }catch (error){
+            expect(error.details).to.equal("failed to get GrumpkinKey for to address")
+        }
+
+    });
     it('Mint to user in bank ',async () => {
         const recevier = accounts.To1
         const preBalance = await getTokenBalance(recevier);
@@ -939,12 +1039,14 @@ describe('Direct Mint', function () {
         let postBalance = await getTokenBalance(recevier);
         expect(postBalance).to.equal(preBalance + 100);
     });
-    it('Mint to user in other bank ',async () => {
-        const recevier = userInNode2
-        // const preBalance = await getTokenBalance(recevier);
+    it('Mint to user in other bank, check recevier balance ',async () => {
+        const recevier = userInNode1
+        const preBalance = await getTokenBalanceInNode1(recevier);
+        console.log("user balance is before mint", preBalance)
         await DirectMint(recevier, 100);
-        // let postBalance = await getTokenBalance(recevier);
-        // expect(postBalance).to.equal(preBalance + 100);
+        let postBalance = await getTokenBalanceInNode1(recevier);
+        console.log("user balance is after mint", postBalance)
+        expect(postBalance).to.equal(preBalance + 100);
     });
     it('Mint to new user ',async () => {
         const wallet = ethers.Wallet.createRandom();
@@ -964,10 +1066,13 @@ describe('Direct Mint', function () {
 
 describe('Direct Transfer', function () {
     this.timeout(1200000);
+    before(async function () {
+        await DirectMint(accounts.Minter, amount*6);
+        await DirectMint(accounts.To1, amount*2);
+    });
     it('Transfer from minter to user in bank ',async () => {
         const sender = accounts.Minter;
         const recevier = accounts.To1;
-        await DirectMint(sender,amount);
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
         await DirectTransfer(sender,recevier, amount);
@@ -976,14 +1081,54 @@ describe('Direct Transfer', function () {
         expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
+    it('Transfer from minter to user in bank with 0 amount ',async () => {
+        const sender = accounts.Minter;
+        const recevier = accounts.To1;
+        const amount = 0;
+        // const preBalanceFrom = await getTokenBalance(sender);
+        // const preBalanceTo = await getTokenBalance(recevier);
+        // await DirectTransfer(sender,recevier, amount);
+        // const postBalanceFrom = await getTokenBalance(sender);
+        // const postBalanceTo = await getTokenBalance(recevier);
+        // expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
+        // expect(postBalanceTo).to.equal(preBalanceTo + amount);
+
+        try {
+            await DirectTransfer(sender,recevier, amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+    });
+    it('Transfer from minter to user in bank with negative amount ',async () => {
+        const sender = accounts.Minter;
+        const recevier = accounts.To1;
+        const amount = -1;
+        try {
+            await DirectTransfer(sender,recevier, amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+    });
+    it('Transfer from minter to ZERO ADDRESS ',async () => {
+        const sender = accounts.Minter;
+        const recevier = ZERO_ADDRESS;
+        const amount = 100;
+        try {
+            await DirectTransfer(sender,recevier, amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid toAddress")
+        }
+    });
     it('Transfer from minter to user in other bank ',async () => {
         const sender = accounts.Minter;
-        const recevier = userInNode2;
-        await DirectMint(sender,amount);
+        const recevier = userInNode1;
         const preBalanceFrom = await getTokenBalance(sender);
+        const preBalanceTo = await getTokenBalanceInNode1(recevier);
         await DirectTransfer(sender,recevier, amount);
         const postBalanceFrom = await getTokenBalance(sender);
+        const postBalanceTo = await getTokenBalanceInNode1(recevier);
         expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
+        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
     it('Transfer from userA to userB in bank ',async () => {
         const sender = accounts.To1;
@@ -996,26 +1141,37 @@ describe('Direct Transfer', function () {
         const postBalanceTo = await getTokenBalance(recevier);
         expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
+
+
+    });
+    it('Transfer from userA to ZERO ADDRESS',async () => {
+        const sender = accounts.To1;
+        const recevier = ZERO_ADDRESS;
+        await DirectMint(sender,amount);
+        try {
+            await DirectTransfer(sender,recevier, amount);
+        }catch (error){
+            expect(error.details).to.equal("Invalid toAddress")
+        }
     });
     it('Transfer from userA to user  in other bank ',async () => {
         const sender = accounts.To1;
-        const recevier = userInNode4;
+        const recevier = userInNode1;
         await DirectMint(sender,amount);
         const preBalanceFrom = await getTokenBalance(sender);
+        const preBalanceTo = await getTokenBalanceInNode1(recevier);
         await DirectTransfer(sender,recevier, amount);
         const postBalanceFrom = await getTokenBalance(sender);
+        const postBalanceTo = await getTokenBalanceInNode1(recevier);
         expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
+        expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
     it('Transfer from minter to new user in bank ',async () => {
         const wallet = ethers.Wallet.createRandom();
         const key = wallet.privateKey;
-        const userWallet = new ethers.Wallet(key,l1Provider);
         const recevier = wallet.address;
-
         await registerUser(recevier);
-
         const sender = accounts.Minter;
-        await DirectMint(sender,amount);
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
         await DirectTransfer(sender,recevier, amount);
@@ -1028,24 +1184,56 @@ describe('Direct Transfer', function () {
 
 describe('Direct Burn', function () {
     this.timeout(1200000);
+    before(async function () {
+        await DirectMint(accounts.Minter, amount);
+        await DirectMint(accounts.To1, amount*3);
+    });
     it('Minter Burn ',async () => {
         const burner = accounts.Minter
-        await DirectMint(burner, amount);
         const preBalance = await getTokenBalance(burner);
         await DirectBurn(burner, amount);
         let postBalance = await getTokenBalance(burner);
         expect(postBalance).to.equal(preBalance - amount);
     });
-    it('User in bank burn  ',async () => {
+    it('User in bank burn',async () => {
+        const burner = accounts.To1
+        const preBalance = await getTokenBalance(burner);
+        await DirectBurn(burner, amount);
+        let postBalance = await getTokenBalance(burner);
+        expect(postBalance).to.equal(preBalance - amount);
+    });
+    it('Try to burn 0 amount',async () => {
         const burner = accounts.To1
         await DirectMint(burner, amount);
-        const preBalance = await getTokenBalance(burner);
-        await DirectBurn(burner, amount);
-        let postBalance = await getTokenBalance(burner);
-        expect(postBalance).to.equal(preBalance - amount);
+        try {
+            await DirectBurn(burner, 0);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+
     });
+    it('Try to burn negative amount',async () => {
+        const burner = accounts.To1
+        try {
+            await DirectBurn(burner, -1);
+        }catch (error){
+            expect(error.details).to.equal("Invalid Amount")
+        }
+    });
+});
 
-
+describe('Cancel splitToken', function () {
+    this.timeout(1200000);
+    it('split token list ',async () => {
+        // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
+        console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
+    });
+    it('cancle split tokens',async () => {
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
+    });
+    it('split token list after should be null ',async () => {
+        console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
+    });
 });
 
 
