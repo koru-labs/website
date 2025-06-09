@@ -434,7 +434,7 @@ async function testTotalSupply(){
 
 // testReserveTokens().then();
 
-testReserveTokensAndBurn().then();
+// testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then();
 // checkBalance(accounts.Minter).then()
 
