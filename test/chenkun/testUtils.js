@@ -60,6 +60,7 @@ async function mintForStart() {
 }
 
 async function testDirectMint() {
+    console.time('testDirectMint'); // Start timing
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -68,13 +69,14 @@ async function testDirectMint() {
     };
     let response = await client.generateDirectMint(generateRequest);
     console.log("Generate Mint Proof response:", response);
-    await client.waitForActionCompletion(client.getMintProof, response.request_id)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id)
+    console.timeEnd('testDirectMint'); // End timing
     await sleep(3000)
     await checkBalance(accounts.Minter)
 }
- function sleep(ms) {
-     return new Promise(resolve => setTimeout(resolve, ms));
- }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function testReserveTokensAndTransfer(){
     const splitRequest = {
@@ -114,6 +116,9 @@ async function testReserveTokensAndBurn(){
 }
 
 async function testDirectBurn() {
+    console.time('testDirectBurn'); // Start timing
+    const startTime = Date.now(); // 获取当前时间戳（毫秒）
+    console.log("Starting testDirectBurn at:", new Date(startTime).toISOString()); // 打印开始时间
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -124,22 +129,27 @@ async function testDirectBurn() {
     let response = await client.generateDirectBurn(splitRequest);
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    console.timeEnd('testDirectBurn'); // End timing
+    const endTime = Date.now(); // 获取结束时间戳
+    console.log("Finished testDirectBurn at:", new Date(endTime).toISOString()); // 打印结束时间
     await sleep(3000)
     await checkBalance(accounts.Minter)
 }
 
 async function testDirectTransfer(){
+    console.time('testDirectTransfer')
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
-        from_address: accounts.To1,
-        to_address : accounts.To2,
+        from_address: accounts.Minter,
+        to_address : accounts.To1,
         amount: amount
     };
 
     let response = await client.generateDirectTransfer(splitRequest);
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    console.timeEnd('testDirectTransfer')
     await sleep(3000)
     await checkBalance(accounts.Minter)
     await checkBalance(accounts.To1)
@@ -164,6 +174,26 @@ async function testReserveTokensAndCancel(){
 
         let receipt = await callPrivateCancel(config.contracts.PrivateERCToken,minterWallet,tokenId)
         console.log("receipt", receipt)
+    }
+}
+
+
+async function testReserveTokensAndGetTokenDetail(){
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount
+    };
+
+    let response = await client.generateSplitToken(splitRequest);
+    console.log("Generate transfer Proof response:", response);
+    let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+    if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+        console.log("proofResult", proofResult)
+        let response = await client.getSplitTokenDetail(proofResult.transfer_token_id);
+        console.log("Generate transfer Proof response:", response);
     }
 }
 async function checkBalance(account) {
@@ -194,12 +224,13 @@ async function testReserveTokensAndTransfer2(){
 
 // testDirectMint().then()
 // testDirectBurn().then()
-testDirectTransfer().then()
+// testDirectTransfer().then()
 
 // mintForStart().then() //mint
 // testReserveTokensAndBurn().then(); // burn
 // testReserveTokensAndTransfer().then();// transfer
 // testReserveTokensAndCancel().then();//cancel
+testReserveTokensAndGetTokenDetail().then();
 // checkTotalSupply().then()
 // checkBalance(accounts.To2).then()
 // testReserveTokensAndTransfer2().then()
