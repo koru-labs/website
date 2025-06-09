@@ -18,6 +18,8 @@ service TokenService {
   rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse);
   rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
   rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse);
+  rpc GetTokenActionStatus    (ProofRequest)                 returns (TokenActionStatusResponse);
+  rpc GetSplitTokenDetail     (SplitTokenDetailRequest)      returns (SplitTokenDetailResponse);
 }
 
 // Token action status enum
@@ -32,6 +34,11 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_DIRECTTX_WAIT = 7;
   TOKEN_ACTION_STATUS_DIRECT_CALL_L1 = 8;
 }
+message TokenActionStatusResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}
+
 
 message ProofRequest {
   string requestId = 1;
@@ -122,4 +129,16 @@ message Token {
   string request_id = 2;
   string type = 3;
   uint64 amount = 4;
+}
+
+message SplitTokenDetailRequest {
+  string token_id =1;
+  string hex_sig = 2;
+  string sig_address =3;
+}
+
+message SplitTokenDetailResponse {
+  uint64 balance = 1;
+  uint64 transferAmount = 2;
+  uint64 remainingAmount = 3;
 }
