@@ -268,6 +268,8 @@ async function main() {
         "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
     }
     await privateUSDC.configurePrivacyMinter(accounts.Minter,  minterAllowedAmount);
+    await privateUSDC.configurePrivacyMinter(accounts.Minter2,  minterAllowedAmount);
+
 
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
     console.log("\nDeployment is done ！");
@@ -337,7 +339,8 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
                 "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766",
                 "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C",
                 "0x4312488937D47A007De24d48aB82940C809EEb2b",
-                "0x57829d5E80730D06B1364A2b05342F44bFB70E8f"
+                "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
+                "0xF50F25915126d936C64A194b2C1DAa1EA45392c4"
             ]
         },
         {
