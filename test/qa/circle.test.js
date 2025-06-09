@@ -366,7 +366,7 @@ describe("Check address balance",function (){
 })
 
 
-describe.only("Mint", function () {
+describe("Mint", function () {
     this.timeout(1200000);
     const recevier = accounts.Minter;
     beforeEach(async function () {
