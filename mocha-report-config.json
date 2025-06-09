@@ -2,7 +2,7 @@
     "reporterEnabled": "mochawesome",
     "mochawesomeReporterOptions": {
     "reportDir": "test-results",
-        "reportFilename": "report",
+        "reportFilename": "mochawesome",
         "quiet": true,
         "overwrite": true,
         "html": true,
