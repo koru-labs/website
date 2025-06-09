@@ -1,6 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
 
-
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     solidity: {
@@ -17,6 +16,12 @@ module.exports = {
             },
             viaIR: true,
         },
+    },
+    mocha: {
+        reporter: 'mocha-multi-reporters',
+        reporterOptions: {
+            configFile: 'mocha-report-config.json'
+        }
     },
     ignition: {
         requiredConfirmations: 1,

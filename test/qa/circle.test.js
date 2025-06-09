@@ -117,6 +117,72 @@ async function ReserveTokensAndTransfer(toAddress,amount) {
 
 }
 
+async function ReserveTokensToTransfer(toAddress,amount) {
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: toAddress,
+        amount: amount
+    };
+    console.log("generateSplitTokenRequest:", splitRequest)
+    try {
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate transfer Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            let tokenId = '0x'+proofResult.transfer_token_id
+            console.log("tokenId", tokenId)
+            // try {
+            //     await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+            // }catch (error){
+            //     return  error
+            // }
+
+        }
+    }catch (error){
+        const wrappedError = new Error('Transfer failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
+
+}
+
+async function ReserveTokensToBurn(amount) {
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        // to_address: toAddress,
+        amount: amount
+    };
+    console.log("generateSplitTokenRequest:", splitRequest)
+    try {
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate Burn Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            let tokenId = '0x'+proofResult.transfer_token_id
+            console.log("tokenId", tokenId)
+            // try {
+            //     await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+            // }catch (error){
+            //     return  error
+            // }
+
+        }
+    }catch (error){
+        const wrappedError = new Error('Transfer failed: ' + error.details);
+        wrappedError.code = error.code;
+        wrappedError.details = error.details;
+        throw wrappedError;
+    }
+
+}
+
 async function ReserveTokensAndTransferFrom(fromWallet,fromAddress,toAddress,amount){
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -225,10 +291,6 @@ async function DirectMint(receiver,amount) {
         to_address: receiver,
         amount: amount
     };
-    // let response = await client.generateDirectMint(generateRequest);
-    // console.log("Generate Mint Proof response:", response);
-    // await client.waitForActionCompletion(client.getMintProof, response.request_id)
-
     try {
         const response = await client.generateDirectMint(generateRequest);
         await client.waitForActionCompletion(client.getMintProof, response.request_id)
@@ -239,7 +301,6 @@ async function DirectMint(receiver,amount) {
         throw wrappedError;
     }
 }
-
 async function DirectTransfer(from,receiver,amount) {
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -248,10 +309,6 @@ async function DirectTransfer(from,receiver,amount) {
         to_address : receiver,
         amount: amount
     };
-
-    // let response = await client.generateDirectTransfer(splitRequest);
-    // console.log("Generate transfer Proof response:", response);
-    // await client.waitForActionCompletion(client.getSplitToken, response.request_id)
 
     try {
         const response = await client.generateDirectTransfer(splitRequest);
@@ -263,7 +320,6 @@ async function DirectTransfer(from,receiver,amount) {
         throw wrappedError;
     }
 }
-
 async function DirectBurn(address,amount) {
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
@@ -271,10 +327,6 @@ async function DirectBurn(address,amount) {
         from_address: address,
         amount: amount
     };
-
-    // let response = await client.generateDirectBurn(splitRequest);
-    // console.log("Generate burn Proof response:", response);
-    // await client.waitForActionCompletion(client.getSplitToken, response.request_id)
 
     try {
         const response = await client.generateDirectBurn(splitRequest);
@@ -314,7 +366,7 @@ describe("Check address balance",function (){
 })
 
 
-describe("Mint", function () {
+describe.only("Mint", function () {
     this.timeout(1200000);
     const recevier = accounts.Minter;
     beforeEach(async function () {
@@ -1225,6 +1277,8 @@ describe('Direct Burn', function () {
 describe('Cancel splitToken', function () {
     this.timeout(1200000);
     it('split token list ',async () => {
+        await ReserveTokensToTransfer(accounts.To1,100);
+        await ReserveTokensToBurn(200);
         // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
         console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
     });
