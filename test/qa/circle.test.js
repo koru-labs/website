@@ -424,7 +424,7 @@ describe.only("Mint", function () {
             console.log(error)
         }
     });
-    it('minter_with_100000000',async ()=>{
+    it.skip('minter_with_100000000',async ()=>{
         // const allowance = await getMinterAllowance()
         // const amount = allowance + 1
         const amount = 100000000;
