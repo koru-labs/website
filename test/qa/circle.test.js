@@ -366,7 +366,7 @@ describe("Check address balance",function (){
 })
 
 
-describe("Mint", function () {
+describe.only("Mint", function () {
     this.timeout(1200000);
     const recevier = accounts.Minter;
     beforeEach(async function () {
@@ -736,6 +736,7 @@ describe("ReserveTokensAndBurn", function () {
 describe("check contract totalSupply", function () {
     this.timeout(1200000);
     let totalSupplyPre,totalSupplyPost;
+    const amount = 20;
     // before(async function  () {
     //     await mint(accounts.Minter, 1000);
     // })
@@ -746,50 +747,50 @@ describe("check contract totalSupply", function () {
     });
     it('totalSupply_add_after_mint ',async () => {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await mint(accounts.Minter, 200);
+        await mint(accounts.Minter, amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_add_after_directMint ',async () => {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await DirectMint(accounts.Minter, 200);
+        await DirectMint(accounts.Minter, amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_add_after_directMint_user ',async () => {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await DirectMint(accounts.To1, 200);
+        await DirectMint(accounts.To1, amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_add_after_directMint_user_other_bank ',async () => {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await DirectMint(userInNode1, 200);
+        await DirectMint(userInNode1, amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre + 200);
+        expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_sub_after_burn ',async () => {
         totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await ReserveTokensAndBurn(100);
+        await ReserveTokensAndBurn(amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
+        expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_sub_after_directBurn ',async () => {
-        await DirectMint(accounts.To1, 100);
+        await DirectMint(accounts.To1, amount);
         totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        await DirectBurn(accounts.To1,100);
+        await DirectBurn(accounts.To1,amount);
         totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
-        expect(totalSupplyPost).to.equal(totalSupplyPre - 100);
+        expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
@@ -798,7 +799,7 @@ describe("check contract totalSupply", function () {
         console.log("totalSupplyPre: ",totalSupplyPre)
         const minterBalance = await getTokenBalance(accounts.Minter);
         if(minterBalance>=100){
-            await ReserveTokensAndTransfer(toAddress1,100);
+            await ReserveTokensAndTransfer(toAddress1,amount);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
             console.log("totalSupplyPost: ",totalSupplyPost)
             expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -811,7 +812,7 @@ describe("check contract totalSupply", function () {
         console.log("totalSupplyPre: ",totalSupplyPre)
         const minterBalance = await getTokenBalance(accounts.Minter);
         if(minterBalance>=100){
-            await DirectTransfer(accounts.Minter,accounts.To1,100);
+            await DirectTransfer(accounts.Minter,accounts.To1,amount);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
             console.log("totalSupplyPost: ",totalSupplyPost)
             expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -823,8 +824,8 @@ describe("check contract totalSupply", function () {
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         console.log("totalSupplyPre: ",totalSupplyPre)
         const minterBalance = await getTokenBalance(accounts.Minter);
-        if(minterBalance>=100){
-            await DirectTransfer(accounts.Minter,userInNode4,100);
+        if(minterBalance>=amount){
+            await DirectTransfer(accounts.Minter,userInNode4,amount);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
             console.log("totalSupplyPost: ",totalSupplyPost)
             expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -837,8 +838,8 @@ describe("check contract totalSupply", function () {
         const privateTotalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
 
         for(let i=0;i<5;i++){
-            await mint(accounts.Minter,200);
-            await ReserveTokensAndBurn(100);
+            await mint(accounts.Minter,amount*2);
+            await ReserveTokensAndBurn(amount);
         }
         const publicTotalSupplyPost = await getPublicTotalSupply(config.contracts.PrivateERCToken);
         const privateTotalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
