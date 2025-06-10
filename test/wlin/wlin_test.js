@@ -17,6 +17,7 @@ const {
     callPrivateApprove,
     callPrivateTransferFrom,
     getAddressBalance,
+    getPublicTotalSupply,
     checkAccountToken
 } = require("../help/testHelp")
 
@@ -415,11 +416,18 @@ async function registerNewUserInNode1(){
     console.log("user registration receipt: ", receipt);
 }
 
+async function testTotalSupply(){
+    let result = await getPublicTotalSupply(config.contracts.PrivateERCToken);
+    console.log("the total supply is: ", result)
+}
+
 // checkDeployedUSDC().then();
 // testMint().then()
 // checkToken(accounts.Minter, '0x61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef').then();
 
 // mintForStart().then()
+// testTotalSupply().then();
+
 // testDirectTransfer().then();
 // testDirectTransferPeers().then();
 // checkBalance(accounts.Minter).then()

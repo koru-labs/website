@@ -55,6 +55,11 @@ function createClient(url) {
         return promisify(client.GenerateDirectBurn.bind(client), request);
     };
 
+    client.getTokenActionStatus = async function(requestId) {
+        const request = { requestId };
+        return promisify(client.GetTokenActionStatus.bind(client), request);
+    };
+
     // Status checking and polling methods
     client.getActionStatus = async function(requestId) {
         const request = { requestId };
@@ -115,6 +120,13 @@ function createClient(url) {
         return promisify(client.GetSplitTokenList.bind(client), request);
     };
 
+    client.getSplitTokenDetail = async function(token_id) {
+        const request = {
+            token_id:token_id,
+        };
+        return promisify(client.GetSplitTokenDetail.bind(client), request);
+    };
+
     client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
@@ -138,7 +150,7 @@ function createClient(url) {
         });
     };
 
-    client.waitForActionCompletion = async function(callBack, requestId, interval = 4000) {
+    client.waitForActionCompletion = async function(callBack, requestId, interval = 1000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
