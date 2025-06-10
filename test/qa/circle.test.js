@@ -507,7 +507,8 @@ describe("ReserveTokensAndTransfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
     before(async function () {
-        await mint(accounts.Minter,amount*13);
+        const mintAmount = amount * 13
+        await mint(accounts.Minter,mintAmount);
         await mint(accounts.To1,100);
     });
 
@@ -838,7 +839,7 @@ describe("check contract totalSupply", function () {
         const privateTotalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
 
         for(let i=0;i<5;i++){
-            await mint(accounts.Minter,amount*2);
+            await mint(accounts.Minter,amount);
             await ReserveTokensAndBurn(amount);
         }
         const publicTotalSupplyPost = await getPublicTotalSupply(config.contracts.PrivateERCToken);
@@ -927,24 +928,24 @@ describe("New user and BlackList", function () {
     const key = wallet.privateKey;
     const userWallet = new ethers.Wallet(key,l1Provider);
     const toAddress = wallet.address;
-    it('New user should not be able to mint', async () => {
+    it('Step1:New user should not be able to mint', async () => {
         try {
             await mint(toAddress, 100)
         } catch (error) {
             expect(error.details).to.equal("failed to get GrumpkinKey for to address")
         }
     });
-    it('Step1: Registe user', async () => {
+    it('Step2: Registe user', async () => {
         await registerUser(toAddress);
     });
-    it('Step2: Mint to user', async () => {
+    it('Step3: Mint to user', async () => {
         const preBalance = await getTokenBalance(toAddress);
         await mint(toAddress, 100);
         let postBalance = await getTokenBalance(toAddress);
         console.log("new user balance is ", postBalance)
         expect(postBalance).to.equal(preBalance + 100);
     });
-    it('Step3: Transfer to user', async () => {
+    it('Step4: Transfer to user', async () => {
         await mint(accounts.Minter, 100)
         const preBalance = await getTokenBalance(toAddress);
         await ReserveTokensAndTransfer(toAddress, 100);
@@ -961,7 +962,7 @@ describe("New user and BlackList", function () {
     //     console.log("postBalance", postBalance)
     //     expect(postBalance).to.equal(preBalance - 100);
     // });
-    it('Step4: ReserveToken And transfer for user', async () => {
+    it('Step5: ReserveToken And transfer for user', async () => {
         const amount = 100
         const recevier  = accounts.To1;
         const preBalance = await getTokenBalance(toAddress);
@@ -974,7 +975,7 @@ describe("New user and BlackList", function () {
         expect(postBalance).to.equal(preBalance - amount);
         expect(postBalanceTo).to.equal(preBalanceTo + amount);
     });
-    it('Step5: Add user to blacklist ', async () => {
+    it('Step6: Add user to blacklist ', async () => {
         let isBlackListed = await isBlackList(toAddress);
         if (!isBlackListed) {
             console.log("user address is ", toAddress);
