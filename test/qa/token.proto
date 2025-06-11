@@ -9,7 +9,7 @@ service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectMint      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateDirectBurn      (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse);
   rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
   rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse);
@@ -39,7 +39,13 @@ message TokenActionStatusResponse {
   TokenActionStatusEnum status = 2;
   string transactionHash = 3;
 }
+message GenerateBurnRequest {
+  string sc_address =1;
+  uint64 token_type =2;
+  string from_address =3;
+  uint64 amount = 4;
 
+}
 
 message ProofRequest {
   string requestId = 1;
