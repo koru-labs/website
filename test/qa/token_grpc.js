@@ -35,9 +35,9 @@ function createClient(url) {
         return promisify(client.GenerateMintProof.bind(client), request);
     };
 
-    client.generateDirectMint = async function(request) {
-        return promisify(client.GenerateDirectMint.bind(client), request);
-    };
+    // client.generateDirectMint = async function(request) {
+    //     return promisify(client.GenerateDirectMint.bind(client), request);
+    // };
 
     // Proof retrieval methods
     client.getMintProof = async function(requestId) {
@@ -83,6 +83,14 @@ function createClient(url) {
         return promisify(client.DecodeElgamalAmount.bind(client), request);
     };
 
+    client.encodeElgamalAmount = async function( balance) {
+        const request = {
+            amount: balance,
+        };
+        console.log("request", request);
+        return promisify(client.EncodeElgamalAmount.bind(client), request);
+    };
+
     client.getAddressAllowance  = async function(ownerAddress, spenderAddress,scAddress) {
         const request = {
             owner_address: ownerAddress,
@@ -96,13 +104,13 @@ function createClient(url) {
         return promisify(client.GenerateSplitToken.bind(client), request);
     };
 
-    client.generateDirectTransfer = async function(request) {
-        return promisify(client.GenerateDirectTransfer.bind(client), request);
-    };
-
-    client.generateDirectBurn = async function(request) {
-        return promisify(client.GenerateDirectBurn.bind(client), request);
-    };
+    // client.generateDirectTransfer = async function(request) {
+    //     return promisify(client.GenerateDirectTransfer.bind(client), request);
+    // };
+    //
+    // client.generateDirectBurn = async function(request) {
+    //     return promisify(client.GenerateDirectBurn.bind(client), request);
+    // };
 
     client.getSplitToken = async function(requestId) {
         const request = { requestId };

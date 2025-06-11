@@ -37,6 +37,7 @@ enum TokenActionStatusEnum {
 message TokenActionStatusResponse {
   string request_id = 1;
   TokenActionStatusEnum status = 2;
+  string transactionHash = 3;
 }
 
 
