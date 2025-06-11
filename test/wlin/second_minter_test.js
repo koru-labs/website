@@ -142,6 +142,6 @@ async function testCrossBankReserveTokensAndTransfer2Node4(){
 // testMint().then()
 
 // mintForStart().then();
-testCrossBankReserveTokensAndTransfer2Node1().then();
-// testCrossBankReserveTokensAndTransfer2Node2().then();
+// testCrossBankReserveTokensAndTransfer2Node1().then();
+testCrossBankReserveTokensAndTransfer2Node2().then();
 // testCrossBankReserveTokensAndTransfer2Node4().then();
