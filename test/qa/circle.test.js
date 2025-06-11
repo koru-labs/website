@@ -103,6 +103,7 @@ async function ReserveTokensAndTransfer(toAddress,amount) {
             console.log("tokenId", tokenId)
             try {
                 await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+                await sleep(1000);
             }catch (error){
                 return  error
             }
@@ -199,6 +200,7 @@ async function ReserveTokensAndTransferFrom(fromWallet,fromAddress,toAddress,amo
             console.log("proofResult", proofResult)
             try {
                 await callPrivateTransfer(fromWallet,config.contracts.PrivateERCToken,toAddress,'0x'+proofResult.transfer_token_id)
+                await sleep(1000);
             }catch (error){
                 return  error
             }
@@ -228,6 +230,7 @@ async function ReserveTokensAndBurn(amount) {
             try {
                 let receipt =await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
                 console.log("privateBurn receipt: ", receipt)
+                await sleep(1000);
             }catch (error){
                 return  error
             }
@@ -294,6 +297,7 @@ async function DirectMint(receiver,amount) {
     try {
         const response = await client.generateDirectMint(generateRequest);
         await client.waitForActionCompletion(client.getMintProof, response.request_id)
+        await sleep(1000);
     }catch (error){
         const wrappedError = new Error('Minting failed: ' + error.details);
         wrappedError.code = error.code;
@@ -312,7 +316,8 @@ async function DirectTransfer(from,receiver,amount) {
 
     try {
         const response = await client.generateDirectTransfer(splitRequest);
-        await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+        await sleep(1000);
     }catch (error){
         const wrappedError = new Error('Minting failed: ' + error.details);
         wrappedError.code = error.code;
@@ -331,6 +336,7 @@ async function DirectBurn(address,amount) {
     try {
         const response = await client.generateDirectBurn(splitRequest);
         await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        await sleep(1000);
     }catch (error){
         const wrappedError = new Error('Minting failed: ' + error.details);
         wrappedError.code = error.code;
@@ -619,6 +625,7 @@ describe("ReserveTokensAndTransfer",  function (){
         }
     });
     it('transfer_all_amount',async () => {
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
         const amount = await getTokenBalance(accounts.Minter);
         console.log("minter amount:",amount)
         preBalanceTo = await getTokenBalance(toAddress1);
@@ -661,13 +668,13 @@ describe("ReserveTokensAndTransfer",  function (){
 
 describe("ReserveTokensAndBurn", function () {
     this.timeout(1200000);
-    before(async function  () {
-        await mint(accounts.Minter, 1000);
-    })
+
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
     });
     it('minter_burn_100', async () => {
+        await mint(accounts.Minter,1000);
+        preBalance = await getTokenBalance(accounts.Minter);
         await ReserveTokensAndBurn(amount);
         postBalance = await getTokenBalance(accounts.Minter);
         console.log(postBalance)
@@ -741,6 +748,9 @@ describe("check contract totalSupply", function () {
     // before(async function  () {
     //     await mint(accounts.Minter, 1000);
     // })
+    beforeEach(async function () {
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
+    })
 
     it('check_contract_totalSupply', async () => {
         console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken));
@@ -809,6 +819,7 @@ describe("check contract totalSupply", function () {
         console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
     });
     it('totalSupply_keep_same_after_directTransfer',async () => {
+
         totalSupplyPre = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken);
         console.log("totalSupplyPre: ",totalSupplyPre)
         const minterBalance = await getTokenBalance(accounts.Minter);
@@ -1129,7 +1140,9 @@ describe('Direct Transfer', function () {
         const recevier = accounts.To1;
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
+
         await DirectTransfer(sender,recevier, amount);
+
         const postBalanceFrom = await getTokenBalance(sender);
         const postBalanceTo = await getTokenBalance(recevier);
         expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
