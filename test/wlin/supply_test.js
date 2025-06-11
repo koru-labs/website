@@ -13,7 +13,7 @@ const {
 } = require("../help/testHelp")
 
 async function testTotalSupply(){
-    let result = await getPublicTotalSupply("0x65580aEaF79a26aC0f61F7BA914bF900956eBA98");
+    let result = await getPublicTotalSupply(config.contracts.PrivateERCToken);
     console.log("the total supply is: ", result)
 }
 
