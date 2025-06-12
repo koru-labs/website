@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "sb-node3-node.hamsa-ucl.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -42,6 +42,11 @@ const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 let newUserPrivateKey = "267d5dc2af7a0ea942834c34bfdf6250d2ce599e3e86c0e4cb59815805cce97a";
 let newUserAddress = "0x9817dBBfBd209CC7B4bF1AC25A4Ca450EAE135BD";
 const newUserWallet = new ethers.Wallet(newUserPrivateKey, l1Provider);
+
+
+let newUser2PrivateKey = "74f5037b731a49d897b5a1945a871337ed76dae8f830d5ca1b64a965048655a5";
+let newUser2Address = "0x9d88b996c7ce52aA2623FE52f6f1481120BCa2CE";
+const newUser2Wallet = new ethers.Wallet(newUser2PrivateKey, l1Provider);
 
 const amount = 1;
 
@@ -131,7 +136,7 @@ async function testMint() {
     console.log("balance: ", balance)
 }
 
-async function testMintForNewUser() {
+async function testMintForNewUser(newUserAddress) {
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -146,6 +151,8 @@ async function testMintForNewUser() {
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
     console.log("receipt", receipt)
 
+
+    //this will fail, we need to connect to node1 to decode the amount
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, newUserAddress)
     console.log("balance: ", balance)
 }
@@ -163,7 +170,9 @@ async function testDirectTransfer(){
 
     let response = await client.generateDirectTransfer(transferRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+
+    let actionResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id)
+    console.log("direct transfer result: ", actionResult)
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To1)
     console.log(`balance of ${accounts.To1}: `, balance)
@@ -180,7 +189,9 @@ async function testDirectTransferPeers(){
 
     let response = await client.generateDirectTransfer(transferRequest);
     console.log("Generate transfer Proof response:", response);
-    let proofResult = await client.waitForActionCompletion(client.getTransferProof, response.request_id)
+
+    let result = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id)
+    console.log("direct transfer result: ", result)
 
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
     console.log(`balance of ${accounts.To1}: `, balance)
@@ -207,7 +218,6 @@ async function testReserveTokensAndBurn(){
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.Minter,
         amount: amount
     };
 
@@ -215,13 +225,16 @@ async function testReserveTokensAndBurn(){
     console.log("Generate transfer Proof response:", response);
     let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
     console.log("tokenResult: ", tokenResult)
+
     let receipt = await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, '0x'+tokenResult.transfer_token_id);
     console.log("privateBurn receipt: ", receipt)
     let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
     console.log("balance of Minter:", balance)
 }
 
-async function testNewUserSplitTokensAndBurn(){
+async function testNewUserSplitTokensAndBurn(newUserWallet){
+    let newUserAddress= newUserWallet.address;
+
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -252,6 +265,7 @@ async function testReserveTokensAndTransfer(){
     console.log("Generate transfer Proof response:", response);
     let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
     console.log("tokenResult: ", tokenResult)
+
     let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, accounts.To2, '0x'+tokenResult.transfer_token_id);
     console.log("privateBurn receipt: ", receipt)
 
@@ -259,7 +273,9 @@ async function testReserveTokensAndTransfer(){
     console.log("balance of Minter:", balance)
 }
 
-async function testNewUserSplitTokensAndTransfer(){
+async function testNewUserSplitTokensAndTransfer(newUserWallet){
+    let newUserAddress = newUserWallet.address
+
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -280,65 +296,6 @@ async function testNewUserSplitTokensAndTransfer(){
 }
 
 
-async function testCrossBankReserveTokensAndTransfer2Node1(){
-    let toAddress ="0x5a3288A7400B2cd5e0568728E8216D9392094892";
-    const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: accounts.Minter,
-        to_address:toAddress,
-        amount: amount
-    };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("tokenResult: ", tokenResult)
-    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
-    console.log("PrivateTransfer receipt: ", receipt)
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
-    console.log("balance of Minter:", balance)
-}
-
-async function testCrossBankReserveTokensAndTransfer2Node2(){
-    let toAddress ="0xF8041E1185C7106121952bA9914ff904A4A01c80";
-    const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: accounts.Minter,
-        to_address:toAddress,
-        amount: amount
-    };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("tokenResult: ", tokenResult)
-    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
-    console.log("PrivateTransfer receipt: ", receipt)
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
-    console.log("balance of Minter:", balance)
-}
-
-async function testCrossBankReserveTokensAndTransfer2Node4(){
-    let toAddress ="0xbA268f776F70caDB087e73020dfE41c7298363Ed";
-    const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: accounts.Minter,
-        to_address:toAddress,
-        amount: amount
-    };
-
-    let response = await client.generateSplitToken(splitRequest);
-    console.log("Generate transfer Proof response:", response);
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("tokenResult: ", tokenResult)
-    let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, toAddress, '0x'+tokenResult.transfer_token_id);
-    console.log("PrivateTransfer receipt: ", receipt)
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
-    console.log("balance of Minter:", balance)
-}
 
 async function testApprove() {
     const approveRequest = {
@@ -403,14 +360,14 @@ async function testBurnToken() {
 }
 
 async function registerNewUserInNode3(){
-    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration, newUserWallet);
+    const institutionRegistration = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstitutionUserRegistry, newUserWallet);
     let tx = await institutionRegistration.registerUser("0xf17f52151EbEF6C7334FAD080c5704D77216b732");
     let receipt = await tx.wait();
     console.log("user registration receipt: ", receipt);
 }
 
 async function registerNewUserInNode1(){
-    const institutionRegistration = await ethers.getContractAt("InstitutionRegistration", config.contracts.InstitutionRegistration, newUserWallet);
+    const institutionRegistration = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstitutionUserRegistry, newUser2Wallet);
     let tx = await institutionRegistration.registerUser("0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127");
     let receipt = await tx.wait();
     console.log("user registration receipt: ", receipt);
@@ -430,33 +387,30 @@ async function testTotalSupply(){
 
 // testDirectTransfer().then();
 // testDirectTransferPeers().then();
-// checkBalance(accounts.Minter).then()
+// checkBalance(accounts.To2).then()
 
 // testReserveTokens().then();
 
 // testReserveTokensAndBurn().then();
-// testReserveTokensAndTransfer().then();
 // checkBalance(accounts.Minter).then()
 
-// testCrossBankReserveTokensAndTransfer2Node1().then();
-// testCrossBankReserveTokensAndTransfer2Node2().then();
-// testCrossBankReserveTokensAndTransfer2Node4().then();
+// testReserveTokensAndTransfer().then();
+// checkBalance(accounts.To2).then()
 
 
 // testBurnToken().then();
-// testTransfer().then();
-// testBurn().then();
+
 
 // testApprove().then();
 // testTransferFrom().then();
-// registerNewUserInNode3().then();
 
 /* test register new user in node3 */
-// testMintForNewUser().then();
-// testNewUserSplitTokensAndTransfer().then();
-// testNewUserSplitTokensAndBurn().then()
+// registerNewUserInNode3().then();
+// testMintForNewUser(newUserAddress).then();
+// testNewUserSplitTokensAndTransfer(newUserWallet).then();
+// testNewUserSplitTokensAndBurn(newUserAddress).then()
 // checkBalance(newUserAddress).then()
 
 /* test register new user in node1 */
 // registerNewUserInNode1().then();
-// testMintForNewUser().then();
+testMintForNewUser(newUser2Address).then();

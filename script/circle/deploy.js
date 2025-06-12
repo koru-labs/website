@@ -262,10 +262,10 @@ async function main() {
     console.log("PrivateERCToken initialized successfully");
 
     const minterAllowedAmount =   {
-        "cl_x": ethers.toBigInt("0x0674c295e0f0892fbf309a316af3adacf8023d5e597bf55533806bd0362170c6"),
-        "cl_y": ethers.toBigInt("0x0cb84b5c84cadfa88f4edf89d2fcf051c100aa015a80c202f517a008296c0359"),
-        "cr_x": ethers.toBigInt("0x1e347c17ddd4fc6ac3ec66da2d2eb23e866b1fe9cab8493a5f1137a49fdcd2fd"),
-        "cr_y": ethers.toBigInt("0x2f2419a3e2efa0de0a9ebe16b0dd90fe8dbcba985b7bd0d1546f197226a5759f"),
+        "cl_x": ethers.toBigInt("0x10029eb129bcca705cf2b0366bfb7b33f5cb462e47a4d600c8cabde8c4a44ed4"),
+        "cl_y": ethers.toBigInt("0x09944660246404d26c916866dfa5d3d13dc3e739645d60803f240e0f5127fccb"),
+        "cr_x": ethers.toBigInt("0x01269732a28d979aee067862a8aeb9ca6085c89180c198b6f13f20d10bdb4cd3"),
+        "cr_y": ethers.toBigInt("0x0e4b8f1fc03b7dc6dc830ccd18b7ff4d82b667aea18aa4fca221b3d6830fa2a2"),
     }
     await privateUSDC.configurePrivacyMinter(accounts.Minter,  minterAllowedAmount);
     await privateUSDC.configurePrivacyMinter(accounts.Minter2,  minterAllowedAmount);
@@ -285,7 +285,6 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
         chainId: (await ethers.provider.getNetwork()).chainId.toString() 
     };
 
-    
     const deploymentsDir = path.join(__dirname, "../../deployments");
     if (!fs.existsSync(deploymentsDir)) {
         fs.mkdirSync(deploymentsDir, { recursive: true });
