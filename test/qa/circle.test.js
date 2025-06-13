@@ -521,6 +521,7 @@ describe("ReserveTokensAndTransfer",  function (){
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
+        console.log("balance before operation is ",preBalance);
     });
     it('transfer_user_inBank_10',async () => {
         const amount = 10
@@ -671,6 +672,7 @@ describe("ReserveTokensAndBurn", function () {
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
+        console.log("balance before operation is ",preBalance);
     });
     it('minter_burn_100', async () => {
         await mint(accounts.Minter,1000);
