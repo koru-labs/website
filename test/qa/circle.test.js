@@ -1120,6 +1120,7 @@ describe('Direct Mint', function () {
         const recevier = wallet.address;
 
         await registerUser(recevier);
+        await sleep(2000);
 
         const preBalance = await getTokenBalance(recevier);
         await DirectMint(recevier, 100);
@@ -1238,6 +1239,7 @@ describe('Direct Transfer', function () {
         const key = wallet.privateKey;
         const recevier = wallet.address;
         await registerUser(recevier);
+        await sleep(2000);
         const sender = accounts.Minter;
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
