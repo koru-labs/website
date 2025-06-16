@@ -6,8 +6,8 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "sb-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_1 = "sb-node1-rpc.hamsa-ucl.com:50051"
+const rpcUrl = "sb-node3-node.hamsa-ucl.com:50051"
+const rpcUrl_1 = "sb-node1-node.hamsa-ucl.com:50051"
 // const rpcUrl_1 = "a06220caa131f4da982beeebdd84ffc5-576531359.us-west-1.elb.amazonaws.com:50051"
 // const rpcUrl = 'dev-node3-node.hamsa-ucl.com:50051'
 const client = createClient(rpcUrl)
@@ -75,7 +75,7 @@ async function mint(address,amount) {
         const response = await client.generateMintProof(generateRequest);
         const proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
         const receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
-        await sleep(1000)
+        await sleep(1000);
         return  receipt
     }catch (error){
         const wrappedError = new Error('Minting failed: ' + error.details);
@@ -359,6 +359,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
             console.log("receipt", receipt)
         }
     }
+    await sleep(3000);
 }
 
 describe("Check address balance",function (){
@@ -514,14 +515,13 @@ describe("ReserveTokensAndTransfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
     before(async function () {
-        // const mintAmount = amount * 13
-        await DirectMint(accounts.Minter,1300);
-        await DirectMint(accounts.To1,100);
+        const mintAmount = amount * 13
+        await mint(accounts.Minter,mintAmount);
+        await mint(accounts.To1,100);
     });
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
-        console.log("balance before operation is ",preBalance);
     });
     it('transfer_user_inBank_10',async () => {
         const amount = 10
@@ -627,6 +627,7 @@ describe("ReserveTokensAndTransfer",  function (){
         }
     });
     it('transfer_all_amount',async () => {
+        await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
         const amount = await getTokenBalance(accounts.Minter);
         console.log("minter amount:",amount)
         preBalanceTo = await getTokenBalance(toAddress1);
@@ -672,7 +673,6 @@ describe("ReserveTokensAndBurn", function () {
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
-        console.log("balance before operation is ",preBalance);
     });
     it('minter_burn_100', async () => {
         await mint(accounts.Minter,1000);
@@ -1122,7 +1122,6 @@ describe('Direct Mint', function () {
         const recevier = wallet.address;
 
         await registerUser(recevier);
-        await sleep(2000);
 
         const preBalance = await getTokenBalance(recevier);
         await DirectMint(recevier, 100);
@@ -1241,7 +1240,6 @@ describe('Direct Transfer', function () {
         const key = wallet.privateKey;
         const recevier = wallet.address;
         await registerUser(recevier);
-        await sleep(2000);
         const sender = accounts.Minter;
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
