@@ -9,7 +9,7 @@ service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectMint      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectBurn      (GenerateBurnRequest)          returns (GenerateProofResponse);
   rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
   rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse);
@@ -20,6 +20,7 @@ service TokenService {
   rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse);
   rpc GetTokenActionStatus    (ProofRequest)                 returns (TokenActionStatusResponse);
   rpc GetSplitTokenDetail     (SplitTokenDetailRequest)      returns (SplitTokenDetailResponse);
+  rpc GetTokenAmount          (TokenAmountRequest)           returns (TokenAmountResponse);
 }
 
 // Token action status enum
@@ -148,4 +149,12 @@ message SplitTokenDetailResponse {
   uint64 balance = 1;
   uint64 transferAmount = 2;
   uint64 remainingAmount = 3;
+}
+
+message TokenAmountRequest {
+  string token_id =1;
+}
+
+message TokenAmountResponse {
+  uint64 amount = 1;
 }

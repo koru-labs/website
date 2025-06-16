@@ -75,6 +75,7 @@ async function mint(address,amount) {
         const response = await client.generateMintProof(generateRequest);
         const proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
         const receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+        await sleep(1000);
         return  receipt
     }catch (error){
         const wrappedError = new Error('Minting failed: ' + error.details);
@@ -358,6 +359,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
             console.log("receipt", receipt)
         }
     }
+    await sleep(3000);
 }
 
 describe("Check address balance",function (){
