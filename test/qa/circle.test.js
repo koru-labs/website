@@ -1388,6 +1388,7 @@ describe('Direct Burn', function () {
 describe('Cancel splitToken', function () {
     this.timeout(1200000);
     it('split token list ',async () => {
+        await DirectMint(accounts.Minter, 500);
         await ReserveTokensToTransfer(accounts.To1,100);
         await ReserveTokensToBurn(200);
         // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
