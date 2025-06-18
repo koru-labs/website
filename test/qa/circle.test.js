@@ -6,8 +6,8 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "sb-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_1 = "sb-node4-rpc.hamsa-ucl.com:50051"
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
+const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
 // const rpcUrl_1 = "a05f5e91e78cd465ca269b49a892c8ee-1959633984.us-west-1.elb.amazonaws.com:50051"
 // const rpcUrl = 'ad42e5760742f4ab58a7d9e2809c59c8-1992668984.us-west-1.elb.amazonaws.com:50051'
 const client = createClient(rpcUrl)
