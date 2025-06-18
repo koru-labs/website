@@ -527,7 +527,7 @@ describe("Mint", function () {
             console.log("error:",error)
         }
     });
-    it.only('Try to mint after allowance exhaustion',async ()=>{
+    it('Try to mint after allowance exhaustion',async ()=>{
         const allowance = await getMinterAllowance()
         const amount = allowance
         if(allowance == 0){
