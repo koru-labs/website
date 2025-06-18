@@ -62,13 +62,13 @@ module.exports = {
             ],
         },
         ucl_node3: {
-            url: "ac7de8abe64c944a1b5644baa8eca908-910597978.us-west-1.elb.amazonaws.com:50051", //node3 url
+            url: "qa-node3-rpc.hamsa-ucl.com:50051", //node3 url
             accounts: [
                 "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", //
             ],
         },
         ucl_node4: {
-            url: "a0db4e54d842a4ab1adccbcd1a235fa9-2142411984.us-west-1.elb.amazonaws.com:50051", //node4 url
+            url: "qa-node4-rpc.hamsa-ucl.com:50051", //node4 url
             accounts: [
                 "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", //
             ],
