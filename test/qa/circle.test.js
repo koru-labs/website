@@ -527,7 +527,7 @@ describe("Mint", function () {
             console.log("error:",error)
         }
     });
-    it.skip('Try to mint after allowance exhaustion',async ()=>{
+    it.only('Try to mint after allowance exhaustion',async ()=>{
         const allowance = await getMinterAllowance()
         const amount = allowance
         if(allowance == 0){
@@ -1394,12 +1394,16 @@ describe('Cancel splitToken', function () {
         await ReserveTokensToBurn(200);
         // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
         console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
+        let splitTokens = await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken)
+        expect(splitTokens.length).not.to.equal(0);
     });
     it('cancle split tokens',async () => {
         await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
     });
     it('split token list after should be null ',async () => {
         console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
+        let splitTokens = await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken)
+        expect(splitTokens.length).to.equal(0);
     });
     it('Try to cancel split tokens again',async () => {
         await DirectMint(accounts.Minter, 200);
