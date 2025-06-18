@@ -971,7 +971,7 @@ describe.skip("check minter allowed balance", function () {
 
 });
 
-describe("New user and BlackList", function () {
+describe.only("New user and BlackList", function () {
     this.timeout(1200000);
     const wallet = ethers.Wallet.createRandom();
     const key = wallet.privateKey;
@@ -1113,7 +1113,7 @@ describe("New user and BlackList", function () {
 
 });
 
-describe('Direct Mint', function () {
+describe.only('Direct Mint', function () {
     this.timeout(1200000);
     it('DirectMint 100 to minter ',async () => {
         const recevier = accounts.Minter
@@ -1145,6 +1145,7 @@ describe('Direct Mint', function () {
         const recevier = wallet.address;
 
         await registerUser(recevier);
+        await sleep(2000);
 
         const preBalance = await getTokenBalance(recevier);
         await DirectMint(recevier, 100);
