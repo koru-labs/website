@@ -201,6 +201,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
         consumedTokens[1] = tokenEntity.rollbackTokenId;
+
+        uint256[] memory oldTokens = new uint256[](1);
+        oldTokens[0] = tokenEntity.id;
+        removeTokensWithBalance(msg.sender, oldTokens);
+
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
         tokenEntity.rollbackTokenId =0;
@@ -209,6 +214,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         addTokenWithBalance(tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
+
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
