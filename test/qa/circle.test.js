@@ -268,6 +268,13 @@ async function getTokenBalance(address){
     // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
     return Number(balance.balance)
 }
+async function getTokenBalanceOnChain(client,address){
+    // let balance = await client.getAccountBalance(config.contracts.PrivateERCToken, address)
+    // console.log(`address ${address} account balance ${balance.balance} `)
+    // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
+    // return Number(balance.balance)
+    return await getAddressBalance(client, config.contracts.PrivateERCToken, address)
+}
 
 async function getTokenBalanceInNode1(address){
     let balance = await client1.getAccountBalance(config.contracts.PrivateERCToken, address)
@@ -1506,6 +1513,15 @@ describe('Cancel splitToken', function () {
             }
         }
 
+    });
+});
+
+describe.only('Verify amount consistency ', function () {
+    this.timeout(1200000);
+    it('verify amount consistency for minter',async () => {
+        // const balanceOnChain = await getTokenBalanceOnChain(client,accounts.Minter);
+        const balanceOffChain = await getTokenBalance(accounts.Minter);
+        console.log("balanceOffChain: ", balanceOffChain)
     });
 });
 
