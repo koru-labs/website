@@ -986,6 +986,7 @@ describe("New user and BlackList", function () {
     });
     it('Step2: Registe user', async () => {
         await registerUser(toAddress);
+        await sleep(2000);
     });
     it('Step3: Mint to user', async () => {
         const preBalance = await getTokenBalance(toAddress);
@@ -1264,6 +1265,7 @@ describe('Direct Transfer', function () {
         const key = wallet.privateKey;
         const recevier = wallet.address;
         await registerUser(recevier);
+        await sleep(2000);
         const sender = accounts.Minter;
         const preBalanceFrom = await getTokenBalance(sender);
         const preBalanceTo = await getTokenBalance(recevier);
