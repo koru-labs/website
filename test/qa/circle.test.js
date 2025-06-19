@@ -572,11 +572,11 @@ describe("Mint", function () {
 describe("ReserveTokensAndTransfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
-    before(async function () {
-        const mintAmount = amount * 13
-        await mint(accounts.Minter,mintAmount);
-        await mint(accounts.To1,100);
-    });
+    // before(async function () {
+    //     const mintAmount = amount * 13
+    //     await mint(accounts.Minter,mintAmount);
+    //     await mint(accounts.To1,100);
+    // });
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
@@ -663,6 +663,53 @@ describe("ReserveTokensAndTransfer",  function (){
             await ReserveTokensAndTransfer(toAddress1,MAX_UINT256);
         }catch (error){
             expect(error.details).to.equal("Invalid Amount")
+        }
+    });
+    it('Try to transfer with used tokenId',async () => {
+        const amount = 10
+        preBalanceTo = await getTokenBalance(toAddress1);
+        const toAddress = accounts.To1;
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: toAddress,
+            amount: amount
+        };
+        console.log("generateSplitTokenRequest:", splitRequest)
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate transfer Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            let tokenId = '0x'+proofResult.transfer_token_id
+            console.log("tokenId", tokenId)
+            await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+            await sleep(1000);
+            console.log(await getTokenBalance(toAddress1))
+            const receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
+            console.log("receipt", receipt)
+            console.log(await getTokenBalance(toAddress1))
+        }
+    });
+    it('Try to transfer with tokenId 0',async () => {
+        const amount = 10
+        preBalanceTo = await getTokenBalance(toAddress1);
+        const toAddress = accounts.To1;
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: toAddress,
+            amount: amount
+        };
+        console.log("generateSplitTokenRequest:", splitRequest)
+        let response = await client.generateSplitToken(splitRequest);
+        console.log("Generate transfer Proof response:", response);
+        let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
+        if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            console.log("proofResult", proofResult)
+            await expect(callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,0)).to.revertedWith("PrivateERCToken: tokenId is zero")
         }
     });
     it('Try to transfer to  ZERO_ADDRESS',async () => {
