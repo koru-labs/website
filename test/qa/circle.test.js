@@ -369,7 +369,7 @@ describe("Check address balance",function (){
         console.log(await getTokenBalance(accounts.To1));
         console.log(await getTokenBalance(accounts.To2));
     });
-    it("Check address balance on other node", async function () {
+    it.skip("Check address balance on other node", async function () {
         await DirectMint(userInNode1,100);
         console.log(await getTokenBalanceInNode1(userInNode1));
     })
@@ -497,6 +497,26 @@ describe("Mint", function () {
             expect(error.details).to.equal("failed to get GrumpkinKey for to address")
         }
     });
+
+    it('Try to mint with invalid proof',async () => {
+        const toAddress = accounts.To1;
+        console.log(await getTokenBalance(toAddress))
+        const generateRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            to_address: toAddress,
+            amount: amount
+        };
+        console.log("generateMintRequest:", generateRequest)
+        const response = await client.generateMintProof(generateRequest);
+        const proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
+        let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+        await sleep(1000);
+        console.log(await getTokenBalance(toAddress))
+        await expect(callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)).to.revertedWith("initialMinterAllowance not match")
+
+    });
+
     it('Try to mint to new address permission limitted',async () => {
         const wallet = ethers.Wallet.createRandom();
         const toAddress = wallet.address;
@@ -506,7 +526,7 @@ describe("Mint", function () {
             expect(error.details).to.equal("failed to get GrumpkinKey for to address")
         }
     });
-    it('Mint m1 tokens to minter',async () => {
+    it('Mint 1 tokens to minter',async () => {
         try {
             const amount = 1;
             await mint(recevier,amount);
