@@ -272,17 +272,17 @@ function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(16)
 }
 
-async function getTokenBalanceOnChain(client,address){
+async function getTokenBalanceOnChain(address){
     const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken)
     let amount = await contract.privateBalanceOf(address)
-
-
+    console.log("amount: ", amount)
     let balance=  {
         cl_x: convertBigInt2Hex(amount[0]),
         cl_y: convertBigInt2Hex(amount[1]),
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
+    console.log("balance: ", balance)
     let decodeAmount = await client.decodeElgamalAmount(balance)
     return Number(decodeAmount.balance)
 }
@@ -1523,17 +1523,34 @@ describe('Cancel splitToken', function () {
 
             }
         }
-
     });
 });
 
-describe.only('Verify amount consistency ', function () {
+describe('Verify amount consistency ', function () {
     this.timeout(1200000);
     it('verify amount consistency for minter',async () => {
-        const balanceOnChain = await getTokenBalanceOnChain(client,accounts.Minter);
+        // await DirectMint(accounts.Minter, 500);
+        const balanceOnChain = await getTokenBalanceOnChain(accounts.Minter);
         console.log("balanceOnChain: ", balanceOnChain)
         const balanceOffChain = await getTokenBalance(accounts.Minter);
         console.log("balanceOffChain: ", balanceOffChain)
+        expect(balanceOnChain).to.equal(balanceOffChain);
+    });
+    it('verify amount consistency for to1',async () => {
+        // await DirectMint(accounts.Minter, 500);
+        const balanceOnChain = await getTokenBalanceOnChain(accounts.To1);
+        console.log("balanceOnChain: ", balanceOnChain)
+        const balanceOffChain = await getTokenBalance(accounts.To1);
+        console.log("balanceOffChain: ", balanceOffChain)
+        expect(balanceOnChain).to.equal(balanceOffChain);
+    });
+    it('verify amount consistency for to2',async () => {
+        // await DirectMint(accounts.Minter, 500);
+        const balanceOnChain = await getTokenBalanceOnChain(accounts.To2);
+        console.log("balanceOnChain: ", balanceOnChain)
+        const balanceOffChain = await getTokenBalance(accounts.To2);
+        console.log("balanceOffChain: ", balanceOffChain)
+        expect(balanceOnChain).to.equal(balanceOffChain);
     });
 });
 
