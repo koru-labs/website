@@ -204,7 +204,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory oldTokens = new uint256[](1);
         oldTokens[0] = tokenEntity.id;
-        removeTokensWithBalance(msg.sender, oldTokens);
+        removeTokens(msg.sender, oldTokens);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
