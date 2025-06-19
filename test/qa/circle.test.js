@@ -572,11 +572,11 @@ describe("Mint", function () {
 describe("ReserveTokensAndTransfer",  function (){
     this.timeout(1200000);
     let preBalanceTo,postBalanceTo;
-    // before(async function () {
-    //     const mintAmount = amount * 13
-    //     await mint(accounts.Minter,mintAmount);
-    //     await mint(accounts.To1,100);
-    // });
+    before(async function () {
+        const mintAmount = amount * 13
+        await mint(accounts.Minter,mintAmount);
+        await mint(accounts.To1,100);
+    });
 
     beforeEach(async function () {
         preBalance = await getTokenBalance(accounts.Minter);
@@ -681,15 +681,10 @@ describe("ReserveTokensAndTransfer",  function (){
         console.log("Generate transfer Proof response:", response);
         let proofResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id)
         if (proofResult.status == "TOKEN_ACTION_STATUS_SUC") {
-            console.log("proofResult", proofResult)
             let tokenId = '0x'+proofResult.transfer_token_id
-            console.log("tokenId", tokenId)
             await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
             await sleep(1000);
-            console.log(await getTokenBalance(toAddress1))
-            const receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)
-            console.log("receipt", receipt)
-            console.log(await getTokenBalance(toAddress1))
+            await expect(callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,tokenId)).to.revertedWith("PrivateERCToken: tokenId is not matched")
         }
     });
     it('Try to transfer with tokenId 0',async () => {
@@ -823,6 +818,23 @@ describe("ReserveTokensAndBurn", function () {
             expect(error.details).to.equal("Invalid Amount")
         }
     });
+
+    it('Try to burn  with tokenId 0',async () => {
+        await DirectMint(accounts.Minter,amount);
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            // to_address: accounts.Minter,
+            amount: amount
+        };
+        let response = await client.generateSplitToken(splitRequest);
+        let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
+        if (tokenResult.status == "TOKEN_ACTION_STATUS_SUC") {
+            await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, 0)).to.revertedWith("PrivateERCToken: tokenId is zero")
+        }
+    });
+
     it('Try to burn negative amount',async () => {
         const amount = -1;
         try {
