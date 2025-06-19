@@ -268,12 +268,23 @@ async function getTokenBalance(address){
     // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
     return Number(balance.balance)
 }
+function convertBigInt2Hex(number) {
+    return ethers.toBigInt(number).toString(16)
+}
+
 async function getTokenBalanceOnChain(client,address){
-    // let balance = await client.getAccountBalance(config.contracts.PrivateERCToken, address)
-    // console.log(`address ${address} account balance ${balance.balance} `)
-    // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
-    // return Number(balance.balance)
-    return await getAddressBalance(client, config.contracts.PrivateERCToken, address)
+    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken)
+    let amount = await contract.privateBalanceOf(address)
+
+
+    let balance=  {
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
+    let decodeAmount = await client.decodeElgamalAmount(balance)
+    return Number(decodeAmount.balance)
 }
 
 async function getTokenBalanceInNode1(address){
@@ -1519,7 +1530,8 @@ describe('Cancel splitToken', function () {
 describe.only('Verify amount consistency ', function () {
     this.timeout(1200000);
     it('verify amount consistency for minter',async () => {
-        // const balanceOnChain = await getTokenBalanceOnChain(client,accounts.Minter);
+        const balanceOnChain = await getTokenBalanceOnChain(client,accounts.Minter);
+        console.log("balanceOnChain: ", balanceOnChain)
         const balanceOffChain = await getTokenBalance(accounts.Minter);
         console.log("balanceOffChain: ", balanceOffChain)
     });
