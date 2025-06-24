@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package tokenproof.v1;
+
+option go_package = "./token_grpc";
+
+// Account service interface
+service AccountService {
+  rpc RegisterAccount       (RegisterRequest)         returns (RegisterResponse);
+  rpc UpdateAccount   (UpdateAccountRequest)         returns (UpdateAccountResponse);
+  rpc GetAccountAction   (AccountActionRequest)         returns (AccountActionResponse);
+  rpc GetAccount   (GetAccountRequest)         returns (GetAccountResponse);
+}
+
+// Account action status enum
+enum AccountActionStatusEnum {
+  ACCOUNT_ACTION_STATUS_PENDING = 0;
+  ACCOUNT_ACTION_STATUS_CALL_L1 = 1;
+  ACCOUNT_ACTION_STATUS_SUC = 2;
+  ACCOUNT_ACTION_STATUS_FAIL = 4;
+}
+// Account status enum
+enum AccountStatusEnum {
+  ACCOUNT_STATUS_INACTIVE = 0;
+  ACCOUNT_STATUS_ACTIVE = 2;
+}
+
+// Account role enum
+enum AccountRoleEnum {
+  ACCOUNT_ROLE_NORMAL = 0;
+  ACCOUNT_ROLE_ADMIN = 1;
+  ACCOUNT_ROLE_MINT = 2;
+}
+
+
+
+message RegisterRequest {
+  string address = 1;
+  AccountRoleEnum role = 2;
+}
+
+message RegisterResponse {
+  string request_id = 1;
+  AccountActionStatusEnum status = 2;
+  string message = 3;
+}
+
+message UpdateAccountRequest {
+  string address = 1;
+  AccountRoleEnum account_role = 2;
+  AccountStatusEnum account_status = 3;
+}
+
+message UpdateAccountResponse {
+  string request_id = 1;
+  AccountActionStatusEnum status = 2;
+  string message = 3;
+}
+
+message AccountActionRequest {
+  string request_id = 1;
+}
+message AccountActionResponse {
+  string request_id = 1;
+  AccountActionStatusEnum status = 2;
+  AccountStatusEnum account_status = 3;
+  string transaction_hash = 4;
+  AccountRoleEnum account_role = 5;
+}
+
+message GetAccountRequest {
+  string account_address = 1;
+}
+message GetAccountResponse {
+  string account_address = 1;
+  AccountStatusEnum account_status = 2;
+  AccountRoleEnum account_role = 3;
+}
+
+

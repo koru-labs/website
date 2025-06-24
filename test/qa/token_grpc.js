@@ -3,6 +3,7 @@ const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
 const PROTO_PATH = path.join(__dirname, './token.proto');
+const ACCOUNT_PROTO_PATH = path.join(__dirname, './account.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -12,8 +13,19 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     oneofs: true
 });
 
+const accountPackageDefinition = protoLoader.loadSync(ACCOUNT_PROTO_PATH, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true
+});
+
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
+const accountProtoDescriptor = grpc.loadPackageDefinition(accountPackageDefinition);
+
 const TokenService = protoDescriptor.tokenproof.v1.TokenService;
+const AccountService = accountProtoDescriptor.tokenproof.v1.AccountService;
 
 // Token action status enum
 const TokenActionStatusEnum = {
@@ -27,71 +39,96 @@ const TokenActionStatusEnum = {
 };
 
 function createClient(url) {
-    const client = new TokenService(url, grpc.credentials.createInsecure());
+    // 创建拦截器函数
+    const loggingInterceptor = (options, nextCall) => {
+        return new grpc.InterceptingCall(nextCall(options), {
+            start: (metadata, listener, next) => {
+                console.log("Sending metadata to server:");
+                console.log(metadata.getMap());
+                next(metadata, listener);
+            }
+        });
+    };
 
+    function createMetadataInterceptor(metadata) {
+        return (options, nextCall) => {
+            return new grpc.InterceptingCall(nextCall(options), {
+                start: (md, listener, next) => {
+                    // 添加认证元数据
+                    for (const [key, value] of Object.entries(metadata.getMap())) {
+                        md.set(key, value);
+                    }
+                    console.log("发送元数据:", md.getMap());
+                    next(md, listener);
+                }
+            });
+        };
+    }
+
+    const client = new TokenService(url, grpc.credentials.createInsecure(), {
+        interceptors: [loggingInterceptor]
+    });
+
+    const accountClient = new AccountService(url, grpc.credentials.createInsecure(), {
+        interceptors: [loggingInterceptor]
+    });
 
     // Proof generation methods
-    client.generateMintProof = async function(request) {
+    client.generateMintProof = async function (request) {
         return promisify(client.GenerateMintProof.bind(client), request);
     };
 
-    // client.generateDirectMint = async function(request) {
-    //     return promisify(client.GenerateDirectMint.bind(client), request);
-    // };
-
-    // Proof retrieval methods
-    client.getMintProof = async function(requestId) {
-        const request = { requestId };
+    client.getMintProof = async function (requestId) {
+        const request = {requestId};
         return promisify(client.GetMintProof.bind(client), request);
     };
-    client.generateDirectMint = async function(request) {
+
+    client.generateDirectMint = async function (request) {
         return promisify(client.GenerateDirectMint.bind(client), request);
     };
-    client.generateDirectTransfer = async function(request) {
+
+    client.generateDirectTransfer = async function (request) {
         return promisify(client.GenerateDirectTransfer.bind(client), request);
     };
 
-    client.generateDirectBurn = async function(request) {
+    client.generateDirectBurn = async function (request) {
         return promisify(client.GenerateDirectBurn.bind(client), request);
     };
 
-    client.getTokenActionStatus = async function(requestId) {
-        const request = { requestId };
+    client.getTokenActionStatus = async function (requestId) {
+        const request = {requestId};
         return promisify(client.GetTokenActionStatus.bind(client), request);
     };
 
     // Status checking and polling methods
-    client.getActionStatus = async function(requestId) {
-        const request = { requestId };
+    client.getActionStatus = async function (requestId) {
+        const request = {requestId};
         return promisify(client.GetActionStatus.bind(client), request);
     };
 
-    client.getAccountBalance = async function(scAddress, ownerAddress, balance) {
+    client.getAccountBalance = async function (scAddress, ownerAddress, balance) {
         const request = {
             sc_address: scAddress,
             owner_address: ownerAddress
         };
-        console.log("request", request);
         return promisify(client.GetAddressBalance.bind(client), request);
     };
 
-    client.decodeElgamalAmount = async function( balance) {
+    client.decodeElgamalAmount = async function (balance) {
         const request = {
             balance: balance,
         };
-        console.log("request", request);
         return promisify(client.DecodeElgamalAmount.bind(client), request);
     };
 
-    client.encodeElgamalAmount = async function( balance) {
+    client.encodeElgamalAmount = async function (balance) {
         const request = {
             amount: balance,
         };
-        console.log("request", request);
         return promisify(client.EncodeElgamalAmount.bind(client), request);
     };
 
-    client.getAddressAllowance  = async function(ownerAddress, spenderAddress,scAddress) {
+    client.getAddressAllowance = async function (ownerAddress, spenderAddress, scAddress) {
         const request = {
             owner_address: ownerAddress,
             spender_address: spenderAddress,
@@ -100,27 +137,20 @@ function createClient(url) {
         return promisify(client.GetAddressAllowance.bind(client), request);
     };
 
-    client.generateSplitToken = async function(request) {
+    client.generateSplitToken = async function (request) {
         return promisify(client.GenerateSplitToken.bind(client), request);
     };
 
-    // client.generateDirectTransfer = async function(request) {
-    //     return promisify(client.GenerateDirectTransfer.bind(client), request);
-    // };
-    //
-    // client.generateDirectBurn = async function(request) {
-    //     return promisify(client.GenerateDirectBurn.bind(client), request);
-    // };
-
-    client.getSplitToken = async function(requestId) {
-        const request = { requestId };
+    client.getSplitToken = async function (requestId) {
+        const request = {requestId};
         return promisify(client.GetSplitToken.bind(client), request);
     };
 
-    client.getMintAllowed = async function(request) {
+    client.getMintAllowed = async function (request) {
         return promisify(client.GetMintAllowed.bind(client), request);
     };
-    client.getSplitTokenList = async function(owner_address,sc_address) {
+
+    client.getSplitTokenList = async function (owner_address, sc_address) {
         const request = {
             owner_address: owner_address,
             sc_address: sc_address,
@@ -128,14 +158,83 @@ function createClient(url) {
         return promisify(client.GetSplitTokenList.bind(client), request);
     };
 
-    client.getSplitTokenDetail = async function(token_id) {
+    client.getSplitTokenDetail = async function (token_id) {
         const request = {
-            token_id:token_id,
+            token_id: token_id,
         };
         return promisify(client.GetSplitTokenDetail.bind(client), request);
     };
 
-    client.waitForProofCompletion = async function(callBack, requestId, interval = 4000) {
+    function promisifyWithMetadata(grpcMethod, request, metadata) {
+        return new Promise((resolve, reject) => {
+            // 确保元数据存在
+            const finalMetadata = metadata || new grpc.Metadata();
+
+            // 创建调用选项 - 关键修复点
+            const callOptions = {
+                metadata: finalMetadata
+            };
+
+            // 调用 gRPC 方法
+            grpcMethod(request, callOptions, (err, response) => {
+                if (err) {
+                    console.error("GRPC 错误:", err);
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    }
+
+    client.registerAccount = async function(request, metadata) {
+        const interceptor = createMetadataInterceptor(metadata);
+        const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
+            interceptors: [interceptor]
+        });
+
+        return new Promise((resolve, reject) => {
+            clientWithInterceptor.RegisterAccount(request, (err, response) => {
+                if (err) reject(err);
+                else resolve(response);
+            });
+        });
+    };
+
+    // Account methods - 使用修复后的promisifyWithMetadata
+    // client.registerAccount = async function (request, metadata) {
+    //     return promisifyWithMetadata(
+    //         accountClient.RegisterAccount.bind(accountClient),
+    //         request,
+    //         metadata
+    //     );
+    // };
+
+    client.updateAccount = async function (request, metadata) {
+        return promisifyWithMetadata(
+            accountClient.UpdateAccount.bind(accountClient),
+            request,
+            metadata
+        );
+    };
+
+    client.getAccountAction = async function (request, metadata) {
+        return promisifyWithMetadata(
+            accountClient.GetAccountAction.bind(accountClient),
+            request,
+            metadata
+        );
+    };
+
+    client.getAccount = async function (request, metadata) {
+        return promisifyWithMetadata(
+            accountClient.GetAccount.bind(accountClient),
+            request,
+            metadata
+        );
+    };
+
+    client.waitForProofCompletion = async function (callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
@@ -158,7 +257,7 @@ function createClient(url) {
         });
     };
 
-    client.waitForActionCompletion = async function(callBack, requestId, interval = 1000) {
+    client.waitForActionCompletion = async function (callBack, requestId, interval = 1000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
@@ -167,7 +266,7 @@ function createClient(url) {
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)
                         return
-                    } else if (result.status=="TOKEN_ACTION_STATUS_FAIL") {
+                    } else if (result.status == "TOKEN_ACTION_STATUS_FAIL") {
                         reject(result);
                         return
                     } else {
@@ -202,7 +301,6 @@ function promisify(grpcMethod, request) {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 
 module.exports = {
     createClient,
