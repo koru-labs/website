@@ -8,8 +8,8 @@ const accounts = require('./../../deployments/account.json');
 const { createClient } = require('../qa/token_http');
 // const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
 // const rpcUrl = "http://127.0.0.1:8080"
-const rpcUrl = "http://sb-node3-node-http.hamsa-ucl.com:8080"
-// const rpcUrl = "sb-node4-node.hamsa-ucl.com:50051"
+const rpcUrl = "http://qa-node3-node-http.hamsa-ucl.com:8080"
+// const rpcUrl = "qa-node4-node.hamsa-ucl.com:50051"
 const client = createClient(rpcUrl)
 
 const {

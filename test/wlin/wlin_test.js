@@ -7,7 +7,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "sb-node3-node.hamsa-ucl.com:50051"
+const rpcUrl = "ad42e5760742f4ab58a7d9e2809c59c8-1992668984.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -413,4 +413,4 @@ async function testTotalSupply(){
 
 /* test register new user in node1 */
 // registerNewUserInNode1().then();
-testMintForNewUser(newUser2Address).then();
+// testMintForNewUser(newUser2Address).then();

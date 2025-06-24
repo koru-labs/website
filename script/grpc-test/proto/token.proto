@@ -11,7 +11,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     version: "1.0";
     description: "apis for generating zk-proof, tokens, and utility apis";
   };
-  host: "sb-node3-node-http.hamsa-ucl.com:8080"; // Do not include scheme (http/https)
+  host: "qa-node3-node-http.hamsa-ucl.com:8080"; // Do not include scheme (http/https)
   base_path: "";
   schemes: HTTP;
 };
