@@ -50,20 +50,7 @@ function createClient(url) {
         });
     };
 
-    function createMetadataInterceptor(metadata) {
-        return (options, nextCall) => {
-            return new grpc.InterceptingCall(nextCall(options), {
-                start: (md, listener, next) => {
-                    // 添加认证元数据
-                    for (const [key, value] of Object.entries(metadata.getMap())) {
-                        md.set(key, value);
-                    }
-                    console.log("发送元数据:", md.getMap());
-                    next(md, listener);
-                }
-            });
-        };
-    }
+
 
     const client = new TokenService(url, grpc.credentials.createInsecure(), {
         interceptors: [loggingInterceptor]
@@ -165,74 +152,44 @@ function createClient(url) {
         return promisify(client.GetSplitTokenDetail.bind(client), request);
     };
 
-    function promisifyWithMetadata(grpcMethod, request, metadata) {
-        return new Promise((resolve, reject) => {
-            // 确保元数据存在
-            const finalMetadata = metadata || new grpc.Metadata();
-
-            // 创建调用选项 - 关键修复点
-            const callOptions = {
-                metadata: finalMetadata
-            };
-
-            // 调用 gRPC 方法
-            grpcMethod(request, callOptions, (err, response) => {
-                if (err) {
-                    console.error("GRPC 错误:", err);
-                    reject(err);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
-    }
-
     client.registerAccount = async function(request, metadata) {
         const interceptor = createMetadataInterceptor(metadata);
         const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
             interceptors: [interceptor]
         });
+        return promisify(clientWithInterceptor.RegisterAccount.bind(clientWithInterceptor), request);
+    };
 
-        return new Promise((resolve, reject) => {
-            clientWithInterceptor.RegisterAccount(request, (err, response) => {
-                if (err) reject(err);
-                else resolve(response);
-            });
+
+
+    client.updateAccount = async function(request, metadata) {
+        const interceptor = createMetadataInterceptor(metadata);
+        const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
+            interceptors: [interceptor]
         });
+
+        return promisify(clientWithInterceptor.UpdateAccount.bind(clientWithInterceptor), request);
     };
 
-    // Account methods - 使用修复后的promisifyWithMetadata
-    // client.registerAccount = async function (request, metadata) {
-    //     return promisifyWithMetadata(
-    //         accountClient.RegisterAccount.bind(accountClient),
-    //         request,
-    //         metadata
-    //     );
-    // };
+    client.getAccountAction = async function(request, metadata) {
+        const interceptor = createMetadataInterceptor(metadata);
+        const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
+            interceptors: [interceptor]
+        });
 
-    client.updateAccount = async function (request, metadata) {
-        return promisifyWithMetadata(
-            accountClient.UpdateAccount.bind(accountClient),
-            request,
-            metadata
-        );
+        return promisify(clientWithInterceptor.getAccountAction.bind(clientWithInterceptor), request);
     };
 
-    client.getAccountAction = async function (request, metadata) {
-        return promisifyWithMetadata(
-            accountClient.GetAccountAction.bind(accountClient),
-            request,
-            metadata
-        );
+    client.getAccount = async function(request, metadata) {
+        const interceptor = createMetadataInterceptor(metadata);
+        const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
+            interceptors: [interceptor]
+        });
+
+        return promisify(clientWithInterceptor.getAccount.bind(clientWithInterceptor), request);
     };
 
-    client.getAccount = async function (request, metadata) {
-        return promisifyWithMetadata(
-            accountClient.GetAccount.bind(accountClient),
-            request,
-            metadata
-        );
-    };
+
 
     client.waitForProofCompletion = async function (callBack, requestId, interval = 4000) {
         return new Promise(async (resolve, reject) => {
@@ -283,6 +240,34 @@ function createClient(url) {
     };
 
     return client;
+}
+
+function createMetadataInterceptor(metadata) {
+    return (options, nextCall) => {
+        return new grpc.InterceptingCall(nextCall(options), {
+            start: (metadataList, listener, next) => {
+                if (metadata) {
+                    for (const [key, value] of Object.entries(metadata.getMap())) {
+                        metadataList.add(key, value);
+                    }
+                }
+                next(metadataList, listener);
+            }
+        });
+    };
+}
+
+function createMetadataInterceptor(metadata) {
+    return (options, nextCall) => {
+        return new grpc.InterceptingCall(nextCall(options), {
+            start: (md, listener, next) => {
+                for (const [key, value] of Object.entries(metadata.getMap())) {
+                    md.set(key, value);
+                }
+                next(md, listener);
+            }
+        });
+    };
 }
 
 function promisify(grpcMethod, request) {

@@ -8,7 +8,7 @@ const client = createClient(rpcUrl);
 
 
 async function testRegisterAccount() {
-    const privateKey = "0x555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+    const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
     const wallet = new ethers.Wallet(privateKey);
 
     // 生成正确的签名数据
