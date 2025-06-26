@@ -171,13 +171,13 @@ function createClient(url) {
         return promisify(clientWithInterceptor.UpdateAccount.bind(clientWithInterceptor), request);
     };
 
-    client.getAccountAction = async function(request, metadata) {
+    client.getAsyncAction = async function(request, metadata) {
         const interceptor = createMetadataInterceptor(metadata);
         const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
             interceptors: [interceptor]
         });
 
-        return promisify(clientWithInterceptor.getAccountAction.bind(clientWithInterceptor), request);
+        return promisify(clientWithInterceptor.getAsyncAction.bind(clientWithInterceptor), request);
     };
 
     client.getAccount = async function(request, metadata) {
