@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const { ethers } = hre;
+const {ethers} = hre;
 const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
@@ -16,17 +16,17 @@ const ADDRESSES = {
 async function loadExistingDeployments() {
     const deploymentsDir = path.join(__dirname, "../../deployments");
     const filepath = path.join(deploymentsDir, "image9.json");
-    
+
     if (fs.existsSync(filepath)) {
         const data = fs.readFileSync(filepath, 'utf8');
         const existingDeployments = JSON.parse(data);
-        
+
         // Get current network info
         const currentNetwork = hre.network.name;
         const currentChainId = (await ethers.provider.getNetwork()).chainId.toString();
-        
+
         // Check if network matches
-        if (existingDeployments.metadata?.network === currentNetwork && 
+        if (existingDeployments.metadata?.network === currentNetwork &&
             existingDeployments.metadata?.chainId === currentChainId) {
             console.log(`Found existing deployments for network: ${currentNetwork} (chainId: ${currentChainId})`);
             return existingDeployments;
@@ -51,7 +51,7 @@ async function main() {
 
     // Load existing deployments
     const existingDeployments = await loadExistingDeployments();
-    
+
     console.log("\n=== Deploy Nova Libs ===");
 
     // Check if all Nova libraries are already deployed
@@ -71,7 +71,7 @@ async function main() {
     // if (!allNovaLibsDeployed)
     {
         console.log("Deploying all Nova libraries...");
-        
+
         // Deploy Fr Lib
         const FrFactory = await ethers.getContractFactory("FrOps");
         const fr = await FrFactory.deploy();
@@ -180,10 +180,10 @@ async function main() {
         deployed.libraries.TokenEventLib = ADDRESSES.TOKEN_EVENT_LIB;
     }
 
-    
+
     console.log("\n=== Deploy business smart contracts ===");
 
-    
+
     if (ADDRESSES.HAMSAL2EVENT == "") {
         console.log("Deploy HamsaL2Event...");
 
@@ -245,13 +245,13 @@ async function main() {
     console.log("PrivateERCToken is deployed at :", privateUSDC.target);
     deployed.contracts.PrivateERCToken = privateUSDC.target;
 
-    
+
     console.log("Initializing PrivateERCToken...");
     const initTx = await privateUSDC.initialize(
-        "Private ERC Token", 
-        "PET", 
-        "USD", 
-        6, 
+        "Private ERC Token",
+        "PET",
+        "USD",
+        6,
         accounts.MasterMinter,
         accounts.Pauser,
         accounts.BlackLister,
@@ -262,14 +262,14 @@ async function main() {
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
 
-    const minterAllowedAmount =   {
+    const minterAllowedAmount = {
         "cl_x": ethers.toBigInt("0x10029eb129bcca705cf2b0366bfb7b33f5cb462e47a4d600c8cabde8c4a44ed4"),
         "cl_y": ethers.toBigInt("0x09944660246404d26c916866dfa5d3d13dc3e739645d60803f240e0f5127fccb"),
         "cr_x": ethers.toBigInt("0x01269732a28d979aee067862a8aeb9ca6085c89180c198b6f13f20d10bdb4cd3"),
         "cr_y": ethers.toBigInt("0x0e4b8f1fc03b7dc6dc830ccd18b7ff4d82b667aea18aa4fca221b3d6830fa2a2"),
     }
-    await privateUSDC.configurePrivacyMinter(accounts.Minter,  minterAllowedAmount);
-    await privateUSDC.configurePrivacyMinter(accounts.Minter2,  minterAllowedAmount);
+    await privateUSDC.configurePrivacyMinter(accounts.Minter, minterAllowedAmount);
+    await privateUSDC.configurePrivacyMinter(accounts.Minter2, minterAllowedAmount);
 
 
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
@@ -283,12 +283,12 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
     deployed.metadata = {
         timestamp: new Date().toISOString(),
         network: hre.network.name,
-        chainId: (await ethers.provider.getNetwork()).chainId.toString() 
+        chainId: (await ethers.provider.getNetwork()).chainId.toString()
     };
 
     const deploymentsDir = path.join(__dirname, "../../deployments");
     if (!fs.existsSync(deploymentsDir)) {
-        fs.mkdirSync(deploymentsDir, { recursive: true });
+        fs.mkdirSync(deploymentsDir, {recursive: true});
     }
 
     const filepath = path.join(deploymentsDir, "image9.json");
@@ -299,11 +299,12 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 
 async function registerInstitutionAndUser(institutionUserRegistryAddress) {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress);
-    
+
     const institutions = [
-         {
+        {
             address: "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127",
             name: "Node1",
+            nodeUrl: "http://node1.com",
             publicKey: {
                 x: "0x27c07a015b9e7d73519e8bcfc8ddd6cf760b51f55938e0f83affb2ff7d244220",
                 y: "0x27e09fb8be7b593a38e107cce390183bd2b15eea7b62c4cc8ad7fae388c9b66f",
@@ -316,6 +317,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         {
             address: "0x03d68e57f1f9939d3FDcf97B5e7a1d0Be995Ec67",
             name: "Node2",
+            nodeUrl: "http://node2.com",
             publicKey: {
                 x: "0x0fb17de4db5168ce623d3c5733f3f39273fb43b194018cadcd4653c9b1d65424",
                 y: "0x2a3cfce65fe973a9354834fe93cd430b6480798166e4c33ab50f4c87843194fc",
@@ -328,11 +330,12 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             name: "Node3",
+            nodeUrl: "http://node3.com",
             publicKey: {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
                 y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
             },
-            privateKey:"0x2fb5b87323812e6fb1ca82c18f7e822403a1076dca78cdb6511fe50e2bcb9610",
+            privateKey: "0x2fb5b87323812e6fb1ca82c18f7e822403a1076dca78cdb6511fe50e2bcb9610",
             userAddresses: [
                 "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
                 "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
@@ -346,6 +349,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             name: "Node4",
+            nodeUrl: "http://node4.com",
             publicKey: {
                 x: "0x200617a15d2b14b21e7fcfee20970928fdec8caf78a8395996d39685f4416c55",
                 y: "0x1020c7e93610321fdffa7ac019165450187eeab7188d54f2a251794100c115ed",
@@ -362,7 +366,8 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         let regTx = await institutionUserRegistry.registerInstitution(
             institutions[i].address,
             institutions[i].name,
-            institutions[i].publicKey
+            institutions[i].publicKey,
+            institutions[i].nodeUrl
         );
         await regTx.wait();
         console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
