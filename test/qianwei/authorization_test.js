@@ -58,6 +58,44 @@ async function testGetAsyncAction() {
     }
 }
 
+async function testUpdateAccountStatus() {
+    try {
+        const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+        const metadata = await createAuthMetadata(privateKey);
 
-testRegisterAccount().then();
+        const address = "0xf17f52151EbEF6C7334FAD080c5704D77216b733"
+        const actionRequest = {
+            address: address,
+            account_role: "admin",
+            account_status: 2,
+        };
+        const actionResponse = await client.updateAccountStatus(actionRequest, metadata);
+        console.log("action response:", actionResponse);
+    } catch (error) {
+        console.error("gRPC call failed:", error);
+    }
+}
+
+async function testUpdateAccountRole() {
+    try {
+        const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+        const metadata = await createAuthMetadata(privateKey);
+
+        const address = "0xf17f52151EbEF6C7334FAD080c5704D77216b733"
+        const actionRequest = {
+            address: address,
+            account_role: "admin",
+            account_status: 2,
+        };
+        const actionResponse = await client.updateAccountRole(actionRequest, metadata);
+        console.log("action response:", actionResponse);
+    } catch (error) {
+        console.error("gRPC call failed:", error);
+    }
+}
+
+
+// testRegisterAccount().then();
 // testGetAsyncAction().then();
+// testUpdateAccountStatus().then();
+testUpdateAccountStatus().then();

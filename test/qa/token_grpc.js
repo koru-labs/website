@@ -162,13 +162,22 @@ function createClient(url) {
 
 
 
-    client.updateAccount = async function(request, metadata) {
+    client.updateAccountStatus = async function(request, metadata) {
         const interceptor = createMetadataInterceptor(metadata);
         const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
             interceptors: [interceptor]
         });
 
-        return promisify(clientWithInterceptor.UpdateAccount.bind(clientWithInterceptor), request);
+        return promisify(clientWithInterceptor.UpdateAccountStatus.bind(clientWithInterceptor), request);
+    };
+
+    client.updateAccountRole = async function(request, metadata) {
+        const interceptor = createMetadataInterceptor(metadata);
+        const clientWithInterceptor = new AccountService(url, grpc.credentials.createInsecure(), {
+            interceptors: [interceptor]
+        });
+
+        return promisify(clientWithInterceptor.UpdateAccountRole.bind(clientWithInterceptor), request);
     };
 
     client.getAsyncAction = async function(request, metadata) {
