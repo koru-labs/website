@@ -2,8 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
-const PROTO_PATH = path.join(__dirname, './token.proto');
-const ACCOUNT_PROTO_PATH = path.join(__dirname, './account.proto');
+const PROTO_PATH = path.join(__dirname, './token_bak.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -13,19 +12,11 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     oneofs: true
 });
 
-const accountPackageDefinition = protoLoader.loadSync(ACCOUNT_PROTO_PATH, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true
-});
 
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
-const accountProtoDescriptor = grpc.loadPackageDefinition(accountPackageDefinition);
 
 const TokenService = protoDescriptor.tokenproof.v1.TokenService;
-const AccountService = accountProtoDescriptor.tokenproof.v1.AccountService;
+const AccountService = protoDescriptor.tokenproof.v1.AccountService;
 
 // Token action status enum
 const TokenActionStatusEnum = {

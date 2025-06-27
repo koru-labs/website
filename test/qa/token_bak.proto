@@ -25,6 +25,7 @@ service TokenService {
   rpc GetSplitToken           (ProofRequest)                returns (SplitTokenResponse);
 }
 
+
 // Token action status enum
 enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_PENDING = 0;
@@ -78,7 +79,7 @@ message TransferProofResponse {
   ElGamal old_balance = 7;
   ElGamal new_balance = 8;
   ElGamal amount = 9;
-  string proof =10;
+  string proof = 10;
   TokenActionStatusEnum status = 11;
 }
 
@@ -117,19 +118,19 @@ message BurnProofResponse {
   string from_address = 4;
   string to_address = 5;
   repeated string parentTokenId = 6;
-  ElGamal supply_decrease =7;
-  ElGamal new_balance =8;
+  ElGamal supply_decrease = 7;
+  ElGamal new_balance = 8;
   ElGamal amount = 9;
-  string proof =10;
+  string proof = 10;
   TokenActionStatusEnum status = 11;
 }
 
 message GenerateProofRequest {
-  string sc_address =1;
-  uint64 token_type =2;
-  string from_address =3;
-  string to_address =4;
-  string spender_address =5;
+  string sc_address = 1;
+  uint64 token_type = 2;
+  string from_address = 3;
+  string to_address = 4;
+  string spender_address = 5;
   uint64 amount = 6;
 }
 
@@ -166,15 +167,82 @@ message AddressAllowanceResponse {
 }
 
 message EncodeAmountRequest {
-  uint64 amount=1;
+  uint64 amount = 1;
 }
 
 message EncodeAmountResponse {
-  ElGamal amount =1;
+  ElGamal amount = 1;
 }
 
 message SplitTokenResponse {
   string request_id = 1;
   TokenActionStatusEnum status = 2;
   string transfer_token_id = 3;
+}
+
+
+
+
+// Account service interface
+service AccountService {
+  rpc RegisterAccount       (RegisterAccountRequest)         returns (RegisterAccountResponse);
+  rpc UpdateAccountStatus   (UpdateAccountStatusRequest)         returns (AsyncActionResponse);
+  rpc UpdateAccountRole   (UpdateAccountRoleRequest)         returns (AsyncActionResponse);
+  rpc GetAsyncAction   (AsyncActionRequest)         returns (AsyncActionResponse);
+  rpc GetAccount   (GetAccountRequest)         returns (GetAccountResponse);
+}
+
+// Account action status enum
+enum AsyncActionStatusEnum {
+  ASYNC_ACTION_STATUS_PENDING = 0;
+  ASYNC_ACTION_STATUS_CALL_L1 = 1;
+  ASYNC_ACTION_STATUS_SUC = 2;
+  ASYNC_ACTION_STATUS_FAIL = 4;
+}
+// Account status enum
+enum AccountStatusEnum {
+  ACCOUNT_STATUS_INACTIVE = 0;
+  ACCOUNT_STATUS_ACTIVE = 2;
+}
+
+
+
+message RegisterAccountRequest {
+  string address = 1 ;
+  string account_role = 2 ;
+}
+
+message RegisterAccountResponse {
+  string request_id = 1;
+  AsyncActionStatusEnum status = 2;
+  string message = 3;
+}
+
+message UpdateAccountStatusRequest {
+  string address = 1 ;
+  AccountStatusEnum account_status = 2 ;
+}
+
+message UpdateAccountRoleRequest {
+  string address = 1 ;
+  string account_role = 2 ;
+}
+
+message AsyncActionRequest {
+  string request_id = 1;
+}
+message AsyncActionResponse {
+  string request_id = 1;
+  AsyncActionStatusEnum status = 2;
+  string transaction_hash = 3;
+  string message = 4;
+}
+
+message GetAccountRequest {
+  string account_address = 1 ;
+}
+message GetAccountResponse {
+  string account_address = 1;
+  AccountStatusEnum account_status = 2;
+  string account_role = 3;
 }
