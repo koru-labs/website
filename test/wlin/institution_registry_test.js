@@ -1,7 +1,7 @@
 const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 
-const registry_address = "0xe1E63FCb4079E8b7333D225A1F5c137a5635952b"
+const registry_address = "0xfeA7B62B9fa8f7bd50ceB661a71A950E5Ef75087"
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPublicKey = {
