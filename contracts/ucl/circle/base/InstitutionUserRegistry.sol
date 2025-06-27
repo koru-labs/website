@@ -12,6 +12,7 @@ contract InstitutionUserRegistry {
         string name;
         address managerAddress;
         TokenModel.GrumpkinPublicKey publicKey;
+        string nodeUrl;
     }
 
     struct User {
@@ -33,24 +34,55 @@ contract InstitutionUserRegistry {
         _;
     }
     
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey) external onlyOwner {
+    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory nodeUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
-        
+        require(! isEmptyString(name), "institution name can't be empty");
+        require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
+        require(publicKey.x != 0, "invalid public key");
+        require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
+
+
         Institution memory institution = Institution({
             name: name,
             managerAddress: institutionAddress,
-            publicKey: publicKey
+            publicKey: publicKey,
+            nodeUrl: nodeUrl
         });
-        
+
         institutions[institutionAddress] = institution;
-        
+
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
             address(this),
             owner,
             institutionAddress,
             name,
-            publicKey
+            publicKey,
+            nodeUrl
+        );
+    }
+    function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl) external onlyOwner {
+        require(institutionAddress != address(0), "Invalid address");
+
+        Institution storage institution =  institutions[institutionAddress];
+        require(institution.managerAddress != address (0), "Institution is still not registered yet");
+
+
+        if (! isEmptyString(name)) {
+            institution.name = name;
+        }
+
+        if (! isEmptyString(nodeUrl)) {
+            institution.nodeUrl = nodeUrl;
+        }
+
+        TokenEventLib.triggerInstitutionUpdatedEvent(
+            l2Event,
+            address(this),
+            owner,
+            institutionAddress,
+            name,
+            nodeUrl
         );
     }
     
@@ -115,6 +147,10 @@ contract InstitutionUserRegistry {
     function getUserInstGrumpkinPubKey(address userAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
         address institutionAddress = getUserManager(userAddress);
         return institutions[institutionAddress].publicKey;
+    }
+
+    function isEmptyString(string memory str) public pure returns (bool) {
+        return bytes(str).length == 0;
     }
 
 }
