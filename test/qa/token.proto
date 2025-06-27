@@ -1,154 +1,30 @@
 syntax = "proto3";
 
 package tokenproof.v1;
-import "google/api/annotations.proto";
-import "annotations.proto";
-import "validate.proto";
-option go_package = "./token_grpc";
 
-option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
-  info: {
-    title: "ZK-server api";
-    version: "1.0";
-    description: "apis for generating zk-proof, tokens, and utility apis";
-  };
-  host: "sb-node3-node-http.hamsa-ucl.com:8080"; // Do not include scheme (http/https)
-  base_path: "";
-  schemes: HTTP;
-};
+option go_package = "./token_grpc";
 
 // Token service interface
 service TokenService {
-  rpc GenerateMintProof       (GenerateMintRequest)         returns (GenerateProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/proof/mint"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Submit request to generate proof for token mint. This is an asynchronous call. To query the proof,  call /query/proof/mint using the returned request_id in the response"
-    };
-  };
-  rpc GenerateSplitToken      (GenerateSplitRequest)         returns (GenerateProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/split/token"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "submit request to split user balance for future transaction (e.g. transfer, burn). This is an asynchronous call. To query the token Id, call /query/split/token using the returned request_id in the response "
-    };
-  };
-
-  rpc GenerateDirectMint      (GenerateMintRequest)         returns (GenerateProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/direct/mint"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the mint process in one function call"
-    };
-  };
-  rpc GenerateDirectTransfer      (GenerateTransferRequest)         returns (GenerateProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/direct/transfer"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the transfer process in one function call"
-    };
-  };
-  rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/direct/burn"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the burn process in one function call"
-    };
-  };
-
-
-  rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/proof/mint"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated mint proof using requestId"
-    };
-  };
-  rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/balance"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query account balance from ZK-server db"
-    };
-  };
-  rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse) {
-    option (google.api.http) = {
-      post: "/v1/elgamal/decode"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to decode ElGamal amount"
-    };
-  };
-
-  // disable as the implementation is wrong
-  //  rpc GetMintAllowed          (MintAllowedRequest)           returns (MintAllowedResponse) {
-  //    option (google.api.http) = {
-  //      post: "/query/mintAllowed"
-  //      body: "*"
-  //    };
-  //  };
-
-  rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/token"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated tokenId using requestId"
-    };
-  };
-  rpc GetTokenActionStatus     (ProofRequest)                 returns (TokenActionStatusResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/token/status"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated tokenId using requestId"
-    };
-  };
-  rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse) {
-    option (google.api.http) = {
-      post: "/v1/elgamal/encode"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to encode amount in ElGamal format"
-    };
-  };
-  rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/tokens"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
-    };
-  };
-  rpc GetSplitTokenDetail       (SplitTokenDetailRequest)        returns (SplitTokenDetailResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/tokens/detail"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
-    };
-  };
+  rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
+  rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
+  rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
+  rpc GetTransferProof        (ProofRequest)                 returns (TransferProofResponse);
+  rpc GetApproveProof         (ProofRequest)                 returns (ApproveProofResponse);
+  rpc GetTransferFromProof    (ProofRequest)                 returns (TransferFromProofResponse);
+  rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
+  rpc GetAddressBalance       (DecodeBalanceRequest)        returns (AddressBalanceResponse);
+  rpc GetAddressAllowance     (AddressAllowanceRequest)     returns (AddressAllowanceResponse);
+  rpc GetMintAllowed          (MintAllowedRequest)          returns (MintAllowedResponse);
+  rpc ElgamalEncodeAmount     (EncodeAmountRequest)         returns (EncodeAmountResponse);
+  rpc GetSplitToken           (ProofRequest)                returns (SplitTokenResponse);
 }
+
 
 // Token action status enum
 enum TokenActionStatusEnum {
@@ -159,8 +35,6 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_FAIL = 4;
   TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
   TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
-  TOKEN_ACTION_STATUS_DIRECTTX_WAIT = 7;
-  TOKEN_ACTION_STATUS_DIRECT_CALL_L1 = 8;
 }
 
 message ProofRequest {
@@ -174,100 +48,19 @@ message ElGamal {
   string cr_y = 4;
 }
 
-message GenerateSplitRequest {
-  string sc_address =1 ;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3;
-  string to_address =4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
-  uint64 amount = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["sc_address","from_address", "amount"]
-    },
-    example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"toAddress\": \"0x4312488937D47A007De24d48aB82940C809EEb2b\", \"amount\":1 }",
-  };
-}
-
-
-message GenerateMintRequest {
-  string sc_address =1 ;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3;
-  string to_address =4 ;
-  uint64 amount = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["sc_address","to_address", "amount"]
-    },
-    example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0xf17f52151EbEF6C7334FAD080c5704D77216b732\", \"toAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"amount\":1 }"
-  };
-}
-
-message GenerateTransferRequest {
-  string sc_address =1 ;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3 ;
-  string to_address =4 ;
-  uint64 amount = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}] ;
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["sc_address","from_address","to_address", "amount"]
-    },
-    example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"toAddress\": \"0x4312488937D47A007De24d48aB82940C809EEb2b\", \"amount\":1 }"
-  };
-}
-
-message GenerateBurnRequest {
-  string sc_address =1;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3 ;
-  uint64 amount = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["sc_address","from_address", "amount"]
-    },
-    example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"amount\":1 }"
-  };
-}
-
-
-message GenerateProofResponse {
-  string request_id = 1;
-  TokenActionStatusEnum status = 2;
-}
-
-message BalanceRequest {
-  string owner_address = 1 ;
-  string sc_address = 2;
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["owner_address","sc_address"]
-    },
-    example: "{\"ownerAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\"}"
-  };
-}
-
-message DecodeAmountRequest {
-  ElGamal balance = 1;
-}
-
-message AddressBalanceResponse {
-  uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-}
-
-message DecodeAmountResponse {
-  uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+message Allowance {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr1_x = 5;
+  string cr1_y = 6;
+  string cr2_x = 7;
+  string cr2_y = 8;
 }
 
 message MintProofResponse {
   string request_id = 1;
   string sc_address = 2;
-  uint64 token_type = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 token_type = 3;
   string from_address = 4;
   string to_address = 5;
   ElGamal supply_amount = 6;
@@ -276,19 +69,109 @@ message MintProofResponse {
   TokenActionStatusEnum status = 9;
 }
 
+message TransferProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  ElGamal amount = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+
+message ApproveProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  Allowance allowance = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+message TransferFromProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  Allowance old_allowance = 6;
+  Allowance new_allowance = 7;
+  ElGamal amount = 8;
+  string proof = 9;
+  TokenActionStatusEnum status = 10;
+}
+
+message BurnProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal supply_decrease = 7;
+  ElGamal new_balance = 8;
+  ElGamal amount = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+message GenerateProofRequest {
+  string sc_address = 1;
+  uint64 token_type = 2;
+  string from_address = 3;
+  string to_address = 4;
+  string spender_address = 5;
+  uint64 amount = 6;
+}
+
+message GenerateProofResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}
+
+message DecodeBalanceRequest {
+  string owner_address = 1;
+  string sc_address = 2;
+  ElGamal balance = 3;
+}
+
+message AddressBalanceResponse {
+  uint64 balance = 1;
+  string decryptBalance = 2;
+}
+
+message AddressAllowanceRequest {
+  string owner_address = 1;
+  string spender_address = 2;
+  string sc_address = 3;
+}
 message MintAllowedRequest {
   string sc_address = 3;
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["sc_address"]
-    },
-    example: "{\"sc_address\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\"}"
-  };
 }
 
 message MintAllowedResponse {
-  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 amount = 1;
+}
+message AddressAllowanceResponse {
+  uint64 amount = 1;
+}
+
+message EncodeAmountRequest {
+  uint64 amount = 1;
+}
+
+message EncodeAmountResponse {
+  ElGamal amount = 1;
 }
 
 message SplitTokenResponse {
@@ -296,61 +179,6 @@ message SplitTokenResponse {
   TokenActionStatusEnum status = 2;
   string transfer_token_id = 3;
 }
-
-message TokenActionStatusResponse {
-  string request_id = 1;
-  TokenActionStatusEnum status = 2;
-  string transaction_hash = 3;
-}
-
-message EncodeAmountRequest {
-  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["amount"]
-    },
-  };
-}
-
-message EncodeAmountResponse {
-  ElGamal amount =1;
-}
-
-message SplitTokenListRequest {
-  string owner_address =1 ;
-  string sc_address =2 ;
-
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-    json_schema:{
-      required:["owner_address","sc_address"]
-    },
-    example: "{\"ownerAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\"}"
-  };
-}
-
-message SplitTokenListResponse {
-  repeated Token split_tokens = 1;
-}
-
-message Token {
-  string token_id = 1;
-  string request_id = 2;
-  string type = 3;
-  uint64 amount = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-}
-
-message SplitTokenDetailRequest {
-  string token_id =1;
-}
-
-message SplitTokenDetailResponse {
-  uint64 balance = 1;
-  uint64 transferAmount = 2;
-  uint64 remainingAmount = 3;
-}
-
-
 
 
 
@@ -380,8 +208,8 @@ enum AccountStatusEnum {
 
 
 message RegisterAccountRequest {
-  string address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"}];
-  string account_role = 2 [(validate.rules).string = {in: ["normal", "admin", "minter"]}];
+  string address = 1 ;
+  string account_role = 2 ;
 }
 
 message RegisterAccountResponse {
@@ -391,17 +219,17 @@ message RegisterAccountResponse {
 }
 
 message UpdateAccountStatusRequest {
-  string address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"}];
-  AccountStatusEnum account_status = 2 [(validate.rules).enum = {defined_only: true, not_in: [0]}];
+  string address = 1 ;
+  AccountStatusEnum account_status = 2 ;
 }
 
 message UpdateAccountRoleRequest {
-  string address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"}];
-  string account_role = 2 [(validate.rules).string = {in: ["normal", "admin", "minter"]}];
+  string address = 1 ;
+  string account_role = 2 ;
 }
 
 message AsyncActionRequest {
-  string request_id = 1 [(validate.rules).string = {min_len: 1}];
+  string request_id = 1;
 }
 message AsyncActionResponse {
   string request_id = 1;
@@ -411,7 +239,7 @@ message AsyncActionResponse {
 }
 
 message GetAccountRequest {
-  string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"}];
+  string account_address = 1 ;
 }
 message GetAccountResponse {
   string account_address = 1;
