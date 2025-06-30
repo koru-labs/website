@@ -46,6 +46,7 @@ library TokenModel {
     struct Account {
         ElGamal balance;
         mapping(uint256 => TokenEntity) assets;
+        mapping(address => uint256[]) allowances;
     }
 
     struct VerifyTokenMintParams {
@@ -96,6 +97,7 @@ library TokenModel {
         InstitutionUserRegistry institutionRegistration;
         address owner;
         address spender;
+        address to;
         ElGamal consumedAmount;
         Allowance allowance;
         ElGamal remainingAmount;

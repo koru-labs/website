@@ -24,6 +24,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
 
+    mapping(address => mapping(address => uint256[])) private allowanceTokens;
+
     TokenModel.ElGamal _privateTotalSupply;
     uint256 _numberOfTotalSupplyChanges;
 
@@ -33,6 +35,9 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
     event PrivateApproval(address indexed owner, address indexed spender, TokenModel.Allowance value);
+    event PrivateApprovalToken(address indexed owner, address indexed spender, uint256 indexed tokenId);
+    event PrivateTransferFrom(address indexed spender, address indexed from, address indexed to, uint256 tokenId);
+    event PrivateApprovalRevoked(address indexed owner, address indexed spender, uint256 indexed tokenId);
 
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
@@ -116,7 +121,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
-        require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
+        require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
         TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
@@ -217,6 +222,149 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
+    }
+
+
+    function privateApprove(
+        uint256[] memory consumedTokenIds,
+        address spender,
+        address to,
+        TokenModel.TokenEntity[] memory newTokens, // [allowanceToken, changeToken, rollbackToken]
+        bytes calldata proof
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender) notBlacklisted(to){
+        require(spender != address(0), "PrivateERCToken: approve to the zero address");
+        require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
+
+        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(msg.sender, consumedTokenIds);
+        TokenModel.TokenEntity memory allowanceToken = newTokens[0];
+        TokenModel.TokenEntity memory changeToken = newTokens[1];
+        TokenModel.TokenEntity memory rollbackToken = newTokens[2];
+
+        TokenModel.VerifyTokenApproveParams memory params = TokenModel.VerifyTokenApproveParams({
+            institutionRegistration: _institutionRegistration,
+            owner: msg.sender,
+            spender: spender,
+            to: to,
+            consumedAmount: onChainConsumedAmount,
+            allowance: TokenModel.Allowance({
+                cl_x: allowanceToken.amount.cl_x,
+                cl_y: allowanceToken.amount.cl_y,
+                cr1_x: allowanceToken.amount.cr_x,
+                cr1_y: allowanceToken.amount.cr_y,
+                cr2_x: rollbackToken.amount.cr_x,
+                cr2_y: rollbackToken.amount.cr_y
+            }),
+            remainingAmount: changeToken.amount,
+            proof: proof
+        });
+
+        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenApprove(params);
+        require(isValid, "PrivateERCToken: invalid approve proof");
+
+        removeTokensWithBalance(msg.sender, consumedTokenIds);
+
+        allowanceToken.owner = spender;
+        allowanceToken.status = TokenModel.TokenStatus.active;
+        addTokenWithBalance(spender, allowanceToken);
+
+        changeToken.owner = msg.sender;
+        changeToken.status = TokenModel.TokenStatus.active;
+        addTokenWithBalance(msg.sender, changeToken);
+
+        rollbackToken.owner = msg.sender;
+        rollbackToken.status = TokenModel.TokenStatus.inactive;
+        rollbackToken.rollbackTokenId = allowanceToken.id;
+        addToken(msg.sender, rollbackToken);
+
+        allowanceToken.rollbackTokenId = rollbackToken.id;
+        accounts[spender].assets[allowanceToken.id] = allowanceToken;
+
+        accounts[msg.sender].allowances[spender].push(allowanceToken.id);
+        allowanceTokens[msg.sender][spender].push(allowanceToken.id);
+
+        emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
+    }
+
+
+    function privateTransferFrom(
+        uint256 tokenId,
+        address from,
+        address to
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) notBlacklisted(to) returns (bool) {
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(to != address(0), "PrivateERCToken: to is the zero address");
+        require(from != address(0), "PrivateERCToken: from is the zero address");
+
+        TokenModel.TokenEntity memory allowanceToken = accounts[msg.sender].assets[tokenId];
+        require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
+        require(allowanceToken.status == TokenModel.TokenStatus.active, "PrivateERCToken: token not active");
+        require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
+
+        uint256[] memory rollbackTokens = new uint256[](1);
+        rollbackTokens[0] = allowanceToken.rollbackTokenId;
+        removeTokensWithBalance(msg.sender, rollbackTokens);
+
+        uint256[] memory consumedTokens = new uint256[](2);
+        consumedTokens[0] = allowanceToken.id;
+        consumedTokens[1] = allowanceToken.rollbackTokenId;
+
+        uint256[] memory oldTokens = new uint256[](1);
+        oldTokens[0] = allowanceToken.id;
+        removeTokens(msg.sender, oldTokens);
+
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+
+        allowanceToken.rollbackTokenId =0;
+        allowanceToken.owner= to;
+        allowanceToken.status = TokenModel.TokenStatus.active;
+
+        addTokenWithBalance(allowanceToken.to, allowanceToken);
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
+
+        removeAllowanceRecord(from, msg.sender, tokenId);
+
+        emit PrivateTransferFrom(msg.sender, from, to, tokenId);
+        return true;
+    }
+
+
+    function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused notBlacklisted(msg.sender) {
+        require(spender != address(0), "PrivateERCToken: spender is the zero address");
+        require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
+
+        uint256[] storage allowanceList = accounts[msg.sender].allowances[spender];
+
+        bool found = false;
+        for (uint i = 0; i < allowanceList.length; i++) {
+            if (allowanceList[i] == allowanceTokenId) {
+                TokenModel.TokenEntity storage allowanceToken = accounts[spender].assets[allowanceTokenId];
+                require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found");
+
+                uint256 rollbackId = allowanceToken.rollbackTokenId;
+                require(rollbackId != 0, "PrivateERCToken: rollback token not found");
+
+                TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[rollbackId];
+                require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
+
+                rollbackToken.status = TokenModel.TokenStatus.active;
+                addTokenWithBalance(msg.sender, rollbackToken);
+
+                uint256[] memory tokenIds = new uint256[](1);
+                tokenIds[0] = allowanceTokenId;
+                removeTokensWithBalance(spender, tokenIds);
+
+                allowanceList[i] = allowanceList[allowanceList.length - 1];
+                allowanceList.pop();
+
+                removeFromAllowanceTokens(msg.sender, spender, allowanceTokenId);
+
+                found = true;
+                emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
+                break;
+            }
+        }
+
+        require(found, "PrivateERCToken: allowance not found");
     }
 
     function privateCancelToken(uint256 tokenId) external 
@@ -341,5 +489,40 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     ) external view returns (TokenModel.TokenEntity memory) {
         TokenModel.Account storage account = accounts[account];
         return account.assets[tokenId];
+    }
+
+    function getAllowanceTokens(address spender) external view returns (uint256[] memory) {
+        return accounts[msg.sender].allowances[spender];
+    }
+
+
+    function getAllowanceTokensFrom(address owner) external view returns (uint256[] memory) {
+        return allowanceTokens[owner][msg.sender];
+    }
+
+
+    function removeAllowanceRecord(address owner, address spender, uint256 tokenId) internal {
+
+        uint256[] storage ownerAllowances = accounts[owner].allowances[spender];
+        for (uint i = 0; i < ownerAllowances.length; i++) {
+            if (ownerAllowances[i] == tokenId) {
+                ownerAllowances[i] = ownerAllowances[ownerAllowances.length - 1];
+                ownerAllowances.pop();
+                break;
+            }
+        }
+
+        removeFromAllowanceTokens(owner, spender, tokenId);
+    }
+
+    function removeFromAllowanceTokens(address owner, address spender, uint256 tokenId) internal {
+        uint256[] storage tokens = allowanceTokens[owner][spender];
+        for (uint i = 0; i < tokens.length; i++) {
+            if (tokens[i] == tokenId) {
+                tokens[i] = tokens[tokens.length - 1];
+                tokens.pop();
+                break;
+            }
+        }
     }
 }

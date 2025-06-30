@@ -303,15 +303,6 @@ library TokenVerificationLib {
 
 
     //Approve
-    //z0:
-    //0~3 tokens_sum, tokens合并之后的值  owner的 pk 加密的
-    //4～5 owner的 pk
-    //6~7 spender_pk
-    //8~9  owner的 pk (approval allowance时暂时用不到)
-    //zn:
-    //0~3 token_for_spender, 给spender的， spender pk 加密的
-    //4~7 token_owner_remaining， tokens_sum 减去 token_for_spender 后的 amount， owner的 pk 加密的
-    //8~11 owner_backup token， amount和token_for_spender一样， owner的 pk 加密的
     function verifyTokenApprove(TokenModel.VerifyTokenApproveParams calldata params) public view returns (bool, uint, uint256[] memory) {
         InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         (uint result, Fr[] memory z0, Fr[] memory zn) = verify(params.proof);
