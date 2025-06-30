@@ -15,13 +15,7 @@ contract InstitutionUserRegistry {
         string nodeUrl;
     }
 
-    struct User {
-        address userAddress;
-        address managerAddress;
-    }
-
     mapping(address => Institution) public institutions;
-    mapping(address => User) public users;
     mapping(address => address) public userToManager;
     
     constructor(address _l2Event) {
@@ -31,6 +25,11 @@ contract InstitutionUserRegistry {
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
+    modifier onlyInstitutionManager() {
+        require(institutions[msg.sender].managerAddress != address(0), "Only institution manager can call this function");
         _;
     }
     
@@ -86,57 +85,48 @@ contract InstitutionUserRegistry {
         );
     }
     
-    function registerUserByOwner(address userAddress, address managerAddress) external onlyOwner {
+    function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(managerAddress != address(0), "Invalid manager address");
-        require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
         require(userToManager[userAddress] == address(0), "User already registered");
-        
-        User memory user = User({
-            userAddress: userAddress,
-            managerAddress: managerAddress
-        });
-        
-        users[userAddress] = user;
-        userToManager[userAddress] = managerAddress;
-        
+
+        userToManager[userAddress] = msg.sender;
+
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
             address(this),
             owner,
             userAddress,
-            managerAddress
+            msg.sender
         );
     }
-    
-    function registerUser(address managerAddress) external {
-        require(managerAddress != address(0), "Invalid manager address");
-        require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
-        require(userToManager[msg.sender] == address(0), "User already registered");
-        
-        User memory user = User({
-            userAddress: msg.sender,
-            managerAddress: managerAddress
-        });
-        
-        users[msg.sender] = user;
-        userToManager[msg.sender] = managerAddress;
-        
-        TokenEventLib.triggerUserRegisteredEvent(
+
+    function removeUser(address userAddress) external onlyInstitutionManager {
+        require(userAddress != address(0), "Invalid user address");
+        require(userToManager[userAddress] == msg.sender, "User not managed by this institution");
+
+        delete userToManager[userAddress];
+
+        TokenEventLib.triggerUserRemovedEvent(
             l2Event,
             address(this),
             owner,
-            msg.sender,
-            managerAddress
+            userAddress,
+            msg.sender
         );
     }
     
     function getUserManager(address userAddress) public view returns (address) {
         return userToManager[userAddress];
     }
-    
+
     function getInstitution(address managerAddress) public view returns (Institution memory) {
         return institutions[managerAddress];
+    }
+
+
+
+    function isInstitutionManager(address managerAddress) public view returns (bool) {
+        return institutions[managerAddress].managerAddress != address(0);
     }
     
     function transferOwnership(address newOwner) external onlyOwner {
