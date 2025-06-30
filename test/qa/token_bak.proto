@@ -234,8 +234,6 @@ message AsyncActionRequest {
 message AsyncActionResponse {
   string request_id = 1;
   AsyncActionStatusEnum status = 2;
-  string transaction_hash = 3;
-  string message = 4;
 }
 
 message GetAccountRequest {

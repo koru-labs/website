@@ -6,8 +6,14 @@ const {createClient} = require('../qa/token_grpc');
 const rpcUrl = "localhost:50051";
 const client = createClient(rpcUrl);
 
-
+// admin
 const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+// normal
+// const privateKey = "2b42ed39b2d9c3d576320af626b90a62ce726ee0f25764061947891415dbe782";
+
+// const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
+// const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
+const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A10213";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -28,8 +34,7 @@ async function testUpdateAccountStatus() {
         const metadata = await createAuthMetadata(privateKey);
 
         const request = {
-            address: "0xf17f52151EbEF6C7334FAD080c5704D77216b733",
-            account_role: "admin",
+            address: address,
             account_status: 2,
         };
         const response = await client.updateAccountStatus(request, metadata);
@@ -42,7 +47,7 @@ async function testUpdateAccountStatus() {
 async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
-        address: "0xf17f52151EbEF6C7334FAD080c5704D77216b733",
+        address: address,
         account_role: "minter"
     };
 
@@ -80,7 +85,6 @@ async function testGetAsyncAction() {
 async function testUpdateAccountRole() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const address = "0xf17f52151EbEF6C7334FAD080c5704D77216b733"
         const actionRequest = {
             address: address,
             account_role: "admin",
@@ -94,7 +98,7 @@ async function testUpdateAccountRole() {
 }
 
 
-// testRegisterAccount().then();
+testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
-testUpdateAccountStatus().then();
+// testUpdateAccountRole().then();
