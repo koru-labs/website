@@ -208,7 +208,7 @@ enum AccountStatusEnum {
 
 
 message RegisterAccountRequest {
-  string address = 1 ;
+  string account_address = 1 ;
   string account_role = 2 ;
 }
 
@@ -219,12 +219,12 @@ message RegisterAccountResponse {
 }
 
 message UpdateAccountStatusRequest {
-  string address = 1 ;
+  string account_address = 1 ;
   AccountStatusEnum account_status = 2 ;
 }
 
 message UpdateAccountRoleRequest {
-  string address = 1 ;
+  string account_address = 1 ;
   string account_role = 2 ;
 }
 

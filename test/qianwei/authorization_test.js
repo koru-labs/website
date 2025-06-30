@@ -34,7 +34,7 @@ async function testUpdateAccountStatus() {
         const metadata = await createAuthMetadata(privateKey);
 
         const request = {
-            address: address,
+            account_address: address,
             account_status: 2,
         };
         const response = await client.updateAccountStatus(request, metadata);
@@ -47,7 +47,7 @@ async function testUpdateAccountStatus() {
 async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
-        address: address,
+        account_address: address,
         account_role: "minter"
     };
 
@@ -86,9 +86,8 @@ async function testUpdateAccountRole() {
     try {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
-            address: address,
+            account_address: address,
             account_role: "admin",
-            account_status: 2,
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
@@ -97,8 +96,22 @@ async function testUpdateAccountRole() {
     }
 }
 
+async function testGetAccount() {
+    try {
+        const metadata = await createAuthMetadata(privateKey);
+        const actionRequest = {
+            account_address: address,
+        };
+        const actionResponse = await client.getAccount(actionRequest, metadata);
+        console.log("action response:", actionResponse);
+    } catch (error) {
+        console.error("gRPC call failed:", error);
+    }
+}
 
-testRegisterAccount().then();
+
+// testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
+testGetAccount().then();

@@ -199,20 +199,6 @@ function createClient(url) {
     return client;
 }
 
-function createMetadataInterceptor(metadata) {
-    return (options, nextCall) => {
-        return new grpc.InterceptingCall(nextCall(options), {
-            start: (metadataList, listener, next) => {
-                if (metadata) {
-                    for (const [key, value] of Object.entries(metadata.getMap())) {
-                        metadataList.add(key, value);
-                    }
-                }
-                next(metadataList, listener);
-            }
-        });
-    };
-}
 
 function promisify(grpcMethod, request) {
     return new Promise((resolve, reject) => {
