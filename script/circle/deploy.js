@@ -303,6 +303,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
     const institutions = [
         {
             address: "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127",
+            ethPrivateKey: "f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc",
             name: "Node1",
             nodeUrl: "https://qa-node1-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node1-http.hamsa-ucl.com:8080",
@@ -317,6 +318,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         },
         {
             address: "0x03d68e57f1f9939d3FDcf97B5e7a1d0Be995Ec67",
+            ethPrivateKey: "d9597e2d88463e47d1b6c2431879f06d440a6ff980a51a1f8c830623b112f329",
             name: "Node2",
             nodeUrl: "https://qa-node2-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node2-http.hamsa-ucl.com:8080",
@@ -331,6 +333,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         },
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+            ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
@@ -352,6 +355,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         },
         {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
+            ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
@@ -367,6 +371,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
     ]
 
     for (let i = 0; i < institutions.length; i++) {
+        const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
+        const adminRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress, wallet);
+
+
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         let regTx = await institutionUserRegistry.registerInstitution(
             institutions[i].address,
@@ -378,10 +386,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         await regTx.wait();
         console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
 
+
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await institutionUserRegistry.registerUserByOwner(
+            let userRegTx = await adminRegistry.registerUser(
                 institutions[i].userAddresses[j],
-                institutions[i].address
             );
             await userRegTx.wait();
             console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);

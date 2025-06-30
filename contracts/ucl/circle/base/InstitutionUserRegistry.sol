@@ -34,15 +34,13 @@ contract InstitutionUserRegistry {
         _;
     }
 
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory nodeUrl) external onlyOwner {
-
     function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey,
         string memory nodeUrl, string memory httpUrl) external onlyOwner {
 
         require(institutionAddress != address(0), "Invalid address");
-        require(!isEmptyString(name), "institution name can't be empty");
-        require(!isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
-        require(!isEmptyString(httpUrl), "institution httpUrl can't be empty");
+        require(! isEmptyString(name), "institution name can't be empty");
+        require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
+        require(! isEmptyString(httpUrl), "institution httpUrl can't be empty");
 
         require(publicKey.x != 0, "invalid public key");
         require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
@@ -77,15 +75,15 @@ contract InstitutionUserRegistry {
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
-        if (!isEmptyString(name)) {
+        if (! isEmptyString(name)) {
             institution.name = name;
         }
 
-        if (!isEmptyString(nodeUrl)) {
+        if (! isEmptyString(nodeUrl)) {
             institution.nodeUrl = nodeUrl;
         }
 
-        if (!isEmptyString(httpUrl)) {
+        if (! isEmptyString(httpUrl)) {
             institution.httpUrl = httpUrl;
         }
 
@@ -99,8 +97,6 @@ contract InstitutionUserRegistry {
             institution.httpUrl
         );
     }
-
-    function registerUserByOwner(address userAddress, address managerAddress) external onlyOwner {
 
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
