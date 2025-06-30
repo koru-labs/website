@@ -1,7 +1,7 @@
 const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 
-const registry_address = "0xfeA7B62B9fa8f7bd50ceB661a71A950E5Ef75087"
+const registry_address = "0x2AA9d9166747e1E8151a72BbD55dB10EB31AD992"
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPublicKey = {
@@ -29,7 +29,7 @@ async function testRegistryInstMissingName() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.registerInstitution(bankAddress, "", bankPublicKey, "http");
+    let tx = await instRegistry.registerInstitution(bankAddress, "", bankPublicKey, "http", "http");
     console.log("tx: ", tx)
 }
 
@@ -40,7 +40,7 @@ async function testRegistryInstMissingPublicKey() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.registerInstitution(bankAddress, "node1", {x:0, y:0}, "http");
+    let tx = await instRegistry.registerInstitution(bankAddress, "node1", {x:0, y:0}, "http", "http");
     console.log("tx: ", tx)
 }
 
@@ -51,7 +51,18 @@ async function testRegistryInstMissingNodeUrl() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "");
+    let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "", "http");
+    console.log("tx: ", tx)
+}
+
+async function testRegistryInstMissingHttpUrl() {
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach(registry_address);
+    let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "http", "");
     console.log("tx: ", tx)
 }
 
@@ -63,7 +74,7 @@ async function testRegistryInstCorrectly() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "http://www.visa.com");
+    let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "https://www.visa.com:8443",  "http://www.visa.com:8080" );
     let receipt = await tx.wait();
 }
 
@@ -74,7 +85,7 @@ async function testUpdateNotRegisteredInst() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.updateInstitution("0x85FC6056e234c36860C7B0ae451c24E041eE939F", "node1", "http://www.visa-update.com");
+    let tx = await instRegistry.updateInstitution("0x85FC6056e234c36860C7B0ae451c24E041eE939F", "node1", "http://www.visa-update.com", "");
     await tx.wait();
 }
 
@@ -85,7 +96,21 @@ async function testUpdateInstNodeUrl() {
         }
     });
     const instRegistry = await InstRegistry.attach(registry_address);
-    let tx = await instRegistry.updateInstitution(bankAddress, "node1-update", "http://www.visa-update2.com");
+    let tx = await instRegistry.updateInstitution(bankAddress, "node1-update", "http://www.visa-update2.com","");
+    await tx.wait();
+
+    let inst = await instRegistry.getInstitution(bankAddress);
+    console.log("updated inst: ", inst);
+}
+
+async function testUpdateInstHttpUrl() {
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach(registry_address);
+    let tx = await instRegistry.updateInstitution(bankAddress, "node1-update", "", "http://www.visa-update.com:8080");
     await tx.wait();
 
     let inst = await instRegistry.getInstitution(bankAddress);
@@ -96,7 +121,9 @@ async function testUpdateInstNodeUrl() {
 // testRegistryInstMissingName().then();
 // testRegistryInstMissingPublicKey().then();
 // testRegistryInstMissingNodeUrl().then();
+// testRegistryInstMissingHttpUrl().then();
 
 // testRegistryInstCorrectly().then();
 // testUpdateNotRegisteredInst().then();
 testUpdateInstNodeUrl().then()
+// testUpdateInstHttpUrl().then();

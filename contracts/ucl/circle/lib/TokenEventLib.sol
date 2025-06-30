@@ -88,13 +88,15 @@ library TokenEventLib {
         address institutionAddress,
         string memory name,
         TokenModel.GrumpkinPublicKey memory publicKey,
-        string memory nodeUrl
+        string memory nodeUrl,
+        string memory httpUrl
     ) public {
         InstitutionRegisteredEvent memory e = InstitutionRegisteredEvent({
             institutionAddress: institutionAddress,
             name: name,
             publicKey: publicKey,
-            nodeUrl: nodeUrl
+            nodeUrl: nodeUrl,
+            httpUrl: httpUrl
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, owner, "InstitutionRegistered", body);
@@ -106,12 +108,14 @@ library TokenEventLib {
         address owner,
         address institutionAddress,
         string memory name,
-        string memory nodeUrl
+        string memory nodeUrl,
+        string memory httpUrl
     ) public {
         InstitutionUpdatedEvent memory e = InstitutionUpdatedEvent({
         institutionAddress: institutionAddress,
         name: name,
-        nodeUrl: nodeUrl
+        nodeUrl: nodeUrl,
+        httpUrl: httpUrl
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, owner, "InstitutionUpdated", body);
