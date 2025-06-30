@@ -12,15 +12,10 @@ contract InstitutionUserRegistry {
         string name;
         address managerAddress;
         TokenModel.GrumpkinPublicKey publicKey;
-    }
-
-    struct User {
-        address userAddress;
-        address managerAddress;
+        string nodeUrl;
     }
 
     mapping(address => Institution) public institutions;
-    mapping(address => User) public users;
     mapping(address => address) public userToManager;
     
     constructor(address _l2Event) {
@@ -32,79 +27,106 @@ contract InstitutionUserRegistry {
         require(msg.sender == owner, "Only owner can call this function");
         _;
     }
+
+    modifier onlyInstitutionManager() {
+        require(institutions[msg.sender].managerAddress != address(0), "Only institution manager can call this function");
+        _;
+    }
     
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey) external onlyOwner {
+    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory nodeUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
-        
+        require(! isEmptyString(name), "institution name can't be empty");
+        require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
+        require(publicKey.x != 0, "invalid public key");
+        require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
+
+
         Institution memory institution = Institution({
             name: name,
             managerAddress: institutionAddress,
-            publicKey: publicKey
+            publicKey: publicKey,
+            nodeUrl: nodeUrl
         });
-        
+
         institutions[institutionAddress] = institution;
-        
+
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
             address(this),
             owner,
             institutionAddress,
             name,
-            publicKey
+            publicKey,
+            nodeUrl
+        );
+    }
+    function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl) external onlyOwner {
+        require(institutionAddress != address(0), "Invalid address");
+
+        Institution storage institution =  institutions[institutionAddress];
+        require(institution.managerAddress != address (0), "Institution is still not registered yet");
+
+
+        if (! isEmptyString(name)) {
+            institution.name = name;
+        }
+
+        if (! isEmptyString(nodeUrl)) {
+            institution.nodeUrl = nodeUrl;
+        }
+
+        TokenEventLib.triggerInstitutionUpdatedEvent(
+            l2Event,
+            address(this),
+            owner,
+            institutionAddress,
+            name,
+            nodeUrl
         );
     }
     
-    function registerUserByOwner(address userAddress, address managerAddress) external onlyOwner {
+    function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(managerAddress != address(0), "Invalid manager address");
-        require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
         require(userToManager[userAddress] == address(0), "User already registered");
-        
-        User memory user = User({
-            userAddress: userAddress,
-            managerAddress: managerAddress
-        });
-        
-        users[userAddress] = user;
-        userToManager[userAddress] = managerAddress;
-        
+
+        userToManager[userAddress] = msg.sender;
+
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
             address(this),
             owner,
             userAddress,
-            managerAddress
+            msg.sender
         );
     }
-    
-    function registerUser(address managerAddress) external {
-        require(managerAddress != address(0), "Invalid manager address");
-        require(institutions[managerAddress].managerAddress != address(0), "Manager not registered");
-        require(userToManager[msg.sender] == address(0), "User already registered");
-        
-        User memory user = User({
-            userAddress: msg.sender,
-            managerAddress: managerAddress
-        });
-        
-        users[msg.sender] = user;
-        userToManager[msg.sender] = managerAddress;
-        
-        TokenEventLib.triggerUserRegisteredEvent(
+
+    function removeUser(address userAddress) external onlyInstitutionManager {
+        require(userAddress != address(0), "Invalid user address");
+        require(userToManager[userAddress] == msg.sender, "User not managed by this institution");
+
+        delete userToManager[userAddress];
+
+        TokenEventLib.triggerUserRemovedEvent(
             l2Event,
             address(this),
             owner,
-            msg.sender,
-            managerAddress
+            userAddress,
+            msg.sender
         );
     }
     
     function getUserManager(address userAddress) public view returns (address) {
         return userToManager[userAddress];
     }
-    
+
     function getInstitution(address managerAddress) public view returns (Institution memory) {
         return institutions[managerAddress];
+    }
+
+
+
+    function isInstitutionManager(address managerAddress) public view returns (bool) {
+        return institutions[managerAddress].managerAddress != address(0);
     }
     
     function transferOwnership(address newOwner) external onlyOwner {
@@ -115,6 +137,10 @@ contract InstitutionUserRegistry {
     function getUserInstGrumpkinPubKey(address userAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
         address institutionAddress = getUserManager(userAddress);
         return institutions[institutionAddress].publicKey;
+    }
+
+    function isEmptyString(string memory str) public pure returns (bool) {
+        return bytes(str).length == 0;
     }
 
 }

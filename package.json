@@ -39,6 +39,7 @@
     "wlin-supply-test": "npx hardhat run test/wlin/supply_test.js --network ucl_L2",
     "wlin-chain-test": "npx hardhat run test/wlin/blockchain_test.js --network ucl_L2",
     "wlin-minter2-test": "npx hardhat run test/wlin/second_minter_test.js --network ucl_L2",
+    "wlin-inst-test": "npx hardhat run test/wlin/institution_registry_test.js --network ucl_L2",
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
     "qa-circle2": "npx hardhat run test/qa/circle.test.js --network ucl_L2",

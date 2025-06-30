@@ -87,16 +87,36 @@ library TokenEventLib {
         address owner,
         address institutionAddress,
         string memory name,
-        TokenModel.GrumpkinPublicKey memory publicKey
+        TokenModel.GrumpkinPublicKey memory publicKey,
+        string memory nodeUrl
     ) public {
         InstitutionRegisteredEvent memory e = InstitutionRegisteredEvent({
             institutionAddress: institutionAddress,
             name: name,
-            publicKey: publicKey
+            publicKey: publicKey,
+            nodeUrl: nodeUrl
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, owner, "InstitutionRegistered", body);
     }
+
+    function triggerInstitutionUpdatedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address owner,
+        address institutionAddress,
+        string memory name,
+        string memory nodeUrl
+    ) public {
+        InstitutionUpdatedEvent memory e = InstitutionUpdatedEvent({
+        institutionAddress: institutionAddress,
+        name: name,
+        nodeUrl: nodeUrl
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, owner, "InstitutionUpdated", body);
+    }
+
 
     function triggerUserRegisteredEvent(
         IL2Event _l2Event,
@@ -111,6 +131,21 @@ library TokenEventLib {
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, owner, "UserRegistered", body);
+    }
+
+    function triggerUserRemovedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address owner,
+        address userAddress,
+        address managerAddress
+    ) public {
+        UserRemovedEvent memory e = UserRemovedEvent({
+            userAddress: userAddress,
+            managerAddress: managerAddress
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, owner, "UserRemoved", body);
     }
 
     function triggerTokenDeletedEvent(
