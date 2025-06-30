@@ -28,6 +28,11 @@ import "../model/TokenModel.sol";
         address managerAddress;
     }
 
+    struct UserRemovedEvent {
+        address userAddress;
+        address managerAddress;
+    }
+
     struct TokenSCCreatedEvent {
         address TokenSCAddress;
         TokenModel.TokenSCTypeEnum TokenSCType;

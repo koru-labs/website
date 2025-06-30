@@ -133,6 +133,21 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, owner, "UserRegistered", body);
     }
 
+    function triggerUserRemovedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address owner,
+        address userAddress,
+        address managerAddress
+    ) public {
+        UserRemovedEvent memory e = UserRemovedEvent({
+            userAddress: userAddress,
+            managerAddress: managerAddress
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, owner, "UserRemoved", body);
+    }
+
     function triggerTokenDeletedEvent(
         IL2Event _l2Event,
         address eventSource,

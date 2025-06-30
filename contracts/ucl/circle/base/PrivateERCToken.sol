@@ -116,7 +116,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
-        require(_institutionRegistration.getInstitution(msg.sender).managerAddress != address (0), "only institution manager is allowed to execute reservation");
+        require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
         TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
