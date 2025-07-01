@@ -13,7 +13,7 @@ const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d62
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A10213";//test
+const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -39,6 +39,14 @@ async function testUpdateAccountStatus() {
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
+        if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
+            const actionRequest = {
+                request_id: response.request_id,
+            };
+
+            const actionResponse = await client.getAsyncAction(actionRequest, metadata);
+            console.log("action response:", actionResponse);
+        }
     } catch (error) {
         console.error("gRPC call failed:", error);
     }
@@ -54,13 +62,14 @@ async function testRegisterAccount() {
     try {
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
+        if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
+            const actionRequest = {
+                request_id: response.request_id,
+            };
 
-        const actionRequest = {
-            request_id: response.request_id,
-        };
-
-        const actionResponse = await client.getAsyncAction(actionRequest, metadata);
-        console.log("action response:", actionResponse);
+            const actionResponse = await client.getAsyncAction(actionRequest, metadata);
+            console.log("action response:", actionResponse);
+        }
     } catch (error) {
         console.error("gRPC call failed:", error);
     }
@@ -87,7 +96,7 @@ async function testUpdateAccountRole() {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: address,
-            account_role: "admin",
+            account_role: "minter",
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
