@@ -303,8 +303,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
     const institutions = [
         {
             address: "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127",
+            ethPrivateKey: "f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc",
             name: "Node1",
-            nodeUrl: "http://node1.com",
+            nodeUrl: "https://qa-node1-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node1-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "0x27c07a015b9e7d73519e8bcfc8ddd6cf760b51f55938e0f83affb2ff7d244220",
                 y: "0x27e09fb8be7b593a38e107cce390183bd2b15eea7b62c4cc8ad7fae388c9b66f",
@@ -316,8 +318,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         },
         {
             address: "0x03d68e57f1f9939d3FDcf97B5e7a1d0Be995Ec67",
+            ethPrivateKey: "d9597e2d88463e47d1b6c2431879f06d440a6ff980a51a1f8c830623b112f329",
             name: "Node2",
-            nodeUrl: "http://node2.com",
+            nodeUrl: "https://qa-node2-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node2-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "0x0fb17de4db5168ce623d3c5733f3f39273fb43b194018cadcd4653c9b1d65424",
                 y: "0x2a3cfce65fe973a9354834fe93cd430b6480798166e4c33ab50f4c87843194fc",
@@ -329,8 +333,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         },
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+            ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            nodeUrl: "http://node3.com",
+            nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
                 y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
@@ -343,39 +349,47 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
                 "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C",
                 "0x4312488937D47A007De24d48aB82940C809EEb2b",
                 "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
-                "0xF50F25915126d936C64A194b2C1DAa1EA45392c4"
+                "0xF50F25915126d936C64A194b2C1DAa1EA45392c4",
+                "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383",   //this is account in wlin meta-mask
             ]
         },
         {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
+            ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
-            nodeUrl: "http://node4.com",
+            nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "0x200617a15d2b14b21e7fcfee20970928fdec8caf78a8395996d39685f4416c55",
                 y: "0x1020c7e93610321fdffa7ac019165450187eeab7188d54f2a251794100c115ed",
             },
             privateKey: "0x0a4d3802de2c9bfabe2cabc18f4f3a34141b412093187d7a9958c437c1f7074f",
             userAddresses: [
-                "0xbA268f776F70caDB087e73020dfE41c7298363Ed"
+                "0xbA268f776F70caDB087e73020dfE41c7298363Ed",
             ]
         }
     ]
 
     for (let i = 0; i < institutions.length; i++) {
+        const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
+        const adminRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress, wallet);
+
+
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         let regTx = await institutionUserRegistry.registerInstitution(
             institutions[i].address,
             institutions[i].name,
             institutions[i].publicKey,
-            institutions[i].nodeUrl
+            institutions[i].nodeUrl,
+            institutions[i].httpUrl
         );
         await regTx.wait();
         console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
 
+
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await institutionUserRegistry.registerUserByOwner(
+            let userRegTx = await adminRegistry.registerUser(
                 institutions[i].userAddresses[j],
-                institutions[i].address
             );
             await userRegTx.wait();
             console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);

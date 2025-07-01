@@ -3,11 +3,11 @@ const assert = require('node:assert');
 const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
-const accounts = require('./../../deployments/account.json');
+let accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "ad42e5760742f4ab58a7d9e2809c59c8-1992668984.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -118,11 +118,13 @@ async function mintForStart() {
 
 
 async function testMint() {
+    accounts.To2= "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383"
+
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: accounts.To2,
-        amount: 1
+        amount: 1000
     };
     let response = await client.generateMintProof(generateRequest);
     console.log("Generate Mint Proof response:", response);
@@ -379,7 +381,7 @@ async function testTotalSupply(){
 }
 
 // checkDeployedUSDC().then();
-// testMint().then()
+testMint().then()
 // checkToken(accounts.Minter, '0x61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef').then();
 
 // mintForStart().then()

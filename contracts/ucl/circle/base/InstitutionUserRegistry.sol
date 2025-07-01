@@ -13,11 +13,12 @@ contract InstitutionUserRegistry {
         address managerAddress;
         TokenModel.GrumpkinPublicKey publicKey;
         string nodeUrl;
+        string httpUrl;
     }
 
     mapping(address => Institution) public institutions;
     mapping(address => address) public userToManager;
-    
+
     constructor(address _l2Event) {
         owner = msg.sender;
         l2Event = IL2Event(_l2Event);
@@ -32,20 +33,25 @@ contract InstitutionUserRegistry {
         require(institutions[msg.sender].managerAddress != address(0), "Only institution manager can call this function");
         _;
     }
-    
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory nodeUrl) external onlyOwner {
+
+    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey,
+        string memory nodeUrl, string memory httpUrl) external onlyOwner {
+
         require(institutionAddress != address(0), "Invalid address");
         require(! isEmptyString(name), "institution name can't be empty");
         require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
+        require(! isEmptyString(httpUrl), "institution httpUrl can't be empty");
+
         require(publicKey.x != 0, "invalid public key");
         require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
 
 
         Institution memory institution = Institution({
-            name: name,
-            managerAddress: institutionAddress,
-            publicKey: publicKey,
-            nodeUrl: nodeUrl
+        name : name,
+        managerAddress : institutionAddress,
+        publicKey : publicKey,
+        nodeUrl : nodeUrl,
+        httpUrl : httpUrl
         });
 
         institutions[institutionAddress] = institution;
@@ -57,14 +63,16 @@ contract InstitutionUserRegistry {
             institutionAddress,
             name,
             publicKey,
-            nodeUrl
+            nodeUrl,
+            httpUrl
         );
     }
-    function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl) external onlyOwner {
+
+    function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl, string memory httpUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
 
-        Institution storage institution =  institutions[institutionAddress];
-        require(institution.managerAddress != address (0), "Institution is still not registered yet");
+        Institution storage institution = institutions[institutionAddress];
+        require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
         if (! isEmptyString(name)) {
@@ -75,16 +83,21 @@ contract InstitutionUserRegistry {
             institution.nodeUrl = nodeUrl;
         }
 
+        if (! isEmptyString(httpUrl)) {
+            institution.httpUrl = httpUrl;
+        }
+
         TokenEventLib.triggerInstitutionUpdatedEvent(
             l2Event,
             address(this),
             owner,
             institutionAddress,
-            name,
-            nodeUrl
+            institution.name,
+            institution.nodeUrl,
+            institution.httpUrl
         );
     }
-    
+
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
         require(userToManager[userAddress] == address(0), "User already registered");
@@ -128,7 +141,7 @@ contract InstitutionUserRegistry {
     function isInstitutionManager(address managerAddress) public view returns (bool) {
         return institutions[managerAddress].managerAddress != address(0);
     }
-    
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Invalid new owner address");
         owner = newOwner;
