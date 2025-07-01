@@ -4,6 +4,8 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
+const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2} = require("./deploy_verifier");
+
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
 const ADDRESSES = {
@@ -104,6 +106,13 @@ async function main() {
         await grumpkin.waitForDeployment();
         console.log("Grumpkin is deployed at :", grumpkin.target);
         deployed.libraries.Grumpkin = grumpkin.target;
+
+        // Deploy Verifier
+        await deployCurveBabyJubJub(deployed);
+        await deployCurveBabyJubJubHelper(deployed);
+        await deployMintAllowedTokenVerifier(deployed);
+        await deployTokenVerificationLib2(deployed);
+        console.log(deployed)
 
         // Deploy RelaxedR1CSSNARKForSMLib
         const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
@@ -228,7 +237,9 @@ async function main() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
             "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
             "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
-            "SignatureChecker": signatureChecker.target
+            "SignatureChecker": signatureChecker.target,
+            "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
+            "TokenVerificationLib2":deployed.libraries.TokenVerificationLib2
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;

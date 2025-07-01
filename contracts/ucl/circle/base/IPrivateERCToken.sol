@@ -9,8 +9,8 @@ interface IPrivateERCToken {
     //circle- v1
 
     // ERC: function mint(address _to, uint256 _amount) external;
-    //  doc: function privateMint(TokenModel.AmountInfo calldata amountInfo, bytes calldata proof) external;
-    function privateMint(address to, TokenModel.ElGamal memory amount, TokenModel.ElGamal memory supply, bytes calldata proof) external returns (bool);
+    //  doc: function privateMint(TokenModel.AmountInfo calldata amountInfo,uint256[8] calldata proof, uint256[22] calldata publicInputs) external;
+    function privateMint(address to, TokenModel.ElGamal memory amount, TokenModel.ElGamal memory supply,uint256[8] calldata proof, uint256[22] calldata publicInputs) external returns (bool);
 
     function privateBurn(uint256 tokenId) external;
 

@@ -59,6 +59,18 @@ library TokenModel {
         bytes proof;
     }
 
+    struct VerifyTokenMintParams2 {
+        InstitutionUserRegistry institutionRegistration;
+        address minter;
+        address to;
+        ElGamal initialMinterAllowed;
+        ElGamal currentMintAmount;
+        ElGamal supplyIncrease;
+
+        uint256[8] proof;
+        uint256[22] publicInputs;
+    }
+
     struct VerifyTokenTransferParams {
         InstitutionUserRegistry institutionRegistration;
         address from;
