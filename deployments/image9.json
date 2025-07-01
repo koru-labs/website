@@ -1,0 +1,30 @@
+{
+  "libraries": {
+    "Fr": "0x0d0D4dCF45DA650849772Bd982bE5f11E74e9406",
+    "Fq": "0x309B373C964746b0AF3235Be7476081899b922a7",
+    "Field": "0x754b02e69Ec18Db9819B24b14C0c5CBfc9b3957E",
+    "Grumpkin": "0x934f94a1855C12D2A43A0DFA2DC9132E4448A697",
+    "CurveBabyJubJub": "0xcbC3c8A5d512E4eEeB08bdFA384D9A958e6064dB",
+    "CurveBabyJubJubHelper": "0xBA766b6a31DA38AC51F679281885695090eAe987",
+    "MintAllowedTokenVerifier": "0xa1B0321586698A4D14BB95EdBA6E6371D7bfE7d2",
+    "TokenVerificationLib2": "0x671BeCcFf28776F3CB54e3Be82aACe5F3c5ccCaB",
+    "RelaxedR1CSSNARKForSMLib": "0x793a64958F08C8DB4dE30e7BAefD5C182599a8a7",
+    "BatchedRelaxedR1CSSNARKLib": "0x245F8B4FDfAB0478F4f5AB081cb09049Bffb8Be3",
+    "ZkVerifier": "0x43399DD920eFD96c211c64A78a8bEcEc2AEEeE11",
+    "TokenGrumpkinLib": "0x440c432351048D826CCdcCB18686113822b5f4c1",
+    "TokenVerificationLib": "0x1591f9F85C6D6194788832D6b20A4B774e585d93",
+    "TokenEventLib": "0x194F410e17bF5505C08A90B29160a28649bfeb3e",
+    "SignatureChecker": "0x6e7913F4f2b56d65E92Fd20Ea8A61165E0321Ab8"
+  },
+  "contracts": {
+    "HamsaL2Event": "0x80238AD5B21A9f253094073256d602f53131F82b",
+    "InstitutionUserRegistry": "0x625D5d0F10De65b19ADB352c29a88D8A10960646",
+    "PrivateERCToken": "0x3BC79Fdd6fd4591391C6b98185Fbb18c0e47Cc04"
+  },
+  "accounts": {},
+  "metadata": {
+    "timestamp": "2025-07-01T07:53:25.244Z",
+    "network": "ucl_L2",
+    "chainId": "1337"
+  }
+}
