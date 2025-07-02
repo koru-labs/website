@@ -120,8 +120,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
     
-    function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
-        whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank {
+    function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof)
+     external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
@@ -160,9 +160,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @dev Burns private fiat tokens from an address and updates the total supply.
      * @param tokenId The tokenId to burn.
      */
-    function privateBurn(
-       uint256 tokenId
-    ) external {
+    function privateBurn(uint256 tokenId)  external onlyAllowedBank {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
@@ -194,6 +192,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     whenNotPaused
     notBlacklisted(msg.sender)
     notBlacklisted(to)
+    onlyAllowedBank
     returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
@@ -228,7 +227,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
     function privateCancelToken(uint256 tokenId) external 
         whenNotPaused 
-        notBlacklisted(msg.sender) 
+        notBlacklisted(msg.sender)
+        onlyAllowedBank
         returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         
