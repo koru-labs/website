@@ -48,26 +48,25 @@ library TokenVerificationLib2 {
         TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
         require(consumedAmount.cl_x == publicInputs[0] && consumedAmount.cl_y == publicInputs[1] && consumedAmount.cr_x == publicInputs[2] && consumedAmount.cr_y == publicInputs[3], "consumedAmount not match");
 
-        // verify from 4-5
+        // verify from 16-17
         TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
-        require(from.x == publicInputs[4] && from.y == publicInputs[5], "from public key not match");
+        require(from.x == publicInputs[16] && from.y == publicInputs[17], "from public key not match");
 
-        // verify to 6-7
+        // verify to 18-19
         TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
-        require(to.x == publicInputs[6] && to.y == publicInputs[7], "to public key not match");
+        require(to.x == publicInputs[18] && to.y == publicInputs[19], "to public key not match");
 
-
-        // verify amount 0-3
+        // verify amount 8-11
         TokenModel.ElGamal memory amount = params.amount;
-        require(amount.cl_x == publicInputs[0] && amount.cl_y == publicInputs[1] && amount.cr_x == publicInputs[2] && amount.cr_y == publicInputs[3], "amount not match");
+        require(amount.cl_x == publicInputs[8] && amount.cl_y == publicInputs[9] && amount.cr_x == publicInputs[10] && amount.cr_y == publicInputs[11], "amount not match");
 
-        // verify remainingAmount 4-7
+        // verify changeAmount 4-7
         TokenModel.ElGamal memory remainingAmount = params.remainingAmount;
         require(remainingAmount.cl_x == publicInputs[4] && remainingAmount.cl_y == publicInputs[5] && remainingAmount.cr_x == publicInputs[6] && remainingAmount.cr_y == publicInputs[7], "remainingAmount not match");
 
-        // verify rollbackAmount  8-11
+        // verify rollbackAmount 12-15
         TokenModel.ElGamal memory rollbackAmount = params.rollbackAmount;
-        require(rollbackAmount.cl_x == publicInputs[8] && rollbackAmount.cl_y == publicInputs[9] && rollbackAmount.cr_x == publicInputs[10] && rollbackAmount.cr_y == publicInputs[11], "rollbackAmount not match");
+        require(rollbackAmount.cl_x == publicInputs[12] && rollbackAmount.cl_y == publicInputs[13] && rollbackAmount.cr_x == publicInputs[14] && rollbackAmount.cr_y == publicInputs[15], "rollbackAmount not match");
 
         return;
     }
