@@ -124,7 +124,7 @@ async function testMint() {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: accounts.To2,
-        amount: 1000
+        amount: 1
     };
     let response = await client.generateMintProof(generateRequest);
     console.log("Generate Mint Proof response:", response);

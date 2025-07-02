@@ -10,13 +10,17 @@ import "../lib/TokenVerificationLib.sol";
 import "../lib/TokenVerificationLib2.sol";
 import "../lib/CurveBabyJubJubHelper.sol";
 
+
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
 import { Pausable } from "../../../usdc/v1/Pausable.sol";
 import { Blacklistable } from "../../../usdc/v1/Blacklistable.sol";
 import { Ownable } from "../../../usdc/v1/Ownable.sol";
 import { Mintable } from "../../../usdc/v1/Mintable.sol";
+import {Permissioned} from "./permissioned.sol";
 
-abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable {
+
+
+abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned {
     // FiatTokenV1 compatible fields
     bool private initialized;
 
@@ -46,7 +50,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
-
+        initializePermission(institutionRegistration);
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
@@ -71,6 +75,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     onlyMinters
     notBlacklisted(msg.sender)
     notBlacklisted(to)
+    onlyAllowedBank
     returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -116,7 +121,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
     
     function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
-        whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
+        whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
