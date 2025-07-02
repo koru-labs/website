@@ -198,7 +198,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = tokenEntity.rollbackTokenId;
-        removeTokensWithBalance(msg.sender, rollbackTokens);
+        removeTokensWithBalance2(msg.sender, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
@@ -214,7 +214,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         tokenEntity.owner= to;
         tokenEntity.status = TokenModel.TokenStatus.active;
 
-        addTokenWithBalance(tokenEntity.to, tokenEntity);
+        addTokenWithBalance2(tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
