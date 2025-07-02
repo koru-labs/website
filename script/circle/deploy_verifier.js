@@ -34,12 +34,22 @@ async function deployMintAllowedTokenVerifier(deployed) {
     deployed.libraries.MintAllowedTokenVerifier = mintAllowedTokenVerifier.target;
 }
 
+// Deploy SplitTokenVerifier
+async function deploySplitTokenVerifier(deployed) {
+    const SplitTokenVerifier = await ethers.getContractFactory("SplitTokenVerifier");
+    const splitTokenVerifier = await SplitTokenVerifier.deploy();
+    await splitTokenVerifier.waitForDeployment();
+    console.log("SplitTokenVerifier is deployed at :", splitTokenVerifier.target);
+    deployed.libraries.SplitTokenVerifier = splitTokenVerifier.target;
+}
+
 // deploy TokenVerificationLib2
 async function deployTokenVerificationLib2(deployed) {
     console.log("Deploy TokenVerificationLib2...");
     const TokenVerificationLib2Factory = await ethers.getContractFactory("TokenVerificationLib2", {
         libraries: {
             MintAllowedTokenVerifier: deployed.libraries.MintAllowedTokenVerifier,
+            SplitTokenVerifier: deployed.libraries.SplitTokenVerifier, // Add the new library link
         }
     });
     const TokenVerificationLib2 = await TokenVerificationLib2Factory.deploy();
@@ -53,3 +63,4 @@ exports.deployCurveBabyJubJub = deployCurveBabyJubJub;
 exports.deployCurveBabyJubJubHelper = deployCurveBabyJubJubHelper;
 exports.deployMintAllowedTokenVerifier = deployMintAllowedTokenVerifier;
 exports.deployTokenVerificationLib2 = deployTokenVerificationLib2;
+exports.deploySplitTokenVerifier = deploySplitTokenVerifier;

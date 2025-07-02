@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
-const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2} = require("./deploy_verifier");
+const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2, deploySplitTokenVerifier} = require("./deploy_verifier");
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
@@ -111,6 +111,7 @@ async function main() {
         await deployCurveBabyJubJub(deployed);
         await deployCurveBabyJubJubHelper(deployed);
         await deployMintAllowedTokenVerifier(deployed);
+        await deploySplitTokenVerifier(deployed);
         await deployTokenVerificationLib2(deployed);
         console.log(deployed)
 
@@ -235,7 +236,6 @@ async function main() {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
             "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,

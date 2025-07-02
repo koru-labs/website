@@ -115,17 +115,17 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
     
-    function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens, bytes calldata proof) external
+    function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens,  uint256[8] calldata proof, uint256[20] calldata publicInputs) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(from, consumedTokenIds);
+        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts2(from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
         TokenModel.TokenEntity memory transferToken = newTokens[1];
         TokenModel.TokenEntity memory rollBackToken = newTokens[2];
 
-        TokenModel.VerifyTokenSplitParams memory params =  TokenModel.VerifyTokenSplitParams({
+        TokenModel.VerifyTokenSplitParams2 memory params =  TokenModel.VerifyTokenSplitParams2({
             institutionRegistration: _institutionRegistration,
             from: from,
             to: to,
@@ -133,10 +133,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             amount: transferToken.amount,
             remainingAmount: changeToken.amount,
             rollbackAmount: rollBackToken.amount,
-            proof: proof
+            proof:  proof,
+            publicInputs:publicInputs
         });
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenSplit(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
-        require(isValid, "failed to validate generated tokens");
+        TokenVerificationLib2.verifyTokenSplit2(params);
 
         removeTokens(from, consumedTokenIds);
 
@@ -165,11 +165,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory supplyDecrease = accounts[msg.sender].assets[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
 
-        subSupply(supplyDecrease);
+        subSupply2(supplyDecrease);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        removeTokensWithBalance(msg.sender, tokenIds);
+        removeTokensWithBalance2(msg.sender, tokenIds);
 
         uint256[] memory rollbackTokenIds = new uint256[](1);
         rollbackTokenIds[0] = entity.rollbackTokenId;
@@ -297,6 +297,11 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         _numberOfTotalSupplyChanges++;
     }
 
+    function subSupply2(TokenModel.ElGamal memory supplyDecrease) internal {
+        _privateTotalSupply = CurveBabyJubJubHelper.subElGamal(_privateTotalSupply, supplyDecrease);
+        _numberOfTotalSupplyChanges++;
+    }
+
     function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (uint256) {
         return uint256(keccak256(abi.encode(elgamal)));
     }
@@ -329,6 +334,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         }
     }
 
+    function removeTokensWithBalance2(address to, uint256[] memory tokenIds) internal {
+        TokenModel.Account storage toAccount = accounts[to];
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            toAccount.balance = CurveBabyJubJubHelper.subElGamal(toAccount.balance, toAccount.assets[tokenIds[i]].amount);
+            delete toAccount.assets[tokenIds[i]];
+        }
+    }
+
     function removeTokens(address to, uint256[] memory tokenIds) internal {
         TokenModel.Account storage toAccount = accounts[to];
 
@@ -341,6 +355,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokens.length; i++) {
             sum = TokenGrumpkinLib.addElGamal(sum, accounts[account].assets[tokens[i]].amount);
+        }
+        return sum;
+    }
+
+    function sumTokenAmounts2(address account, uint256[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
+        TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            sum = CurveBabyJubJubHelper.addElGamal(sum, accounts[account].assets[tokens[i]].amount);
         }
         return sum;
     }

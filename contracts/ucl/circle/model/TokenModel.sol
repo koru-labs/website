@@ -92,6 +92,18 @@ library TokenModel {
         bytes proof;
     }
 
+    struct VerifyTokenSplitParams2 {
+        InstitutionUserRegistry institutionRegistration;
+        address from;
+        address to;
+        ElGamal consumedAmount;
+        ElGamal amount;
+        ElGamal remainingAmount;
+        ElGamal rollbackAmount;
+        uint256[8] proof;
+        uint256[20] publicInputs;
+    }
+
     struct VerifyTokenBurnParams{
         InstitutionUserRegistry institutionRegistration;
         address from;

@@ -9,7 +9,7 @@ pragma solidity ^0.8.0;
 /// (256 bytes) and compressed (128 bytes) format. A view function is provided
 /// to compress proofs.
 /// @notice See <https://2π.com/23/bn254-compression> for further explanation.
-contract Verifier {
+library SplitTokenVerifier {
 
     /// Some of the provided public input values are larger than the field modulus.
     /// @dev Public input elements are not automatically reduced, as this is can be
@@ -123,7 +123,7 @@ contract Verifier {
     /// @notice The input does not need to be reduced.
     /// @param a the base
     /// @return x the result
-    function negate(uint256 a) internal pure returns (uint256 x) {
+    function negate(uint256 a) public pure returns (uint256 x) {
         unchecked {
             x = (P - (a % P)) % P; // Modulo is cheaper than branching
         }
@@ -135,7 +135,7 @@ contract Verifier {
     /// @param a the base
     /// @param e the exponent
     /// @return x the result
-    function exp(uint256 a, uint256 e) internal view returns (uint256 x) {
+    function exp(uint256 a, uint256 e) public view returns (uint256 x) {
         bool success;
         assembly ("memory-safe") {
             let f := mload(0x40)
@@ -161,7 +161,7 @@ contract Verifier {
     /// @notice Reverts with ProofInvalid() if the inverse does not exist
     /// @param a the input
     /// @return x the solution
-    function invert_Fp(uint256 a) internal view returns (uint256 x) {
+    function invert_Fp(uint256 a) public view returns (uint256 x) {
         x = exp(a, EXP_INVERSE_FP);
         if (mulmod(a, x, P) != 1) {
             // Inverse does not exist.
@@ -176,7 +176,7 @@ contract Verifier {
     /// or not reduced.
     /// @param a the square
     /// @return x the solution
-    function sqrt_Fp(uint256 a) internal view returns (uint256 x) {
+    function sqrt_Fp(uint256 a) public view returns (uint256 x) {
         x = exp(a, EXP_SQRT_FP);
         if (mulmod(x, x, P) != a) {
             // Square root does not exist or a is not reduced.
@@ -191,7 +191,7 @@ contract Verifier {
     /// or not reduced.
     /// @param a the square
     /// @return x the solution
-    function isSquare_Fp(uint256 a) internal view returns (bool) {
+    function isSquare_Fp(uint256 a) public view returns (bool) {
         uint256 x = exp(a, EXP_SQRT_FP);
         return mulmod(x, x, P) == a;
     }
@@ -208,7 +208,7 @@ contract Verifier {
     /// @param hint A hint which of two possible signs to pick in the equation.
     /// @return x0 The real part of the square root.
     /// @return x1 The imaginary part of the square root.
-    function sqrt_Fp2(uint256 a0, uint256 a1, bool hint) internal view returns (uint256 x0, uint256 x1) {
+    function sqrt_Fp2(uint256 a0, uint256 a1, bool hint) public view returns (uint256 x0, uint256 x1) {
         // If this square root reverts there is no solution in Fp2.
         uint256 d = sqrt_Fp(addmod(mulmod(a0, a0, P), mulmod(a1, a1, P), P));
         if (hint) {
@@ -233,7 +233,7 @@ contract Verifier {
     /// @param x The X coordinate in Fp.
     /// @param y The Y coordinate in Fp.
     /// @return c The compresed point (x with one signal bit).
-    function compress_g1(uint256 x, uint256 y) internal view returns (uint256 c) {
+    function compress_g1(uint256 x, uint256 y) public view returns (uint256 c) {
         if (x >= P || y >= P) {
             // G1 point not in field.
             revert ProofInvalid();
@@ -261,7 +261,7 @@ contract Verifier {
     /// @param c The compresed point (x with one signal bit).
     /// @return x The X coordinate in Fp.
     /// @return y The Y coordinate in Fp.
-    function decompress_g1(uint256 c) internal view returns (uint256 x, uint256 y) {
+    function decompress_g1(uint256 c) public view returns (uint256 x, uint256 y) {
         // Note that X = 0 is not on the curve since 0³ + 3 = 3 is not a square.
         // so we can use it to represent the point at infinity.
         if (c == 0) {
@@ -297,7 +297,7 @@ contract Verifier {
     /// @return c0 The first half of the compresed point (x0 with two signal bits).
     /// @return c1 The second half of the compressed point (x1 unmodified).
     function compress_g2(uint256 x0, uint256 x1, uint256 y0, uint256 y1)
-    internal view returns (uint256 c0, uint256 c1) {
+    public view returns (uint256 c0, uint256 c1) {
         if (x0 >= P || x1 >= P || y0 >= P || y1 >= P) {
             // G2 point not in field.
             revert ProofInvalid();
@@ -353,7 +353,7 @@ contract Verifier {
     /// @return y0 The real part of the Y coordinate.
     /// @return y1 The imaginary part of the Y coordinate.
     function decompress_g2(uint256 c0, uint256 c1)
-    internal view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
+    public view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
         // Note that X = (0, 0) is not on the curve since 0³ + 3/(9 + i) is not a square.
         // so we can use it to represent the point at infinity.
         if (c0 == 0 && c1 == 0) {
@@ -394,7 +394,7 @@ contract Verifier {
     /// @return x The X coordinate of the resulting G1 point.
     /// @return y The Y coordinate of the resulting G1 point.
     function publicInputMSM(uint256[20] calldata input)
-    internal view returns (uint256 x, uint256 y) {
+    public view returns (uint256 x, uint256 y) {
         // Note: The ECMUL precompile does not reject unreduced values, so we check this.
         // Note: Unrolling this loop does not cost much extra in code-size, the bulk of the
         //       code-size is in the PUB_ constants.

@@ -44,19 +44,35 @@ library CurveBabyJubJubHelper {
         return (x2Reduced, y2);
     }
 
-    function tokenAdd(uint256 _token1LeftX, uint256 _token1LeftY, uint256 _token1RightX, uint256 _token1RightY,uint256 _token2LeftX, uint256 _token2LeftY, uint256 _token2RightX, uint256 _token2RightY) public view returns (uint256 tokenSumLeftX, uint256 tokenSumLeftY, uint256 tokenSumRightX, uint256 tokenSumRightY){
+    function tokenAdd(uint256 _token1LeftX, uint256 _token1LeftY, uint256 _token1RightX, uint256 _token1RightY,uint256 _token2LeftX, uint256 _token2LeftY, uint256 _token2RightX, uint256 _token2RightY) internal view returns (uint256 tokenSumLeftX, uint256 tokenSumLeftY, uint256 tokenSumRightX, uint256 tokenSumRightY){
         (tokenSumLeftX,tokenSumLeftY) = pointAdd(_token1LeftX,_token1LeftY,_token2LeftX,_token2LeftY);
         (tokenSumRightX,tokenSumRightY) = pointAdd(_token1RightX,_token1RightY,_token2RightX,_token2RightY);
     }
 
-    function addElGamal(TokenModel.ElGamal memory _token1, TokenModel.ElGamal memory _token2) public view returns (TokenModel.ElGamal memory tokenSum){
+    function tokenSub(uint256 _token1LeftX, uint256 _token1LeftY, uint256 _token1RightX, uint256 _token1RightY,uint256 _token2LeftX, uint256 _token2LeftY, uint256 _token2RightX, uint256 _token2RightY) internal view returns (uint256 tokenSubLeftX, uint256 tokenSubLeftY, uint256 tokenSubRightX, uint256 tokenSubRightY){
+        uint256 _negToken2LeftX = submod(modulus, _token2LeftX, modulus);
+        uint256 _negToken2RightX = submod(modulus, _token2RightX, modulus);
+        (tokenSubLeftX,tokenSubLeftY) = pointAdd(_token1LeftX,_token1LeftY,_negToken2LeftX,_token2LeftY);
+        (tokenSubRightX,tokenSubRightY) = pointAdd(_token1RightX,_token1RightY,_negToken2RightX,_token2RightY);
+    }
+
+    function submod(uint256 _a, uint256 _b, uint256 _mod) internal pure returns (uint256) {
+        uint256 aNN = _a;
+
+        if (_a <= _b) {
+            aNN += _mod;
+        }
+
+        return addmod(aNN - _b, 0, _mod);
+    }
+
+    function addElGamal(TokenModel.ElGamal memory _token1, TokenModel.ElGamal memory _token2) public view returns (TokenModel.ElGamal memory){
         uint256 tokenSumLeftX;
         uint256 tokenSumLeftY;
         uint256 tokenSumRightX;
         uint256 tokenSumRightY;
 
-        (tokenSumLeftX,tokenSumLeftY) = pointAdd(_token1.cl_x,_token1.cl_y,_token2.cl_x,_token2.cl_y);
-        (tokenSumRightX,tokenSumRightY) = pointAdd(_token1.cr_x,_token1.cr_y,_token2.cr_x,_token2.cr_y);
+        (tokenSumLeftX,tokenSumLeftY,tokenSumRightX,tokenSumRightY) = tokenAdd(_token1.cl_x,_token1.cl_y,_token1.cr_x,_token1.cr_y,_token2.cl_x,_token2.cl_y,_token2.cr_x,_token2.cr_y);
 
         return TokenModel.ElGamal({
             cl_x: tokenSumLeftX,
@@ -66,21 +82,20 @@ library CurveBabyJubJubHelper {
         });
     }
 
+    function subElGamal(TokenModel.ElGamal memory _token1, TokenModel.ElGamal memory _token2) public view returns (TokenModel.ElGamal memory){
+        uint256 tokenSubLeftX;
+        uint256 tokenSubLeftY;
+        uint256 tokenSubRightX;
+        uint256 tokenSubRightY;
 
-    function tokenSub(uint256 _token1LeftX, uint256 _token1LeftY, uint256 _token1RightX, uint256 _token1RightY,uint256 _token2LeftX, uint256 _token2LeftY, uint256 _token2RightX, uint256 _token2RightY) public view returns (uint256 tokenSubLeftX, uint256 tokenSubLeftY, uint256 tokenSubRightX, uint256 tokenSubRightY){
-        uint256 _negToken2LeftX = submod(modulus, _token2LeftX, modulus);
-        uint256 _negToken2RightX = submod(modulus, _token2RightX, modulus);
-        (tokenSubLeftX,tokenSubLeftY) = pointAdd(_token1LeftX,_token1LeftY,_negToken2LeftX,_token2LeftY);
-        (tokenSubRightX,tokenSubRightY) = pointAdd(_token1RightX,_token1RightY,_negToken2RightX,_token2RightY);
-    }
-    function submod(uint256 _a, uint256 _b, uint256 _mod) public pure returns (uint256) {
-        uint256 aNN = _a;
+        (tokenSubLeftX,tokenSubLeftY,tokenSubRightX,tokenSubRightY) = tokenSub(_token1.cl_x,_token1.cl_y,_token1.cr_x,_token1.cr_y,_token2.cl_x,_token2.cl_y,_token2.cr_x,_token2.cr_y);
 
-        if (_a <= _b) {
-            aNN += _mod;
-        }
-
-        return addmod(aNN - _b, 0, _mod);
+        return TokenModel.ElGamal({
+            cl_x: tokenSubLeftX,
+            cl_y: tokenSubLeftY,
+            cr_x: tokenSubRightX,
+            cr_y: tokenSubRightY
+        });
     }
 
 }
