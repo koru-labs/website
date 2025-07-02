@@ -4,6 +4,8 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
+const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2, deploySplitTokenVerifier} = require("./deploy_verifier");
+
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
 const ADDRESSES = {
@@ -104,6 +106,14 @@ async function main() {
         await grumpkin.waitForDeployment();
         console.log("Grumpkin is deployed at :", grumpkin.target);
         deployed.libraries.Grumpkin = grumpkin.target;
+
+        // Deploy Verifier
+        await deployCurveBabyJubJub(deployed);
+        await deployCurveBabyJubJubHelper(deployed);
+        await deployMintAllowedTokenVerifier(deployed);
+        await deploySplitTokenVerifier(deployed);
+        await deployTokenVerificationLib2(deployed);
+        console.log(deployed)
 
         // Deploy RelaxedR1CSSNARKForSMLib
         const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
@@ -226,9 +236,10 @@ async function main() {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
             "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
-            "SignatureChecker": signatureChecker.target
+            "SignatureChecker": signatureChecker.target,
+            "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
+            "TokenVerificationLib2":deployed.libraries.TokenVerificationLib2
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;
@@ -263,10 +274,11 @@ async function main() {
     console.log("PrivateERCToken initialized successfully");
 
     const minterAllowedAmount = {
-        "cl_x": ethers.toBigInt("0x10029eb129bcca705cf2b0366bfb7b33f5cb462e47a4d600c8cabde8c4a44ed4"),
-        "cl_y": ethers.toBigInt("0x09944660246404d26c916866dfa5d3d13dc3e739645d60803f240e0f5127fccb"),
-        "cr_x": ethers.toBigInt("0x01269732a28d979aee067862a8aeb9ca6085c89180c198b6f13f20d10bdb4cd3"),
-        "cr_y": ethers.toBigInt("0x0e4b8f1fc03b7dc6dc830ccd18b7ff4d82b667aea18aa4fca221b3d6830fa2a2"),
+
+        "cl_x": 12471555042661360587544800162065755795674189145103865559839899232596785258454n,
+        "cl_y": 1737930707933683103650156072759295371220110285000086571046562936740215870821n,
+        "cr_x": 16214182244949587672181156540211074430416577328670591100004849430453808262463n,
+        "cr_y": 16835050334831984745407907242255855690755563282276948218792256680709906757113n,
     }
     await privateUSDC.configurePrivacyMinter(accounts.Minter, minterAllowedAmount);
     await privateUSDC.configurePrivacyMinter(accounts.Minter2, minterAllowedAmount);
@@ -338,10 +350,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "0x260966dc3f87c49de63c2b777617f9f6ccb11b7be01d5248383618939453944a",
-                y: "0x0012858a1d2ab976fd22a3620acd587b43319177bd677df84089630e21d7ffaf",
+                x: "21884860663745937110188882287549004018000429168590071699858146546647393507357",
+                y: "20872109379609247395071969917477882513460276943785017644530594039822594594043",
             },
-            privateKey: "0x2fb5b87323812e6fb1ca82c18f7e822403a1076dca78cdb6511fe50e2bcb9610",
+            privateKey: "1405978777598282936925404642843735152113843874473048823601219566628017370251",
             userAddresses: [
                 "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
                 "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
