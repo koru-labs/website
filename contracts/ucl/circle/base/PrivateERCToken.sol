@@ -85,7 +85,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
             proof:  proof,
             publicInputs:publicInputs
         });
-        TokenVerificationLib2.verifyTokenMint(params); // TODO please read https://docs.soliditylang.org/en/latest/control-structures.html#assignment and avoid unused variables.
+        TokenVerificationLib2.verifyTokenMint(params);
 
         TokenModel.ElGamal memory newAllowed = TokenModel.ElGamal({
             cl_x: publicInputs[4],

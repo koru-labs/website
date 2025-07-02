@@ -136,8 +136,6 @@ contract InstitutionUserRegistry {
         return institutions[managerAddress];
     }
 
-
-
     function isInstitutionManager(address managerAddress) public view returns (bool) {
         return institutions[managerAddress].managerAddress != address(0);
     }
