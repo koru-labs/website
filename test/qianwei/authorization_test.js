@@ -3,7 +3,8 @@ const {ethers} = require('ethers');
 const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 
-const rpcUrl = "localhost:50051";
+// const rpcUrl = "localhost:50051";
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 
 // admin
@@ -39,7 +40,7 @@ async function testUpdateAccountStatus() {
 
         const request = {
             account_address: address,
-            account_status: 0,
+            account_status: 0, //0:inactive,2:active
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
@@ -60,7 +61,7 @@ async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: address,
-        account_role: "minter"
+        account_role: "minter",//minter,admin,normal
     };
 
     try {
@@ -100,7 +101,7 @@ async function testUpdateAccountRole() {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: address,
-            account_role: "minter",
+            account_role: "minter",//minter,admin,normal
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
@@ -123,7 +124,7 @@ async function testGetAccount() {
 }
 
 
-// testRegisterAccount().then();
+testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
