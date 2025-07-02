@@ -35,7 +35,7 @@ async function testUpdateAccountStatus() {
 
         const request = {
             account_address: address,
-            account_status: 2,
+            account_status: 0,
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
@@ -78,7 +78,7 @@ async function testRegisterAccount() {
 async function testGetAsyncAction() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const request_id = "a5aa75f0c6c66c7ed35d82025685fe380652f4c1e9f5e81113cf36cf6cb22fbc"
+        const request_id = "f4dd2d79d8c0357c4637ccdf099f7f82281b1e771b1287387ebffd9a709ee4fb"
         const actionRequest = {
             request_id: request_id,
         };
@@ -123,4 +123,4 @@ async function testGetAccount() {
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
-testGetAccount().then();
+// testGetAccount().then();
