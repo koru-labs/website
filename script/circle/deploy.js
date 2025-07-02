@@ -8,10 +8,11 @@ const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedToke
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
+let institutionRegistration = "0x3B385db98eb3a24787bf570B0f0264C94bD962De";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
-    INSTITUTION_REGISTRATION: ""
+    INSTITUTION_REGISTRATION: institutionRegistration
 };
 
 // Add function to check existing deployments

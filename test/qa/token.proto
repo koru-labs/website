@@ -7,21 +7,24 @@ option go_package = "./token_grpc";
 // Token service interface
 service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateDirectMint      (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateDirectBurn      (GenerateBurnRequest)          returns (GenerateProofResponse);
   rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
+  rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
   rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
-  rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse);
-  rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse);
-  rpc GetMintAllowed          (MintAllowedRequest)           returns (MintAllowedResponse);
-  rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse);
-  rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse);
-  rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse);
-  rpc GetTokenActionStatus    (ProofRequest)                 returns (TokenActionStatusResponse);
-  rpc GetSplitTokenDetail     (SplitTokenDetailRequest)      returns (SplitTokenDetailResponse);
-  rpc GetTokenAmount          (TokenAmountRequest)           returns (TokenAmountResponse);
+  rpc GetTransferProof        (ProofRequest)                 returns (TransferProofResponse);
+  rpc GetApproveProof         (ProofRequest)                 returns (ApproveProofResponse);
+  rpc GetTransferFromProof    (ProofRequest)                 returns (TransferFromProofResponse);
+  rpc GetBurnProof            (ProofRequest)                 returns (BurnProofResponse);
+  rpc GetAddressBalance       (DecodeBalanceRequest)        returns (AddressBalanceResponse);
+  rpc GetAddressAllowance     (AddressAllowanceRequest)     returns (AddressAllowanceResponse);
+  rpc GetMintAllowed          (MintAllowedRequest)          returns (MintAllowedResponse);
+  rpc ElgamalEncodeAmount     (EncodeAmountRequest)         returns (EncodeAmountResponse);
+  rpc GetSplitToken           (ProofRequest)                returns (SplitTokenResponse);
 }
+
 
 // Token action status enum
 enum TokenActionStatusEnum {
@@ -32,20 +35,6 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_FAIL = 4;
   TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
   TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
-  TOKEN_ACTION_STATUS_DIRECTTX_WAIT = 7;
-  TOKEN_ACTION_STATUS_DIRECT_CALL_L1 = 8;
-}
-message TokenActionStatusResponse {
-  string request_id = 1;
-  TokenActionStatusEnum status = 2;
-  string transactionHash = 3;
-}
-message GenerateBurnRequest {
-  string sc_address =1;
-  uint64 token_type =2;
-  string from_address =3;
-  uint64 amount = 4;
-
 }
 
 message ProofRequest {
@@ -59,34 +48,13 @@ message ElGamal {
   string cr_y = 4;
 }
 
-message GenerateProofRequest {
-  string sc_address =1;
-  uint64 token_type =2;
-  string from_address =3;
-  string to_address =4;
-  uint64 amount = 5;
-}
-
-message GenerateProofResponse {
-  string request_id = 1;
-  TokenActionStatusEnum status = 2;
-}
-
-message BalanceRequest {
-  string owner_address = 1;
-  string sc_address = 2;
-}
-
-message DecodeAmountRequest {
-  ElGamal balance = 1;
-}
-
-message AddressBalanceResponse {
-  uint64 balance = 1;
-}
-
-message DecodeAmountResponse {
-  uint64 balance = 1;
+message Allowance {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr1_x = 5;
+  string cr1_y = 6;
+  string cr2_x = 7;
+  string cr2_y = 8;
 }
 
 message MintProofResponse {
@@ -101,12 +69,109 @@ message MintProofResponse {
   TokenActionStatusEnum status = 9;
 }
 
+message TransferProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  ElGamal amount = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+
+message ApproveProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal old_balance = 7;
+  ElGamal new_balance = 8;
+  Allowance allowance = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+message TransferFromProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  Allowance old_allowance = 6;
+  Allowance new_allowance = 7;
+  ElGamal amount = 8;
+  string proof = 9;
+  TokenActionStatusEnum status = 10;
+}
+
+message BurnProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3;
+  string from_address = 4;
+  string to_address = 5;
+  repeated string parentTokenId = 6;
+  ElGamal supply_decrease = 7;
+  ElGamal new_balance = 8;
+  ElGamal amount = 9;
+  string proof = 10;
+  TokenActionStatusEnum status = 11;
+}
+
+message GenerateProofRequest {
+  string sc_address = 1;
+  uint64 token_type = 2;
+  string from_address = 3;
+  string to_address = 4;
+  string spender_address = 5;
+  uint64 amount = 6;
+}
+
+message GenerateProofResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}
+
+message DecodeBalanceRequest {
+  string owner_address = 1;
+  string sc_address = 2;
+  ElGamal balance = 3;
+}
+
+message AddressBalanceResponse {
+  uint64 balance = 1;
+  string decryptBalance = 2;
+}
+
+message AddressAllowanceRequest {
+  string owner_address = 1;
+  string spender_address = 2;
+  string sc_address = 3;
+}
 message MintAllowedRequest {
   string sc_address = 3;
 }
 
 message MintAllowedResponse {
   uint64 amount = 1;
+}
+message AddressAllowanceResponse {
+  uint64 amount = 1;
+}
+
+message EncodeAmountRequest {
+  uint64 amount = 1;
+}
+
+message EncodeAmountResponse {
+  ElGamal amount = 1;
 }
 
 message SplitTokenResponse {
@@ -115,46 +180,68 @@ message SplitTokenResponse {
   string transfer_token_id = 3;
 }
 
-message EncodeAmountRequest {
-  uint64 amount=1;
+
+
+
+// Account service interface
+service AccountService {
+  rpc RegisterAccount       (RegisterAccountRequest)         returns (RegisterAccountResponse);
+  rpc UpdateAccountStatus   (UpdateAccountStatusRequest)         returns (AsyncActionResponse);
+  rpc UpdateAccountRole   (UpdateAccountRoleRequest)         returns (AsyncActionResponse);
+  rpc GetAsyncAction   (AsyncActionRequest)         returns (AsyncActionResponse);
+  rpc GetAccount   (GetAccountRequest)         returns (GetAccountResponse);
 }
 
-message EncodeAmountResponse {
-  ElGamal amount =1;
+// Account action status enum
+enum AsyncActionStatusEnum {
+  ASYNC_ACTION_STATUS_PENDING = 0;
+  ASYNC_ACTION_STATUS_CALL_L1 = 1;
+  ASYNC_ACTION_STATUS_SUC = 2;
+  ASYNC_ACTION_STATUS_FAIL = 4;
+}
+// Account status enum
+enum AccountStatusEnum {
+  ACCOUNT_STATUS_INACTIVE = 0;
+  ACCOUNT_STATUS_ACTIVE = 2;
 }
 
-message SplitTokenListRequest {
-  string owner_address =1;
-  string sc_address =2;
+
+
+message RegisterAccountRequest {
+  string account_address = 1 ;
+  string account_role = 2 ;
 }
 
-message SplitTokenListResponse {
-  repeated Token split_tokens = 1;
+message RegisterAccountResponse {
+  string request_id = 1;
+  AsyncActionStatusEnum status = 2;
+  string message = 3;
 }
 
-message Token {
-  string token_id = 1;
-  string request_id = 2;
-  string type = 3;
-  uint64 amount = 4;
+message UpdateAccountStatusRequest {
+  string account_address = 1 ;
+  AccountStatusEnum account_status = 2 ;
 }
 
-message SplitTokenDetailRequest {
-  string token_id =1;
-  string hex_sig = 2;
-  string sig_address =3;
+message UpdateAccountRoleRequest {
+  string account_address = 1 ;
+  string account_role = 2 ;
 }
 
-message SplitTokenDetailResponse {
-  uint64 balance = 1;
-  uint64 transferAmount = 2;
-  uint64 remainingAmount = 3;
+message AsyncActionRequest {
+  string request_id = 1;
+}
+message AsyncActionResponse {
+  string request_id = 1;
+  AsyncActionStatusEnum status = 2;
+  string message = 3;
 }
 
-message TokenAmountRequest {
-  string token_id =1;
+message GetAccountRequest {
+  string account_address = 1 ;
 }
-
-message TokenAmountResponse {
-  uint64 amount = 1;
+message GetAccountResponse {
+  string account_address = 1;
+  AccountStatusEnum account_status = 2;
+  string account_role = 3;
 }
