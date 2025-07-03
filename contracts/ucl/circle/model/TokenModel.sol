@@ -46,6 +46,7 @@ library TokenModel {
     struct Account {
         ElGamal balance;
         mapping(uint256 => TokenEntity) assets;
+        mapping(address => uint256) allowances;
     }
 
     struct VerifyTokenMintParams {
@@ -92,6 +93,18 @@ library TokenModel {
         bytes proof;
     }
 
+    struct VerifyTokenSplitParams2 {
+        InstitutionUserRegistry institutionRegistration;
+        address from;
+        address to;
+        ElGamal consumedAmount;
+        ElGamal amount;
+        ElGamal remainingAmount;
+        ElGamal rollbackAmount;
+        uint256[8] proof;
+        uint256[20] publicInputs;
+    }
+
     struct VerifyTokenBurnParams{
         InstitutionUserRegistry institutionRegistration;
         address from;
@@ -108,10 +121,23 @@ library TokenModel {
         InstitutionUserRegistry institutionRegistration;
         address owner;
         address spender;
+        address to;
         ElGamal consumedAmount;
         Allowance allowance;
         ElGamal remainingAmount;
         bytes proof;
+    }
+
+    struct VerifyTokenApproveParams2 {
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
+        address spender;
+        address to;
+        ElGamal consumedAmount;
+        Allowance allowance;
+        ElGamal remainingAmount;
+        uint256[8] proof;
+        uint256[22] publicInputs;
     }
 
     //VerifyTransferFromParams

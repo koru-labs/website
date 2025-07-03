@@ -4,14 +4,15 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
-const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2} = require("./deploy_verifier");
+const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2, deploySplitTokenVerifier, deploySplitAllowanceTokenVerifier} = require("./deploy_verifier");
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
+let institutionRegistration = "0x34305eDd20bDdBE3478cB8761DC9Bd1A54CB06dc";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
-    INSTITUTION_REGISTRATION: ""
+    INSTITUTION_REGISTRATION: institutionRegistration
 };
 
 // Add function to check existing deployments
@@ -111,6 +112,8 @@ async function main() {
         await deployCurveBabyJubJub(deployed);
         await deployCurveBabyJubJubHelper(deployed);
         await deployMintAllowedTokenVerifier(deployed);
+        await deploySplitTokenVerifier(deployed);
+        await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
         await deployTokenVerificationLib2(deployed);
         console.log(deployed)
 
@@ -235,7 +238,6 @@ async function main() {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
             "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
@@ -274,11 +276,10 @@ async function main() {
     console.log("PrivateERCToken initialized successfully");
 
     const minterAllowedAmount = {
-
-        "cl_x": 12471555042661360587544800162065755795674189145103865559839899232596785258454n,
-        "cl_y": 1737930707933683103650156072759295371220110285000086571046562936740215870821n,
-        "cr_x": 16214182244949587672181156540211074430416577328670591100004849430453808262463n,
-        "cr_y": 16835050334831984745407907242255855690755563282276948218792256680709906757113n,
+        "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
+        "cl_y": 17997503520096523373978760079614633178183544935372525079367653487073845131371n,
+        "cr_x": 2799658707790704252170544877645553735081603739176317448125814928308770685127n,
+        "cr_y": 10724405929777949929088094477911843117820716522007699467531083531418761611245n,
     }
     await privateUSDC.configurePrivacyMinter(accounts.Minter, minterAllowedAmount);
     await privateUSDC.configurePrivacyMinter(accounts.Minter2, minterAllowedAmount);
@@ -320,10 +321,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             nodeUrl: "https://qa-node1-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node1-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "0x27c07a015b9e7d73519e8bcfc8ddd6cf760b51f55938e0f83affb2ff7d244220",
-                y: "0x27e09fb8be7b593a38e107cce390183bd2b15eea7b62c4cc8ad7fae388c9b66f",
+                x: "8870958234945531012140077554967107612834978073622531518187994135599594024004",
+                y: "1602896076095556872064323498591590133311615038843128356451925530793022734414",
             },
-            privateKey: "0x01d5d0f71878b433db00449efa0907786c05ef271b00e85fd0270bd445daa27e",
+            privateKey: "416573880578171335403689549793041749905608668623681787361470319903201766514",
             userAddresses: [
                 "0x5a3288A7400B2cd5e0568728E8216D9392094892"
             ]
@@ -335,10 +336,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             nodeUrl: "https://qa-node2-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node2-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "0x0fb17de4db5168ce623d3c5733f3f39273fb43b194018cadcd4653c9b1d65424",
-                y: "0x2a3cfce65fe973a9354834fe93cd430b6480798166e4c33ab50f4c87843194fc",
+                x: "5820367833026910549315409246395472618478921328059164198985819674997868240519",
+                y: "16447690327536854731829234134374272913253014843200385847735869511531503932278",
             },
-            privateKey: "0x20b4a40e591bedccb987de33572eb4f7cb09671743df43aa8f2b0023dbb6253c",
+            privateKey: "2168409685083436357554395152062201983676872832460334205932174282094784521144",
             userAddresses: [
                 "0xF8041E1185C7106121952bA9914ff904A4A01c80"
             ]
@@ -350,10 +351,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "21884860663745937110188882287549004018000429168590071699858146546647393507357",
-                y: "20872109379609247395071969917477882513460276943785017644530594039822594594043",
+                x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
+                y: "9519187890267549073736999464396081731503319602421352094119155053337094535674",
             },
-            privateKey: "1405978777598282936925404642843735152113843874473048823601219566628017370251",
+            privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
             userAddresses: [
                 "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
                 "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
@@ -372,10 +373,10 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "0x200617a15d2b14b21e7fcfee20970928fdec8caf78a8395996d39685f4416c55",
-                y: "0x1020c7e93610321fdffa7ac019165450187eeab7188d54f2a251794100c115ed",
+                x: "20939066757645918795634673682728216909767846507882077869735730662556512988867",
+                y: "10484302653646958667875402192638179073860126846729616349907290732560904524336",
             },
-            privateKey: "0x0a4d3802de2c9bfabe2cabc18f4f3a34141b412093187d7a9958c437c1f7074f",
+            privateKey: "1269647837676258859940892295235950289673852489198963778624801308185618508021",
             userAddresses: [
                 "0xbA268f776F70caDB087e73020dfE41c7298363Ed",
             ]
@@ -410,9 +411,19 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
 }
 
 
-main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error("Deployment failed: ", error);
-        process.exit(1);
-    });
+// Export the main function for use in tests
+module.exports = {
+    main,
+    saveDeploymentInfo,
+    registerInstitutionAndUser
+};
+
+// Only run if this file is executed directly
+if (require.main === module) {
+    main()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error("Deployment failed: ", error);
+            process.exit(1);
+        });
+}
