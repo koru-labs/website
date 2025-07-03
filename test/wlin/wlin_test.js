@@ -126,9 +126,10 @@ async function testMint() {
         to_address: accounts.To2,
         amount: 1
     };
-    let response = await client.generateMintProof(generateRequest);
+    let metData= await createAuthMetadata(accounts.MinterKey)
+    let response = await client.generateMintProof(generateRequest, metData);
     console.log("Generate Mint Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
+    let proofResult = await client.waitForProofCompletion( client.getMintProof, response.request_id)
 
     console.log("Mint Proof Result:", proofResult);
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
@@ -378,6 +379,21 @@ async function registerNewUserInNode1(){
 async function testTotalSupply(){
     let result = await getPublicTotalSupply(config.contracts.PrivateERCToken);
     console.log("the total supply is: ", result)
+}
+
+
+async function createAuthMetadata(privateKey, messagePrefix = "login") {
+    const wallet = new ethers.Wallet(privateKey);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const message = `${messagePrefix}_${timestamp}`;
+    const signature = await wallet.signMessage(message);
+
+    const metadata = new grpc.Metadata();
+    metadata.set('address', wallet.address.toLowerCase());
+    metadata.set('signature', signature);
+    metadata.set('message', message);
+
+    return metadata;
 }
 
 // checkDeployedUSDC().then();
