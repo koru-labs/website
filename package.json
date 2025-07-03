@@ -15,11 +15,14 @@
     "prettier-plugin-solidity": "^2.0.0"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.13.3",
+    "@grpc/grpc-js": "^1.13.4",
+    "@grpc/proto-loader": "^0.7.15",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ignition": "^0.15.5",
     "circomlibjs": "^0.1.7",
     "ethers": "^6.13.1",
+    "google-proto-files": "^5.0.0",
+    "google-protobuf": "^3.21.4",
     "grpc-web": "^1.5.0",
     "install": "^0.13.0",
     "moment": "^2.30.1",
@@ -44,6 +47,7 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:sol": "prettier --write \"**/*.sol\"",
     "format:check:sol": "prettier --check \"**/*.sol\"",
-    "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_L2"
+    "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_L2",
+    "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js"
   }
 }
