@@ -239,8 +239,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
 
         TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts2(msg.sender, consumedTokenIds);
-        TokenModel.TokenEntity memory allowanceToken = newTokens[0];
-        TokenModel.TokenEntity memory changeToken = newTokens[1];
+        TokenModel.TokenEntity memory changeToken = newTokens[0];
+        TokenModel.TokenEntity memory allowanceToken = newTokens[1];
         TokenModel.TokenEntity memory rollbackToken = newTokens[2];
 
         TokenModel.VerifyTokenSplitParams2 memory params =  TokenModel.VerifyTokenSplitParams2({
