@@ -19,19 +19,20 @@ const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const amount = {
-        cl_x: ethers.toBigInt(proofResult.amount.cl_x),
-        cl_y: ethers.toBigInt(proofResult.amount.cl_y),
-        cr_x: ethers.toBigInt(proofResult.amount.cr_x),
-        cr_y: ethers.toBigInt(proofResult.amount.cr_y)
+        cl_x: ethers.toBigInt(proofResult.amount.clX),
+        cl_y: ethers.toBigInt(proofResult.amount.clY),
+        cr_x: ethers.toBigInt(proofResult.amount.crX),
+        cr_y: ethers.toBigInt(proofResult.amount.crY)
     };
     const supplyAmount = {
-        cl_x: ethers.toBigInt(proofResult.supply_amount.cl_x),
-        cl_y: ethers.toBigInt(proofResult.supply_amount.cl_y),
-        cr_x: ethers.toBigInt(proofResult.supply_amount.cr_x),
-        cr_y: ethers.toBigInt(proofResult.supply_amount.cr_y)
+        cl_x: ethers.toBigInt(proofResult.supplyAmount.clX),
+        cl_y: ethers.toBigInt(proofResult.supplyAmount.clY),
+        cr_x: ethers.toBigInt(proofResult.supplyAmount.crX),
+        cr_y: ethers.toBigInt(proofResult.supplyAmount.crY)
     };
-    const proofData = Buffer.from(proofResult.proof, "hex");
-    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proofData);
+    const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+    const input = proofResult.input.map(i => ethers.toBigInt(i));
+    const tx = await contract.privateMint(proofResult.toAddress,amount,supplyAmount,proof,input);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -44,6 +45,13 @@ async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
     return receipt;
 }
 
+
+async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateTransferFrom(tokenId,from,to);
+    let receipt = await tx.wait();
+    return receipt;
+}
 
 async function callPrivateBurn2(scAddress, tokenId, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -106,39 +114,6 @@ async function callPrivateBurn(scAddress, proofResult, accountWallet) {
 
     const tx = await contract.privateBurn(consumedTokens,amount,consumedTokensRemainingAmount,supplyDecrease,proofData);
     console.log("Result:", tx);
-    let receipt = await tx.wait();
-    return receipt
-}
-
-
-
-async function callPrivateTransferFrom(scAddress, proofResult, spenderWallet) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, spenderWallet)
-    const oldAllowance = {
-        "cl_x": ethers.toBigInt(proofResult.old_allowance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.old_allowance.cl_y),
-        "cr1_x": ethers.toBigInt(proofResult.old_allowance.cr1_x),
-        "cr1_y": ethers.toBigInt(proofResult.old_allowance.cr1_y),
-        "cr2_x": ethers.toBigInt(proofResult.old_allowance.cr2_x),
-        "cr2_y": ethers.toBigInt(proofResult.old_allowance.cr2_y)
-    }
-    const newAllowance = {
-        "cl_x": ethers.toBigInt(proofResult.new_allowance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.new_allowance.cl_y),
-        "cr1_x": ethers.toBigInt(proofResult.new_allowance.cr1_x),
-        "cr1_y": ethers.toBigInt(proofResult.new_allowance.cr1_y),
-        "cr2_x": ethers.toBigInt(proofResult.new_allowance.cr2_x),
-        "cr2_y": ethers.toBigInt(proofResult.new_allowance.cr2_y)
-    }
-    const amount = {
-        "cl_x": ethers.toBigInt(proofResult.amount.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.amount.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.amount.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.amount.cr_y)
-    }
-    const proofData = Buffer.from(proofResult.proof, "hex");
-
-    const tx = await contract.privateTransferFrom(proofResult.from_address,oldAllowance,newAllowance,proofResult.to_address, amount,proofData);
     let receipt = await tx.wait();
     return receipt
 }
@@ -323,6 +298,7 @@ async function getEvents(eventName){
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
+    callPrivateTransferFrom,
     callPrivateBurn,
     getAddressBalance,
     getAllowanceBalance,

@@ -43,22 +43,41 @@ function createClient(url) {
         const request = {requestId};
         return promisify(client.GetMintProof.bind(client), request);
     };
-
-    client.generateDirectMint = async function (request) {
-        return promisify(client.GenerateDirectMint.bind(client), request);
+    //
+    // client.generateDirectMint = async function (request) {
+    //     return promisify(client.GenerateDirectMint.bind(client), request);
+    // };
+    client.generateDirectMint = async function (request, metadata) {
+        return promisifyByMetadata(client.GenerateDirectMint.bind(client), request, metadata);
     };
 
-    client.generateDirectTransfer = async function (request) {
-        return promisify(client.GenerateDirectTransfer.bind(client), request);
+    // client.registerAccount = async function (request, metadata) {
+    //     return promisifyByMetadata(accountClient.registerAccount.bind(accountClient), request, metadata);
+    // };
+
+    // client.generateDirectTransfer = async function (request) {
+    //     return promisify(client.GenerateDirectTransfer.bind(client), request);
+    // };
+
+    client.generateDirectTransfer = async function (request,metadata) {
+        return promisifyByMetadata(client.GenerateDirectTransfer.bind(client), request,metadata);
     };
 
-    client.generateDirectBurn = async function (request) {
-        return promisify(client.GenerateDirectBurn.bind(client), request);
+    client.generateApproveProof = async function (request,metadata) {
+        return promisifyByMetadata(client.GenerateApproveProof.bind(client), request,metadata);
     };
 
-    client.getTokenActionStatus = async function (requestId) {
+    // client.generateDirectBurn = async function (request) {
+    //     return promisify(client.GenerateDirectBurn.bind(client), request);
+    // };
+
+    client.generateDirectBurn = async function (request, metadata) {
+        return promisifyByMetadata(client.GenerateDirectBurn.bind(client), request, metadata);
+    };
+
+    client.getTokenActionStatus = async function (requestId, metadata) {
         const request = {requestId};
-        return promisify(client.GetTokenActionStatus.bind(client), request);
+        return promisifyByMetadata(client.GetTokenActionStatus.bind(client), request, metadata);
     };
 
     // Status checking and polling methods
@@ -67,19 +86,19 @@ function createClient(url) {
         return promisify(client.GetActionStatus.bind(client), request);
     };
 
-    client.getAccountBalance = async function (scAddress, ownerAddress, balance) {
+    client.getAccountBalance = async function (scAddress, ownerAddress, metadata) {
         const request = {
             sc_address: scAddress,
             owner_address: ownerAddress
         };
-        return promisify(client.GetAddressBalance.bind(client), request);
+        return promisifyByMetadata(client.GetAddressBalance.bind(client), request,metadata);
     };
 
-    client.decodeElgamalAmount = async function (balance) {
+    client.decodeElgamalAmount = async function (balance,metadata) {
         const request = {
             balance: balance,
         };
-        return promisify(client.DecodeElgamalAmount.bind(client), request);
+        return promisifyByMetadata(client.DecodeElgamalAmount.bind(client), request,metadata);
     };
 
     client.encodeElgamalAmount = async function (balance) {
@@ -98,8 +117,12 @@ function createClient(url) {
         return promisify(client.GetAddressAllowance.bind(client), request);
     };
 
-    client.generateSplitToken = async function (request) {
-        return promisify(client.GenerateSplitToken.bind(client), request);
+    // client.generateSplitToken = async function (request) {
+    //     return promisify(client.GenerateSplitToken.bind(client), request);
+    // };
+
+    client.generateSplitToken = async function (request, metadata) {
+        return promisifyByMetadata(client.GenerateSplitToken.bind(client), request, metadata);
     };
 
     client.getSplitToken = async function (requestId) {
@@ -171,11 +194,11 @@ function createClient(url) {
         });
     };
 
-    client.waitForActionCompletion = async function (callBack, requestId, interval = 1000) {
+    client.waitForActionCompletion = async function (callBack, requestId,metadata, interval = 1000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
-                    const result = await callBack(requestId);
+                    const result = await callBack(requestId,metadata);
 
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)

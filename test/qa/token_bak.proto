@@ -8,9 +8,9 @@ option go_package = "./token_grpc";
 service TokenService {
   rpc GenerateMintProof       (GenerateProofRequest)         returns (GenerateProofResponse);
   rpc GenerateTransferProof   (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateDirectTransfer  (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateDirectTransfer  (GenerateTransferRequest)         returns (GenerateProofResponse);
   rpc GenerateSplitToken      (GenerateProofRequest)         returns (GenerateProofResponse);
-  rpc GenerateApproveProof    (GenerateProofRequest)         returns (GenerateProofResponse);
+  rpc GenerateApproveProof    (GenerateApproveRequest)         returns (SplitTokenResponse);
   rpc GenerateTransferFromProof (GenerateProofRequest)       returns (GenerateProofResponse);
   rpc GenerateBurnProof        (GenerateProofRequest)        returns (GenerateProofResponse);
   rpc GetMintProof            (ProofRequest)                 returns (MintProofResponse);
@@ -23,6 +23,33 @@ service TokenService {
   rpc GetMintAllowed          (MintAllowedRequest)          returns (MintAllowedResponse);
   rpc ElgamalEncodeAmount     (EncodeAmountRequest)         returns (EncodeAmountResponse);
   rpc GetSplitToken           (ProofRequest)                returns (SplitTokenResponse);
+  rpc GenerateDirectMint      (GenerateMintRequest)         returns (GenerateProofResponse);
+  rpc GetTokenActionStatus    (ProofRequest)                returns (TokenActionStatusResponse);
+  rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse);
+  rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse);
+}
+
+message GenerateApproveRequest {
+  string sc_address =1 ;
+  uint64 token_type =2 ;
+  string from_address =3;
+  string to_address =4 ;
+  string spender_address =5;
+  uint64 amount = 6 ;
+}
+message GenerateTransferRequest {
+  string sc_address = 1 ;
+  uint64 token_type = 2 ;
+  string from_address = 3 ;
+  string to_address = 4 ;
+  uint64 amount = 5;
+
+}
+message GenerateBurnRequest {
+  string sc_address = 1;
+  uint64 token_type = 2 ;
+  string from_address = 3 ;
+  uint64 amount = 4 ;
 }
 
 
@@ -36,11 +63,33 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_PENDING_PROOF = 5;
   TOKEN_ACTION_STATUS_CALL_L1_SUC = 6;
 }
+message GenerateMintRequest {
+  string sc_address = 1 ;
+  uint64 token_type = 2 ;
+  string from_address = 3;
+  string to_address = 4 ;
+  uint64 amount = 5 ;
 
+}
+message DecodeAmountRequest {
+  ElGamal balance = 1;
+}
+
+message AddressBalanceResponse {
+  uint64 balance = 1 ;
+}
+
+message DecodeAmountResponse {
+  uint64 balance = 1 ;
+}
 message ProofRequest {
   string requestId = 1;
 }
-
+message TokenActionStatusResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+  string transaction_hash = 3;
+}
 message ElGamal {
   string cl_x = 1;
   string cl_y = 2;
@@ -137,17 +186,13 @@ message GenerateProofRequest {
 message GenerateProofResponse {
   string request_id = 1;
   TokenActionStatusEnum status = 2;
+  string message = 3;
 }
 
 message DecodeBalanceRequest {
   string owner_address = 1;
   string sc_address = 2;
   ElGamal balance = 3;
-}
-
-message AddressBalanceResponse {
-  uint64 balance = 1;
-  string decryptBalance = 2;
 }
 
 message AddressAllowanceRequest {
