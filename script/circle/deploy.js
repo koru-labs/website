@@ -411,9 +411,19 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
 }
 
 
-main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error("Deployment failed: ", error);
-        process.exit(1);
-    });
+// Export the main function for use in tests
+module.exports = {
+    main,
+    saveDeploymentInfo,
+    registerInstitutionAndUser
+};
+
+// Only run if this file is executed directly
+if (require.main === module) {
+    main()
+        .then(() => process.exit(0))
+        .catch((error) => {
+            console.error("Deployment failed: ", error);
+            process.exit(1);
+        });
+}
