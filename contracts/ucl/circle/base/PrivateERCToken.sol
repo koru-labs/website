@@ -286,7 +286,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         TokenModel.TokenEntity memory allowanceToken = accounts[from].assets[tokenId];
         require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
-        require(allowanceToken.status == TokenModel.TokenStatus.active, "PrivateERCToken: token not active");
         require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
 
         uint256 allowanceTokenId = accounts[from].allowances[msg.sender];
