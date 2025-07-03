@@ -128,6 +128,18 @@ library TokenModel {
         bytes proof;
     }
 
+    struct VerifyTokenApproveParams2 {
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
+        address spender;
+        address to;
+        ElGamal consumedAmount;
+        Allowance allowance;
+        ElGamal remainingAmount;
+        uint256[8] proof;
+        uint256[22] publicInputs;
+    }
+
     //VerifyTransferFromParams
     struct VerifyTokenTransferFromParams {
         InstitutionUserRegistry institutionRegistration;

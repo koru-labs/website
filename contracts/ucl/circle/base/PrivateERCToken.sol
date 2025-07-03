@@ -232,17 +232,18 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         address spender,
         address to,
         TokenModel.TokenEntity[] memory newTokens, // [allowanceToken, changeToken, rollbackToken]
-        bytes calldata proof
+        uint256[8] calldata proof,
+        uint256[22] calldata publicInputs
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender) notBlacklisted(to){
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(msg.sender, consumedTokenIds);
+        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts2(msg.sender, consumedTokenIds);
         TokenModel.TokenEntity memory allowanceToken = newTokens[0];
         TokenModel.TokenEntity memory changeToken = newTokens[1];
         TokenModel.TokenEntity memory rollbackToken = newTokens[2];
 
-        TokenModel.VerifyTokenApproveParams memory params = TokenModel.VerifyTokenApproveParams({
+        TokenModel.VerifyTokenApproveParams2 memory params = TokenModel.VerifyTokenApproveParams2({
             institutionRegistration: _institutionRegistration,
             owner: msg.sender,
             spender: spender,
@@ -257,21 +258,21 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
                 cr2_y: rollbackToken.amount.cr_y
             }),
             remainingAmount: changeToken.amount,
-            proof: proof
+            proof:  proof,
+            publicInputs:publicInputs
         });
 
-        (bool isValid, uint result, uint256[] memory znValues) = TokenVerificationLib.verifyTokenApprove(params);
-        require(isValid, "PrivateERCToken: invalid approve proof");
+        TokenVerificationLib2.verifyTokenApprove2(params);
 
-        removeTokensWithBalance(msg.sender, consumedTokenIds);
+        removeTokens(msg.sender, consumedTokenIds);
 
         allowanceToken.owner = spender;
         allowanceToken.status = TokenModel.TokenStatus.active;
-        addTokenWithBalance(spender, allowanceToken);
+        addToken(spender, allowanceToken);
 
         changeToken.owner = msg.sender;
         changeToken.status = TokenModel.TokenStatus.active;
-        addTokenWithBalance(msg.sender, changeToken);
+        addToken(msg.sender, changeToken);
 
         rollbackToken.owner = msg.sender;
         rollbackToken.status = TokenModel.TokenStatus.inactive;

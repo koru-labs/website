@@ -6,6 +6,7 @@ import "../model/TokenModel.sol";
 import "./verify/BurnTokenVerifier.sol";
 import "./verify/MintAllowedTokenVerifier.sol";
 import "./verify/SplitTokenVerifier.sol";
+import "./verify/SplitAllowanceTokenVerifier.sol";
 
 library TokenVerificationLib2 {
 
@@ -67,6 +68,39 @@ library TokenVerificationLib2 {
         // verify rollbackAmount 12-15
         TokenModel.ElGamal memory rollbackAmount = params.rollbackAmount;
         require(rollbackAmount.cl_x == publicInputs[12] && rollbackAmount.cl_y == publicInputs[13] && rollbackAmount.cr_x == publicInputs[14] && rollbackAmount.cr_y == publicInputs[15], "rollbackAmount not match");
+
+        return;
+    }
+
+    //Approve
+    function verifyTokenApprove2(TokenModel.VerifyTokenApproveParams2 calldata params) public view {
+        InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
+        SplitAllowanceTokenVerifier.verifyProof(params.proof,params.publicInputs);
+
+        uint256[22] memory publicInputs = params.publicInputs;
+
+        // verify consumedAmount 0-3
+        TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
+        require(consumedAmount.cl_x == publicInputs[0] && consumedAmount.cl_y == publicInputs[1] && consumedAmount.cr_x == publicInputs[2] && consumedAmount.cr_y == publicInputs[3], "consumedAmount not match");
+
+        // verify owner 4-5
+        TokenModel.GrumpkinPublicKey memory owner = institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
+        require(owner.x == publicInputs[4] && owner.y == publicInputs[5], "owner public key not match");
+
+        // verify spender 6-7
+        TokenModel.GrumpkinPublicKey memory spender = institutionRegistration.getUserInstGrumpkinPubKey(params.spender);
+        require(spender.x == publicInputs[6] && spender.y == publicInputs[7], "spender public key not match");
+
+        // verify allowance 0-3
+        TokenModel.Allowance memory allowance = params.allowance;
+        require(allowance.cl_x == publicInputs[0] && allowance.cl_y == publicInputs[1] && allowance.cr1_x == publicInputs[2] && allowance.cr1_y == publicInputs[3], "allowance not match");
+
+        // verify remainingAmount 4-7
+        TokenModel.ElGamal memory remainingAmount = params.remainingAmount;
+        require(remainingAmount.cl_x == publicInputs[4] && remainingAmount.cl_y == publicInputs[5] && remainingAmount.cr_x == publicInputs[6] && remainingAmount.cr_y == publicInputs[7], "remainingAmount not match");
+
+        // verify ownerBackupAmount 8-11
+        require(params.allowance.cl_x == publicInputs[8] && params.allowance.cl_y == publicInputs[9] && params.allowance.cr2_x == publicInputs[10] && params.allowance.cr2_y == publicInputs[11], "ownerBackupAmount not match");
 
         return;
     }
