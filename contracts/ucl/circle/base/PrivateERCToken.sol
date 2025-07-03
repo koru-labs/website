@@ -293,7 +293,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = allowanceToken.rollbackTokenId;
-        removeTokensWithBalance2(msg.sender, rollbackTokens);
+        removeTokensWithBalance2(from, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = allowanceToken.id;
@@ -301,9 +301,9 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory oldTokens = new uint256[](1);
         oldTokens[0] = allowanceToken.id;
-        removeTokens(msg.sender, oldTokens);
+        removeTokens(from, oldTokens);
 
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, 0);
 
         allowanceToken.rollbackTokenId =0;
         allowanceToken.owner= to;
