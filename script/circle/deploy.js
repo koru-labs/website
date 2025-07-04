@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
-const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2, deploySplitTokenVerifier, deploySplitAllowanceTokenVerifier} = require("./deploy_verifier");
+const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib, deploySplitTokenVerifier, deploySplitAllowanceTokenVerifier} = require("./deploy_verifier");
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
@@ -55,125 +55,16 @@ async function main() {
     // Load existing deployments
     const existingDeployments = await loadExistingDeployments();
 
-    console.log("\n=== Deploy Nova Libs ===");
-
-    // Check if all Nova libraries are already deployed
-    const novaLibraries = [
-        "Fr",
-        "Fq",
-        "RelaxedR1CSSNARKForSMLib",
-        "BatchedRelaxedR1CSSNARKLib",
-        "Field",
-        "Grumpkin",
-        "ZkVerifier"
-    ];
-
-    // const allNovaLibsDeployed = novaLibraries.every(lib => existingDeployments?.libraries?.[lib]);
-
-    // don't do this as it make trouble shooting very difficult
-    // if (!allNovaLibsDeployed)
-    {
-        console.log("Deploying all Nova libraries...");
-
-        // Deploy Fr Lib
-        const FrFactory = await ethers.getContractFactory("FrOps");
-        const fr = await FrFactory.deploy();
-        await fr.waitForDeployment();
-        console.log("Fr Lib is deployed at :", fr.target);
-        deployed.libraries.Fr = fr.target;
-
-        // Deploy Fq Lib
-        const FqFactory = await ethers.getContractFactory("FqOps");
-        const fq = await FqFactory.deploy();
-        await fq.waitForDeployment();
-        console.log("Fq is deployed at :", fq.target);
-        deployed.libraries.Fq = fq.target;
-
-        // Deploy Field first as it's a dependency
-        const Field = await ethers.getContractFactory("Field");
-        const field = await Field.deploy();
-        await field.waitForDeployment();
-        console.log("Field is deployed at :", field.target);
-        deployed.libraries.Field = field.target;
-
-        // Deploy Grumpkin
-        const Grumpkin = await ethers.getContractFactory("Grumpkin", {
-            libraries: {
-                "Field": field.target,
-                "CommonUtilities": field.target,
-            }
-        });
-        const grumpkin = await Grumpkin.deploy();
-        await grumpkin.waitForDeployment();
-        console.log("Grumpkin is deployed at :", grumpkin.target);
-        deployed.libraries.Grumpkin = grumpkin.target;
-
-        // Deploy Verifier
-        await deployCurveBabyJubJub(deployed);
-        await deployCurveBabyJubJubHelper(deployed);
-        await deployMintAllowedTokenVerifier(deployed);
-        await deploySplitTokenVerifier(deployed);
-        await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
-        await deployTokenVerificationLib2(deployed);
-        console.log(deployed)
-
-        // Deploy RelaxedR1CSSNARKForSMLib
-        const RelaxedR1CSSNARKForSMLibFactory = await ethers.getContractFactory("RelaxedR1CSSNARKForSMLib");
-        const relaxedR1CSSNARKForSMLib = await RelaxedR1CSSNARKForSMLibFactory.deploy();
-        await relaxedR1CSSNARKForSMLib.waitForDeployment();
-        console.log("RelaxedR1CSSNARKForSMLib is deployed at :", relaxedR1CSSNARKForSMLib.target);
-        deployed.libraries.RelaxedR1CSSNARKForSMLib = relaxedR1CSSNARKForSMLib.target;
-
-        // Deploy BatchedRelaxedR1CSSNARKLib
-        const BatchedRelaxedR1CSSNARKLibFactory = await ethers.getContractFactory("BatchedRelaxedR1CSSNARKLib");
-        const batchedRelaxedR1CSSNARKLib = await BatchedRelaxedR1CSSNARKLibFactory.deploy();
-        await batchedRelaxedR1CSSNARKLib.waitForDeployment();
-        console.log("BatchedRelaxedR1CSSNARKLib is deployed at :", batchedRelaxedR1CSSNARKLib.target);
-        deployed.libraries.BatchedRelaxedR1CSSNARKLib = batchedRelaxedR1CSSNARKLib.target;
-
-        // Deploy ZkVerifier
-        const ZkVerifierFactory = await ethers.getContractFactory("ZkVerifier", {
-            libraries: {
-                "RelaxedR1CSSNARKForSMLib": deployed.libraries.RelaxedR1CSSNARKForSMLib,
-                "BatchedRelaxedR1CSSNARKLib": deployed.libraries.BatchedRelaxedR1CSSNARKLib
-            }
-        });
-        const zkVerifier = await ZkVerifierFactory.deploy();
-        await zkVerifier.waitForDeployment();
-        console.log("ZkVerifier is deployed at:", zkVerifier.target);
-        deployed.libraries.ZkVerifier = zkVerifier.target;
-    }
-
     console.log("\n=== Deploy TokenSc Libs ===");
-    console.log("Deploy TokenGrumpkinLib...");
-    try {
-        const TokenGrumpkinLibFactory = await ethers.getContractFactory("TokenGrumpkinLib", {
-            libraries: {
-                "Grumpkin": deployed.libraries.Grumpkin,
-            }
-        });
-        const tokenGrumpkinLib = await TokenGrumpkinLibFactory.deploy();
-        await tokenGrumpkinLib.waitForDeployment();
-        console.log("TokenGrumpkinLib is deployed at :", tokenGrumpkinLib.target);
-        deployed.libraries.TokenGrumpkinLib = tokenGrumpkinLib.target;
-    } catch (error) {
-        console.error("TokenGrumpkinLib deployment failed:", error.message);
-    }
 
-    console.log("Deploy TokenVerificationLib...");
-    try {
-        const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
-            libraries: {
-                "ZkVerifier": deployed.libraries.ZkVerifier,
-            }
-        });
-        const tokenVerificationLib = await TokenVerificationLibFactory.deploy();
-        await tokenVerificationLib.waitForDeployment();
-        console.log("TokenVerificationLib is deployed at :", tokenVerificationLib.target);
-        deployed.libraries.TokenVerificationLib = tokenVerificationLib.target;
-    } catch (error) {
-        console.error("TokenVerificationLib deployment failed:", error.message);
-    }
+    // Deploy Verifier
+    await deployCurveBabyJubJub(deployed);
+    await deployCurveBabyJubJubHelper(deployed);
+    await deployMintAllowedTokenVerifier(deployed);
+    await deploySplitTokenVerifier(deployed);
+    await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
+    await deployTokenVerificationLib(deployed);
+    console.log(deployed)
 
     if (ADDRESSES.TOKEN_EVENT_LIB == "") {
         console.log("Deploy TokenEventLib...");
@@ -238,17 +129,15 @@ async function main() {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib2":deployed.libraries.TokenVerificationLib2
+            "TokenVerificationLib":deployed.libraries.TokenVerificationLib
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;
 
     if (!deployed.libraries.TokenEventLib ||
         !deployed.libraries.TokenVerificationLib ||
-        !deployed.libraries.Grumpkin ||
         !deployed.contracts.InstitutionUserRegistry) {
         throw new Error("Deployment of HamsaUSDC failed");
     }
