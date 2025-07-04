@@ -102,17 +102,17 @@ async function main() {
 
     console.log("Checking InstitutionUserRegistry.sol smart contract...");
     // if (ADDRESSES.INSTITUTION_REGISTRATION == "") {
-    //     console.log("Deploying new InstitutionUserRegistry.sol contract...");
-    //     const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
-    //         libraries: {
-    //             "TokenEventLib": deployed.libraries.TokenEventLib,
-    //         }
-    //     });
-    //     const institutionUserRegistry = await InstitutionUserRegistryFactory.deploy(deployed.contracts.HamsaL2Event);
-    //     await institutionUserRegistry.waitForDeployment();
-    //
-    //     console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
-    //     deployed.contracts.InstitutionUserRegistry = institutionUserRegistry.target;
+    console.log("Deploying new InstitutionUserRegistry.sol contract...");
+    const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const institutionUserRegistry = await InstitutionUserRegistryFactory.deploy(deployed.contracts.HamsaL2Event);
+    await institutionUserRegistry.waitForDeployment();
+
+    console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
+    deployed.contracts.InstitutionUserRegistry = institutionUserRegistry.target;
     //
     // } else {
     //     console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
@@ -131,7 +131,7 @@ async function main() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib":deployed.libraries.TokenVerificationLib
+            "TokenVerificationLib": deployed.libraries.TokenVerificationLib
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;
