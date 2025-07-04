@@ -20,6 +20,7 @@ const {
     callPrivateApprove,
     callPrivateTransferFrom,
     getAddressBalance,
+    getAddressBalance2,
     getPublicTotalSupply,
     checkAccountToken
 } = require("../help/testHelp")
@@ -133,14 +134,13 @@ async function testMint() {
     console.log("metaData: ", metaData)
     let response = await client.generateMintProof(generateRequest, metaData);
     console.log("Generate Mint Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
-    console.log("Mint Proof Result:", proofResult);
 
-    // let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    // console.log("receipt", receipt)
-    //
-    // let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
-    // console.log("balance: ", balance)
+
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
+    console.log("receipt", receipt)
+
+    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To2, metaData)
+    console.log("balance: ", balance)
 }
 
 async function testMintForNewUser(newUserAddress) {

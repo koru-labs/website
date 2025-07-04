@@ -31,8 +31,12 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
         cr_x: ethers.toBigInt(proofResult.supply_amount.cr_x),
         cr_y: ethers.toBigInt(proofResult.supply_amount.cr_y)
     };
-    const proofData = Buffer.from(proofResult.proof, "hex");
-    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proofData);
+    const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+    const input = proofResult.input.map(i => ethers.toBigInt(i));
+
+    console.log(proofResult.to_address,amount,supplyAmount,proof,input)
+
+    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proof,input);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -158,6 +162,33 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     }
     let result = await grpcClient.getAccountBalance(scAddress, account)
     let decodeAmount = await grpcClient.decodeElgamalAmount(balance)
+
+    console.log("===================================================================");
+    console.log("Checking Owner Balance");
+    console.log("Owner Address:", account);
+    console.log("-------------------------------------------------------------------");
+    console.log("Decrypted On-chain Balance:", decodeAmount);
+    console.log("Database Balance:", result);
+    console.log("===================================================================\n");
+
+    return result
+}
+
+async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.privateBalanceOf(account)
+
+    let balance=  {
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
+    let result = await grpcClient.getAccountBalance(scAddress, account,metadata)
+    let decodeAmount = 0
+    if (balance.cl_x != '0') {
+        decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
+    }
 
     console.log("===================================================================");
     console.log("Checking Owner Balance");
@@ -455,6 +486,7 @@ module.exports =  {
     callPrivateTransfer,
     callPrivateBurn,
     getAddressBalance,
+    getAddressBalance2,
     getAllowanceBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
