@@ -28,7 +28,7 @@ service TokenService {
       description: "Submit request to generate proof for token mint. This is an asynchronous call. To query the proof,  call /query/proof/mint using the returned request_id in the response"
     };
   };
-  rpc GenerateSplitToken      (GenerateSplitRequest)         returns (GenerateProofResponse) {
+  rpc GenerateSplitToken      (GenerateSplitRequest)         returns (SplitTokenResponse) {
     option (google.api.http) = {
       post: "/v1/split/token"
       body: "*"
