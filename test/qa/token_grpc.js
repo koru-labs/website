@@ -2,7 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
-const PROTO_PATH = path.join(__dirname, './token_bak.proto');
+const PROTO_PATH = path.join(__dirname, './token.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -36,12 +36,12 @@ function createClient(url) {
 
     // Proof generation methods
     client.generateMintProof = async function (request, metadata) {
-        return promisify(client.GenerateMintProof.bind(client), request, metadata);
+        return promisifyByMetadata(client.GenerateMintProof.bind(client), request, metadata);
     };
 
     client.getMintProof = async function (requestId, metadata) {
         const request = {requestId};
-        return promisify(client.GetMintProof.bind(client), request, metadata);
+        return promisifyByMetadata(client.GetMintProof.bind(client), request, metadata);
     };
     //
     // client.generateDirectMint = async function (request) {

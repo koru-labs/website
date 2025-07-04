@@ -1,6 +1,7 @@
 const assert = require('node:assert');
 
 const {ethers} = require('hardhat');
+const grpc = require("@grpc/grpc-js");
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
 let accounts = require('./../../deployments/account.json');
@@ -8,6 +9,8 @@ const {createClient} = require('../qa/token_grpc')
 
 
 const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
+// const rpcUrl = "localhost:50051"
+
 const client = createClient(rpcUrl)
 
 const {
@@ -122,21 +125,22 @@ async function testMint() {
 
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
+        token_type: 0,
         to_address: accounts.To2,
         amount: 1
     };
-    let metData= await createAuthMetadata(accounts.MinterKey)
-    let response = await client.generateMintProof(generateRequest, metData);
+    let metaData= await createAuthMetadata(accounts.MinterKey)
+    console.log("metaData: ", metaData)
+    let response = await client.generateMintProof(generateRequest, metaData);
     console.log("Generate Mint Proof response:", response);
-    let proofResult = await client.waitForProofCompletion( client.getMintProof, response.request_id)
-
+    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
     console.log("Mint Proof Result:", proofResult);
-    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
-    console.log("receipt", receipt)
 
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
-    console.log("balance: ", balance)
+    // let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+    // console.log("receipt", receipt)
+    //
+    // let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
+    // console.log("balance: ", balance)
 }
 
 async function testMintForNewUser(newUserAddress) {

@@ -9,10 +9,11 @@ const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedToke
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
 let institutionRegistration = "0x34305eDd20bDdBE3478cB8761DC9Bd1A54CB06dc";// qa
+
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
-    INSTITUTION_REGISTRATION: institutionRegistration
+    INSTITUTION_REGISTRATION: ""
 };
 
 // Add function to check existing deployments
@@ -387,7 +388,6 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
         const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
         const adminRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress, wallet);
 
-
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         let regTx = await institutionUserRegistry.registerInstitution(
             institutions[i].address,
@@ -401,10 +401,15 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
 
 
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await adminRegistry.registerUser(
-                institutions[i].userAddresses[j],
-            );
-            await userRegTx.wait();
+
+            try {
+                let userRegTx = await adminRegistry.registerUser(
+                    institutions[i].userAddresses[j],
+                );
+                await userRegTx.wait();
+            } catch (err) {
+                console.log("error:", err)
+            }
             console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);
         }
     }
