@@ -4,7 +4,16 @@ const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
 const accounts = require("../../deployments/account.json");
-const {deployCurveBabyJubJub, deployCurveBabyJubJubHelper, deployMintAllowedTokenVerifier, deployTokenVerificationLib2, deploySplitTokenVerifier, deploySplitAllowanceTokenVerifier} = require("./deploy_verifier");
+const {createAuthMetadata} = require("../../test/help/testHelp.js")
+const {createClient} = require('../../test/qa/token_grpc');
+const {
+    deployCurveBabyJubJub,
+    deployCurveBabyJubJubHelper,
+    deployMintAllowedTokenVerifier,
+    deployTokenVerificationLib2,
+    deploySplitTokenVerifier,
+    deploySplitAllowanceTokenVerifier
+} = require("./deploy_verifier");
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
@@ -44,8 +53,7 @@ async function loadExistingDeployments() {
 }
 
 async function main() {
-    console.log("Deploy UCL SandBox smart contracts...");
-
+    console.log("Deploy UCL SandBox smart contracts...")
     let deployed = {
         libraries: {},
         contracts: {},
@@ -209,25 +217,24 @@ async function main() {
     }
 
     console.log("Checking InstitutionUserRegistry.sol smart contract...");
-    if (ADDRESSES.INSTITUTION_REGISTRATION == "") {
-        console.log("Deploying new InstitutionUserRegistry.sol contract...");
-        const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
-            libraries: {
-                "TokenEventLib": deployed.libraries.TokenEventLib,
-            }
-        });
-        const institutionUserRegistry = await InstitutionUserRegistryFactory.deploy(deployed.contracts.HamsaL2Event);
-        await institutionUserRegistry.waitForDeployment();
-
-        console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
-        deployed.contracts.InstitutionUserRegistry = institutionUserRegistry.target;
-
-
-        await registerInstitutionAndUser(deployed.contracts.InstitutionUserRegistry);
-    } else {
-        console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
-        deployed.contracts.InstitutionUserRegistry = ADDRESSES.INSTITUTION_REGISTRATION;
-    }
+    // if (ADDRESSES.INSTITUTION_REGISTRATION == "") {
+    //     console.log("Deploying new InstitutionUserRegistry.sol contract...");
+    //     const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
+    //         libraries: {
+    //             "TokenEventLib": deployed.libraries.TokenEventLib,
+    //         }
+    //     });
+    //     const institutionUserRegistry = await InstitutionUserRegistryFactory.deploy(deployed.contracts.HamsaL2Event);
+    //     await institutionUserRegistry.waitForDeployment();
+    //
+    //     console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
+    //     deployed.contracts.InstitutionUserRegistry = institutionUserRegistry.target;
+    //
+    // } else {
+    //     console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
+    //     deployed.contracts.InstitutionUserRegistry = ADDRESSES.INSTITUTION_REGISTRATION;
+    // }
+    await registerInstitutionAndUser(deployed.contracts.InstitutionUserRegistry);
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
@@ -241,7 +248,7 @@ async function main() {
             "TokenGrumpkinLib": deployed.libraries.TokenGrumpkinLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib2":deployed.libraries.TokenVerificationLib2
+            "TokenVerificationLib2": deployed.libraries.TokenVerificationLib2
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;
@@ -310,14 +317,14 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 }
 
 
-async function registerInstitutionAndUser(institutionUserRegistryAddress) {
-    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress);
+async function registerInstitutionAndUser() {
 
     const institutions = [
         {
             address: "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127",
             ethPrivateKey: "f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc",
             name: "Node1",
+            rpcUrl: "qa-node1-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node1-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node1-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -333,6 +340,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             address: "0x03d68e57f1f9939d3FDcf97B5e7a1d0Be995Ec67",
             ethPrivateKey: "d9597e2d88463e47d1b6c2431879f06d440a6ff980a51a1f8c830623b112f329",
             name: "Node2",
+            rpcUrl: "qa-node2-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node2-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node2-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -348,6 +356,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
+            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -370,6 +379,7 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
+            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -384,29 +394,37 @@ async function registerInstitutionAndUser(institutionUserRegistryAddress) {
     ]
 
     for (let i = 0; i < institutions.length; i++) {
-        const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
-        const adminRegistry = await ethers.getContractAt("InstitutionUserRegistry", institutionUserRegistryAddress, wallet);
-
-
-        console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
-        let regTx = await institutionUserRegistry.registerInstitution(
-            institutions[i].address,
-            institutions[i].name,
-            institutions[i].publicKey,
-            institutions[i].nodeUrl,
-            institutions[i].httpUrl
-        );
-        await regTx.wait();
-        console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
-
+        let client;
+        try {
+            client = createClient(institutions[i].rpcUrl);
+        } catch (error) {
+            console.error(`[ERROR] Failed to connect to node ${institutions[i].name}:`, {
+                rpcUrl: institutions[i].rpcUrl,
+                error: error.message,
+                stack: error.stack
+            });
+            continue;
+        }
 
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userRegTx = await adminRegistry.registerUser(
-                institutions[i].userAddresses[j],
-            );
-            await userRegTx.wait();
+            registerUser(client, institutions[i].ethPrivateKey, institutions[i].userAddresses[j]);
             console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);
         }
+    }
+}
+
+
+async function registerUser(client, privateKey, userAddress) {
+    const metadata = await createAuthMetadata(privateKey);
+    const request = {
+        account_address: userAddress,
+        account_role: "normal",//minter,admin,normal
+    };
+    try {
+        const response = await client.registerAccount(request, metadata);
+        console.log("registerAccount response:", response);
+    } catch (error) {
+        console.error("registerAccount failed:", error);
     }
 }
 
