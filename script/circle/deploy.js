@@ -18,11 +18,11 @@ const {createClient} = require('../../test/qa/token_grpc');
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
-let institutionRegistration = "0x34305eDd20bDdBE3478cB8761DC9Bd1A54CB06dc";// qa
+let institutionRegistration = "0x1097dda2a3D721EEDe3d2c07a7265e477bb3fF83";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
-    INSTITUTION_REGISTRATION: ""
+    INSTITUTION_REGISTRATION: institutionRegistration
 };
 
 const institutions = [
@@ -338,7 +338,11 @@ async function registerInstitutionAndUser() {
         }
 
         for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            await registerUser(client, institutions[i].ethPrivateKey, institutions[i].userAddresses[j]);
+            let userAddress = institutions[i].userAddresses[j];
+            if (userAddress == institutions[i].address) {
+                continue;
+            }
+            await registerUser(client, institutions[i].ethPrivateKey, userAddress);
             console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);
         }
     }
@@ -359,7 +363,7 @@ async function registerUser(client, privateKey, userAddress) {
     }
 }
 
-// main().then();
+main().then();
 //call this function after updating settings in k8s cluster and restart them
 // registerInstitutionAndUser().then();
 
