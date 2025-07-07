@@ -2,7 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
-const PROTO_PATH = path.join(__dirname, './token_bak.proto');
+const PROTO_PATH = path.join(__dirname, './token.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -35,13 +35,13 @@ function createClient(url) {
 
 
     // Proof generation methods
-    client.generateMintProof = async function (request) {
-        return promisify(client.GenerateMintProof.bind(client), request);
+    client.generateMintProof = async function (request, metadata) {
+        return promisifyByMetadata(client.GenerateMintProof.bind(client), request, metadata);
     };
 
-    client.getMintProof = async function (requestId) {
+    client.getMintProof = async function (requestId, metadata) {
         const request = {requestId};
-        return promisify(client.GetMintProof.bind(client), request);
+        return promisifyByMetadata(client.GetMintProof.bind(client), request, metadata);
     };
     //
     // client.generateDirectMint = async function (request) {
@@ -81,9 +81,9 @@ function createClient(url) {
     };
 
     // Status checking and polling methods
-    client.getActionStatus = async function (requestId) {
+    client.getActionStatus = async function (requestId, metadata) {
         const request = {requestId};
-        return promisify(client.GetActionStatus.bind(client), request);
+        return promisify(client.GetActionStatus.bind(client), request, metadata);
     };
 
     client.getAccountBalance = async function (scAddress, ownerAddress, metadata) {
@@ -125,9 +125,9 @@ function createClient(url) {
         return promisifyByMetadata(client.GenerateSplitToken.bind(client), request, metadata);
     };
 
-    client.getSplitToken = async function (requestId) {
+    client.getSplitToken = async function (requestId, metadata) {
         const request = {requestId};
-        return promisify(client.GetSplitToken.bind(client), request);
+        return promisify(client.GetSplitToken.bind(client), request, metadata);
     };
 
     client.getMintAllowed = async function (request) {
@@ -218,7 +218,6 @@ function createClient(url) {
             }
         });
     };
-
     return client;
 }
 

@@ -1,6 +1,7 @@
 const assert = require('node:assert');
 
 const {ethers} = require('hardhat');
+const grpc = require("@grpc/grpc-js");
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
 let accounts = require('./../../deployments/account.json');
@@ -8,6 +9,8 @@ const {createClient} = require('../qa/token_grpc')
 
 
 const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
+// const rpcUrl = "localhost:50051"
+
 const client = createClient(rpcUrl)
 
 const {
@@ -17,6 +20,7 @@ const {
     callPrivateApprove,
     callPrivateTransferFrom,
     getAddressBalance,
+    getAddressBalance2,
     getPublicTotalSupply,
     checkAccountToken
 } = require("../help/testHelp")
@@ -122,19 +126,20 @@ async function testMint() {
 
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
+        token_type: 0,
         to_address: accounts.To2,
-        amount: 1000
+        amount: 1
     };
-    let response = await client.generateMintProof(generateRequest);
+    let metaData= await createAuthMetadata(accounts.MinterKey)
+    console.log("metaData: ", metaData)
+    let response = await client.generateMintProof(generateRequest, metaData);
     console.log("Generate Mint Proof response:", response);
-    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
 
-    console.log("Mint Proof Result:", proofResult);
-    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
     console.log("receipt", receipt)
 
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.To2)
+    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To2, metaData)
     console.log("balance: ", balance)
 }
 
@@ -378,6 +383,21 @@ async function registerNewUserInNode1(){
 async function testTotalSupply(){
     let result = await getPublicTotalSupply(config.contracts.PrivateERCToken);
     console.log("the total supply is: ", result)
+}
+
+
+async function createAuthMetadata(privateKey, messagePrefix = "login") {
+    const wallet = new ethers.Wallet(privateKey);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const message = `${messagePrefix}_${timestamp}`;
+    const signature = await wallet.signMessage(message);
+
+    const metadata = new grpc.Metadata();
+    metadata.set('address', wallet.address.toLowerCase());
+    metadata.set('signature', signature);
+    metadata.set('message', message);
+
+    return metadata;
 }
 
 // checkDeployedUSDC().then();

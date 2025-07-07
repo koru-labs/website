@@ -54,7 +54,8 @@ contract InstitutionUserRegistry {
         httpUrl : httpUrl
         });
 
-        institutions[institutionAddress] = institution;
+        institutions[institutionAddress]  = institution;
+        userToManager[institutionAddress] = institutionAddress;
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
