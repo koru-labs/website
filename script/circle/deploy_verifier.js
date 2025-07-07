@@ -52,26 +52,26 @@ async function deploySplitAllowanceTokenVerifier(deployed) {
     deployed.libraries.SplitAllowanceTokenVerifier = splitAllowanceTokenVerifier.target;
 }
 
-// deploy TokenVerificationLib2
-async function deployTokenVerificationLib2(deployed) {
-    console.log("Deploy TokenVerificationLib2...");
-    const TokenVerificationLib2Factory = await ethers.getContractFactory("TokenVerificationLib2", {
+// deploy TokenVerificationLib.sol
+async function deployTokenVerificationLib(deployed) {
+    console.log("Deploy TokenVerificationLib.sol...");
+    const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
         libraries: {
             MintAllowedTokenVerifier: deployed.libraries.MintAllowedTokenVerifier,
             SplitTokenVerifier: deployed.libraries.SplitTokenVerifier, // Add the new library link
             SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier // Add the new library link
         }
     });
-    const TokenVerificationLib2 = await TokenVerificationLib2Factory.deploy();
-    await TokenVerificationLib2.waitForDeployment();
-    console.log("TokenVerificationLib2 is deployed at :", TokenVerificationLib2.target);
-    deployed.libraries.TokenVerificationLib2 = TokenVerificationLib2.target;
-    console.log("deployed.libraries.TokenVerificationLib2 :", deployed.libraries.TokenVerificationLib2);
+    const TokenVerificationLib = await TokenVerificationLibFactory.deploy();
+    await TokenVerificationLib.waitForDeployment();
+    console.log("TokenVerificationLib.sol is deployed at :", TokenVerificationLib.target);
+    deployed.libraries.TokenVerificationLib = TokenVerificationLib.target;
+    console.log("deployed.libraries.TokenVerificationLib.sol :", deployed.libraries.TokenVerificationLib);
 }
 
 exports.deployCurveBabyJubJub = deployCurveBabyJubJub;
 exports.deployCurveBabyJubJubHelper = deployCurveBabyJubJubHelper;
 exports.deployMintAllowedTokenVerifier = deployMintAllowedTokenVerifier;
-exports.deployTokenVerificationLib2 = deployTokenVerificationLib2;
+exports.deployTokenVerificationLib = deployTokenVerificationLib;
 exports.deploySplitTokenVerifier = deploySplitTokenVerifier;
 exports.deploySplitAllowanceTokenVerifier = deploySplitAllowanceTokenVerifier;

@@ -57,43 +57,11 @@ library TokenModel {
         ElGamal currentMintAmount;
         ElGamal supplyIncrease;
 
-        bytes proof;
-    }
-
-    struct VerifyTokenMintParams2 {
-        InstitutionUserRegistry institutionRegistration;
-        address minter;
-        address to;
-        ElGamal initialMinterAllowed;
-        ElGamal currentMintAmount;
-        ElGamal supplyIncrease;
-
         uint256[8] proof;
         uint256[22] publicInputs;
     }
 
-    struct VerifyTokenTransferParams {
-        InstitutionUserRegistry institutionRegistration;
-        address from;
-        address to;
-        ElGamal consumedAmount;
-        ElGamal amount;
-        ElGamal remainingAmount;
-        bytes proof;
-    }
-
     struct VerifyTokenSplitParams {
-        InstitutionUserRegistry institutionRegistration;
-        address from;
-        address to;
-        ElGamal consumedAmount;
-        ElGamal amount;
-        ElGamal remainingAmount;
-        ElGamal rollbackAmount;
-        bytes proof;
-    }
-
-    struct VerifyTokenSplitParams2 {
         InstitutionUserRegistry institutionRegistration;
         address from;
         address to;
@@ -105,30 +73,7 @@ library TokenModel {
         uint256[20] publicInputs;
     }
 
-    struct VerifyTokenBurnParams{
-        InstitutionUserRegistry institutionRegistration;
-        address from;
-        ElGamal consumedAmount;
-        ElGamal amount;
-        ElGamal remainingAmount;
-        ElGamal supplyDecrease;
-//        address owner;
-        bytes proof;
-    }
-
-    //VerifyApproveParams
     struct VerifyTokenApproveParams {
-        InstitutionUserRegistry institutionRegistration;
-        address owner;
-        address spender;
-        address to;
-        ElGamal consumedAmount;
-        Allowance allowance;
-        ElGamal remainingAmount;
-        bytes proof;
-    }
-
-    struct VerifyTokenApproveParams2 {
         InstitutionUserRegistry institutionRegistration;
         address owner;
         address spender;
@@ -138,18 +83,6 @@ library TokenModel {
         ElGamal remainingAmount;
         uint256[8] proof;
         uint256[22] publicInputs;
-    }
-
-    //VerifyTransferFromParams
-    struct VerifyTokenTransferFromParams {
-        InstitutionUserRegistry institutionRegistration;
-        address owner;
-        address spender;
-        address receiver;
-        Allowance oldAllowance;
-        Allowance newAllowance;
-        ElGamal amount;
-        bytes proof;
     }
 
     struct GrumpkinPublicKey {

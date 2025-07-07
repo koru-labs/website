@@ -1,31 +1,21 @@
 {
   "libraries": {
-    "Fr": "0xCa5475571931FD0C7519f6A01611F423300054Cc",
-    "Fq": "0x44F2B872917a398f64f73EA3d7f19f405599A1f4",
-    "Field": "0x966BF382905bD9D767Bc89bCfBF80517F190D052",
-    "Grumpkin": "0x7Dd1814e00897Ba7Bd55c7D7EF54A5cd67cD9C26",
-    "CurveBabyJubJub": "0x195F2aBCcA036434e40D35eF152A01271C1fB132",
-    "CurveBabyJubJubHelper": "0xa09aa53597818AA7EdF238f9bD00bd3E22482b48",
-    "MintAllowedTokenVerifier": "0x44b6d2d75f74C03225bf5bc2005964462B25377f",
-    "SplitTokenVerifier": "0x59175064cb43a965441402A9f1a409C3bbb32dfb",
-    "SplitAllowanceTokenVerifier": "0x6a124E093c2B62079bf03A7AD00572D571993831",
-    "TokenVerificationLib2": "0xDBAb1cAfaE9aeB617ac24D3C656FBb45703E880d",
-    "RelaxedR1CSSNARKForSMLib": "0x3C36e25B68b4FeB955B5aE8a2a50EdbB1C414E67",
-    "BatchedRelaxedR1CSSNARKLib": "0xF2e7447d710a327ee0229414d34A028FFbA45887",
-    "ZkVerifier": "0x6098756e32Deb61a6C75cF341aFca9ce9f70a076",
-    "TokenGrumpkinLib": "0x7176D117481E9684C0D98245795BA40975686aeb",
-    "TokenVerificationLib": "0x9de846fdDbd6Bbe4772191eA0b1DebAff7a186e4",
-    "TokenEventLib": "0x32f5a3D670f3bFc50dFe6c2dF332AdCb0b8F48D6",
-    "SignatureChecker": "0xA2383148D70d05b2BED2e36683f302AF7432146A"
+    "CurveBabyJubJub": "0xdA6156B26429E942Df45840166314F34B042d537",
+    "CurveBabyJubJubHelper": "0x931Fa059Fb891D0763e45FeEea4373C30a3d1641",
+    "MintAllowedTokenVerifier": "0x1d4B37A83dDe1aD1e9827c96650Efb4564Eb3882",
+    "SplitTokenVerifier": "0x0c6c3768C539d2162b4F07A66479823251DAd0f1",
+    "SplitAllowanceTokenVerifier": "0x53D9FFe6Cbf55A1bF586066853e189Fa0936cC0C",
+    "TokenVerificationLib": "0xe9e3e4d3D8920A61c7FcA6cA1ADE60712bee76b7",
+    "TokenEventLib": "0xEAfB51f5BDCc8ab2524cE4c56EDFE914A7f8CAd4",
+    "SignatureChecker": "0xc791c60deD4Bcfb43433B8a4AA235248632B0452"
   },
   "contracts": {
     "HamsaL2Event": "0x80238AD5B21A9f253094073256d602f53131F82b",
-    "InstitutionUserRegistry": "0x6Bf6073d701F9cF2dCe00AaB93fD1ccAF31dEf04",
-    "PrivateERCToken": "0xde8C9FB3a753a171093154559887Df1eEc5DBdE5"
+    "PrivateERCToken": "0x0F91fB20b0Ab10C1AD55F8dc169476bBB3006810"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-07-04T06:41:04.045Z",
+    "timestamp": "2025-07-04T08:59:20.049Z",
     "network": "ucl_L2",
     "chainId": "1337"
   }

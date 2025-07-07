@@ -2,19 +2,23 @@ const assert = require('node:assert');
 const {ethers} = require('ethers');
 const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
+const axios = require('axios');
 
 // const rpcUrl = "localhost:50051";
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
-const client = createClient(rpcUrl);
+// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+// const httpUrl = "http://localhost:8080";
+const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+
+// const client = createClient(rpcUrl);
 
 // admin
-const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
 // normal
 // const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0x4568E35F2c4590Bde059be615015AaB6cc873004";//test
+const address = "0xa03099ce91035fa9b1a3a123c7678bd045531d1c";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -44,14 +48,12 @@ async function testUpdateAccountStatus() {
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
-        if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
-            await delay(10000);
-            const actionRequest = {
-                request_id: response.request_id,
-            };
-            const actionResponse = await client.getAsyncAction(actionRequest, metadata);
-            console.log("action response:", actionResponse);
-        }
+        await delay(10000);
+        const actionRequest = {
+            request_id: response.request_id,
+        };
+        const actionResponse = await client.getAsyncAction(actionRequest, metadata);
+        console.log("action response:", actionResponse);
     } catch (error) {
         console.error("gRPC call failed:", error);
     }
@@ -67,14 +69,12 @@ async function testRegisterAccount() {
     try {
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
-        if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
-            const actionRequest = {
-                request_id: response.request_id,
-            };
-            await delay(10000);
-            const actionResponse = await client.getAsyncAction(actionRequest, metadata);
-            console.log("action response:", actionResponse);
-        }
+        const actionRequest = {
+            request_id: response.request_id,
+        };
+        await delay(10000);
+        const actionResponse = await client.getAsyncAction(actionRequest, metadata);
+        console.log("action response:", actionResponse);
     } catch (error) {
         console.error("gRPC call failed:", error);
     }
@@ -83,7 +83,7 @@ async function testRegisterAccount() {
 async function testGetAsyncAction() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const request_id = "f4dd2d79d8c0357c4637ccdf099f7f82281b1e771b1287387ebffd9a709ee4fb"
+        const request_id = "9d52031436dc78bacfa195a3d85f04d27b9cc1feeba0af718d3ff524d824491b"
         const actionRequest = {
             request_id: request_id,
         };
@@ -93,7 +93,6 @@ async function testGetAsyncAction() {
         console.error("gRPC call failed:", error);
     }
 }
-
 
 
 async function testUpdateAccountRole() {
@@ -124,8 +123,46 @@ async function testGetAccount() {
 }
 
 
-testRegisterAccount().then();
+async function createAuthHeaders(privateKey, messagePrefix = "login") {
+    const wallet = new ethers.Wallet(privateKey);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const message = `${messagePrefix}_${timestamp}`;
+    const signature = await wallet.signMessage(message);
+
+    return {
+        'Content-Type': 'application/json',
+        'address': wallet.address.toLowerCase(),
+        'signature': signature,
+        'message': message,
+        'Grpc-Metadata-Address': wallet.address.toLowerCase(),
+        'Grpc-Metadata-Signature': signature,
+        'Grpc-Metadata-Message': message
+    };
+}
+
+async function testGetAccountForHttp() {
+    try {
+        const headers = await createAuthHeaders(privateKey);
+        // console.log('Request headers:', headers);
+        const response = await axios.post(`${httpUrl}/v1/account/query`, {
+            account_address: address
+        }, {
+            headers: headers,
+            timeout: 15000
+        });
+
+        console.log("HTTP response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("HTTP call failed:", error.response?.data || error.message);
+        throw error;
+    }
+}
+
+
+// testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
 // testGetAccount().then();
+testGetAccountForHttp().then();
