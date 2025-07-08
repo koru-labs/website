@@ -1,22 +1,22 @@
 {
   "libraries": {
-    "CurveBabyJubJub": "0xCCf3A53D6cDf65907db236ff03651588d96e6839",
-    "CurveBabyJubJubHelper": "0x11a6d1746b4c086016226e5640525Ce6937Da3e9",
-    "MintAllowedTokenVerifier": "0x574D43A6E65973B38134B68C269F3a23be2B4C14",
-    "SplitTokenVerifier": "0x49864770B18F5c43fbD88415F583E7AA6F67d496",
-    "SplitAllowanceTokenVerifier": "0x156D6e2738d8d216726A252b1e32e339759980D6",
-    "TokenVerificationLib": "0x521245B37C091275FeeC57654a8f46e02Fb13449",
-    "TokenEventLib": "0x8aB8aF672ff6a912Aef0853B86dC072E0B9C91d2",
-    "SignatureChecker": "0x25F9a4DD71F7650b23e57D36E0974c680A807617"
+    "CurveBabyJubJub": "0x9530893760eC7a27ee54412098D6B6406b02537a",
+    "CurveBabyJubJubHelper": "0x8A835e03748Dc8B2F0Cc37500EF601F92Cf9bF06",
+    "MintAllowedTokenVerifier": "0x2899413a39DC7D50268f9Fb5cA38Ee26EB599f77",
+    "SplitTokenVerifier": "0xaed7b465514CF68B290F283C09191520fcdB6F93",
+    "SplitAllowanceTokenVerifier": "0x715E1B32db6Fa592bD19462e2904d4a3772C87aC",
+    "TokenVerificationLib": "0x20cA2D08cA921EA84c4c4E40533015132C8AeB20",
+    "TokenEventLib": "0xF95F62897506AfB6aF334E2E866dd8971F5860A4",
+    "SignatureChecker": "0x014F0a0d07e08349723922042c753c04bf22a8d0"
   },
   "contracts": {
     "HamsaL2Event": "0x80238AD5B21A9f253094073256d602f53131F82b",
     "InstitutionUserRegistry": "0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4",
-    "PrivateERCToken": "0x44ABAa4Fb3b768a9b8130E4C5dbCBfD13E30123a"
+    "PrivateERCToken": "0x46C4340F9E466fAB68a5164Fc378AD2207347da4"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-07-08T00:10:40.682Z",
+    "timestamp": "2025-07-08T08:30:19.823Z",
     "network": "ucl_L2",
     "chainId": "1337"
   }

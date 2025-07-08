@@ -366,7 +366,7 @@ async function registerUser(client, privateKey, userAddress, role) {
     }
 }
 
-// main().then();
+main().then();
 //call this function after updating settings in k8s cluster and restart them
-registerInstitutionAndUser().then();
+// registerInstitutionAndUser().then();
 
