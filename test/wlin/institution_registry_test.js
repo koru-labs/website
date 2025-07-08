@@ -123,8 +123,8 @@ async function testInstituteInformation() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
-    const instRegistry = await InstRegistry.attach("0x1097dda2a3D721EEDe3d2c07a7265e477bb3fF83");
-    let inst = await instRegistry.getUserInstGrumpkinPubKey("0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766");
+    const instRegistry = await InstRegistry.attach("0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4");
+    let inst = await instRegistry.getUserInstGrumpkinPubKey("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
     console.log("user registration ", inst);
 }
 
@@ -134,9 +134,9 @@ async function testUserInformation() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
-    const instRegistry = await InstRegistry.attach("0x1097dda2a3D721EEDe3d2c07a7265e477bb3fF83");
-    let inst = await instRegistry.getUserManager("0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766");
-    console.log("user registration ", inst);
+    const instRegistry = await InstRegistry.attach("0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4");
+    let inst = await instRegistry.getUserManager("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+    console.log("user manager ", inst);
 }
 
 
@@ -150,5 +150,5 @@ async function testUserInformation() {
 // testUpdateNotRegisteredInst().then();
 // testUpdateInstNodeUrl().then()
 // testUpdateInstHttpUrl().then();
-// testInstituteInformation().then();
-testUserInformation().then();
+testInstituteInformation().then();
+// testUserInformation().then();

@@ -18,7 +18,7 @@ const {createClient} = require('../../test/qa/token_grpc');
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
-let institutionRegistration = "0x1097dda2a3D721EEDe3d2c07a7265e477bb3fF83";// qa
+let institutionRegistration = "0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
@@ -38,8 +38,8 @@ const institutions = [
             y: "1602896076095556872064323498591590133311615038843128356451925530793022734414",
         },
         privateKey: "416573880578171335403689549793041749905608668623681787361470319903201766514",
-        userAddresses: [
-            "0x5a3288A7400B2cd5e0568728E8216D9392094892"
+        users: [
+            {address: "0x5a3288A7400B2cd5e0568728E8216D9392094892", role:"normal"}
         ]
     },
     {
@@ -54,8 +54,8 @@ const institutions = [
             y: "16447690327536854731829234134374272913253014843200385847735869511531503932278",
         },
         privateKey: "2168409685083436357554395152062201983676872832460334205932174282094784521144",
-        userAddresses: [
-            "0xF8041E1185C7106121952bA9914ff904A4A01c80"
+        users: [
+            {address: "0xF8041E1185C7106121952bA9914ff904A4A01c80", role:"normal"}
         ]
     },
     {
@@ -70,15 +70,15 @@ const institutions = [
             y: "9519187890267549073736999464396081731503319602421352094119155053337094535674",
         },
         privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
-        userAddresses: [
-            "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
-            "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-            "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766",
-            "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C",
-            "0x4312488937D47A007De24d48aB82940C809EEb2b",
-            "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
-            "0xF50F25915126d936C64A194b2C1DAa1EA45392c4",
-            "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383",   //this is account in wlin meta-mask
+        users: [
+            {address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB", role:"normal"},
+            {address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732", role:"admin"},
+            {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},
+            {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},
+            {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},
+            {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},
+            {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},
+            {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}  //this is account in wlin meta-mask
         ]
     },
     {
@@ -93,8 +93,8 @@ const institutions = [
             y: "10484302653646958667875402192638179073860126846729616349907290732560904524336",
         },
         privateKey: "1269647837676258859940892295235950289673852489198963778624801308185618508021",
-        userAddresses: [
-            "0xbA268f776F70caDB087e73020dfE41c7298363Ed",
+        users: [
+            {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "normal"}
         ]
     }
 ]
@@ -322,7 +322,9 @@ async function registerInstitutionAndUser() {
             await regTx.wait();
             console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
         } catch (error) {
-            console.log(error);
+           if (! error.message.includes("institution already registered")){
+               console.log(error)
+           }
         }
 
         let client;
@@ -337,24 +339,25 @@ async function registerInstitutionAndUser() {
             continue;
         }
 
-        for (let j = 0; j < institutions[i].userAddresses.length; j++) {
-            let userAddress = institutions[i].userAddresses[j];
-            if (userAddress == institutions[i].address) {
-                continue;
-            }
-            await registerUser(client, institutions[i].ethPrivateKey, userAddress);
-            console.log(`Registered user ${institutions[i].userAddresses[j]} under Bank ${institutions[i].address}`);
+        for (let j = 0; j < institutions[i].users.length; j++) {
+            let {address, role} = institutions[i].users[j];
+            // if (userAddress == institutions[i].address) {
+            //     continue;
+            // }
+            await registerUser(client, institutions[i].ethPrivateKey, address, role);
+            console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
         }
     }
 }
 
 
-async function registerUser(client, privateKey, userAddress) {
+async function registerUser(client, privateKey, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_role: "normal",//minter,admin,normal
+        account_role: role ,//minter,admin,normal
     };
+    console.log("metadata: ", privateKey,  metadata)
     try {
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
@@ -363,7 +366,7 @@ async function registerUser(client, privateKey, userAddress) {
     }
 }
 
-main().then();
+// main().then();
 //call this function after updating settings in k8s cluster and restart them
-// registerInstitutionAndUser().then();
+registerInstitutionAndUser().then();
 
