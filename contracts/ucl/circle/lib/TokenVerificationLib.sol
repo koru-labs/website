@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "../base/InstitutionUserRegistry.sol";
 import "../model/TokenModel.sol";
-import "./verify/BurnTokenVerifier.sol";
 import "./verify/MintAllowedTokenVerifier.sol";
 import "./verify/SplitTokenVerifier.sol";
 import "./verify/SplitAllowanceTokenVerifier.sol";
