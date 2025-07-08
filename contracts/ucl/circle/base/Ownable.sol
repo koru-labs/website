@@ -36,7 +36,7 @@ pragma solidity ^0.8.0;
  */
 contract Ownable {
     // Owner of the contract
-    address private _owner;
+    address internal _owner;
 
     /**
      * @dev Event to show ownership has been transferred
