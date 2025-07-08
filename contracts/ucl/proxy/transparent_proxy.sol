@@ -3,12 +3,13 @@ pragma solidity ^0.8.0;
 import "../circle/base/Ownable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract TransparentProxy is TransparentUpgradeableProxy {
+contract HamsaTransparentProxy is TransparentUpgradeableProxy {
     uint8   _implBPercent = 0;
     address _implAAddress;
     address _implBAddress;
 
-    constructor() TransparentUpgradeableProxy(address(0), msg.sender, new bytes(0)) {
+    constructor(address implAddress) TransparentUpgradeableProxy(implAddress, msg.sender, new bytes(0)) {
+        _implAAddress = implAddress;
     }
 
     function setImplementationA(address implAddress) external ifAdmin {
