@@ -101,7 +101,7 @@ contract InstitutionUserRegistry {
 
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(userToManager[userAddress] == address(0), "User already registered");
+        require(userToManager[userAddress] == address(0) || userToManager[userAddress] == msg.sender, "User already registered");
 
         userToManager[userAddress] = msg.sender;
 

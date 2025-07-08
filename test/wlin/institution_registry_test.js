@@ -117,6 +117,29 @@ async function testUpdateInstHttpUrl() {
     console.log("updated inst: ", inst);
 }
 
+async function testInstituteInformation() {
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach("0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4");
+    let inst = await instRegistry.getUserInstGrumpkinPubKey("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+    console.log("user registration ", inst);
+}
+
+async function testUserInformation() {
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach("0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4");
+    let inst = await instRegistry.getUserManager("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+    console.log("user manager ", inst);
+}
+
+
 // deployRegistry().then();
 // testRegistryInstMissingName().then();
 // testRegistryInstMissingPublicKey().then();
@@ -125,5 +148,7 @@ async function testUpdateInstHttpUrl() {
 
 // testRegistryInstCorrectly().then();
 // testUpdateNotRegisteredInst().then();
-testUpdateInstNodeUrl().then()
+// testUpdateInstNodeUrl().then()
 // testUpdateInstHttpUrl().then();
+testInstituteInformation().then();
+// testUserInformation().then();
