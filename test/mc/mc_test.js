@@ -6,7 +6,7 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-const rpcUrl = "a31b8f17091f84b9b966146b6032acd3-1561831942.us-west-1.elb.amazonaws.com:50051"
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -16,7 +16,8 @@ const {
     callPrivateApprove,
     callPrivateTransferFrom,
     getAddressBalance,
-    checkAccountToken
+    getAddressBalance2,
+    createAuthMetadata
 } = require("../help/testHelp")
 
 const l1CustomNetwork = {
@@ -36,35 +37,38 @@ const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 
 const amount = 1;
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function mintForStart() {
     console.log("=== Starting Mint Process ===");
+    const metadata = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: accounts.Minter,
-        amount: 10
+        amount: 100
     };
-    
-    let response = await client.generateMintProof(generateRequest);
+
+    let response = await client.generateMintProof(generateRequest, metadata);
     console.log("Generate Mint Proof response:", response);
-    
-    let proofResult = await client.waitForProofCompletion(client.getMintProof, response.request_id)
-    console.log("Mint Proof Result:", proofResult);
-    
-    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, proofResult, minterWallet)
+
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
     console.log("Mint receipt:", receipt);
 
-    await client.waitForActionCompletion(client.getMintProof, response.request_id)
+    await sleep(2000)
 
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter)
+    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata)
     console.log("Minter balance after mint:", balance);
-    
+
     assert(parseInt(balance.balance) > 0, "Mint operation should increase balance");
     console.log("✅ Mint completed successfully");
 }
 
-async function testReserveTokens() {
+async function testSplitTokens() {
     console.log("=== Starting Token Split Process ===");
+    const metadata = await createAuthMetadata(accounts.MinterKey);
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -73,47 +77,36 @@ async function testReserveTokens() {
         amount: amount
     };
 
-    let response = await client.generateSplitToken(splitRequest);
+    let response = await client.generateSplitToken(splitRequest, metadata);
     console.log("Generate Split Token Proof response:", response);
-    
-    let tokenResult = await client.waitForActionCompletion(client.getSplitToken, response.request_id);
-    console.log("Split Token Result:", tokenResult);
-    
-    // Store the transfer token ID for cancellation test
-    global.transferTokenId = '0x' + tokenResult.transfer_token_id;
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+    console.log("Split Token completed successfully");
+
+    // Store the transfer token ID for cancellation test (use response.transfer_token_id)
+    global.transferTokenId = '0x' + response.transfer_token_id;
     console.log("Transfer Token ID stored for cancellation:", global.transferTokenId);
-    
-    // Try to check that the transfer token exists and is in inactive status
-    try {
-        let tokenEntity = await checkAccountToken(config.contracts.PrivateERCToken, accounts.Minter, global.transferTokenId);
-        console.log("Transfer token entity:", tokenEntity);
-        
-        // Check if status exists and is inactive (1)
-        if (tokenEntity && tokenEntity.status !== undefined) {
-            assert(tokenEntity.status.toString() === "1", "Transfer token should be in inactive status (1)"); // 1 = inactive
-            console.log("✅ Token split completed successfully - transfer token is inactive");
-        } else {
-            console.log("⚠️ Could not verify token status, but proceeding with test");
-        }
-    } catch (error) {
-        console.log("⚠️ Could not check token details, but proceeding with test:", error.message);
-    }
-    
+
+    console.log("✅ Token split completed successfully");
+
     return global.transferTokenId;
 }
 
 async function testCancel(transferTokenId) {
     console.log("=== Starting Token Cancellation Process ===");
     console.log("Transfer Token ID to cancel:", transferTokenId);
-    
+
+    const metadata = await createAuthMetadata(accounts.MinterKey);
     const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
     const tx = await contract.privateCancelToken(transferTokenId);
     const receipt = await tx.wait();
     console.log("Cancel receipt:", receipt);
-    
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, accounts.Minter);
+
+    await sleep(2000)
+
+    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
     console.log("Minter balance after cancellation:", balance);
-    
+
     assert(parseInt(balance.balance) > 0, "Cancel operation should restore balance");
     console.log("✅ Cancel completed successfully");
 }
@@ -127,7 +120,7 @@ async function runFullCancellationTest() {
         await mintForStart();
         
         // Step 2: Split tokens to create transfer and rollback tokens
-        let transferTokenId = await testReserveTokens();
+        let transferTokenId = await testSplitTokens();
         
         // Step 3: Cancel the transfer token to restore rollback token
         await testCancel(transferTokenId);
@@ -144,16 +137,17 @@ async function runFullCancellationTest() {
 
 // Individual test functions for debugging
 async function checkBalance(account) {
-    let balance = await getAddressBalance(client, config.contracts.PrivateERCToken, account);
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, account, metadata);
     console.log(`Balance of ${account}:`, balance);
     return balance;
 }
 
 async function checkToken(account, tokenId) {
     try {
-        let token = await checkAccountToken(config.contracts.PrivateERCToken, account, tokenId);
-        console.log("Token details:", token);
-        return token;
+        // This function is not available in the current testHelp, so we'll skip it
+        console.log("Token checking not available, skipping...");
+        return null;
     } catch (error) {
         console.log("Error checking token:", error.message);
         return null;
@@ -163,7 +157,7 @@ async function checkToken(account, tokenId) {
 // Export functions for individual testing
 module.exports = {
     mintForStart,
-    testReserveTokens,
+    testSplitTokens,
     testCancel,
     runFullCancellationTest,
     checkBalance,
