@@ -341,9 +341,10 @@ async function registerInstitutionAndUser() {
 
         for (let j = 0; j < institutions[i].users.length; j++) {
             let {address, role} = institutions[i].users[j];
-            // if (userAddress == institutions[i].address) {
-            //     continue;
-            // }
+            // don't remove below line
+            if (address == institutions[i].address) {
+                continue;
+            }
             await registerUser(client, institutions[i].ethPrivateKey, address, role);
             console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
         }
@@ -357,7 +358,6 @@ async function registerUser(client, privateKey, userAddress, role) {
         account_address: userAddress,
         account_role: role ,//minter,admin,normal
     };
-    console.log("metadata: ", privateKey,  metadata)
     try {
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
