@@ -362,7 +362,7 @@ async function registerUser(client, privateKey, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_role: role ,//minter,admin,normal
+        account_roles: role ,//minter,admin,normal
     };
     try {
         const response = await client.registerAccount(request, metadata);
