@@ -10,7 +10,7 @@ const registry1_address="0x5e1C3430F5967e2364B8964e35Cd0E40Eb40B987"
 const data2_address="0xf0BD2d753f133052FFE2A1d90521E9078cF9f9b9";
 const registry2_address="0x229B7C72d989e33bbb6ba7340560A8de0C71e4Bb";
 
-const proxy_address="0x7a1c75dB8443f653CB4Fe7277EA354F6b7bDd571";
+const proxy_address="0x901ac36bEEf0C6D4eE82913FE306Fc79064143C4";
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPrivateKey="f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"
@@ -82,10 +82,18 @@ async function deployProxy() {
     console.log("proxy is deployed at: ", proxy.target)
 }
 
+async function setupProxy() {
+    const proxy = await ethers.getContractAt("HamsaTransparentProxy", proxy_address);
+    let tx = await proxy.setImplementationA(registry1_address);
+    await tx.wait();
+
+    tx = await proxy.setImplementationA(registry1_address);
+    await tx.wait();
+}
 
 async function testGetUserManagerThroughProxy() {
-    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", proxy_address, bankManagerWallet);
-    let result = await instRegistry.getUserManager(userAddress)
+    const proxy = await ethers.getContractAt("InstitutionUserRegistry", proxy_address, bankManagerWallet);
+    let result = await proxy.getUserManager(userAddress)
     console.log("user manager: ", result);
 }
 
@@ -101,5 +109,6 @@ async function testGetUserManagerThroughProxy() {
 // registerUserInRegistry1().then();
 
 // deployProxy().then();
+// setupProxy().then();
 
 testGetUserManagerThroughProxy().then();

@@ -40,7 +40,7 @@ contract HamsaTransparentProxy is TransparentUpgradeableProxy {
         if (_implBAddress!=address(0)) {
             return _implBAddress;
         }
-        return address(0);
+        revert ("no valid implementation");
     }
 
     function pickImplementationByABPolicy() internal view returns (address) {
