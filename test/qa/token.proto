@@ -455,14 +455,16 @@ enum AccountStatusEnum {
 message RegisterAccountRequest {
   string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to register"}];
-  string account_role = 2 [(validate.rules).string = {in: ["normal", "admin", "minter"]},
-    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The role of the account (normal, admin, or minter)"}];
+  string account_role = 2 [(validate.rules).string = {
+    pattern: "^((normal|admin|minter)(,(normal|admin|minter))*)?$"
+  },
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin,minter)"}];
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["account_address", "account_role"]
     },
-    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_role\": \"admin\"}"
+    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_role\": \"admin,minter\"}"
   };
 }
 
@@ -489,14 +491,16 @@ message UpdateAccountStatusRequest {
 message UpdateAccountRoleRequest {
   string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to update"}];
-  string account_role = 2 [(validate.rules).string = {in: ["normal", "admin", "minter"]},
-    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The new role of the account (normal, admin, or minter)"}];
+  string account_role = 2 [(validate.rules).string = {
+    pattern: "^((normal|admin|minter)(,(normal|admin|minter))*)?$"
+  },
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin,minter)"}];
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["account_address", "account_role"]
     },
-    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_role\": \"admin\"}"
+    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_role\": \"admin,minter\"}"
   };
 }
 
