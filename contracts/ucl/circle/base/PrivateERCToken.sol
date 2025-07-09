@@ -121,7 +121,9 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         addTokenWithBalance(to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
-        emit PrivateMint(to, amount);
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
+
+    emit PrivateMint(to, amount);
         return true;
     }
     
