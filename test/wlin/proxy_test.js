@@ -4,13 +4,11 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const data1_address="0xa55DD243467503978bC5392e5a94322d0d19b85b";
-const registry1_address="0xf750cD79d9328890D36204FBB7574a29423D86DA"
+const registry1_address="0xCe371E6d96449429bFB5Cb16248A80E5047239a2"
+const registry2_address="0xDBDfA4F9fB9c4561cA833D3BAFE1Ef178f155104";
+const registryB_address="0xA948223485c10d7d36Aa7D916c250Ddea270C38c";
+const proxy_address="0x5DfCB413cca1C34a5b104756b4df3CaAfD2b40E3";
 
-const proxy_address="0xE6FA53dfaf8bE234Dd141aE584ceB1229Bb1ebB5";
-
-const data2_address="0xf0BD2d753f133052FFE2A1d90521E9078cF9f9b9";
-const registry2_address="0x229B7C72d989e33bbb6ba7340560A8de0C71e4Bb";
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPrivateKey="f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"
@@ -40,21 +38,27 @@ async function deployData() {
     console.log("instData is deployed at: ", instData.target)
 }
 
-async function deployRegistry(data_address) {
+async function deployRegistry() {
     const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
 
-    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event, data_address);
+    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event);
     await instRegistry.waitForDeployment();
     console.log("InstitutionUserRegistry is deployed at: ", instRegistry.target);
-
-    const instData = await ethers.getContractAt("InstitutionUserData", data_address);
-    let tx = await instData.setAllowedCaller(instRegistry.target, true);
-    await tx.wait();
 }
+
+
+async function deployRegistryB() {
+    const InstRegistry = await ethers.getContractFactory("InstUserRegistryB");
+
+    const instRegistry = await InstRegistry.deploy();
+    await instRegistry.waitForDeployment();
+    console.log("InstitutionUserRegistryB is deployed at: ", instRegistry.target);
+}
+
 
 async function registerInstInRegistry1() {
     const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry1_address);
@@ -83,10 +87,10 @@ async function deployProxy() {
 
 async function setupProxy() {
     const proxy = await ethers.getContractAt("HamsaTransparentProxy", proxy_address);
-    let tx = await proxy.setImplementationA(registry1_address);
+    let tx = await proxy.setImplementationB(registryB_address);
     await tx.wait();
 
-    tx = await proxy.setImplementationA(registry1_address);
+    tx = await proxy.setImplBPercent(100);
     await tx.wait();
 }
 
@@ -97,18 +101,17 @@ async function testGetUserManagerThroughProxy() {
 }
 
 
-// deployData().then();
-// deployRegistry(data1_address).then();
+
+// deployRegistry().then();
+// deployRegistry().then();
+// deployRegistryB().then();
 
 // deployProxy().then();
 
-// deployData().then();
-// deployRegistry(data2_address).then();
 
 // registerInstInRegistry1().then();
 // registerUserInRegistry1().then();
 
 
 // setupProxy().then();
-
 testGetUserManagerThroughProxy().then();

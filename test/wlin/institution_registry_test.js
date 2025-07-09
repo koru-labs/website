@@ -2,8 +2,7 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const inst_data_address="0x4B6EeCBAd11f32534E75c132D4fe79E6Ef83ebE5";
-const registry_address = "0x6Bd7701FC4CF215076e0196D8A621032408D11b0"
+const registry_address = "0xd819991e6F4c0028d013EC8Ac75b05Fb9631e65c"
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPrivateKey="f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"
@@ -29,13 +28,6 @@ const bankManagerWallet = new ethers.Wallet(bankPrivateKey, l1Provider);
 
 
 
-async function deployData() {
-    const InstData = await ethers.getContractFactory("InstitutionUserData");
-    const instData = await InstData.deploy();
-    await instData.waitForDeployment();
-    console.log("instData is deployed at: ", instData.target)
-}
-
 async function deployRegistry() {
     const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
         libraries: {
@@ -43,23 +35,13 @@ async function deployRegistry() {
         }
     });
 
-    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event, inst_data_address);
+    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event);
     await instRegistry.waitForDeployment();
     console.log("InstitutionUserRegistry is deployed at: ", instRegistry.target);
-
-    const InstData = await ethers.getContractFactory("InstitutionUserData");
-    const instData= InstData.attach(inst_data_address);
-    let tx = await instData.setAllowedCaller(instRegistry.target, true);
-    await tx.wait();
 }
 
 async function testRegistryInstMissingName() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let tx = await instRegistry.registerInstitution(bankAddress, "", bankPublicKey, "http", "http");
     console.log("tx: ", tx)
 }
@@ -114,23 +96,13 @@ async function testRegistryInstCorrectly() {
 }
 
 async function testUpdateNotRegisteredInst() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let tx = await instRegistry.updateInstitution("0x85FC6056e234c36860C7B0ae451c24E041eE939F", "node1", "http://www.visa-update.com", "");
     await tx.wait();
 }
 
 async function testUpdateInstNodeUrl() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let tx = await instRegistry.updateInstitution(bankAddress, "node1-update", "http://www.visa-update2.com","");
     await tx.wait();
 
@@ -139,12 +111,7 @@ async function testUpdateInstNodeUrl() {
 }
 
 async function testUpdateInstHttpUrl() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let tx = await instRegistry.updateInstitution(bankAddress, "node1-update", "", "http://www.visa-update.com:8080");
     await tx.wait();
 
@@ -153,23 +120,13 @@ async function testUpdateInstHttpUrl() {
 }
 
 async function testInstituteInformation() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let inst = await instRegistry.getInstitution(bankAddress);
     console.log("inst info ", inst);
 }
 
 async function testUserInformation() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let inst = await instRegistry.getUserManager(bankAddress);
     console.log("user manager ", inst);
 }
@@ -195,13 +152,12 @@ async function testRemoveUser() {
     console.log("user after remove: ", result2);
 }
 
-async function  testIsInstitutionManager() {
+async function testIsInstitutionManager() {
     const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address, bankManagerWallet);
     let result = await instRegistry.isInstitutionManager(bankAddress);
     console.log("result: ", result);
 }
 
-// deployData().then();
 // deployRegistry().then();
 // testRegistryInstMissingName().then();
 // testRegistryInstMissingPublicKey().then();
@@ -215,7 +171,7 @@ async function  testIsInstitutionManager() {
 // testUpdateInstHttpUrl().then();
 // testInstituteInformation().then();
 
-testRegisterUser().then();
+// testRegisterUser().then();
 // testRemoveUser().then();
 
 // testUserInformation().then();
