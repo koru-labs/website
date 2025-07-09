@@ -18,8 +18,8 @@ const {createClient} = require('../../test/qa/token_grpc');
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 // let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
-let hamsal2event = "0x4e383f0E94AcCad8d7164De9dD418640bEa05DE4";// qa
-let institutionRegistration = "0x125624F0916d71451DaF172046641EB1671B465C";// qa
+let hamsal2event = "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC";// qa
+let institutionRegistration = "0xf1ad4b1e0d3f48dEB2B5243848A66553cB873eA6";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
@@ -203,6 +203,7 @@ async function main() {
         console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
         deployed.contracts.InstitutionUserRegistry = ADDRESSES.INSTITUTION_REGISTRATION;
     }
+    // institutionRegistration = deployed.contracts.InstitutionUserRegistry
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
