@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "./InstitutionUserRegistry.sol";
 import "../event/IL2Event.sol";
 import "../model/TokenModel.sol";
@@ -19,7 +21,7 @@ import {Permissioned} from "./permissioned.sol";
 
 
 
-abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned {
+abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned , ReentrancyGuard {
     // FiatTokenV1 compatible fields
     bool private initialized;
 
@@ -78,6 +80,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     notBlacklisted(msg.sender)
     notBlacklisted(to)
     onlyAllowedBank
+    nonReentrant
     returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -124,7 +127,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     
     function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens,  uint256[8] calldata proof, uint256[20] calldata publicInputs) external
         whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to)
-        onlyAllowedBank {
+        onlyAllowedBank nonReentrant {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
@@ -163,7 +166,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
      * @dev Burns private fiat tokens from an address and updates the total supply.
      * @param tokenId The tokenId to burn.
      */
-    function privateBurn(uint256 tokenId)  external onlyAllowedBank {
+    function privateBurn(uint256 tokenId)  external onlyAllowedBank nonReentrant {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
@@ -194,7 +197,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     external
     whenNotPaused
     notBlacklisted(msg.sender)
-    notBlacklisted(to) onlyAllowedBank returns (bool)
+    notBlacklisted(to) onlyAllowedBank nonReentrant returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
@@ -236,7 +239,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender)
-     notBlacklisted(to) onlyAllowedBank {
+     notBlacklisted(to) onlyAllowedBank nonReentrant {
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
 
@@ -282,7 +285,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         address from,
         address to
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from)
-    notBlacklisted(to) onlyAllowedBank returns (bool) {
+    notBlacklisted(to) onlyAllowedBank nonReentrant returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         require(from != address(0), "PrivateERCToken: from is the zero address");
@@ -325,7 +328,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
 
     function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused
-    notBlacklisted(msg.sender) onlyAllowedBank {
+    notBlacklisted(msg.sender) onlyAllowedBank nonReentrant {
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
@@ -350,7 +353,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     }
 
     function privateCancelToken(uint256 tokenId) external
-        whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank returns (bool) {
+        whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank nonReentrant returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         
         TokenModel.TokenEntity memory transferToken = accounts[msg.sender].assets[tokenId];
@@ -381,7 +384,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return consolidatedSupply;
     }
 
-    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) external {
+    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) nonReentrant nonReentrant external {
         //TODO add proof logic
         _publicTotalSupply = publicTotalSupply;
     }

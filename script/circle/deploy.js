@@ -78,6 +78,7 @@ const institutions = [
             {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},
             {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},
             {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},
+            {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},
             {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}  //this is account in wlin meta-mask
         ]
     },
@@ -252,6 +253,7 @@ async function main() {
     }
     await privateUSDC.configurePrivacyMinter(accounts.Minter, minterAllowedAmount);
     await privateUSDC.configurePrivacyMinter(accounts.Minter2, minterAllowedAmount);
+    await privateUSDC.configurePrivacyMinter(accounts.Minter3, minterAllowedAmount);
 
     await allowBanksInTokenSmartContract(deployed);
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
