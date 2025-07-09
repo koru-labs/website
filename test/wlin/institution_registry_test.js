@@ -34,7 +34,6 @@ async function deployData() {
     const instData = await InstData.deploy();
     await instData.waitForDeployment();
     console.log("instData is deployed at: ", instData.target)
-
 }
 
 async function deployRegistry() {
@@ -216,9 +215,9 @@ async function  testIsInstitutionManager() {
 // testUpdateInstHttpUrl().then();
 // testInstituteInformation().then();
 
-// testRegisterUser().then();
+testRegisterUser().then();
 // testRemoveUser().then();
 
 // testUserInformation().then();
 
-testIsInstitutionManager().then();
+// testIsInstitutionManager().then();
