@@ -1,12 +1,14 @@
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
 
+
 contract InstitutionUserRegistry {
     address public owner;
-    IL2Event public l2Event;
+    IL2Event private l2Event;
 
     struct Institution {
         string name;
@@ -15,12 +17,11 @@ contract InstitutionUserRegistry {
         string nodeUrl;
         string httpUrl;
     }
-
     mapping(address => Institution) public institutions;
     mapping(address => address) public userToManager;
 
-    constructor(address _l2Event) {
-        owner = msg.sender;
+    function initialize(address _owner, address _l2Event) external {
+        owner = _owner;
         l2Event = IL2Event(_l2Event);
     }
 
@@ -155,4 +156,7 @@ contract InstitutionUserRegistry {
         return bytes(str).length == 0;
     }
 
+    function getEventAddress() public view returns (address) {
+        return address(l2Event);
+    }
 }

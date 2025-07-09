@@ -4,10 +4,10 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const registry1_address="0xCe371E6d96449429bFB5Cb16248A80E5047239a2"
-const registry2_address="0xDBDfA4F9fB9c4561cA833D3BAFE1Ef178f155104";
-const registryB_address="0xA948223485c10d7d36Aa7D916c250Ddea270C38c";
-const proxy_address="0x5DfCB413cca1C34a5b104756b4df3CaAfD2b40E3";
+const registry1_address="0x25cF364b1c67D52b7Bf7a17f092eA32755923aC5"
+const registry2_address="0x9e25af6d3035d0B8b3fB58B7eC78Af8Aa457A806";
+const registryB_address="0xf8803E7218582802995FbEc0B2c737507f631D2b";
+const proxy_address="0x35903866c938F73527258a9576A60c6e38f37Bb9";
 
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
@@ -31,12 +31,7 @@ const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 const bankManagerWallet = new ethers.Wallet(bankPrivateKey, l1Provider);
 
-async function deployData() {
-    const InstData = await ethers.getContractFactory("InstitutionUserData");
-    const instData = await InstData.deploy();
-    await instData.waitForDeployment();
-    console.log("instData is deployed at: ", instData.target)
-}
+
 
 async function deployRegistry() {
     const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
@@ -45,7 +40,7 @@ async function deployRegistry() {
         }
     });
 
-    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event);
+    const instRegistry = await InstRegistry.deploy();
     await instRegistry.waitForDeployment();
     console.log("InstitutionUserRegistry is deployed at: ", instRegistry.target);
 }
@@ -59,9 +54,17 @@ async function deployRegistryB() {
     console.log("InstitutionUserRegistryB is deployed at: ", instRegistry.target);
 }
 
+async function testRegistryOwner() {
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", proxy_address);
+    let result = await instRegistry.owner();
+    console.log("registry owner: ", result);
+
+    result = await instRegistry.getEventAddress();
+    console.log("registry event: ", result);
+}
 
 async function registerInstInRegistry1() {
-    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry1_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", proxy_address);
     let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "https://www.visa.com:8443",  "http://www.visa.com:8080" );
     let receipt = await tx.wait();
 
@@ -70,7 +73,7 @@ async function registerInstInRegistry1() {
 }
 
 async function registerUserInRegistry1() {
-    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry1_address, bankManagerWallet);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", proxy_address, bankManagerWallet);
     let tx = await instRegistry.registerUser(userAddress);
     await tx.wait();
 
@@ -79,10 +82,17 @@ async function registerUserInRegistry1() {
 }
 
 async function deployProxy() {
+    let [deployer, signer]= await ethers.getSigners();
     const Proxy = await ethers.getContractFactory("HamsaTransparentProxy");
-    const proxy = await Proxy.deploy(registry1_address);
+    const proxy = await Proxy.deploy(signer.address, registry1_address);
     await proxy.waitForDeployment();
     console.log("proxy is deployed at: ", proxy.target)
+
+
+    // const proxied = await ethers.getContractAt("InstitutionUserRegistry", proxy.target);
+    // console.log("deployer address: ", deployer.address)
+    // let tx = await proxied.initialize(deployer.address, deployed.contracts.HamsaL2Event);
+    // await tx.wait();
 }
 
 async function setupProxy() {
@@ -90,12 +100,12 @@ async function setupProxy() {
     let tx = await proxy.setImplementationB(registryB_address);
     await tx.wait();
 
-    tx = await proxy.setImplBPercent(100);
+    tx = await proxy.setImplBPercent(0);
     await tx.wait();
 }
 
 async function testGetUserManagerThroughProxy() {
-    const proxy = await ethers.getContractAt("InstitutionUserRegistry", registry1_address, bankManagerWallet);
+    const proxy = await ethers.getContractAt("InstitutionUserRegistry", proxy_address, bankManagerWallet);
     let result = await proxy.getUserManager(userAddress)
     console.log("user manager: ", result);
 }
@@ -108,10 +118,11 @@ async function testGetUserManagerThroughProxy() {
 
 // deployProxy().then();
 
+testRegistryOwner().then();
 
 // registerInstInRegistry1().then();
 // registerUserInRegistry1().then();
 
 
 // setupProxy().then();
-testGetUserManagerThroughProxy().then();
+// testGetUserManagerThroughProxy().then();

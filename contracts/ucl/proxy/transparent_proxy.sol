@@ -8,7 +8,7 @@ contract HamsaTransparentProxy is TransparentUpgradeableProxy {
     address _implAAddress;
     address _implBAddress;
 
-    constructor(address implAddress) TransparentUpgradeableProxy(implAddress, msg.sender, new bytes(0)) {
+    constructor(address admin, address implAddress) TransparentUpgradeableProxy(implAddress, admin, new bytes(0)) {
         _implAAddress = implAddress;
     }
 
