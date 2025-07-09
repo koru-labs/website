@@ -4,13 +4,13 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const data1_address="0xe4D8BAB51266400c107422495fdf24B79E16eA54";
-const registry1_address="0x5e1C3430F5967e2364B8964e35Cd0E40Eb40B987"
+const data1_address="0xa55DD243467503978bC5392e5a94322d0d19b85b";
+const registry1_address="0xf750cD79d9328890D36204FBB7574a29423D86DA"
+
+const proxy_address="0xE6FA53dfaf8bE234Dd141aE584ceB1229Bb1ebB5";
 
 const data2_address="0xf0BD2d753f133052FFE2A1d90521E9078cF9f9b9";
 const registry2_address="0x229B7C72d989e33bbb6ba7340560A8de0C71e4Bb";
-
-const proxy_address="0x901ac36bEEf0C6D4eE82913FE306Fc79064143C4";
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPrivateKey="f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"
@@ -51,8 +51,7 @@ async function deployRegistry(data_address) {
     await instRegistry.waitForDeployment();
     console.log("InstitutionUserRegistry is deployed at: ", instRegistry.target);
 
-    const InstData = await ethers.getContractFactory("InstitutionUserData");
-    const instData= InstData.attach(data_address);
+    const instData = await ethers.getContractAt("InstitutionUserData", data_address);
     let tx = await instData.setAllowedCaller(instRegistry.target, true);
     await tx.wait();
 }
@@ -92,7 +91,7 @@ async function setupProxy() {
 }
 
 async function testGetUserManagerThroughProxy() {
-    const proxy = await ethers.getContractAt("InstitutionUserRegistry", proxy_address, bankManagerWallet);
+    const proxy = await ethers.getContractAt("InstitutionUserRegistry", registry1_address, bankManagerWallet);
     let result = await proxy.getUserManager(userAddress)
     console.log("user manager: ", result);
 }
@@ -101,6 +100,7 @@ async function testGetUserManagerThroughProxy() {
 // deployData().then();
 // deployRegistry(data1_address).then();
 
+// deployProxy().then();
 
 // deployData().then();
 // deployRegistry(data2_address).then();
@@ -108,7 +108,7 @@ async function testGetUserManagerThroughProxy() {
 // registerInstInRegistry1().then();
 // registerUserInRegistry1().then();
 
-// deployProxy().then();
+
 // setupProxy().then();
 
 testGetUserManagerThroughProxy().then();
