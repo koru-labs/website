@@ -1,27 +1,20 @@
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
+import "../model/InstUserModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
+import "./IInstUsrData.sol";
 
 contract InstitutionUserRegistry {
     address public owner;
     IL2Event public l2Event;
+    IInstUser private instUserData;
 
-    struct Institution {
-        string name;
-        address managerAddress;
-        TokenModel.GrumpkinPublicKey publicKey;
-        string nodeUrl;
-        string httpUrl;
-    }
-
-    mapping(address => Institution) public institutions;
-    mapping(address => address) public userToManager;
-
-    constructor(address _l2Event) {
+    constructor(address _l2Event, IInstUser _data) {
         owner = msg.sender;
         l2Event = IL2Event(_l2Event);
+        instUserData = _data;
     }
 
     modifier onlyOwner() {
@@ -30,7 +23,7 @@ contract InstitutionUserRegistry {
     }
 
     modifier onlyInstitutionManager() {
-        require(institutions[msg.sender].managerAddress != address(0), "Only institution manager can call this function");
+        require(instUserData.getInstByManager(msg.sender).managerAddress != address(0), "Only institution manager can call this function");
         _;
     }
 
@@ -43,10 +36,10 @@ contract InstitutionUserRegistry {
         require(! isEmptyString(httpUrl), "institution httpUrl can't be empty");
 
         require(publicKey.x != 0, "invalid public key");
-        require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
+        require(isEmptyString(instUserData.getInstByManager(institutionAddress).name), "institution already registered. Call updateInstitution to update");
 
 
-        Institution memory institution = Institution({
+        InstUserModel.Institution memory institution = InstUserModel.Institution({
         name : name,
         managerAddress : institutionAddress,
         publicKey : publicKey,
@@ -54,8 +47,8 @@ contract InstitutionUserRegistry {
         httpUrl : httpUrl
         });
 
-        institutions[institutionAddress]  = institution;
-        userToManager[institutionAddress] = institutionAddress;
+        instUserData.saveInstByManager(institutionAddress, institution);
+        instUserData.saveUserManager(institutionAddress, institutionAddress);
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
@@ -72,7 +65,7 @@ contract InstitutionUserRegistry {
     function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl, string memory httpUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
 
-        Institution storage institution = institutions[institutionAddress];
+        InstUserModel.Institution memory institution = instUserData.getInstByManager(institutionAddress);
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
@@ -87,6 +80,7 @@ contract InstitutionUserRegistry {
         if (! isEmptyString(httpUrl)) {
             institution.httpUrl = httpUrl;
         }
+        instUserData.saveInstByManager(institutionAddress, institution);
 
         TokenEventLib.triggerInstitutionUpdatedEvent(
             l2Event,
@@ -101,10 +95,10 @@ contract InstitutionUserRegistry {
 
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(userToManager[userAddress] == address(0) || userToManager[userAddress] == msg.sender, "User already registered");
+        address existingManager= instUserData.getUserManager(userAddress);
+        require(existingManager == address(0) || existingManager == msg.sender, "User already registered");
 
-        userToManager[userAddress] = msg.sender;
-
+        instUserData.saveUserManager(userAddress, msg.sender);
         TokenEventLib.triggerUserRegisteredEvent(
             l2Event,
             address(this),
@@ -116,10 +110,9 @@ contract InstitutionUserRegistry {
 
     function removeUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(userToManager[userAddress] == msg.sender, "User not managed by this institution");
+        require(instUserData.getUserManager(userAddress) == msg.sender, "User not managed by this institution");
 
-        delete userToManager[userAddress];
-
+        instUserData.removeUser(userAddress);
         TokenEventLib.triggerUserRemovedEvent(
             l2Event,
             address(this),
@@ -130,15 +123,15 @@ contract InstitutionUserRegistry {
     }
     
     function getUserManager(address userAddress) public view returns (address) {
-        return userToManager[userAddress];
+        return instUserData.getUserManager(userAddress);
     }
 
-    function getInstitution(address managerAddress) public view returns (Institution memory) {
-        return institutions[managerAddress];
+    function getInstitution(address managerAddress) public view returns (InstUserModel.Institution memory) {
+        return instUserData.getInstByManager(managerAddress);
     }
 
     function isInstitutionManager(address managerAddress) public view returns (bool) {
-        return institutions[managerAddress].managerAddress != address(0);
+        return instUserData.getInstByManager(managerAddress).managerAddress != address(0);
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -147,12 +140,11 @@ contract InstitutionUserRegistry {
     }
 
     function getUserInstGrumpkinPubKey(address userAddress) public view returns (TokenModel.GrumpkinPublicKey memory) {
-        address institutionAddress = getUserManager(userAddress);
-        return institutions[institutionAddress].publicKey;
+        address institutionAddress = instUserData.getUserManager(userAddress);
+        return instUserData.getInstByManager(institutionAddress).publicKey;
     }
 
     function isEmptyString(string memory str) public pure returns (bool) {
         return bytes(str).length == 0;
     }
-
 }
