@@ -247,6 +247,8 @@ async function main() {
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
 
+    await registerInstitutionAndUser();
+
     const minterAllowedAmount = {
         "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
         "cl_y": 17997503520096523373978760079614633178183544935372525079367653487073845131371n,
