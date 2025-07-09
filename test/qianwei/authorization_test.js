@@ -4,12 +4,14 @@ const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
 
-// const rpcUrl = "localhost:50051";
+const rpcUrl = "localhost:50051";
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // const httpUrl = "http://localhost:8080";
-const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+// const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
-// const client = createClient(rpcUrl);
+const client = createClient(rpcUrl);
+
+const request_id = "617ec920c0e59bfa078dca2655f9c1e2e41236589460646d7485601d01a5eb81"
 
 // admin
 const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
@@ -18,7 +20,7 @@ const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0xa03099ce91035fa9b1a3a123c7678bd045531d1c";//test
+const address = "0x4568E35F2c4590Bde059be615015AaB6cc873004";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -44,7 +46,7 @@ async function testUpdateAccountStatus() {
 
         const request = {
             account_address: address,
-            account_status: 0, //0:inactive,2:active
+            account_status: 2, //0:inactive,2:active
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
@@ -63,7 +65,7 @@ async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: address,
-        account_role: "minter",//minter,admin,normal
+        account_roles: "minter",//minter,admin,normal
     };
 
     try {
@@ -83,7 +85,7 @@ async function testRegisterAccount() {
 async function testGetAsyncAction() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const request_id = "9d52031436dc78bacfa195a3d85f04d27b9cc1feeba0af718d3ff524d824491b"
+
         const actionRequest = {
             request_id: request_id,
         };
@@ -100,7 +102,7 @@ async function testUpdateAccountRole() {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: address,
-            account_role: "minter",//minter,admin,normal
+            account_roles: "normal",//minter,admin,normal
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
@@ -165,4 +167,4 @@ async function testGetAccountForHttp() {
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
 // testGetAccount().then();
-testGetAccountForHttp().then();
+// testGetAccountForHttp().then();
