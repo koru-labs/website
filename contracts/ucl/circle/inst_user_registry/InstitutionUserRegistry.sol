@@ -4,23 +4,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
+import "./InstUserDataTemplate.sol";
 
-
-contract InstitutionUserRegistry {
-    address public owner;
-    IL2Event private l2Event;
-
-    struct Institution {
-        string name;
-        address managerAddress;
-        TokenModel.GrumpkinPublicKey publicKey;
-        string nodeUrl;
-        string httpUrl;
-    }
-    mapping(address => Institution) public institutions;
-    mapping(address => address) public userToManager;
+contract InstitutionUserRegistry is InstUserDataTemplate {
 
     function initialize(address _owner, address _l2Event) external {
+        require(_owner != address(0), "owner is empty");
+        require(_l2Event != address(0), "event is null");
         owner = _owner;
         l2Event = IL2Event(_l2Event);
     }

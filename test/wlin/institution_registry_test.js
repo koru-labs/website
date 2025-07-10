@@ -2,7 +2,7 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const registry_address = "0xd819991e6F4c0028d013EC8Ac75b05Fb9631e65c"
+const registry_address = "0xE712F604DBb3CfFec509AbeC7B7BdA2F33576440"
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
 const bankPrivateKey="f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"
@@ -29,15 +29,19 @@ const bankManagerWallet = new ethers.Wallet(bankPrivateKey, l1Provider);
 
 
 async function deployRegistry() {
+    let [deployer] = await ethers.getSigners();
     const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
 
-    const instRegistry = await InstRegistry.deploy(deployed.contracts.HamsaL2Event);
+    const instRegistry = await InstRegistry.deploy();
     await instRegistry.waitForDeployment();
     console.log("InstitutionUserRegistry is deployed at: ", instRegistry.target);
+
+    let tx  = await instRegistry.initialize(deployer.address, deployed.contracts.HamsaL2Event);
+    await tx.wait();
 }
 
 async function testRegistryInstMissingName() {
@@ -81,12 +85,7 @@ async function testRegistryInstMissingHttpUrl() {
 
 
 async function testRegistryInstCorrectly() {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const instRegistry = await InstRegistry.attach(registry_address);
+    const instRegistry = await ethers.getContractAt("InstitutionUserRegistry", registry_address);
     let tx = await instRegistry.registerInstitution(bankAddress, "node1", bankPublicKey, "https://www.visa.com:8443",  "http://www.visa.com:8080" );
     let receipt = await tx.wait();
 
@@ -172,7 +171,7 @@ async function testIsInstitutionManager() {
 // testInstituteInformation().then();
 
 // testRegisterUser().then();
-// testRemoveUser().then();
+testRemoveUser().then();
 
 // testUserInformation().then();
 
