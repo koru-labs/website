@@ -175,7 +175,7 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
     return result
 }
 
-async function getTotalSupplyNode3(grpcClient, scAddress) {
+async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateTotalSupply()
     let balance=  {
@@ -184,7 +184,7 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.decodeElgamalAmount(balance)
+    let result = await grpcClient.decodeElgamalAmount(balance,metadata)
     return Number(result.balance)
 }
 
