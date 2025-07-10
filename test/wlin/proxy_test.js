@@ -5,7 +5,7 @@ const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
 const registry1_address="0xd9fA162604BB6f66864B229c85995fa3D4b32B1f"
-const registryB_address="0x35531556905e79fE2576187F3A8f6746F9218857";
+const registryB_address="0x4DE5D9728c4212495409Ef947Bb7721b400D8108";
 const proxy_address="0x9D9c16B19ee93E2208A605D42EA91cd76B5C56b2";
 
 
@@ -101,7 +101,7 @@ async function deployProxy() {
 
 async function setupProxy() {
     const proxy = await ethers.getContractAt("PercentRouterProxy", proxy_address);
-    let tx = await proxy.setImplementationB(registryB_address, 100);
+    let tx = await proxy.setImplementationB(registryB_address, 50);
     await tx.wait();
 }
 

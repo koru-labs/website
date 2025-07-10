@@ -8,7 +8,7 @@ import "./InstUserDataTemplate.sol";
 
 contract InstitutionUserRegistryB is InstUserDataTemplate {
 
-    function getEventAddress() public view returns (address) {
+    function getUserManager(address userAddress) public view returns (address) {
         return address(0);
     }
 }
