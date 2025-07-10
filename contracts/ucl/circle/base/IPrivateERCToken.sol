@@ -24,4 +24,5 @@ interface IPrivateERCToken {
     function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount) external returns (bool);
 
     function removePrivacyMinter(address minter) external returns (bool);
+
 }
