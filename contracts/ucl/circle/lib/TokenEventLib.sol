@@ -288,4 +288,17 @@ library TokenEventLib {
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "MinterAllowedSet", body);
     }
+
+    function triggerTokenActionCompletedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        uint256 rollbackTokenId
+    ) public {
+        TokenActionCompletedEvent memory e = TokenActionCompletedEvent({
+            rollbackTokenId : rollbackTokenId
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenActionCompleted", body);
+    }
 } 

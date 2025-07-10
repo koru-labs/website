@@ -42,8 +42,11 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+
     const tx = await contract.privateTransfer(tokenId,to);
+    console.log("tx")
     let receipt = await tx.wait();
+    console.log("Result:", receipt);
     return receipt;
 }
 
@@ -161,18 +164,18 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
         decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
     }
 
-    console.log("===================================================================");
-    console.log("Checking Owner Balance");
-    console.log("Owner Address:", account);
-    console.log("-------------------------------------------------------------------");
-    console.log("Decrypted On-chain Balance:", decodeAmount);
-    console.log("Database Balance:", result);
-    console.log("===================================================================\n");
+    // console.log("===================================================================");
+    // console.log("Checking Owner Balance");
+    // console.log("Owner Address:", account);
+    // console.log("-------------------------------------------------------------------");
+    // console.log("Decrypted On-chain Balance:", decodeAmount);
+    // console.log("Database Balance:", result);
+    // console.log("===================================================================\n");
 
     return result
 }
 
-async function getTotalSupplyNode3(grpcClient, scAddress) {
+async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateTotalSupply()
     let balance=  {
@@ -181,7 +184,7 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.decodeElgamalAmount(balance)
+    let result = await grpcClient.decodeElgamalAmount(balance,metadata)
     return Number(result.balance)
 }
 
@@ -198,8 +201,8 @@ async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     return grpcAllowanceAmount;
 }
 
-async function getSplitTokenList(grpcClient,owner, scAddress){
-    const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress);
+async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
+    const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress, metadata);
     return grpcResult;
 }
 
@@ -282,7 +285,7 @@ async function registerUser(privateKey,client,userAddress,role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_role: role,//minter,admin,normal
+        account_roles: role,//minter,admin,normal
     };
 
     try {
@@ -292,7 +295,7 @@ async function registerUser(privateKey,client,userAddress,role) {
             const actionRequest = {
                 request_id: response.request_id,
             };
-            await sleep(10000);
+            await sleep(3000);
             const actionResponse = await client.getAsyncAction(actionRequest, metadata);
             console.log("action response:", actionResponse);
             return actionResponse
@@ -314,7 +317,7 @@ async function updateAccountStatus(privateKey,client,userAddress,status) {
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
         if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
-            await sleep(10000);
+            await sleep(3000);
             const actionRequest = {
                 request_id: response.request_id,
             };
@@ -339,7 +342,7 @@ async function updateAccountRole(privateKey,client,userAddress,role) {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: userAddress,
-            account_role: role,//minter,admin,normal
+            account_roles: role,//minter,admin,normal
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
@@ -391,7 +394,7 @@ async function getEvents(eventName){
 
 
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
-        const startBlock = endBlock - 10000;  // 起始区块
+        const startBlock = endBlock - 3000;  // 起始区块
         const batchSize = 1000;  // 每次查询的区块范围
 
         // 事件名称（确保事件名称正确）
@@ -426,7 +429,7 @@ async function getEventsWithBlock(eventName,fromBlock,toBlock){
 
 
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
-        const startBlock = endBlock - 10000;  // 起始区块
+        const startBlock = endBlock - 3000;  // 起始区块
         const batchSize = 1000;  // 每次查询的区块范围
 
         // 事件名称（确保事件名称正确）

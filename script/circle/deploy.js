@@ -17,8 +17,9 @@ const {createAuthMetadata} = require("../../test/help/testHelp.js")
 const {createClient} = require('../../test/qa/token_grpc');
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
-let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
-let institutionRegistration = "0xAb321584C1B87C93F6fB6673c4245B7cF4C024e4";// qa
+// let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
+let hamsal2event = "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC";// qa
+let institutionRegistration = "0xf1ad4b1e0d3f48dEB2B5243848A66553cB873eA6";// qa
 const ADDRESSES = {
     TOKEN_EVENT_LIB: "",
     HAMSAL2EVENT: hamsal2event,
@@ -202,6 +203,7 @@ async function main() {
         console.log("Reusing existing InstitutionUserRegistry.sol at:", ADDRESSES.INSTITUTION_REGISTRATION);
         deployed.contracts.InstitutionUserRegistry = ADDRESSES.INSTITUTION_REGISTRATION;
     }
+    // institutionRegistration = deployed.contracts.InstitutionUserRegistry
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
@@ -244,6 +246,8 @@ async function main() {
     );
     await initTx.wait();
     console.log("PrivateERCToken initialized successfully");
+
+    await registerInstitutionAndUser();
 
     const minterAllowedAmount = {
         "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
@@ -358,7 +362,7 @@ async function registerUser(client, privateKey, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_role: role ,//minter,admin,normal
+        account_roles: role ,//minter,admin,normal
     };
     try {
         const response = await client.registerAccount(request, metadata);

@@ -121,7 +121,9 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         addTokenWithBalance(to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
-        emit PrivateMint(to, amount);
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
+
+    emit PrivateMint(to, amount);
         return true;
     }
     
@@ -225,6 +227,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         addTokenWithBalance(tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
@@ -318,6 +321,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
 
         removeAllowanceRecord(from, msg.sender);
+
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokens[0]);
 
         emit PrivateTransferFrom(msg.sender, from, to, tokenId);
         return true;
