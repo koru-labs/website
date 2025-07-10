@@ -4,9 +4,9 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const registry1_address="0xd9fA162604BB6f66864B229c85995fa3D4b32B1f"
-const registryB_address="0x4DE5D9728c4212495409Ef947Bb7721b400D8108";
-const proxy_address="0x9D9c16B19ee93E2208A605D42EA91cd76B5C56b2";
+const registry1_address="0x6F810294857252A20C639dCA1Ae9C871eC534982"
+const registryB_address="0xC768DD4Fb7Ce831725e62d81d2FC35Ce90B87c2E";
+const proxy_address="0x3A64c7d00C4e6A6cBD85d796A8e98c3b478F7B8a";
 
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
@@ -101,7 +101,7 @@ async function deployProxy() {
 
 async function setupProxy() {
     const proxy = await ethers.getContractAt("PercentRouterProxy", proxy_address);
-    let tx = await proxy.setImplementationB(registryB_address, 50);
+    let tx = await proxy.setImplementationB(registryB_address, 1);
     await tx.wait();
 }
 
@@ -125,4 +125,4 @@ async function testGetUserManagerThroughProxy() {
 
 
 // setupProxy().then();
-testGetUserManagerThroughProxy().then();
+// testGetUserManagerThroughProxy().then();
