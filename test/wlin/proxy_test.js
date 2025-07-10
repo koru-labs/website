@@ -112,6 +112,20 @@ async function testGetUserManagerThroughProxy() {
 }
 
 
+async function testProxySettings(){
+    const proxy = await ethers.getContractAt("InstPercentRouterProxy", "0x0449034be472297A9303818f568cB5275E199Aab");
+    let admin = await proxy.admin();
+    let implA = await proxy.implementationA();
+    let implB = await proxy.implementationB();
+    let percent = await proxy.percentageToB();
+
+    console.log({
+        admin,
+        implA,
+        implB, percent
+    })
+}
+
 
 // deployRegistry().then();
 // deployRegistryB().then();
@@ -126,3 +140,6 @@ async function testGetUserManagerThroughProxy() {
 
 // setupProxy().then();
 // testGetUserManagerThroughProxy().then();
+
+
+testProxySettings().then();

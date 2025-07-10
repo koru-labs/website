@@ -1,13 +1,13 @@
 const hre = require("hardhat");
 const {ethers} = hre;
-const accounts = require("../../deployments/account.json");
-const {deployToken} = require("./deploy_token");
+const accounts = require("../../../deployments/account.json");
+const {deployToken} = require("../token/deploy_token");
 
-const {createAuthMetadata} = require("../../test/help/testHelp.js")
-const {createClient} = require('../../test/qa/token_grpc');
-const hardhatConfig = require("../../hardhat.config");
-const deployed = require('./../../deployments/image9.json');
-const {sleep} = require("../../test/help/testHelp");
+const {createAuthMetadata} = require("../../../test/help/testHelp.js")
+const {createClient} = require('../../../test/qa/token_grpc');
+const hardhatConfig = require("../../../hardhat.config");
+const deployed = require('../../../deployments/image9.json');
+const {sleep} = require("../../../test/help/testHelp");
 
 
 const institutions = [

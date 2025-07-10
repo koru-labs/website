@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "./InstUserDataTemplate.sol";
 
-contract PercentRouterProxy is InstUserDataTemplate {
+contract InstPercentRouterProxy is InstUserDataTemplate {
     address public admin;
     address public implementationA;
     address public implementationB;

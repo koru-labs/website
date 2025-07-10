@@ -34,8 +34,11 @@
     "protobufjs": "^7.5.0"
   },
   "scripts": {
-    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_L2",
-    "circle-deploy2": "npx hardhat run script/circle/deploy_info.js --network ucl_L2",
+    "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2",
+    "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2",
+
+    "circle-deploy2": "npx hardhat run script/circle/temp/deploy_info.js --network ucl_L2",
+
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2",
     "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_L2",
     "wlin-test": "npx hardhat run test/wlin/wlin_test.js --network ucl_L2",

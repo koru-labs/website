@@ -19,4 +19,5 @@ abstract contract InstUserDataTemplate {
      }
      mapping(address => Institution) public institutions;
      mapping(address => address) public userToManager;
+
  }
