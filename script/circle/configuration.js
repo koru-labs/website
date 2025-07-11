@@ -3,7 +3,7 @@ module.exports = {
     {
         "TOKEN_EVENT_LIB": "",
         "HAMSAL2EVENT": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
-        "INSTITUTION_REGISTRATION": ""
+        "INSTITUTION_REGISTRATION": "0x0449034be472297A9303818f568cB5275E199Aab"
     },
     institutions: [
         {
