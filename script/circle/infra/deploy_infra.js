@@ -36,6 +36,16 @@ async function deployLibs(deployed) {
     console.log("TokenEventLib is deployed at :", tokenEventLib.target);
     deployed.libraries.TokenEventLib = tokenEventLib.target;
 
+    const TokenUtilsLibFactory = await ethers.getContractFactory("TokenUtilsLib", {
+        libraries: {
+            "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper
+        }
+    });
+    const tokenUtilsLib = await TokenUtilsLibFactory.deploy();
+    await tokenUtilsLib.waitForDeployment();
+    console.log("TokenUtilsLib is deployed at :", tokenUtilsLib.target);
+    deployed.libraries.TokenUtilsLib = tokenUtilsLib.target;
+
     console.log("=== TokenSc Libs deployment finished ===");
 }
 

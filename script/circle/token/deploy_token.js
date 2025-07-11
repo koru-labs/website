@@ -13,9 +13,9 @@ async function deployToken(deployed) {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "SignatureChecker": deployed.libraries.SignatureChecker,
-            "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib
+            "TokenUtilsLib": deployed.libraries.TokenUtilsLib,
+            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
+            "SignatureChecker": deployed.libraries.SignatureChecker
         }
     });
     const privateUSDC = await PrivateUSDCFactory.deploy();
@@ -83,9 +83,9 @@ async function setMinterAllowed(deployed) {
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
-            "SignatureChecker": deployed.libraries.SignatureChecker,
-            "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib
+            "TokenUtilsLib": deployed.libraries.TokenUtilsLib,
+            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
+            "SignatureChecker": deployed.libraries.SignatureChecker
         }
     });
     const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
