@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import { Ownable } from "../../../usdc/v1/Ownable.sol";
-import "./InstitutionUserRegistry.sol";
+import "../inst_user_registry/InstitutionUserRegistry.sol";
 
 abstract contract Permissioned is Ownable {
     mapping(address=>bool) allowedBanks;

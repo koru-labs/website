@@ -3,8 +3,8 @@ const {ethers} = hre;
 const fs = require("fs");
 const path = require("path");
 const {address} = require("hardhat/internal/core/config/config-validation");
-const hardhatConfig = require('../../hardhat.config');
-const accounts = require("../../deployments/account.json");
+const hardhatConfig = require('../../../hardhat.config');
+const accounts = require("../../../deployments/account.json");
 const {
     deployCurveBabyJubJub,
     deployCurveBabyJubJubHelper,
@@ -12,9 +12,9 @@ const {
     deployTokenVerificationLib,
     deploySplitTokenVerifier,
     deploySplitAllowanceTokenVerifier
-} = require("./deploy_verifier");
-const {createAuthMetadata} = require("../../test/help/testHelp.js")
-const {createClient} = require('../../test/qa/token_grpc');
+} = require("../infra/deploy_verifier");
+const {createAuthMetadata} = require("../../../test/help/testHelp.js")
+const {createClient} = require('../../../test/qa/token_grpc');
 
 // let hamsal2event = "0x1a9122150280DBDB9f2b6b5438811d2943e3A6aA"; //dev
 // let hamsal2event = "0x80238AD5B21A9f253094073256d602f53131F82b";// qa
@@ -307,7 +307,7 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 
 
 async function registerInstitutionAndUser() {
-    const deployed = require('./../../deployments/image9.json');
+    const deployed = require('../../../deployments/image9.json');
 
     const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
         libraries: {
