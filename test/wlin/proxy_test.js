@@ -4,9 +4,9 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const registry1_address="0x3f267Fdd8E35A71546bC35126D010bD15F119b0d"
-const registryB_address="0x651F063b3f24f7971DF2dbBE48F226390BaDfF63";
-const proxy_address="0xcDc049Db9D6bbe407E6FB87F212682C2000F6939";
+const registry1_address="0xC18CBB980CFe3Ce0b17abcd85c22D33B41a91Fe4"
+const registryB_address="0xe8F02c16E8dfd191B6e6322DdBff334d89F559e3";
+const proxy_address="0x84901617b01B37c6571f40c459aE3C0ee1b16e14";
 const prod_proxy_address="0x0449034be472297A9303818f568cB5275E199Aab"
 
 
@@ -105,8 +105,8 @@ async function setupProxy(proxy_address) {
     let tx = await proxy.setImplementationB(registryB_address, 50);
     await tx.wait();
 
-    tx = await proxy.setImplementationA(registryB_address);
-    await tx.wait();
+    // tx = await proxy.setImplementationA(registryB_address);
+    // await tx.wait();
 }
 
 async function testGetUserManagerThroughProxy(proxy_address) {
@@ -141,7 +141,7 @@ async function testInstRegistryUpgrade(proxy_address) {
 
 // deployProxy().then();
 
-//testRegistryOwner().then();
+// testRegistryOwner().then();
 // registerInstInRegistry1().then();
 // registerUserInRegistry1().then();
 
