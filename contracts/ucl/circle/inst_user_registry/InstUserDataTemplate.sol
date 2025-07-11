@@ -7,6 +7,13 @@ import "../event/IL2Event.sol";
 
 
 abstract contract InstUserDataTemplate {
+    // the followings are for proxy
+    address public admin;
+    address public implementationA;
+    address public implementationB;
+    uint8 public percentageToB;
+
+    //the followings are for registry
      address public owner;
      IL2Event internal l2Event;
 
@@ -19,5 +26,4 @@ abstract contract InstUserDataTemplate {
      }
      mapping(address => Institution) public institutions;
      mapping(address => address) public userToManager;
-
- }
+}

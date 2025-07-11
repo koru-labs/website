@@ -3,14 +3,6 @@ pragma solidity ^0.8.0;
 import "./InstUserDataTemplate.sol";
 
 contract InstPercentRouterProxy is InstUserDataTemplate {
-    address public admin;
-    address public implementationA;
-    address public implementationB;
-
-    // Percent of traffic routed to implementationA (0 - 100)
-    uint8 public percentageToB;
-
-
 
     constructor(address _implA) {
         require(_implA != address(0), "Invalid address");
