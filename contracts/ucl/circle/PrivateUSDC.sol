@@ -52,7 +52,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
      * @dev Convert USDC to private USDC
      * @param account The address that will receive the private USDC
      * @param amount The amount of USDC to convert
-     * @param value The ElGamal encrypted private USDC amount
+     * @param elAmount The ElGamal encrypted private USDC amount
      * @param publicInputs The public inputs for the proof
      * @param proof The zero knowledge proof
      * @return True if the operation was successful
@@ -60,7 +60,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
     function convert2pUSDC(
         address account, 
         uint256 amount, 
-        TokenModel.ElGamal calldata value, 
+        TokenModel.ElGamal calldata elAmount, 
         uint256[] calldata publicInputs,
         uint256[8] calldata proof
     )
@@ -76,26 +76,31 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         
         // Verify the proof
         require(verifyProof(VerifierType.Convert2pUSDC, proof, publicInputs), "PrivateUSDC: invalid proof");
-        
+        // publicInputs[0] & publicInputs[1] is cl; publicInputs[2] & publicInputs[3] is cr
+        require(elAmount.cl_x == publicInputs[0] && elAmount.cl_y == publicInputs[1] && elAmount.cr_x == publicInputs[2] && elAmount.cr_y == publicInputs[3], "PrivateUSDC: elAmount is not equal");
+        // publicInputs[4] == amount
+        require(publicInputs[4] == amount, "PrivateUSDC: amount is not equal");
+        // publicInputs[5] & publicInputs[6] is owner pk skip check
+
         // Create TokenEntity
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: hashElgamal(value),
+            id: hashElgamal(elAmount),
             owner: account,
             status: TokenModel.TokenStatus.active,
-            amount: value,
+            amount: elAmount,
             to: address(0),
             rollbackTokenId: 0
         });
         
         // Increase private total supply
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        addSupply(value);
+        addSupply(elAmount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event, 
             address(this), 
             msg.sender, 
             oldTotalSupply, 
-            value, 
+            elAmount, 
             TokenModel.ElGamal(0,0,0,0), 
             _privateTotalSupply,
             _numberOfTotalSupplyChanges
@@ -150,6 +155,13 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
 
         // Verify the proof
         require(verifyProof(VerifierType.Convert2USDC, proof, publicInputs), "PrivateUSDC: invalid proof");
+        // owner check
+        require(entity.owner == account, "PrivateUSDC: only owner can convert");
+        // amount elgamal check
+        require(entity.amount.cl_x == publicInputs[0] && entity.amount.cl_y == publicInputs[1] && entity.amount.cr_x == publicInputs[2] && entity.amount.cr_y == publicInputs[3], "PrivateUSDC: elAmount is not equal");
+        // publicInputs[4] == amount, check
+        require(publicInputs[4] == amount, "PrivateUSDC: amount is not equal");
+        // publicInputs[5] and publicInputs[6] is owner pk skip check
         
         // Decrease private total supply
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
@@ -172,7 +184,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         removeTokensWithBalance(msg.sender, tokenIds);
         
         // direct call the _setBalance method in the inherited FiatTokenV1.sol
-        // totalSupply_ = totalSupply() + amount;
+        totalSupply_ += amount;
         _setBalance(account, _balanceOf(account) + amount);
 
         emit Transfer(address(0), account, amount);
