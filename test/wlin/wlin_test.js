@@ -416,7 +416,7 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 // testMint().then()
 // checkToken(accounts.Minter, '0x61914ef2a2e652a88afbe081269ce156b194786d6380f49c062fe2cc295cecef').then();
 
-// mintForStart().then()
+mintForStart().then()
 // testTotalSupply().then();
 
 // testDirectTransfer().then();
@@ -428,7 +428,7 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 // testReserveTokensAndBurn().then();
 // checkBalance(accounts.Minter).then()
 
-testReserveTokensAndTransfer().then();
+// testReserveTokensAndTransfer().then();
 // checkBalance(accounts.To2).then()
 
 

@@ -5,7 +5,7 @@ async function deployInstProxy(deployed) {
     let [deployer]= await ethers.getSigners();
 
 
-    if (Fixed_Addresses.INSTITUTION_REGISTRATION == "") {
+    if (Fixed_Addresses.PROXY_ADDRESS == "") {
         console.log("deployInstProxy deployment starts");
 
         const Proxy = await ethers.getContractFactory("InstPercentRouterProxy");
@@ -18,7 +18,7 @@ async function deployInstProxy(deployed) {
         let tx = await proxied.initialize(deployer.address, deployed.contracts.HamsaL2Event);
         await tx.wait();
 
-        deployed.contracts.InstitutionUserRegistry = proxy.target
+        deployed.contracts.InstUserProxy = proxy.target
 
         console.log("proxy initialization is done")
 
@@ -27,6 +27,11 @@ async function deployInstProxy(deployed) {
 
         console.log("deployInstProxy deployment completed");
     } else {
+        const proxy= await ethers.getContractAt("InstPercentRouterProxy", Fixed_Addresses.PROXY_ADDRESS);
+        let tx  = await proxy.setImplementationA(deployed.contracts.InstitutionUserRegistry)
+        await tx.wait();
+
+        deployed.contracts.InstUserProxy = Fixed_Addresses.PROXY_ADDRESS
         console.log("deployInstProxy is skipped due to address in circle/configuration.js")
     }
 }

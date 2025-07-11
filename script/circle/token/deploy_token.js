@@ -8,7 +8,7 @@ const {loadExistingDeployments, saveDeploymentInfo} = require("../deploy_help");
 
 async function deployToken(deployed) {
     let hamsal2event =  deployed.contracts.HamsaL2Event;
-    let institutionRegistration = deployed.contracts.InstitutionUserRegistry
+    let institutionRegistration = deployed.contracts.InstUserProxy
 
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {

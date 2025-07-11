@@ -8,12 +8,9 @@ const institutions = require("../configuration").institutions
 module.exports = async function registerInstitutionAndUser() {
     const deployed = require('../../../deployments/image9.json');
 
-    const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-        }
-    });
-    const institutionUserRegistry = await InstitutionUserRegistryFactory.attach(deployed.contracts.InstitutionUserRegistry);
+
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy);
+
     for (let i = 0; i < institutions.length; i++) {
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         try {
