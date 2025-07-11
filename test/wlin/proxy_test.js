@@ -4,9 +4,10 @@ const {ethers} = require('hardhat');
 const deployed = require("../../deployments/image9.json")
 const hardhatConfig = require('../../hardhat.config');
 
-const registry1_address="0x6F810294857252A20C639dCA1Ae9C871eC534982"
-const registryB_address="0xC768DD4Fb7Ce831725e62d81d2FC35Ce90B87c2E";
-const proxy_address="0x3A64c7d00C4e6A6cBD85d796A8e98c3b478F7B8a";
+const registry1_address="0x3f267Fdd8E35A71546bC35126D010bD15F119b0d"
+const registryB_address="0x651F063b3f24f7971DF2dbBE48F226390BaDfF63";
+const proxy_address="0xcDc049Db9D6bbe407E6FB87F212682C2000F6939";
+const prod_proxy_address="0x0449034be472297A9303818f568cB5275E199Aab"
 
 
 const bankAddress = "0x2c44c4B96AE5f9c9dbf32cF3AA743Cd0277F3127"
@@ -83,7 +84,7 @@ async function registerUserInRegistry1() {
 
 async function deployProxy() {
     let [deployer, signer]= await ethers.getSigners();
-    const Proxy = await ethers.getContractFactory("PercentRouterProxy");
+    const Proxy = await ethers.getContractFactory("InstPercentRouterProxy");
     const proxy = await Proxy.deploy(registry1_address);
     await proxy.waitForDeployment();
     console.log("proxy is deployed at: ", proxy.target)
@@ -99,21 +100,24 @@ async function deployProxy() {
     console.log("registry event: ", result);
 }
 
-async function setupProxy() {
-    const proxy = await ethers.getContractAt("PercentRouterProxy", proxy_address);
-    let tx = await proxy.setImplementationB(registryB_address, 1);
+async function setupProxy(proxy_address) {
+    const proxy = await ethers.getContractAt("InstPercentRouterProxy", proxy_address);
+    let tx = await proxy.setImplementationB(registryB_address, 50);
+    await tx.wait();
+
+    tx = await proxy.setImplementationA(registryB_address);
     await tx.wait();
 }
 
-async function testGetUserManagerThroughProxy() {
+async function testGetUserManagerThroughProxy(proxy_address) {
     const proxy = await ethers.getContractAt("InstitutionUserRegistry", proxy_address);
     let result = await proxy.getUserManager(userAddress)
     console.log("user manager: ", result);
 }
 
 
-async function testProxySettings(){
-    const proxy = await ethers.getContractAt("InstPercentRouterProxy", "0x0449034be472297A9303818f568cB5275E199Aab");
+async function testProxySettings(proxy_address){
+    const proxy = await ethers.getContractAt("InstPercentRouterProxy", proxy_address);
     let admin = await proxy.admin();
     let implA = await proxy.implementationA();
     let implB = await proxy.implementationB();
@@ -126,20 +130,28 @@ async function testProxySettings(){
     })
 }
 
+async function testInstRegistryUpgrade(proxy_address) {
+    const proxy = await ethers.getContractAt("InstPercentRouterProxy", proxy_address);
+
+}
+
 
 // deployRegistry().then();
 // deployRegistryB().then();
 
 // deployProxy().then();
 
-// testRegistryOwner().then();
-
+//testRegistryOwner().then();
 // registerInstInRegistry1().then();
 // registerUserInRegistry1().then();
 
+// setupProxy(proxy_address).then();
+// testGetUserManagerThroughProxy(proxy_address).then();
+// testProxySettings(proxy_address).then();
 
-// setupProxy().then();
-// testGetUserManagerThroughProxy().then();
 
 
-testProxySettings().then();
+// setupProxy(prod_proxy_address).then();
+// testGetUserManagerThroughProxy(prod_proxy_address).then();
+// testProxySettings(prod_proxy_address).then();
+
