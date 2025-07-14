@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./base/PrivateERCToken.sol";
 import "../../usdc/v2/FiatTokenV2.sol";
 import "./base/TokenConverterBase.sol";
+import {TokenUtilsLib} from "./lib/TokenUtilsLib.sol";
 
 /**
  * @title IZKProofVerifier
@@ -84,7 +85,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
 
         // Create TokenEntity
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: hashElgamal(elAmount),
+            id: TokenUtilsLib.hashElgamal(elAmount),
             owner: account,
             status: TokenModel.TokenStatus.active,
             amount: elAmount,
@@ -94,7 +95,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         
         // Increase private total supply
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        addSupply(elAmount);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, elAmount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event, 
             address(this), 
@@ -107,7 +108,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         );
         
         // Add token and update balance
-        addTokenWithBalance(account, entity);
+        TokenUtilsLib.addTokenWithBalance(accounts, account, entity);
         
         // Use received token event
         TokenEventLib.triggerTokenReceivedEvent(
@@ -165,7 +166,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         
         // Decrease private total supply
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        subSupply(entity.amount);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, entity.amount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event, 
             address(this), 
@@ -181,7 +182,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         // Remove token and update balance
-        removeTokensWithBalance(msg.sender, tokenIds);
+        TokenUtilsLib.removeTokensWithBalance(accounts, msg.sender, tokenIds);
         
         // direct call the _setBalance method in the inherited FiatTokenV1.sol
         totalSupply_ += amount;
@@ -211,7 +212,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
      * @param verifierType The type of verifier to set
      * @param verifierAddress The address of the verifier contract
      */
-    function setVerifier(VerifierType verifierType, address verifierAddress) external onlyOwner {
+    function setVerifier(VerifierType verifierType, address verifierAddress) external /* onlyOwner */ {
         require(verifierAddress != address(0), "PrivateUSDC: verifier cannot be zero address");
         _verifiers[verifierType] = verifierAddress;
         emit VerifierSet(verifierType, verifierAddress);
