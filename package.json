@@ -11,6 +11,8 @@
     "chai": "4.3.7",
     "hardhat": "^2.22.5",
     "mocha": "^10.7.3",
+    "mocha-multi-reporters": "^1.5.1",
+    "mochawesome": "^7.1.3",
     "prettier": "^3.5.3",
     "prettier-plugin-solidity": "^2.0.0"
   },
@@ -32,7 +34,11 @@
     "protobufjs": "^7.5.0"
   },
   "scripts": {
-    "circle-deploy": "npx hardhat run script/circle/deploy.js --network ucl_L2",
+    "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2",
+    "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2",
+
+    "circle-deploy2": "npx hardhat run script/circle/temp/deploy_info.js --network ucl_L2",
+
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2",
     "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_L2",
     "wlin-test": "npx hardhat run test/wlin/wlin_test.js --network ucl_L2",
@@ -40,6 +46,8 @@
     "wlin-chain-test": "npx hardhat run test/wlin/blockchain_test.js --network ucl_L2",
     "wlin-minter2-test": "npx hardhat run test/wlin/second_minter_test.js --network ucl_L2",
     "wlin-inst-test": "npx hardhat run test/wlin/institution_registry_test.js --network ucl_L2",
+    "wlin-proxy-test": "npx hardhat run test/wlin/proxy_test.js --network ucl_L2",
+
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
     "qa-circle2": "npx hardhat run test/qa/circle.test.js --network ucl_L2",

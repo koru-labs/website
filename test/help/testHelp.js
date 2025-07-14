@@ -31,8 +31,10 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
         cr_x: ethers.toBigInt(proofResult.supply_amount.cr_x),
         cr_y: ethers.toBigInt(proofResult.supply_amount.cr_y)
     };
-    const proofData = Buffer.from(proofResult.proof, "hex");
-    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proofData);
+    const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+    const input = proofResult.input.map(i => ethers.toBigInt(i));
+
+    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proof,input);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -40,8 +42,11 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+
     const tx = await contract.privateTransfer(tokenId,to);
+    console.log("tx")
     let receipt = await tx.wait();
+    console.log("Result:", receipt);
     return receipt;
 }
 
@@ -111,39 +116,12 @@ async function callPrivateBurn(scAddress, proofResult, accountWallet) {
     return receipt
 }
 
-
-
-async function callPrivateTransferFrom(scAddress, proofResult, spenderWallet) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, spenderWallet)
-    const oldAllowance = {
-        "cl_x": ethers.toBigInt(proofResult.old_allowance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.old_allowance.cl_y),
-        "cr1_x": ethers.toBigInt(proofResult.old_allowance.cr1_x),
-        "cr1_y": ethers.toBigInt(proofResult.old_allowance.cr1_y),
-        "cr2_x": ethers.toBigInt(proofResult.old_allowance.cr2_x),
-        "cr2_y": ethers.toBigInt(proofResult.old_allowance.cr2_y)
-    }
-    const newAllowance = {
-        "cl_x": ethers.toBigInt(proofResult.new_allowance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.new_allowance.cl_y),
-        "cr1_x": ethers.toBigInt(proofResult.new_allowance.cr1_x),
-        "cr1_y": ethers.toBigInt(proofResult.new_allowance.cr1_y),
-        "cr2_x": ethers.toBigInt(proofResult.new_allowance.cr2_x),
-        "cr2_y": ethers.toBigInt(proofResult.new_allowance.cr2_y)
-    }
-    const amount = {
-        "cl_x": ethers.toBigInt(proofResult.amount.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.amount.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.amount.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.amount.cr_y)
-    }
-    const proofData = Buffer.from(proofResult.proof, "hex");
-
-    const tx = await contract.privateTransferFrom(proofResult.from_address,oldAllowance,newAllowance,proofResult.to_address, amount,proofData);
+async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateTransferFrom(tokenId,from,to);
     let receipt = await tx.wait();
-    return receipt
+    return receipt;
 }
-
 
 async function getAddressBalance(grpcClient, scAddress, account) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
@@ -170,7 +148,34 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     return result
 }
 
-async function getTotalSupplyNode3(grpcClient, scAddress) {
+async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    let amount = await contract.privateBalanceOf(account)
+
+    let balance=  {
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
+    let result = await grpcClient.getAccountBalance(scAddress, account,metadata)
+    let decodeAmount = 0
+    if (balance.cl_x != '0') {
+        decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
+    }
+
+    // console.log("===================================================================");
+    // console.log("Checking Owner Balance");
+    // console.log("Owner Address:", account);
+    // console.log("-------------------------------------------------------------------");
+    // console.log("Decrypted On-chain Balance:", decodeAmount);
+    // console.log("Database Balance:", result);
+    // console.log("===================================================================\n");
+
+    return result
+}
+
+async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateTotalSupply()
     let balance=  {
@@ -179,7 +184,7 @@ async function getTotalSupplyNode3(grpcClient, scAddress) {
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.decodeElgamalAmount(balance)
+    let result = await grpcClient.decodeElgamalAmount(balance,metadata)
     return Number(result.balance)
 }
 
@@ -196,8 +201,8 @@ async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
     return grpcAllowanceAmount;
 }
 
-async function getSplitTokenList(grpcClient,owner, scAddress){
-    const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress);
+async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
+    const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress, metadata);
     return grpcResult;
 }
 
@@ -219,7 +224,7 @@ function hexToDecimal(hexString) {
     }
 }
 function convertBigInt2Hex(number) {
-    return ethers.toBigInt(number).toString(16)
+    return ethers.toBigInt(number).toString(10)
 }
 
 function convertParentTokenIds(parentTokenIds) {
@@ -269,11 +274,18 @@ async function callPrivateCancel(scAddress, wallet, tokenId) {
     return receipt;
 }
 
+async function callPrivateRevoke(scAddress, wallet,spenderAddress, tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    let tx = await contract.privateRevokeApproval(spenderAddress,tokenId)
+    let receipt = await tx.wait();
+    return receipt;
+}
+
 async function registerUser(privateKey,client,userAddress,role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_role: role,//minter,admin,normal
+        account_roles: role,//minter,admin,normal
     };
 
     try {
@@ -283,7 +295,7 @@ async function registerUser(privateKey,client,userAddress,role) {
             const actionRequest = {
                 request_id: response.request_id,
             };
-            await sleep(10000);
+            await sleep(3000);
             const actionResponse = await client.getAsyncAction(actionRequest, metadata);
             console.log("action response:", actionResponse);
             return actionResponse
@@ -305,7 +317,7 @@ async function updateAccountStatus(privateKey,client,userAddress,status) {
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
         if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
-            await sleep(10000);
+            await sleep(3000);
             const actionRequest = {
                 request_id: response.request_id,
             };
@@ -330,7 +342,7 @@ async function updateAccountRole(privateKey,client,userAddress,role) {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: userAddress,
-            account_role: role,//minter,admin,normal
+            account_roles: role,//minter,admin,normal
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
         console.log("action response:", actionResponse);
@@ -382,7 +394,7 @@ async function getEvents(eventName){
 
 
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
-        const startBlock = endBlock - 10000;  // 起始区块
+        const startBlock = endBlock - 3000;  // 起始区块
         const batchSize = 1000;  // 每次查询的区块范围
 
         // 事件名称（确保事件名称正确）
@@ -417,7 +429,7 @@ async function getEventsWithBlock(eventName,fromBlock,toBlock){
 
 
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
-        const startBlock = endBlock - 10000;  // 起始区块
+        const startBlock = endBlock - 3000;  // 起始区块
         const batchSize = 1000;  // 每次查询的区块范围
 
         // 事件名称（确保事件名称正确）
@@ -453,12 +465,15 @@ function sleep(ms) {
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
+    callPrivateTransferFrom,
     callPrivateBurn,
     getAddressBalance,
+    getAddressBalance2,
     getAllowanceBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
     callPrivateCancel,
+    callPrivateRevoke,
     createAuthMetadata,
     registerUser,
     updateAccountRole,

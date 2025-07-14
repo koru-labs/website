@@ -1,32 +1,21 @@
 pragma solidity ^0.8.0;
 
-import "../model/TokenModel.sol";
-import "../lib/TokenEventLib.sol";
-import "../event/IL2Event.sol";
 
-contract InstitutionUserRegistry {
-    address public owner;
-    IL2Event public l2Event;
+import "./InstUserDataTemplate.sol";
 
-    struct Institution {
-        string name;
-        address managerAddress;
-        TokenModel.GrumpkinPublicKey publicKey;
-        string nodeUrl;
-        string httpUrl;
-    }
-
-    mapping(address => Institution) public institutions;
-    mapping(address => address) public userToManager;
-
-    constructor(address _l2Event) {
-        owner = msg.sender;
-        l2Event = IL2Event(_l2Event);
-    }
+contract InstitutionUserRegistry is InstUserDataTemplate {
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
+        require(msg.sender == owner || owner == address(0), "Only owner can call this function");
         _;
+    }
+
+    function initialize(address _owner, address _l2Event) external onlyOwner {
+        require(_owner != address(0), "owner is empty");
+        require(_l2Event != address(0), "event is null");
+
+        owner = _owner;
+        l2Event = IL2Event(_l2Event);
     }
 
     modifier onlyInstitutionManager() {
@@ -54,7 +43,8 @@ contract InstitutionUserRegistry {
         httpUrl : httpUrl
         });
 
-        institutions[institutionAddress] = institution;
+        institutions[institutionAddress]  = institution;
+        userToManager[institutionAddress] = institutionAddress;
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
@@ -100,7 +90,7 @@ contract InstitutionUserRegistry {
 
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
-        require(userToManager[userAddress] == address(0), "User already registered");
+        require(userToManager[userAddress] == address(0) || userToManager[userAddress] == msg.sender, "User already registered");
 
         userToManager[userAddress] = msg.sender;
 
@@ -127,7 +117,7 @@ contract InstitutionUserRegistry {
             msg.sender
         );
     }
-    
+
     function getUserManager(address userAddress) public view returns (address) {
         return userToManager[userAddress];
     }
@@ -154,4 +144,7 @@ contract InstitutionUserRegistry {
         return bytes(str).length == 0;
     }
 
+    function getEventAddress() public view returns (address) {
+        return address(l2Event);
+    }
 }

@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./InstitutionUserRegistry.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import "../inst_user_registry/InstitutionUserRegistry.sol";
 import "../event/IL2Event.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "./IPrivateERCToken.sol";
 import "../lib/TokenVerificationLib.sol";
-import "../lib/CurveBabyJubJubHelper.sol";
+
 
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
+import {TokenUtilsLib} from "../lib/TokenUtilsLib.sol";
 import { Pausable } from "../../../usdc/v1/Pausable.sol";
 import { Blacklistable } from "../../../usdc/v1/Blacklistable.sol";
 import { Ownable } from "../../../usdc/v1/Ownable.sol";
 import { Mintable } from "../../../usdc/v1/Mintable.sol";
+import {Permissioned} from "./permissioned.sol";
 
-abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable {
+
+
+abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned , ReentrancyGuard {
     // FiatTokenV1 compatible fields
     bool private initialized;
 
@@ -48,7 +54,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
-
+        initializePermission(institutionRegistration);
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
@@ -73,6 +79,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     onlyMinters
     notBlacklisted(msg.sender)
     notBlacklisted(to)
+    onlyAllowedBank
+    nonReentrant
     returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -99,30 +107,33 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, privateMinterAllowed[msg.sender], newAllowed);
 
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        addSupply(supplyIncrease);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyIncrease);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply,_numberOfTotalSupplyChanges);
 
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: hashElgamal(amount),
+            id: TokenUtilsLib.hashElgamal(amount),
              owner:to,
             status: TokenModel.TokenStatus.active,
              amount:  amount,
              to:  address(0),
              rollbackTokenId:0
         });
-        addTokenWithBalance(to, entity);
+        TokenUtilsLib.addTokenWithBalance(accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
 
-        emit PrivateMint(to, amount);
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
+
+    emit PrivateMint(to, amount);
         return true;
     }
     
     function privateSplitToken(uint256[] memory consumedTokenIds, address from, address to, TokenModel.TokenEntity[] calldata newTokens,  uint256[8] calldata proof, uint256[20] calldata publicInputs) external
-        whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) {
+        whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to)
+        onlyAllowedBank nonReentrant {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(from, consumedTokenIds);
+        TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(accounts, from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
         TokenModel.TokenEntity memory transferToken = newTokens[1];
         TokenModel.TokenEntity memory rollBackToken = newTokens[2];
@@ -140,26 +151,24 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         });
         TokenVerificationLib.verifyTokenSplit(params);
 
-        removeTokens(from, consumedTokenIds);
+        TokenUtilsLib.removeTokens(accounts, from, consumedTokenIds);
 
         changeToken.status = TokenModel.TokenStatus.active;
-        addToken(from, changeToken);
+        TokenUtilsLib.addToken(accounts, from, changeToken);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokenIds, changeToken.id);
 
         transferToken.rollbackTokenId = rollBackToken.id;
-        addToken(from, transferToken);
+        TokenUtilsLib.addToken(accounts, from, transferToken);
 
-        addToken(from, rollBackToken);
+        TokenUtilsLib.addToken(accounts, from, rollBackToken);
     }
 
     /**
      * @dev Burns private fiat tokens from an address and updates the total supply.
      * @param tokenId The tokenId to burn.
      */
-    function privateBurn(
-       uint256 tokenId
-    ) external {
+    function privateBurn(uint256 tokenId)  external onlyAllowedBank nonReentrant {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
@@ -167,15 +176,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.ElGamal memory supplyDecrease = accounts[msg.sender].assets[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
 
-        subSupply(supplyDecrease);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyDecrease);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        removeTokensWithBalance(msg.sender, tokenIds);
+        TokenUtilsLib.removeTokensWithBalance(accounts, msg.sender, tokenIds);
 
         uint256[] memory rollbackTokenIds = new uint256[](1);
         rollbackTokenIds[0] = entity.rollbackTokenId;
-        removeTokens(msg.sender, rollbackTokenIds);
+        TokenUtilsLib.removeTokens(accounts, msg.sender, rollbackTokenIds);
 
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply,_numberOfTotalSupplyChanges);
         TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, tokenId);
@@ -190,8 +199,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     external
     whenNotPaused
     notBlacklisted(msg.sender)
-    notBlacklisted(to)
-    returns (bool)
+    notBlacklisted(to) onlyAllowedBank nonReentrant returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
@@ -200,7 +208,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = tokenEntity.rollbackTokenId;
-        removeTokensWithBalance(msg.sender, rollbackTokens);
+        TokenUtilsLib.removeTokensWithBalance(accounts, msg.sender, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
@@ -208,7 +216,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory oldTokens = new uint256[](1);
         oldTokens[0] = tokenEntity.id;
-        removeTokens(msg.sender, oldTokens);
+        TokenUtilsLib.removeTokens(accounts, msg.sender, oldTokens);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
@@ -216,9 +224,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         tokenEntity.owner= to;
         tokenEntity.status = TokenModel.TokenStatus.active;
 
-        addTokenWithBalance(tokenEntity.to, tokenEntity);
+        TokenUtilsLib.addTokenWithBalance(accounts, tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
@@ -231,11 +240,12 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         TokenModel.TokenEntity[] memory newTokens, // [allowanceToken, changeToken, rollbackToken]
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender) notBlacklisted(to){
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender)
+     notBlacklisted(to) onlyAllowedBank nonReentrant {
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
 
-        TokenModel.ElGamal memory onChainConsumedAmount = sumTokenAmounts(msg.sender, consumedTokenIds);
+        TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(accounts, msg.sender, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
         TokenModel.TokenEntity memory allowanceToken = newTokens[1];
         TokenModel.TokenEntity memory rollbackToken = newTokens[2];
@@ -253,20 +263,20 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         });
         TokenVerificationLib.verifyTokenSplit(params);
 
-        removeTokens(msg.sender, consumedTokenIds);
+        TokenUtilsLib.removeTokens(accounts, msg.sender, consumedTokenIds);
 
         changeToken.status = TokenModel.TokenStatus.active;
-        addToken(msg.sender, changeToken);
+        TokenUtilsLib.addToken(accounts, msg.sender, changeToken);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokenIds, changeToken.id);
 
         allowanceToken.rollbackTokenId = rollbackToken.id;
         allowanceToken.to = to;
-        addToken(msg.sender, allowanceToken);
+        TokenUtilsLib.addToken(accounts, msg.sender, allowanceToken);
 
         accounts[msg.sender].allowances[spender] = allowanceToken.id;
 
-        addToken(msg.sender, rollbackToken);
+        TokenUtilsLib.addToken(accounts, msg.sender, rollbackToken);
 
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
     }
@@ -276,7 +286,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256 tokenId,
         address from,
         address to
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) notBlacklisted(to) returns (bool) {
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from)
+    notBlacklisted(to) onlyAllowedBank nonReentrant returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         require(from != address(0), "PrivateERCToken: from is the zero address");
@@ -290,7 +301,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = allowanceToken.rollbackTokenId;
-        removeTokensWithBalance(from, rollbackTokens);
+        TokenUtilsLib.removeTokensWithBalance(accounts, from, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = allowanceToken.id;
@@ -298,7 +309,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory oldTokens = new uint256[](1);
         oldTokens[0] = allowanceToken.id;
-        removeTokens(from, oldTokens);
+        TokenUtilsLib.removeTokens(accounts, from, oldTokens);
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, 0);
 
@@ -306,17 +317,20 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         allowanceToken.owner= to;
         allowanceToken.status = TokenModel.TokenStatus.active;
 
-        addTokenWithBalance(allowanceToken.to, allowanceToken);
+        TokenUtilsLib.addTokenWithBalance(accounts, allowanceToken.to, allowanceToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
 
-        removeAllowanceRecord(from, msg.sender);
+        TokenUtilsLib.removeAllowanceRecord(accounts, from, msg.sender);
+
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokens[0]);
 
         emit PrivateTransferFrom(msg.sender, from, to, tokenId);
         return true;
     }
 
 
-    function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused notBlacklisted(msg.sender) {
+    function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused
+    notBlacklisted(msg.sender) onlyAllowedBank nonReentrant {
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
@@ -329,21 +343,19 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory allowanceTokenIds = new uint256[](1);
         allowanceTokenIds[0] = allowanceTokenId;
-        removeTokensWithBalance(allowanceToken.owner, allowanceTokenIds);
+        TokenUtilsLib.removeTokensWithBalance(accounts, allowanceToken.owner, allowanceTokenIds);
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenIds, 0);
 
-        addTokenWithBalance(msg.sender, rollbackToken);
+        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, rollbackToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
 
-        removeAllowanceRecord(msg.sender, spender);
+        TokenUtilsLib.removeAllowanceRecord(accounts, msg.sender, spender);
 
         emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
     }
 
-    function privateCancelToken(uint256 tokenId) external 
-        whenNotPaused 
-        notBlacklisted(msg.sender) 
-        returns (bool) {
+    function privateCancelToken(uint256 tokenId) external
+        whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank nonReentrant returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         
         TokenModel.TokenEntity memory transferToken = accounts[msg.sender].assets[tokenId];
@@ -357,10 +369,10 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         uint256[] memory transferTokens = new uint256[](1);
         transferTokens[0] = transferToken.id;
-        removeTokensWithBalance(transferToken.owner, transferTokens);
+        TokenUtilsLib.removeTokensWithBalance(accounts, transferToken.owner, transferTokens);
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), transferToken.owner, transferTokens, 0);
 
-        addTokenWithBalance(msg.sender, rollbackToken);
+        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, rollbackToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
         return true;
     }
@@ -374,7 +386,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return consolidatedSupply;
     }
 
-    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) external {
+    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof) nonReentrant nonReentrant external {
         //TODO add proof logic
         _publicTotalSupply = publicTotalSupply;
     }
@@ -397,57 +409,6 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         return true;
     }
 
-    function addSupply(TokenModel.ElGamal memory supplyIncrease) internal {
-        _privateTotalSupply = CurveBabyJubJubHelper.addElGamal(_privateTotalSupply, supplyIncrease);
-        _numberOfTotalSupplyChanges++;
-    }
-
-    function subSupply(TokenModel.ElGamal memory supplyDecrease) internal {
-        _privateTotalSupply = CurveBabyJubJubHelper.subElGamal(_privateTotalSupply, supplyDecrease);
-        _numberOfTotalSupplyChanges++;
-    }
-
-    function hashElgamal(TokenModel.ElGamal memory elgamal) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encode(elgamal)));
-    }
-
-    function addTokenWithBalance(address to, TokenModel.TokenEntity memory entity) internal {
-        TokenModel.Account storage toAccount = accounts[to];
-
-        toAccount.balance = CurveBabyJubJubHelper.addElGamal(toAccount.balance, entity.amount);
-        toAccount.assets[entity.id] = entity;
-    }
-    
-    function addToken(address to, TokenModel.TokenEntity memory token) internal {
-        TokenModel.Account storage toAccount = accounts[to];
-        toAccount.assets[token.id] = token;
-    }
-
-    function removeTokensWithBalance(address to, uint256[] memory tokenIds) internal {
-        TokenModel.Account storage toAccount = accounts[to];
-
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            toAccount.balance = CurveBabyJubJubHelper.subElGamal(toAccount.balance, toAccount.assets[tokenIds[i]].amount);
-            delete toAccount.assets[tokenIds[i]];
-        }
-    }
-
-    function removeTokens(address to, uint256[] memory tokenIds) internal {
-        TokenModel.Account storage toAccount = accounts[to];
-
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            delete toAccount.assets[tokenIds[i]];
-        }
-    }
-
-    function sumTokenAmounts(address account, uint256[] memory tokens) internal view returns (TokenModel.ElGamal memory) {
-        TokenModel.ElGamal memory sum = TokenModel.ElGamal(0, 0, 0, 0);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            sum = CurveBabyJubJubHelper.addElGamal(sum, accounts[account].assets[tokens[i]].amount);
-        }
-        return sum;
-    }
-
     function publicTotalSupply() external view returns (uint256, bool) {
         return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
     }
@@ -456,20 +417,15 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         address account,
         uint256 tokenId
     ) external view returns (TokenModel.TokenEntity memory) {
-        TokenModel.Account storage account = accounts[account];
-        return account.assets[tokenId];
+        TokenModel.Account storage userAccount = accounts[account];
+        return userAccount.assets[tokenId];
     }
 
     function getAllowanceTokens(address spender) external view returns (uint256) {
         return accounts[msg.sender].allowances[spender];
     }
 
-
     function getAllowanceTokensFrom(address owner) external view returns (uint256) {
         return accounts[owner].allowances[msg.sender];
-    }
-
-    function removeAllowanceRecord(address owner, address spender) internal {
-        delete accounts[owner].allowances[spender];
     }
 }
