@@ -195,10 +195,12 @@ async function getPublicTotalSupply(scAddress) {
     return amount[0]
 }
 
-async function getAllowanceBalance(grpcClient, scAddress, owner, spender) {
-    const grpcResult = await grpcClient.getAddressAllowance(owner, spender, scAddress);
-    const grpcAllowanceAmount = Number(grpcResult.amount);
-    return grpcAllowanceAmount;
+async function getApprovedAllowance(scAddress,wallet,owner) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress,wallet)
+    console.log("Approve owner: ", owner)
+    let approvedToken = await contract.getAllowanceTokensFrom(owner)
+    console.log("Approve token: ", '0x'+approvedToken.toString(16))
+    return approvedToken
 }
 
 async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
@@ -469,7 +471,6 @@ module.exports =  {
     callPrivateBurn,
     getAddressBalance,
     getAddressBalance2,
-    getAllowanceBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
     callPrivateCancel,
@@ -484,5 +485,6 @@ module.exports =  {
     removeFromBlackList,
     getEvents,
     getSplitTokenList,
-    sleep
+    sleep,
+    getApprovedAllowance
 }
