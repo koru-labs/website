@@ -360,20 +360,22 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     function privateCancelToken(uint256 tokenId) external
         whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank nonReentrant returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
-        
+
         TokenModel.TokenEntity memory transferToken = accounts[msg.sender].assets[tokenId];
-        require(transferToken.owner == msg.sender, "token.owner != msg.sender");
-        require(transferToken.status == TokenModel.TokenStatus.inactive, "token is not inactive");
-        require(transferToken.rollbackTokenId != 0, "rollback token does not exist");
+        require(transferToken.id != 0, "PrivateERCToken: token does not exist");
+        require(transferToken.owner == msg.sender, "PrivateERCToken: caller is not the token owner");
+        require(transferToken.status == TokenModel.TokenStatus.inactive, "PrivateERCToken: token is not in inactive status");
+        require(transferToken.rollbackTokenId != 0, "PrivateERCToken: rollback token does not exist");
 
         TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[transferToken.rollbackTokenId];
-        require(rollbackToken.id != 0, "invalid rollback token");
+        require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
+        require(rollbackToken.owner == msg.sender, "PrivateERCToken: caller is not the rollback token owner");
         rollbackToken.status = TokenModel.TokenStatus.active;
 
         uint256[] memory transferTokens = new uint256[](1);
-        transferTokens[0] = transferToken.id;
+        transferTokens[0] = tokenId;
         TokenUtilsLib.removeTokens(accounts, transferToken.owner, transferTokens);
-        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferToken.id);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, tokenId);
         return true;
     }
     
