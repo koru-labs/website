@@ -123,24 +123,28 @@ abstract contract PrivateTokenApproval is
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
         uint256 onChainAllowanceTokenId = _accounts[msg.sender].allowances[spender];
-        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance not found");
+        require(onChainAllowanceTokenId != 0, "PrivateERCToken: no allowance exists for this spender");
+        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance tokenId mismatch");
 
-        TokenModel.TokenEntity memory allowanceToken = _accounts[spender].assets[onChainAllowanceTokenId];
-        TokenModel.TokenEntity memory rollbackToken = _accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
+        TokenModel.TokenEntity memory allowanceToken = _accounts[msg.sender].assets[onChainAllowanceTokenId];
+        require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
+        require(allowanceToken.owner == msg.sender, "PrivateERCToken: caller is not the token owner");
+        require(allowanceToken.rollbackTokenId != 0, "PrivateERCToken: rollback token not found");
+
+        TokenModel.TokenEntity storage rollbackToken = _accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
+        require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
         rollbackToken.status = TokenModel.TokenStatus.active;
 
         uint256[] memory allowanceTokenIds = new uint256[](1);
         allowanceTokenIds[0] = allowanceTokenId;
-        TokenUtilsLib.removeTokensWithBalance(_accounts, allowanceToken.owner, allowanceTokenIds);
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenIds, 0);
-
-        TokenUtilsLib.addTokenWithBalance(_accounts, msg.sender, rollbackToken);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
+        TokenUtilsLib.removeTokens(_accounts, allowanceToken.owner, allowanceTokenIds);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenId);
 
         TokenUtilsLib.removeAllowanceRecord(_accounts, msg.sender, spender);
 
         emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
     }
+
     function getAllowanceTokens(address spender) external view returns (uint256) {
         return _accounts[msg.sender].allowances[spender];
     }
