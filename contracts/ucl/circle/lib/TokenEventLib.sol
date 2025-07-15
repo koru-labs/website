@@ -167,6 +167,23 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, eventAccount, "TokenDeleted", body);
     }
 
+    function triggerTokenCanceledEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address eventAccount,
+        uint256[] memory consumedTokens,
+        uint256 changeTokenId
+    ) public {
+        TokenCanceledEvent memory e = TokenCanceledEvent({
+            consumedTokens : consumedTokens,
+            changeTokenId : changeTokenId
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, eventAccount, "TokenCanceled", body);
+    }
+
+
+
     //triggerTokenReceivedEvent
 //    function triggerTokenReceivedEvent(
 //        IL2Event _l2Event,
