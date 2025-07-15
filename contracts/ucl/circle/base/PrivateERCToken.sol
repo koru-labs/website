@@ -338,16 +338,13 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance not found");
 
         TokenModel.TokenEntity memory allowanceToken = accounts[spender].assets[onChainAllowanceTokenId];
-        TokenModel.TokenEntity memory rollbackToken = accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
+        TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
         rollbackToken.status = TokenModel.TokenStatus.active;
 
         uint256[] memory allowanceTokenIds = new uint256[](1);
         allowanceTokenIds[0] = allowanceTokenId;
-        TokenUtilsLib.removeTokensWithBalance(accounts, allowanceToken.owner, allowanceTokenIds);
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenIds, 0);
-
-        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, rollbackToken);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
+        TokenUtilsLib.removeTokens(accounts, allowanceToken.owner, allowanceTokenIds);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenId);
 
         TokenUtilsLib.removeAllowanceRecord(accounts, msg.sender, spender);
 
@@ -363,17 +360,14 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(transferToken.status == TokenModel.TokenStatus.inactive, "token is not inactive");
         require(transferToken.rollbackTokenId != 0, "rollback token does not exist");
 
-        TokenModel.TokenEntity memory rollbackToken = accounts[msg.sender].assets[transferToken.rollbackTokenId];
+        TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[transferToken.rollbackTokenId];
         require(rollbackToken.id != 0, "invalid rollback token");
         rollbackToken.status = TokenModel.TokenStatus.active;
 
         uint256[] memory transferTokens = new uint256[](1);
         transferTokens[0] = transferToken.id;
-        TokenUtilsLib.removeTokensWithBalance(accounts, transferToken.owner, transferTokens);
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), transferToken.owner, transferTokens, 0);
-
-        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, rollbackToken);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), msg.sender, rollbackToken.id, address(this), TokenModel.TokenStatus.active, rollbackToken.amount);
+        TokenUtilsLib.removeTokens(accounts, transferToken.owner, transferTokens);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferToken);
         return true;
     }
     
