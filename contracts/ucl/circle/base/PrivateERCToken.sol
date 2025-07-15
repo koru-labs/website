@@ -367,7 +367,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256[] memory transferTokens = new uint256[](1);
         transferTokens[0] = transferToken.id;
         TokenUtilsLib.removeTokens(accounts, transferToken.owner, transferTokens);
-        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferToken);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferToken.id);
         return true;
     }
     
