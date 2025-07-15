@@ -30,5 +30,6 @@ contract L2EventParser {
     function parseMinterAllowedUpdate(TokenMintAllowedUpdatedEvent memory e) public view {}
 
     function parseTokenActionCompleted(TokenActionCompletedEvent memory e) public view {}
+    function parseTokenCanceled(TokenCanceledEvent memory e) public view {}
 
 }
