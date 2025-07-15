@@ -465,13 +465,24 @@ function sleep(ms) {
 }
 
 async function allowBanksInTokenSmartContract(minterAddress) {
+    const l1CustomNetwork = {
+        name: "BESU",
+        chainId: 1337
+    };
+    const options = {
+        batchMaxCount: 1,
+        staticNetwork: true
+    };
+
+    const L1Url = hardhatConfig.networks.ucl_L2.url;
+    const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
-    console.log(`Add ${minterAddress} to contract`)
     const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
+    console.log(`Add ${minterAddress} to contract`)
     let tx = await privateUSDC.updateAllowedBank(minterAddress, true)
     console.log(tx);
     await tx.wait();
-    const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstitutionUserRegistry, ownerWallet);
+    const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
     console.log("manager: ",await Institution.getUserManager(minterAddress))
 }
 
