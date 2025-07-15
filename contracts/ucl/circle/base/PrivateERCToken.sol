@@ -337,7 +337,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256 onChainAllowanceTokenId = accounts[msg.sender].allowances[spender];
         require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance not found");
 
-        TokenModel.TokenEntity memory allowanceToken = accounts[spender].assets[onChainAllowanceTokenId];
+        TokenModel.TokenEntity memory allowanceToken = accounts[msg.sender].assets[onChainAllowanceTokenId];
         TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
         rollbackToken.status = TokenModel.TokenStatus.active;
 
