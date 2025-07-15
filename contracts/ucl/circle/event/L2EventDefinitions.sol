@@ -130,8 +130,7 @@ import "../model/TokenModel.sol";
 
 
     struct TokenCanceledEvent {
-        uint256[] consumedTokens;
-        uint256 changeTokenId;
+        uint256 transferTokenId;
     }
 
     struct TokenActionCompletedEvent {

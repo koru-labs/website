@@ -171,12 +171,10 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address eventAccount,
-        uint256[] memory consumedTokens,
-        uint256 changeTokenId
+        uint256 transferTokenId
     ) public {
         TokenCanceledEvent memory e = TokenCanceledEvent({
-            consumedTokens : consumedTokens,
-            changeTokenId : changeTokenId
+            transferTokenId : transferTokenId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenCanceled", body);

@@ -344,7 +344,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256[] memory allowanceTokenIds = new uint256[](1);
         allowanceTokenIds[0] = allowanceTokenId;
         TokenUtilsLib.removeTokens(accounts, allowanceToken.owner, allowanceTokenIds);
-        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenIds, 0);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenId);
 
         TokenUtilsLib.removeAllowanceRecord(accounts, msg.sender, spender);
 
@@ -367,7 +367,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         uint256[] memory transferTokens = new uint256[](1);
         transferTokens[0] = transferToken.id;
         TokenUtilsLib.removeTokens(accounts, transferToken.owner, transferTokens);
-        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferTokens, 0);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, transferToken);
         return true;
     }
     
