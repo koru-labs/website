@@ -128,6 +128,12 @@ import "../model/TokenModel.sol";
         uint256 changeTokenId;
     }
 
+
+    struct TokenCanceledEvent {
+        uint256[] consumedTokens;
+        uint256 changeTokenId;
+    }
+
     struct TokenActionCompletedEvent {
         uint256 rollbackTokenId;
     }
