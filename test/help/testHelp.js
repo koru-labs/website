@@ -164,13 +164,13 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
         decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
     }
 
-    // console.log("===================================================================");
-    // console.log("Checking Owner Balance");
-    // console.log("Owner Address:", account);
-    // console.log("-------------------------------------------------------------------");
-    // console.log("Decrypted On-chain Balance:", decodeAmount);
-    // console.log("Database Balance:", result);
-    // console.log("===================================================================\n");
+    console.log("===================================================================");
+    console.log("Checking Owner Balance");
+    console.log("Owner Address:", account);
+    console.log("-------------------------------------------------------------------");
+    console.log("Decrypted On-chain Balance:", decodeAmount);
+    console.log("Database Balance:", result);
+    console.log("===================================================================\n");
 
     return result
 }
@@ -464,6 +464,48 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function allowBanksInTokenSmartContract(minterAddress) {
+    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
+    console.log(`Add ${minterAddress} to contract`)
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
+    let tx = await privateUSDC.updateAllowedBank(minterAddress, true)
+    console.log(tx);
+    await tx.wait();
+    const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstitutionUserRegistry, ownerWallet);
+    console.log("manager: ",await Institution.getUserManager(minterAddress))
+}
+
+async function setMinterAllowed(minterAddress) {
+    const minterAllowedAmount = {
+        "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
+        "cl_y": 17997503520096523373978760079614633178183544935372525079367653487073845131371n,
+        "cr_x": 2799658707790704252170544877645553735081603739176317448125814928308770685127n,
+        "cr_y": 10724405929777949929088094477911843117820716522007699467531083531418761611245n,
+    }
+
+    console.log(`Configure ${minterAddress} allowed amount...`)
+
+    const minters = [
+        {account: minterAddress, name: "Minter"},
+    ];
+
+    const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
+        libraries: {
+            "TokenEventLib": config.libraries.TokenEventLib,
+            "TokenUtilsLib": config.libraries.TokenUtilsLib,
+            "TokenVerificationLib": config.libraries.TokenVerificationLib,
+            "SignatureChecker": config.libraries.SignatureChecker
+        }
+    });
+    const privateUSDC = await PrivateUSDCFactory.attach(config.contracts.PrivateERCToken);
+
+
+    for (const minter of minters) {
+        await privateUSDC.configurePrivacyMinter(minterAddress, minterAllowedAmount);
+        console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`)
+    }
+}
+
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
@@ -486,5 +528,7 @@ module.exports =  {
     getEvents,
     getSplitTokenList,
     sleep,
-    getApprovedAllowance
+    getApprovedAllowance,
+    allowBanksInTokenSmartContract,
+    setMinterAllowed
 }
