@@ -335,10 +335,16 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
         uint256 onChainAllowanceTokenId = accounts[msg.sender].allowances[spender];
-        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance not found");
+        require(onChainAllowanceTokenId != 0, "PrivateERCToken: no allowance exists for this spender");
+        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance tokenId mismatch");
 
         TokenModel.TokenEntity memory allowanceToken = accounts[msg.sender].assets[onChainAllowanceTokenId];
+        require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
+        require(allowanceToken.owner == msg.sender, "PrivateERCToken: caller is not the token owner");
+        require(allowanceToken.rollbackTokenId != 0, "PrivateERCToken: rollback token not found");
+
         TokenModel.TokenEntity storage rollbackToken = accounts[msg.sender].assets[allowanceToken.rollbackTokenId];
+        require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
         rollbackToken.status = TokenModel.TokenStatus.active;
 
         uint256[] memory allowanceTokenIds = new uint256[](1);
