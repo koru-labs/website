@@ -168,22 +168,15 @@ async function ReserveTokensToTransfer(toAddress,amount,metadata) {
 }
 async function ReserveTokensToBurn(amount) {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    try {
-        const splitRequest = {
-            sc_address: config.contracts.PrivateERCToken,
-            token_type: '0',
-            from_address: accounts.Minter,
-            amount: amount
-        };
-        let response = await client.generateSplitToken(splitRequest,metadata);
-        console.log("Generate burn Proof response:", response);
-        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
-    }catch (error){
-        const wrappedError = new Error('Burn failed: ' + error.details);
-        wrappedError.code = error.code;
-        wrappedError.details = error.details;
-        throw wrappedError;
-    }
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        amount: amount
+    };
+    let response = await client.generateSplitToken(splitRequest,metadata);
+    console.log("Generate burn Proof response:", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
 
 }
 async function ReserveTokensAndTransferFrom(fromWallet,spenderWallet,fromAddress,toAddress,amount,fromMetadata){
