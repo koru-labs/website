@@ -159,7 +159,7 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
         cr_y: convertBigInt2Hex(amount[3])
     }
     let result = await grpcClient.getAccountBalance(scAddress, account,metadata)
-    let decodeAmount = 0
+    let decodeAmount = { balance: '0' }
     if (balance.cl_x != '0') {
         decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
     }
@@ -171,8 +171,12 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
     console.log("Decrypted On-chain Balance:", decodeAmount);
     console.log("Database Balance:", result);
     console.log("===================================================================\n");
-
-    return result
+    if (decodeAmount.balance != result.balance) {
+        console.log("Balance in database and on-chain Mismatch");
+        // console.log({decodeAmount,result})
+    }else {
+        return result
+    }
 }
 
 async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
@@ -347,7 +351,9 @@ async function updateAccountRole(privateKey,client,userAddress,role) {
             account_roles: role,//minter,admin,normal
         };
         const actionResponse = await client.updateAccountRole(actionRequest, metadata);
+        await sleep(3000)
         console.log("action response:", actionResponse);
+        return actionResponse
 
     } catch (error) {
         console.error("gRPC call failed:", error);
@@ -477,6 +483,7 @@ async function allowBanksInTokenSmartContract(minterAddress) {
     const L1Url = hardhatConfig.networks.ucl_L2.url;
     const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
+    console.log(`PrivateERCToken : ${config.contracts.PrivateERCToken}`)
     const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
     console.log(`Add ${minterAddress} to contract`)
     let tx = await privateUSDC.updateAllowedBank(minterAddress, true)
