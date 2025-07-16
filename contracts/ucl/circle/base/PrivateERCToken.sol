@@ -5,5 +5,5 @@ import "./PrivateTokenCore.sol";
 import "./PrivateTokenApproval.sol";
 import "./IPrivateERCToken.sol";
 
-abstract contract PrivateERCToken is IPrivateERCToken, PrivateTokenCore, PrivateTokenApproval {
+abstract contract PrivateERCToken is PrivateTokenCore, PrivateTokenApproval {
 }

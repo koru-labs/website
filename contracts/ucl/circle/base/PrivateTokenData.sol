@@ -22,7 +22,7 @@ abstract contract PrivateTokenData is Ownable {
     mapping(address => bool) internal _authorizedContracts;
     
     modifier onlyAuthorized() {
-        require(_authorizedContracts[msg.sender] || msg.sender == owner(), "PrivateTokenData: unauthorized access");
+        require(_authorizedContracts[msg.sender] || msg.sender == this.owner(), "PrivateTokenData: unauthorized access");
         _;
     }
     

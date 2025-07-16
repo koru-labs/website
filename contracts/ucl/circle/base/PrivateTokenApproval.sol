@@ -11,12 +11,12 @@ import { Blacklistable } from "../../../usdc/v1/Blacklistable.sol";
 import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-abstract contract PrivateTokenApproval is
-    PrivateTokenData,
-    Pausable,
-    Blacklistable,
-    Permissioned,
-    ReentrancyGuard
+abstract contract PrivateTokenApproval is 
+    PrivateTokenData, 
+    Pausable, 
+    Blacklistable, 
+    Permissioned, 
+    ReentrancyGuard 
 {
     event PrivateApproval(address indexed owner, address indexed spender, TokenModel.Allowance value);
     event PrivateApprovalToken(address indexed owner, address indexed spender, uint256 indexed tokenId);
@@ -31,7 +31,7 @@ abstract contract PrivateTokenApproval is
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender)
-     notBlacklisted(to) onlyAllowedBank nonReentrant {
+     notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
 
@@ -76,7 +76,7 @@ abstract contract PrivateTokenApproval is
         address from,
         address to
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from)
-    notBlacklisted(to) onlyAllowedBank nonReentrant returns (bool) {
+    notBlacklisted(to) onlyAllowedBank nonReentrant virtual returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         require(from != address(0), "PrivateERCToken: from is the zero address");
@@ -118,7 +118,7 @@ abstract contract PrivateTokenApproval is
     }
 
     function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused
-    notBlacklisted(msg.sender) onlyAllowedBank nonReentrant {
+    notBlacklisted(msg.sender) onlyAllowedBank nonReentrant virtual {
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
@@ -144,12 +144,12 @@ abstract contract PrivateTokenApproval is
 
         emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
     }
-
-    function getAllowanceTokens(address spender) external view returns (uint256) {
+    
+    function getAllowanceTokens(address spender) external view virtual returns (uint256) {
         return _accounts[msg.sender].allowances[spender];
     }
-    
-    function getAllowanceTokensFrom(address owner) external view returns (uint256) {
+
+    function getAllowanceTokensFrom(address owner) external view virtual returns (uint256) {
         return _accounts[owner].allowances[msg.sender];
     }
 }

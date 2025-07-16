@@ -27,7 +27,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
         InstitutionUserRegistry institutionRegistration
-    ) public {
+    ) public virtual {
         require(!_initialized, "FiatToken: contract is already initialized");
         
         _initialized = true;
@@ -37,27 +37,27 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
     }
 
-    function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory) {
+    function privateBalanceOf(address owner) external view virtual returns (TokenModel.ElGamal memory) {
         return _accounts[owner].balance;
     }
     
-    function privateTotalSupply() external view returns (TokenModel.ElGamal memory) {
+    function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
     }
     
-    function publicTotalSupply() external view returns (uint256, bool) {
+    function publicTotalSupply() external view virtual returns (uint256, bool) {
         return (_publicTotalSupply, _numberOfTotalSupplyChanges == 0);
     }
     
     function getAccountTokenById(
         address account,
         uint256 tokenId
-    ) external view returns (TokenModel.TokenEntity memory) {
+    ) external view virtual returns (TokenModel.TokenEntity memory) {
         return _accounts[account].assets[tokenId];
     }
 
-    function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount) 
-        external whenNotPaused onlyMasterMinter returns (bool) 
+    function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
+        external whenNotPaused onlyMasterMinter virtual returns (bool)
     {
         minters[minter] = true;
         _privateMinterAllowed[minter] = privateAllowedAmount;
@@ -65,7 +65,7 @@ abstract contract PrivateTokenCore is
         return true;
     }
     
-    function removePrivacyMinter(address minter) external onlyMasterMinter returns (bool) {
+    function removePrivacyMinter(address minter) external onlyMasterMinter virtual returns (bool) {
         _privateMinterAllowed[minter] = TokenModel.ElGamal({
             cl_x: 0,
             cl_y: 0,
@@ -76,7 +76,7 @@ abstract contract PrivateTokenCore is
     }
     
     function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof)
-        external nonReentrant
+        external nonReentrant virtual
     {
         _publicTotalSupply = publicTotalSupply;
     }
@@ -94,6 +94,7 @@ abstract contract PrivateTokenCore is
     notBlacklisted(to)
     onlyAllowedBank
     nonReentrant
+    virtual
     returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
@@ -139,7 +140,7 @@ abstract contract PrivateTokenCore is
         return true;
     }
 
-    function privateBurn(uint256 tokenId) external onlyAllowedBank nonReentrant {
+    function privateBurn(uint256 tokenId) external onlyAllowedBank nonReentrant virtual {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
@@ -170,7 +171,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant {
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
 
         require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
 
@@ -215,6 +216,7 @@ abstract contract PrivateTokenCore is
     notBlacklisted(to)
     onlyAllowedBank
     nonReentrant
+    virtual
     returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
@@ -249,7 +251,7 @@ abstract contract PrivateTokenCore is
     }
 
     function privateCancelToken(uint256 tokenId) external
-    whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank nonReentrant returns (bool) {
+    whenNotPaused notBlacklisted(msg.sender) onlyAllowedBank nonReentrant virtual returns (bool) {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
 
         TokenModel.TokenEntity memory transferToken = _accounts[msg.sender].assets[tokenId];
