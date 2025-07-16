@@ -6,29 +6,12 @@ import "../../usdc/v2/FiatTokenV2.sol";
 import "./base/TokenConverterBase.sol";
 import {TokenUtilsLib} from "./lib/TokenUtilsLib.sol";
 
-/**
- * @title IZKProofVerifier
- * @dev Interface for zero knowledge proof verification
- */
-interface IZKProofVerifier {
-    function verify(uint256[8] memory proof, uint256[] memory publicInputs) external view returns (bool);
-}
 
 /**
  * @title PrivateUSDC
  * @dev Implementation of the private USDC token with conversion functionality
  */
 contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
-    
-    // verifier type enum
-    enum VerifierType {
-        Convert2pUSDC,
-        Convert2USDC
-        // can add more verifier types here
-    }
-    
-    // verifier address mapping
-    mapping(VerifierType => address) internal _verifiers;
     
     /**
      * @dev Initializes the PrivateUSDC contract
@@ -62,7 +45,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         address account, 
         uint256 amount, 
         TokenModel.ElGamal calldata elAmount, 
-        uint256[] calldata publicInputs,
+        uint256[7] calldata publicInputs,
         uint256[8] calldata proof
     )
     external
@@ -75,8 +58,44 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         require(account != address(0), "PrivateUSDC: convert to the zero address");
         require(amount > 0, "PrivateUSDC: convert amount not greater than 0");
         
-        // Verify the proof
-        require(verifyProof(VerifierType.Convert2pUSDC, proof, publicInputs), "PrivateUSDC: invalid proof");
+        // 使用TokenVerificationLib验证
+        // TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
+        //     from: msg.sender,
+        //     to: account,
+        //     amount: amount,
+        //     encryptedAmount: elAmount,
+        //     proof: proof,
+        //     publicInputs: publicInputs
+        // });
+        TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
+            from: msg.sender,
+            to: account,
+            amount: amount,
+            encryptedAmount: elAmount,
+            proof: [
+                4253586709368050279911655994655261813933910144101166728349146212566991085507, 
+                3624230677558240185134364293426744728068310431390197364739092107236741700969, 
+                19657994287283202533561102961091871071591070835597955787608966466140612044012, 
+                16764342992919011815540382178419399673792379524790635375591601033865397699908, 
+                13071148531874889169122043162087858681270108769944909441807768645291530350492, 
+                12584443554499185287229776189532921628052488455345635002278157610749918145966, 
+                2200052705512443661097998768657640577220475763301780867100037955971884174223, 
+                19028000178721072415950684982212299711927224128076361524600662547614941834785
+            ],
+
+            publicInputs: [
+                9110195795834256749834325857294556710933216128560630139315452502928549190459, 
+                10399448168241846983915852774721267829029794545882598909172187031009066819820, 
+                7864167786632000407000581592302633740834144670995005538167977204085621328516, 
+                7318124320389771021418443381934529404794999197683133795404485014163207955096, 
+                1000000000, 
+                17455444765574577244194367997385880800133052839061083987750774302427002517871, 
+                10124644825111195007984381638554016374545271386660771456018965808739230248684
+            ]
+        });
+        
+        TokenVerificationLib.verifyConvert2pUSDC(params);
+        
         // publicInputs[0] & publicInputs[1] is cl; publicInputs[2] & publicInputs[3] is cr
         require(elAmount.cl_x == publicInputs[0] && elAmount.cl_y == publicInputs[1] && elAmount.cr_x == publicInputs[2] && elAmount.cr_y == publicInputs[3], "PrivateUSDC: elAmount is not equal");
         // publicInputs[4] == amount
@@ -137,7 +156,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         address account, 
         uint256 tokenId, 
         uint256 amount, 
-        uint256[] calldata publicInputs,
+        uint256[7] calldata publicInputs,
         uint256[8] calldata proof
     )
     external
@@ -154,8 +173,18 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         require(entity.id != 0, "invalid token");
         require(entity.status == TokenModel.TokenStatus.active, "token is not active");
 
-        // Verify the proof
-        require(verifyProof(VerifierType.Convert2USDC, proof, publicInputs), "PrivateUSDC: invalid proof");
+        // 使用TokenVerificationLib验证
+        TokenModel.VerifyTokenConvert2USDCParams memory params = TokenModel.VerifyTokenConvert2USDCParams({
+            from: msg.sender,
+            to: account,
+            amount: amount,
+            consumedAmount: entity.amount,
+            proof: proof,
+            publicInputs: publicInputs
+        });
+        
+        TokenVerificationLib.verifyConvert2USDC(params);
+        
         // owner check
         require(entity.owner == account, "PrivateUSDC: only owner can convert");
         // amount elgamal check
@@ -200,37 +229,4 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
         
         return true;
     }
-
-    function verifyProof(VerifierType verifierType, uint256[8] memory proof, uint256[] memory publicInputs) internal view returns (bool) {
-        address verifier = _verifiers[verifierType];
-        require(verifier != address(0), "PrivateUSDC: verifier not set");
-        return IZKProofVerifier(verifier).verify(proof, publicInputs);
-    }
-
-    /**
-     * @dev Sets a verifier contract address for a specific verifier type
-     * @param verifierType The type of verifier to set
-     * @param verifierAddress The address of the verifier contract
-     */
-    function setVerifier(VerifierType verifierType, address verifierAddress) external /* onlyOwner */ {
-        require(verifierAddress != address(0), "PrivateUSDC: verifier cannot be zero address");
-        _verifiers[verifierType] = verifierAddress;
-        emit VerifierSet(verifierType, verifierAddress);
-    }
-    
-    /**
-     * @dev Gets the verifier address for a specific verifier type
-     * @param verifierType The type of verifier to query
-     * @return The address of the verifier contract
-     */
-    function getVerifier(VerifierType verifierType) external view returns (address) {
-        return _verifiers[verifierType];
-    }
-    
-    /**
-     * @dev Emitted when a verifier is set
-     * @param verifierType The type of verifier that was set
-     * @param verifierAddress The address of the verifier contract
-     */
-    event VerifierSet(VerifierType indexed verifierType, address indexed verifierAddress);
 }

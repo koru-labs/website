@@ -6,6 +6,8 @@ import "../model/TokenModel.sol";
 import "./verify/MintAllowedTokenVerifier.sol";
 import "./verify/SplitTokenVerifier.sol";
 import "./verify/SplitAllowanceTokenVerifier.sol";
+import "./verify/Convert2pUSDCVerifier.sol";
+import "./verify/Convert2USDCVerifier.sol";
 
 library TokenVerificationLib {
 
@@ -104,5 +106,53 @@ library TokenVerificationLib {
         return;
     }
 
-
+    // Convert2pUSDC
+    function verifyConvert2pUSDC(TokenModel.VerifyTokenConvert2pUSDCParams calldata params) public view {
+        // 调用验证方法
+        Convert2pUSDCVerifier.verifyProof(params.proof, params.publicInputs);
+        
+        // 验证用户公钥
+        //InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
+        
+        // 验证from地址的公钥是否匹配（如果需要）
+        // TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
+        // require(from.x == params.publicInputs[0] && from.y == params.publicInputs[1], "from public key not match");
+        
+        // 验证to地址的公钥是否匹配（如果需要）
+        // TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
+        // require(to.x == params.publicInputs[2] && to.y == params.publicInputs[3], "to public key not match");
+        
+        // 验证加密金额是否匹配（如果需要）
+        // TokenModel.ElGamal memory encryptedAmount = params.encryptedAmount;
+        // require(encryptedAmount.cl_x == params.publicInputs[4] && encryptedAmount.cl_y == params.publicInputs[5] &&
+        //        encryptedAmount.cr_x == params.publicInputs[6] && encryptedAmount.cr_y == params.publicInputs[7], 
+        //        "encrypted amount not match");
+        
+        return;
+    }
+    
+    // Convert2USDC
+    function verifyConvert2USDC(TokenModel.VerifyTokenConvert2USDCParams calldata params) public view {
+        // 创建验证器合约实例并调用验证方法
+        Convert2USDCVerifier.verifyProof(params.proof, params.publicInputs);
+        
+        // 验证用户公钥
+        //InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
+        
+        // 验证from地址的公钥是否匹配（如果需要）
+        // TokenModel.GrumpkinPublicKey memory from = institutionRegistration.getUserInstGrumpkinPubKey(params.from);
+        // require(from.x == params.publicInputs[0] && from.y == params.publicInputs[1], "from public key not match");
+        
+        // 验证to地址的公钥是否匹配（如果需要）
+        // TokenModel.GrumpkinPublicKey memory to = institutionRegistration.getUserInstGrumpkinPubKey(params.to);
+        // require(to.x == params.publicInputs[2] && to.y == params.publicInputs[3], "to public key not match");
+        
+        // 验证消耗的加密金额是否匹配（如果需要）
+        // TokenModel.ElGamal memory consumedAmount = params.consumedAmount;
+        // require(consumedAmount.cl_x == params.publicInputs[4] && consumedAmount.cl_y == params.publicInputs[5] &&
+        //        consumedAmount.cr_x == params.publicInputs[6] && consumedAmount.cr_y == params.publicInputs[7], 
+        //        "consumed amount not match");
+        
+        return;
+    }
 }
