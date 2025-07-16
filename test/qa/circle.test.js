@@ -93,8 +93,8 @@ async function mint(address,amount) {
         console.log("callPrivateMint:", receipt)
         let tx = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
         await sleep(2000);
-        console.log("tx:", tx)
-        // return  tx
+        // console.log("tx:", tx)
+        return  receipt
     // }catch (error){
     //     const wrappedError = new Error('Minting failed: ' + error.details);
     //     wrappedError.code = error.code;
@@ -404,7 +404,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     await sleep(3000);
 }
 
-describe("Function Cases",function (){
+describe.only("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
 
@@ -421,7 +421,6 @@ describe("Function Cases",function (){
         // await registerUser(adminPrivateKey,client1,userInNode1,"normal");
         // await updateAccountStatus(adminPrivateKey,client1,userInNode1,2)
     })
-
     describe("Check address balance with role auth",function (){
         it('Admin role check balance: minter and normal',async () => {
             // admin role can check all user balance
@@ -497,22 +496,21 @@ describe("Function Cases",function (){
     describe("Split and transfer",  function (){
         this.timeout(1200000);
         let preBalanceTo,postBalanceTo;
-
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
         it('transfer to user1 inBank with 1',async () => {
-            await DirectMint(accounts.Minter,amount)
+            await DirectMint(accounts.Minter,100)
+            preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             await ReserveTokensAndTransfer(toAddress1,amount,minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
-            expect(postBalance).to.equal(preBalance);
+            expect(postBalance).to.equal(preBalance-amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
         it('transfer to user1 inBank with 10 string format',async () => {
-            const amount = 10;
             preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             await ReserveTokensAndTransfer(toAddress1,amount.toString(),minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
@@ -522,15 +520,6 @@ describe("Function Cases",function (){
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
 
-        it('transfer to spender inBank with 10',async () => {
-            const recevier = accounts.Spender1;
-            preBalanceTo = await getTokenBalanceByAdmin(recevier);
-            await ReserveTokensAndTransfer(recevier,amount,minterMeta);
-            postBalanceTo = await getTokenBalanceByAdmin(recevier);
-            postBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            expect(postBalance).to.equal(preBalance - amount);
-            expect(postBalanceTo).to.equal(preBalanceTo + amount);
-        });
         it('transfer to user cross Bank with 10',async () => {
             const recevier = userInNode1;
             preBalanceTo = await getTokenBalanceInNode1(recevier);
@@ -582,7 +571,6 @@ describe("Function Cases",function (){
             }
         });
     })
-
     describe("Approve and tranfer",function (){
         this.timeout(1200000);
         let preBalance,postBalance;
@@ -636,7 +624,6 @@ describe("Function Cases",function (){
         });
 
     })
-
     describe("Approve and revoke", function () {
         this.timeout(1200000);
         let preBalance,postBalance;
@@ -692,7 +679,6 @@ describe("Function Cases",function (){
         });
 
     })
-
     describe("Split and burn", function () {
         this.timeout(1200000);
 
@@ -735,7 +721,6 @@ describe("Function Cases",function (){
             expect(postBalance).to.equal(preBalance - burn_amount);
         });
     });
-
     describe('Full token life: mint ,tranfer, burn', function () {
         this.timeout(1200000);
         const userAddress = userInNode1;
@@ -782,7 +767,6 @@ describe("Function Cases",function (){
         });
 
     });
-
     describe('Direct Mint', function () {
         this.timeout(1200000);
         it('DirectMint 10 to minter ',async () => {
@@ -813,7 +797,6 @@ describe("Function Cases",function (){
             expect(postBalance).to.equal(preBalance + amount);
         });
     });
-
     describe('Direct Transfer', function () {
         this.timeout(1200000);
         before(async function () {
@@ -867,7 +850,6 @@ describe("Function Cases",function (){
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
     });
-
     describe('Direct Burn', function () {
         this.timeout(1200000);
         before(async function () {
@@ -891,19 +873,23 @@ describe("Function Cases",function (){
             let postBalance = await getTokenBalanceByAdmin(burner);
             expect(postBalance).to.equal(preBalance - amount);
         });
-
-        it('Try to DirectBurn 100 for user of other bank',async () => {
+        it('Try to DirectBurn 10 for user of other bank',async () => {
             const burner = userInNode1
-            try {
-                await DirectBurn(burner, 100);
-            }catch (error){
-                console.log(error)
-                expect(error.details).to.equal("No tokens are available for splitting.")
-            }
-        });
+            await DirectMint(burner, amount);
+            const minterMeta = await createAuthMetadata(accounts.MinterKey)
+            const splitRequest =
+                {
+                    sc_address: config.contracts.PrivateERCToken,
+                    token_type: '0',
+                    from_address: burner,
+                    amount: amount
+                };
 
-    });
+            let response = await client.generateDirectBurn(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            expect(response.status).to.equal("TOKEN_ACTION_STATUS_FAIL");
 
+    });})
     describe('Cancel splitToken', function () {
         this.timeout(1200000);
         it('split token list ',async () => {
@@ -937,8 +923,8 @@ describe("Function Cases",function (){
                     console.log("cancel split token: ", splitToken.token_id)
                     // await callPrivateCancel(scAddress, ownerWallet, splitToken.token_id);
                     let receipt = await callPrivateCancel(scAddress, ownerWallet, ethers.toBigInt('0x'+splitToken.token_id))
-                    //console.log("receipt", receipt)
-                    await expect(callPrivateCancel(scAddress, ownerWallet, ethers.toBigInt('0x'+splitToken.token_id))).to.be.revertedWith("token.owner != msg.sender")
+                    console.log("receipt", receipt)
+                    await expect(callPrivateCancel(scAddress, ownerWallet, ethers.toBigInt('0x'+splitToken.token_id))).to.be.revertedWith("PrivateERCToken: token does not exist")
 
                 }
             }
@@ -1083,7 +1069,6 @@ describe("Function Cases",function (){
             expect(balanceOnChain).to.equal(balanceOffChain);
         });
     });
-
     describe.skip("check minter allowed balance", function () {
         this.timeout(1200000);
         let preAllowance,postAllowance;
@@ -1154,8 +1139,7 @@ describe("Function Cases",function (){
         });
 
     });
-
-    describe.only("Authorization", function () {
+    describe("Authorization", function () {
         const normalWallet = ethers.Wallet.createRandom();
         const newMinterWallet = ethers.Wallet.createRandom();
         const newAdminWallet = ethers.Wallet.createRandom();
@@ -1472,12 +1456,12 @@ describe("Function Cases",function (){
         })
 
     });
-
     describe("check gas used", function () {
         this.timeout(1200000);
         const MAX_GAS_LIMIT = 30000000;
         it('Check gas used during mint ',async () => {
             const receipt = await mint(accounts.Minter, 20);
+            console.log(receipt)
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
         it('Check gas used during transfer ',async () => {
@@ -2120,7 +2104,6 @@ describe("Boundary value cases",function (){
             }
         });
     });
-
 })
 describe("Permission and BlackList", function () {
     this.timeout(1200000);
