@@ -137,6 +137,7 @@ async function ReserveTokensAndTransfer(toAddress,amount,metadata) {
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
         let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,'0x'+response.transfer_token_id)
         await sleep(2000)
+        console.log("callPrivateTransfer:", receipt)
         return receipt
     }catch (error){
         const wrappedError = new Error('Transfer failed: ' + error.details);
@@ -365,25 +366,17 @@ async function DirectTransfer(from,receiver,amount) {
 }
 async function DirectBurn(address,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
-    try {
-        const splitRequest =
-            {
-                sc_address: config.contracts.PrivateERCToken,
-                token_type: '0',
-                from_address: address,
-                amount: amount
-            };
+    const splitRequest =
+        {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: address,
+            amount: amount
+        };
 
-        let response = await client.generateDirectBurn(splitRequest,minterMeta);
-        console.log("Generate transfer Proof response:", response);
-        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
-        // await sleep(3000);
-    }catch (error){
-        const wrappedError = new Error('Burn failed: ' + error.details);
-        wrappedError.code = error.code;
-        wrappedError.details = error.details;
-        throw wrappedError;
-    }
+    let response = await client.generateDirectBurn(splitRequest,minterMeta);
+    console.log("Generate transfer Proof response:", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
 }
 
 async function cancelAllSplitTokens(ownerWallet,scAddress){
@@ -502,9 +495,9 @@ describe.only("Function Cases",function (){
         it('transfer to user1 inBank with 1',async () => {
             await DirectMint(accounts.Minter,100)
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
-            await ReserveTokensAndTransfer(toAddress1,amount,minterMeta);
-            postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
+            preBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
+            await ReserveTokensAndTransfer(accounts.To1,amount,minterMeta);
+            postBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
             expect(postBalance).to.equal(preBalance-amount);
@@ -711,7 +704,6 @@ describe.only("Function Cases",function (){
             }else {
                 console.log("balance is not enough")
             }
-
         });
         it('burn all minter amount',async () => {
             const burn_amount = await getTokenBalanceByAdmin(accounts.Minter);
@@ -2280,7 +2272,6 @@ describe("Permission and BlackList", function () {
     });
 
 });
-
 describe('Security cases', function () {
     let adminMeta,minterMeta,spenderMeta,to1Meta
 
