@@ -875,7 +875,7 @@ describe.only("Function Cases",function (){
             expect(response.status).to.equal("TOKEN_ACTION_STATUS_FAIL");
 
     });})
-    describe.only('Cancel splitToken', function () {
+    describe('Cancel splitToken', function () {
         this.timeout(1200000);
         it('split token list ',async () => {
             await DirectMint(accounts.Minter, 50);
