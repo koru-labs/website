@@ -24,10 +24,9 @@ async function deployLibs(deployed) {
     await deployMintAllowedTokenVerifier(deployed);
     await deploySplitTokenVerifier(deployed);
     await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
-    await deployTokenVerificationLib(deployed);
     await deployConvert2pUSDCVerifier(deployed);
     await deployConvert2USDCVerifier(deployed);
-
+    await deployTokenVerificationLib(deployed);
 
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();

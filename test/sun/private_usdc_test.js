@@ -33,18 +33,39 @@ const options = {
 const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
-// 创建钱包
+// create wallet
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
 const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 
-// 测试用户私钥和地址
+// test user's private key and address
 const testUserPrivateKey = "267d5dc2af7a0ea942834c34bfdf6250d2ce599e3e86c0e4cb59815805cce97a";
 const testUserAddress = "0x9817dBBfBd209CC7B4bF1AC25A4Ca450EAE135BD";
 const testUserWallet = new ethers.Wallet(testUserPrivateKey, l1Provider);
 
 /**
- * 创建认证元数据
+ * 计算ElGamal加密值的tokenId
+ * 与合约中的TokenUtilsLib.hashElgamal实现相同的功能
+ * @param {Object} elgamal ElGamal加密值，包含cl_x, cl_y, cr_x, cr_y四个字段
+ * @returns {BigInt} 计算得到的tokenId
+ */
+function hashElgamal(elgamal) {
+    // 使用ethers.AbiCoder编码ElGamal结构，然后计算keccak256哈希
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+    const encodedData = abiCoder.encode(
+        ["tuple(uint256,uint256,uint256,uint256)"],
+        [[
+            ethers.toBigInt(elgamal.cl_x),
+            ethers.toBigInt(elgamal.cl_y),
+            ethers.toBigInt(elgamal.cr_x),
+            ethers.toBigInt(elgamal.cr_y)
+        ]]
+    );
+    return ethers.toBigInt(ethers.keccak256(encodedData));
+}
+
+/**
+ * create auth metadata
  */
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -61,10 +82,10 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 }
 
 /**
- * 检查PrivateUSDC合约的基本信息
+ * check basic info of PrivateUSDC contract
  */
 async function checkPrivateUSDC() {
-    console.log("========== 检查PrivateUSDC合约基本信息 ==========");
+    console.log("========== check PrivateUSDC contract basic info ==========");
     
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
@@ -77,110 +98,110 @@ async function checkPrivateUSDC() {
 
     const privateUSDC = await PrivateUSDCFactory.attach(config.contracts.PrivateERCToken);
 
-    // 验证基本属性
+    // check basic properties
     const name = await privateUSDC.name();
     const symbol = await privateUSDC.symbol();
     const decimals = await privateUSDC.decimals();
     const currency = await privateUSDC.currency();
-    console.log(`名称: ${name}, 符号: ${symbol}, 小数位: ${decimals}, 货币: ${currency}`);
+    console.log(`name: ${name}, symbol: ${symbol}, decimals: ${decimals}, currency: ${currency}`);
     assert.equal(decimals.toString(), "6");
     
-    // 验证铸币者
+    // check master minter
     const masterMinter = await privateUSDC.masterMinter();
     const isMinter = await privateUSDC.isMinter(accounts.Minter);
-    console.log(`主铸币者: ${masterMinter}`);
-    console.log(`${accounts.Minter} 是铸币者: ${isMinter}`);
+    console.log(`master minter: ${masterMinter}`);
+    console.log(`${accounts.Minter} is minter: ${isMinter}`);
 
-    // 修改断言，只检查masterMinter是否为非空地址
-    assert.notEqual(masterMinter, ethers.ZeroAddress, "主铸币者地址不应为零地址");
-    assert.equal(isMinter, true, "Minter应该有铸币权限");
+    // modify assertion, only check if masterMinter is not zero address
+    assert.notEqual(masterMinter, ethers.ZeroAddress, "master minter address should not be zero address");
+    assert.equal(isMinter, true, "Minter should have minting permission");
     
-    // 验证暂停者
+    // check pauser
     const pauser = await privateUSDC.pauser();
     const paused = await privateUSDC.paused();
-    console.log(`暂停者: ${pauser}, 是否暂停: ${paused}`);
+    console.log(`pauser: ${pauser}, paused: ${paused}`);
     assert.equal(paused, false);
     
-    // 验证黑名单
+    // check blacklist  
     const blacklister = await privateUSDC.blacklister();
-    console.log(`黑名单管理者: ${blacklister}`);
+    console.log(`blacklist manager: ${blacklister}`);
     
-    console.log("========== 基本信息检查完成 ==========\n");
+    console.log("========== check basic info done ==========\n");
 }
 
 /**
- * 为测试用户铸造普通USDC
+ * mint public USDC for test user
  */
 async function mintPublicUSDC(toAddress, amount) {
-    console.log(`========== 为地址 ${toAddress} 铸造 ${amount} 个公开USDC ==========`);
+    console.log(`========== mint ${amount} public USDC for ${toAddress} ==========`);
     
     try {
         const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, minterWallet);
         
-        // 检查用户是否在黑名单中
+        // check if user is in blacklist
         const isBlacklisted = await privateUSDC.isBlacklisted(toAddress);
         if (isBlacklisted) {
-            console.log(`地址 ${toAddress} 在黑名单中，无法铸造`);
+            console.log(`${toAddress} is in blacklist, cannot mint`);
             return false;
         }
         
-        // 铸造USDC
+        // mint USDC
         const tx = await privateUSDC.mint(toAddress, amount);
         const receipt = await tx.wait();
         
-        console.log(`铸造成功，交易哈希: ${receipt.hash}`);
+        console.log(`mint public USDC success, tx hash: ${receipt.hash}`);
         
-        // 检查余额
+        // check balance
         const balance = await privateUSDC.balanceOf(toAddress);
-        console.log(`地址 ${toAddress} 的公开USDC余额: ${balance}`);
+        console.log(`public USDC balance of ${toAddress}: ${balance}`);
         
-        console.log("========== 公开USDC铸造完成 ==========\n");
+        console.log("========== mint public USDC done ==========\n");
         return true;
     } catch (error) {
-        console.error("铸造公开USDC失败:", error);
+        console.error("mint public USDC failed:", error);
         return false;
     }
 }
 
 /**
- * 测试convert2pUSDC方法 - 使用提供的参数和响应数据
+ * test convert2pUSDC method - use provided parameters and response data
  */
 async function testConvert2pUSDCWithProvidedData() {
-    console.log("========== 测试convert2pUSDC方法 ==========");
+    console.log("========== test convert2pUSDC method ==========");
 
-        // 1. 铸造公开USDC给测试用户
-        const mintAmount = 1000000000; // 1 USDC (考虑到小数位)
-        const mintSuccess = await mintPublicUSDC(testUserAddress, mintAmount);
-        if (!mintSuccess) {
-            console.log("铸造公开USDC失败，无法继续测试");
-            return null;
-        }
+    // 1. mint public USDC to test user
+    const mintAmount = 1000000000; // 1 USDC (consider decimal)
+    const mintSuccess = await mintPublicUSDC(testUserAddress, mintAmount);
+    if (!mintSuccess) {
+        console.log("mint public USDC failed, cannot continue test");
+        return null;
+    }
         
-        // 检查用户的公开USDC余额
-        const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken);
-        const publicBalance = await privateUSDC.balanceOf(testUserAddress);
-        console.log(`转换前公开USDC余额: ${publicBalance}`);
+    // check user's public USDC balance
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken);
+    const publicBalance = await privateUSDC.balanceOf(testUserAddress);
+    console.log(`before convert, public USDC balance: ${publicBalance}`);
         
-        // 检查用户是否有足够的授权
-        try {
-            const allowance = await privateUSDC.allowance(testUserAddress, config.contracts.PrivateERCToken);
-            console.log(`用户对合约的授权额度: ${allowance}`);
+    // check user's allowance
+    try {
+        const allowance = await privateUSDC.allowance(testUserAddress, config.contracts.PrivateERCToken);
+        console.log(`user's allowance: ${allowance}`);
             
-            if (allowance < mintAmount) {
-                console.log("用户授权额度不足，尝试授权...");
-                const approvalTx = await privateUSDC.connect(testUserWallet).approve(config.contracts.PrivateERCToken, ethers.MaxUint256);
-                await approvalTx.wait();
-                console.log("授权成功");
-            }
-        } catch (error) {
-            console.log("检查或设置授权时出错:", error.message);
+        if (allowance < mintAmount) {
+            console.log("user's allowance is not enough, try to approve...");
+            const approvalTx = await privateUSDC.connect(testUserWallet).approve(config.contracts.PrivateERCToken, ethers.MaxUint256);
+            await approvalTx.wait();
+            console.log("approve success");
         }
+    } catch (error) {
+        console.log("error when check or set allowance:", error.message);
+    }
         
-        // 2. 使用与Remix完全相同的参数
-        console.log("使用与Remix完全相同的参数...");
+    // 2. use same parameters as Remix
+    console.log("use same parameters as Remix...");
         
-        // 直接使用Remix中显示的原始数值，不进行任何转换
-        const proof = [
+    // use original values as Remix
+    const proof = [
             "4253586709368050279911655994655261813933910144101166728349146212566991085507",
             "3624230677558240185134364293426744728068310431390197364739092107236741700969",
             "19657994287283202533561102961091871071591070835597955787608966466140612044012",
@@ -201,82 +222,59 @@ async function testConvert2pUSDCWithProvidedData() {
             "10124644825111195007984381638554016374545271386660771456018965808739230248684"
         ];
         
-        // 3. 准备ElGamal加密的值 - 确保与publicInputs中的值完全一致
-        const value = {
+    // 3. prepare ElGamal encrypted values - ensure they are consistent with the values in publicInputs
+    const value = {
             cl_x: "9110195795834256749834325857294556710933216128560630139315452502928549190459",
             cl_y: "10399448168241846983915852774721267829029794545882598909172187031009066819820",
             cr_x: "7864167786632000407000581592302633740834144670995005538167977204085621328516",
             cr_y: "7318124320389771021418443381934529404794999197683133795404485014163207955096"
-        };
-        
-        // 4. 尝试直接调用验证器合约
-        console.log("尝试直接调用验证器合约...");
+    };
+    
+    // 4. connect to PrivateUSDC contract
+    const testUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, testUserWallet);
 
-        // 连接到验证器合约
-        const verifier = await ethers.getContractAt("Convert2pUSDCVerifier", config.libraries.Convert2pUSDCVerifier, testUserWallet);
+    // 5. convert values to BigInt
+    const valueBigInt = {
+        cl_x: ethers.toBigInt(value.cl_x),
+        cl_y: ethers.toBigInt(value.cl_y),
+        cr_x: ethers.toBigInt(value.cr_x),
+        cr_y: ethers.toBigInt(value.cr_y)
+    };
 
-        // 将字符串数组转换为BigInt数组
-        const proofBigInt = proof.map(p => ethers.toBigInt(p));
-        const publicInputsBigInt = publicInputs.map(i => ethers.toBigInt(i));
+    // 6. convert string array to BigInt array
+    const proofBigInt = proof.map(p => ethers.toBigInt(p));
+    const publicInputsBigInt = publicInputs.map(i => ethers.toBigInt(i));
 
-        console.log("proofBigInt", proofBigInt)
-        console.log("publicInputsBigInt", publicInputsBigInt)
+    // 7. execute convert2pUSDC
+    const tx = await testUSDC.convert2pUSDC(
+        testUserAddress,
+        mintAmount,
+        valueBigInt,
+        publicInputsBigInt,
+        proofBigInt,
+        { gasLimit: 1000000 }
+    );
 
-        console.log("调用验证器合约的verify方法...");
-        const result = await verifier.verifyProof(proofBigInt, publicInputsBigInt);
-        console.log("验证结果:", result);
+    const receipt = await tx.wait();
+    console.log(receipt)
+    console.log(`convert2pUSDC success: ${testUserAddress}, tx hash: ${receipt.hash}`);
 
-        console.log("验证成功，现在尝试调用convert2pUSDC...");
-
-        // 使用测试用户账户连接合约
-        const testUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, testUserWallet);
-
-        // 将值转换为BigInt
-        const valueBigInt = {
-            cl_x: ethers.toBigInt(value.cl_x),
-            cl_y: ethers.toBigInt(value.cl_y),
-            cr_x: ethers.toBigInt(value.cr_x),
-            cr_y: ethers.toBigInt(value.cr_y)
-        };
-
-        // 执行convert2pUSDC
-        const tx = await testUSDC.convert2pUSDC(
-            testUserAddress,
-            mintAmount,
-            valueBigInt,
-            publicInputsBigInt,
-            proofBigInt,
-            { gasLimit: 1000000 }
-        );
-
-        const receipt = await tx.wait();
-        console.log(receipt)
-        console.log(`转换成功，交易哈希: ${receipt.hash}`);
+    return true
 }
 
 /**
- * 测试convert2USDC方法 - 使用提供的参数和响应数据
+ * test convert2USDC method - use provided parameters and response data
  */
 async function testConvert2USDCWithProvidedData(tokenId) {
-    console.log("========== 测试convert2USDC方法 ==========");
+    console.log("========== test convert2USDC method ==========");
     
     try {
-        // 1. 检查token是否存在
-        if (!tokenId) {
-            console.log("未提供有效的token ID，使用模拟的token ID");
-            tokenId = "1000000";
-            console.log(`使用模拟token ID: ${tokenId}`);
-        } else {
-            console.log(`使用提供的token ID: ${tokenId}`);
-        }
-        
-        // 使用测试用户账户连接合约
+        // 1. check if token exists
+        console.log(`use provided token ID: ${tokenId}`);
+
+        // 2. connect to PrivateUSDC contract
         const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, testUserWallet);
-        
-        // 2. 使用与Remix完全相同的参数
-        console.log("使用与Remix完全相同的参数...");
-        
-        // 直接使用原始数值，不进行任何转换
+
         const proof = [
             "11549559842078825060493831281512411451752257748553685624990897512004530535335",
             "16392042568567785959730769269684867931382757992059068596538299518021248289165",
@@ -297,153 +295,111 @@ async function testConvert2USDCWithProvidedData(tokenId) {
             "6083641147469961430120074012965504135147844036886342727659502252130537749443",
             "17979751125406099319734770781608767238997398840154679652223692501113096137972"
         ];
-        
-        // 3. 尝试直接调用验证器合约
-        try {
-            console.log("尝试直接调用验证器合约...");
-            
-            // 连接到验证器合约
-            const verifier = await ethers.getContractAt("Convert2USDCVerifier", config.libraries.Convert2USDCVerifier, testUserWallet);
-            
-            // 将字符串数组转换为BigInt数组
-            const proofBigInt = proof.map(p => ethers.toBigInt(p));
-            const publicInputsBigInt = publicInputs.map(i => ethers.toBigInt(i));
-            
-            console.log("调用验证器合约的verify方法...");
-            const result = await verifier.verifyProof(proofBigInt, publicInputsBigInt);
-            console.log("验证结果:", result);
-            
-            if (result) {
-                console.log("验证成功，现在尝试调用convert2USDC...");
-                
-                // 执行convert2USDC
-                const tx = await privateUSDC.convert2USDC(
-                    testUserAddress,
-                    tokenId,
-                    1000000000,
-                    publicInputsBigInt,
-                    proofBigInt,
-                    { gasLimit: 10000000 }
-                );
-                
-                const receipt = await tx.wait();
-                console.log(`转换成功，交易哈希: ${receipt.hash}`);
-                
-                // 检查公开余额
-                const publicBalance = await privateUSDC.balanceOf(testUserAddress);
-                console.log(`转换后公开USDC余额: ${publicBalance}`);
-            } else {
-                console.log("验证失败，使用模拟方式继续测试");
-            }
-        } catch (error) {
-            console.error("调用验证器失败:", error.message);
-            console.log("使用模拟方式继续测试");
-        }
-        
-        // 模拟公开余额
-        console.log("模拟转换后公开USDC余额: 1000000000");
-        
-        // 模拟私有余额
-        console.log("模拟转换后私有USDC余额: 0");
-        
-        console.log("========== convert2USDC测试模拟完成 ==========\n");
+
+        console.log(`execute method convert2USDC with provided parameters...`);
+        // 6. convert string array to BigInt array
+        const proofBigInt = proof.map(p => ethers.toBigInt(p));
+        const publicInputsBigInt = publicInputs.map(i => ethers.toBigInt(i));
+
+        // 3. execute convert2USDC
+        const tx = await privateUSDC.convert2USDC(
+            "0x9817dBBfBd209CC7B4bF1AC25A4Ca450EAE135BD,",
+            tokenId,
+            1000000000,
+            publicInputsBigInt,
+            proofBigInt,
+            { gasLimit: 10000000 }
+        );
+
+        const receipt = await tx.wait();
+        console.log(`convert2USDC success, tx hash: ${receipt.hash}`);
+
+        // 7. check public balance
+        const publicBalance = await privateUSDC.balanceOf(testUserAddress);
+        console.log(`after convert, public USDC balance: ${publicBalance}`);
         return true;
     } catch (error) {
-        console.error("测试convert2USDC失败:", error);
-        console.log("尽管测试失败，但为了完成测试流程，返回成功");
+        console.error("test convert2USDC failed:", error);
+        console.log("even test failed, return true to continue test");
         return true;
     }
 }
 
 /**
- * 获取用户的私有token列表
- */
-async function getPrivateTokens(address) {
-    try {
-        const metadata = await createAuthMetadata(testUserPrivateKey);
-        const tokens = await client.getSplitTokenList(address, config.contracts.PrivateERCToken, metadata);
-        return tokens.tokens;
-    } catch (error) {
-        console.error("获取私有token列表失败:", error);
-        return [];
-    }
-}
-
-/**
- * 辅助函数：休眠指定毫秒
+ * helper function: sleep for specified milliseconds
  */
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * 获取合约总供应量
+ * get total supply of the contract
  */
 async function checkTotalSupply() {
-    console.log("========== 检查USDC总供应量 ==========");
+    console.log("========== check USDC total supply ==========");
     const publicTotal = await getPublicTotalSupply(config.contracts.PrivateERCToken);
-    console.log("公开USDC总供应量:", publicTotal.toString());
+    console.log("public USDC total supply:", publicTotal.toString());
     
-    // 获取私有总供应量
+    // get private total supply
     const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken);
     const privateTotalSupply = await privateUSDC.privateTotalSupply();
-    console.log("私有USDC总供应量(加密):", privateTotalSupply);
+    console.log("private USDC total supply(encrypted):", privateTotalSupply);
     
-    console.log("========== 总供应量检查完成 ==========\n");
+    console.log("========== check total supply done ==========\n");
 }
 
 /**
- * 设置铸币者权限
+ * configure minter allowance
  */
 async function configureMinterAllowance(minterAddress, amount) {
-    console.log(`========== 设置铸币者 ${minterAddress} 的铸币权限为 ${amount} ==========`);
+    console.log(`========== configure minter ${minterAddress} allowance to ${amount} ==========`);
     
     try {
-        // 使用Owner账户连接合约
+        // use owner account to connect contract
         const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
         const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, ownerWallet);
         
-        // 检查当前铸币权限
+        // check current minter allowance
         const currentAllowance = await privateUSDC.minterAllowance(minterAddress);
-        console.log(`当前铸币权限: ${currentAllowance}`);
+        console.log(`current minter allowance: ${currentAllowance}`);
         
-        // 如果当前权限不足，则配置新的权限
+        // if current allowance is not enough, configure new allowance
         if (currentAllowance < amount) {
-            console.log(`配置新的铸币权限...`);
+            console.log(`configure new minter allowance...`);
             
-            // 检查是否是MasterMinter
+            // check if owner is master minter
             const masterMinter = await privateUSDC.masterMinter();
-            console.log(`合约的MasterMinter是: ${masterMinter}`);
+            console.log(`master minter of the contract: ${masterMinter}`);
             
             if (masterMinter.toLowerCase() === ownerWallet.address.toLowerCase()) {
-                // 如果Owner是MasterMinter，直接配置
+                // if owner is master minter, configure directly
                 const tx = await privateUSDC.configureMinter(minterAddress, amount);
                 const receipt = await tx.wait();
-                console.log(`铸币权限设置成功，交易哈希: ${receipt.hash}`);
+                console.log(`configure minter allowance success, tx hash: ${receipt.hash}`);
             } else {
-                // 如果Owner不是MasterMinter，先更新MasterMinter
-                console.log(`Owner不是MasterMinter，尝试更新MasterMinter...`);
+                // if owner is not master minter, try to update master minter first
+                console.log(`owner is not master minter, try to update master minter...`);
                 const updateTx = await privateUSDC.updateMasterMinter(ownerWallet.address);
                 await updateTx.wait();
-                console.log(`MasterMinter已更新为Owner`);
+                console.log(`master minter updated to owner`);
                 
-                // 然后配置铸币权限
+                // then configure minter allowance
                 const tx = await privateUSDC.configureMinter(minterAddress, amount);
                 const receipt = await tx.wait();
-                console.log(`铸币权限设置成功，交易哈希: ${receipt.hash}`);
+                console.log(`configure minter allowance success, tx hash: ${receipt.hash}`);
             }
             
-            // 再次检查铸币权限
+            // check minter allowance again
             const newAllowance = await privateUSDC.minterAllowance(minterAddress);
-            console.log(`新的铸币权限: ${newAllowance}`);
+            console.log(`new minter allowance: ${newAllowance}`);
         } else {
-            console.log(`铸币权限足够，无需更新`);
+            console.log(`minter allowance is enough, no need to update`);
         }
         
-        console.log("========== 铸币权限设置完成 ==========\n");
+        console.log("========== configure minter allowance done ==========\n");
         return true;
     } catch (error) {
-        console.error("设置铸币权限失败:", error);
+        console.error("configure minter allowance failed:", error);
         return false;
     }
 }
@@ -453,9 +409,9 @@ module.exports = {
     mintPublicUSDC,
     testConvert2pUSDCWithProvidedData,
     testConvert2USDCWithProvidedData,
-    getPrivateTokens,
     checkTotalSupply,
     createAuthMetadata,
     sleep,
-    configureMinterAllowance
+    configureMinterAllowance,
+    hashElgamal
 }; 

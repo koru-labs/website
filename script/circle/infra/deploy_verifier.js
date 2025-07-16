@@ -78,7 +78,9 @@ async function deployTokenVerificationLib(deployed) {
         libraries: {
             MintAllowedTokenVerifier: deployed.libraries.MintAllowedTokenVerifier,
             SplitTokenVerifier: deployed.libraries.SplitTokenVerifier, // Add the new library link
-            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier // Add the new library link
+            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier, // Add the new library link
+            Convert2pUSDCVerifier: deployed.libraries.Convert2pUSDCVerifier,
+            Convert2USDCVerifier: deployed.libraries.Convert2USDCVerifier
         }
     });
     const TokenVerificationLib = await TokenVerificationLibFactory.deploy();

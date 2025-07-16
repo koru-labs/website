@@ -25,7 +25,7 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
     // FiatTokenV1 compatible fields
     bool private initialized;
 
-    InstitutionUserRegistry private _institutionRegistration;
+    InstitutionUserRegistry internal _institutionRegistration;
     IL2Event _l2Event;
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;

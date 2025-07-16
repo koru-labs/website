@@ -1,50 +1,48 @@
+const {ethers} = require('hardhat');
 const privateUSDCTest = require('./private_usdc_test');
 
-// 1. 检查合约基本信息
+// 1. check contract basic info
 privateUSDCTest.checkPrivateUSDC()
     .then(() => {
-        console.log("合约基本信息检查完成");
+        console.log("check contract basic info done");
         return privateUSDCTest.checkTotalSupply();
     })
     .then(() => {
-        console.log("总供应量检查完成");
-        // 设置铸币者权限，为测试准备足够的铸币额度
+        console.log("check total supply done");
+        // set minter allowance, prepare enough mint amount
         const accounts = require('./../../deployments/account.json');
-        const mintAmount = 10000000000; // 10 USDC (考虑到小数位)
+        const mintAmount = 10000000000; // 10 USDC (consider decimal)
         return privateUSDCTest.configureMinterAllowance(accounts.Minter, mintAmount);
     })
     .then(() => {
         return privateUSDCTest.testConvert2pUSDCWithProvidedData();
     })
     .then((convert2pUSDCResult) => {
-        console.log("等待区块确认...");
+        console.log("wait for block confirmation...");
         return privateUSDCTest.sleep(5000)
             .then(() => convert2pUSDCResult);
     })
     .then((convert2pUSDCResult) => {
-        if (convert2pUSDCResult) {
-            return privateUSDCTest.getPrivateTokens("0x9817dBBfBd209CC7B4bF1AC25A4Ca450EAE135BD")
-                .then((tokens) => {
-                    if (tokens && tokens.length > 0) {
-                        // 检查token对象的结构，适应可能的不同格式
-                        const tokenId = tokens[0].token_id || tokens[0].id || tokens[0];
-                        console.log(`找到 token ID: ${tokenId}，用于 convert2USDC 测试`);
-                        return tokenId;
-                    }
-                    console.log("没有可用的 token ID 进行 convert2USDC 测试");
-                    return null;
-                });
-        } else {
-            console.log("convert2pUSDC 测试失败，跳过 convert2USDC 测试");
-            return null;
-        }
+        // calculate tokenId using the hashElgamal function from private_usdc_test.js
+        const value = {
+            cl_x: "9110195795834256749834325857294556710933216128560630139315452502928549190459",
+            cl_y: "10399448168241846983915852774721267829029794545882598909172187031009066819820",
+            cr_x: "7864167786632000407000581592302633740834144670995005538167977204085621328516",
+            cr_y: "7318124320389771021418443381934529404794999197683133795404485014163207955096"
+        };
+        
+        // use the hashElgamal function from private_usdc_test.js
+        const tokenId = privateUSDCTest.hashElgamal(value);
+        
+        console.log(`calculated tokenId: ${tokenId}`);
+        return tokenId;
     })
     .then((tokenId) => {
         if (tokenId) {
-            console.log(`使用 tokenId ${tokenId} 执行 convert2USDC 测试...`);
+            console.log(`use tokenId ${tokenId} to execute convert2USDC test...`);
             return privateUSDCTest.testConvert2USDCWithProvidedData(tokenId);
         } else {
-            console.log("没有有效的 tokenId，跳过 convert2USDC 测试");
+            console.log("no valid tokenId, skip convert2USDC test");
             return null;
         }
     })
@@ -52,10 +50,10 @@ privateUSDCTest.checkPrivateUSDC()
         return privateUSDCTest.checkTotalSupply();
     })
     .then(() => {
-        console.log("============= 测试完成 =============");
+        console.log("============= test done =============");
         process.exit(0);
     })
     .catch(error => {
-        console.error("测试过程中出现错误:", error);
+        console.error("error occurred in test:", error);
         process.exit(1);
     }); 

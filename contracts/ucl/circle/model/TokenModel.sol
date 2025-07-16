@@ -86,9 +86,8 @@ library TokenModel {
     }
 
     struct VerifyTokenConvert2pUSDCParams {
-        // InstitutionUserRegistry institutionRegistration;
-        address from;
-        address to;
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
         uint256 amount;
         ElGamal encryptedAmount;
         uint256[8] proof;
@@ -96,11 +95,10 @@ library TokenModel {
     }
 
     struct VerifyTokenConvert2USDCParams {
-        // InstitutionUserRegistry institutionRegistration;
-        address from;
-        address to;
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
         uint256 amount;
-        ElGamal consumedAmount;
+        ElGamal encryptedAmount;
         uint256[8] proof;
         uint256[7] publicInputs;
     }
