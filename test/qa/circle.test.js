@@ -492,7 +492,7 @@ describe.only("Function Cases",function (){
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
-        it.only('transfer to user1 inBank with 1',async () => {
+        it('transfer to user1 inBank with 1',async () => {
             await DirectMint(accounts.Minter,100)
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             preBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
@@ -522,7 +522,7 @@ describe.only("Function Cases",function (){
             expect(postBalance).to.equal(preBalance - amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
-        it.only('transfer all amount',async () => {
+        it('transfer all amount',async () => {
             // await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
             const amount = await getTokenBalanceByAdmin(accounts.Minter);
             console.log("minter amount:",amount)
@@ -882,7 +882,7 @@ describe.only("Function Cases",function (){
             expect(response.status).to.equal("TOKEN_ACTION_STATUS_FAIL");
 
     });})
-    describe('Cancel splitToken', function () {
+    describe.only('Cancel splitToken', function () {
         this.timeout(1200000);
         it('split token list ',async () => {
             await DirectMint(accounts.Minter, 50);
