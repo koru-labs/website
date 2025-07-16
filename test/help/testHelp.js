@@ -159,7 +159,7 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
         cr_y: convertBigInt2Hex(amount[3])
     }
     let result = await grpcClient.getAccountBalance(scAddress, account,metadata)
-    let decodeAmount = 0
+    let decodeAmount = { balance: '0' }
     if (balance.cl_x != '0') {
         decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
     }
@@ -171,8 +171,9 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
     console.log("Decrypted On-chain Balance:", decodeAmount);
     console.log("Database Balance:", result);
     console.log("===================================================================\n");
-    if (decodeAmount.balance != result.balance){
+    if (decodeAmount.balance != result.balance) {
         console.log("Balance in database and on-chain Mismatch");
+        // console.log({decodeAmount,result})
     }else {
         return result
     }
