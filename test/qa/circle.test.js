@@ -882,7 +882,8 @@ describe.only("Function Cases",function (){
             await ReserveTokensToTransfer(accounts.To1,10,minterMeta);
             await ReserveTokensToBurn(20);
             // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
-            console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta))
+            // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta))
+            await sleep(3000)
             let splitTokens = await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta)
             expect(splitTokens.split_tokens.length).not.to.equal(0);
         });
