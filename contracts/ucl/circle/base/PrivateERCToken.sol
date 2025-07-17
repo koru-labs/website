@@ -279,6 +279,8 @@ abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blackl
 
         TokenUtilsLib.addToken(accounts, msg.sender, rollbackToken);
 
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, allowanceToken.id);
+
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
     }
 
