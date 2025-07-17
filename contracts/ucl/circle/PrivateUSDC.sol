@@ -11,7 +11,7 @@ import {TokenUtilsLib} from "./lib/TokenUtilsLib.sol";
  * @title PrivateUSDC
  * @dev Implementation of the private USDC token with conversion functionality
  */
-contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
+contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     
     /**
      * @dev Initializes the PrivateUSDC contract
@@ -57,7 +57,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2, TokenConverterBase {
     {
         require(account != address(0), "PrivateUSDC: convert to the zero address");
         require(amount > 0, "PrivateUSDC: convert amount not greater than 0");
-        //require(msg.sender != account, "PrivateUSDC: convert to the same address");
+        require(msg.sender != account, "PrivateUSDC: convert to the same address");
 
         TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
             institutionRegistration: _institutionRegistration,
