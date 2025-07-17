@@ -1818,7 +1818,7 @@ describe("Permission and BlackList", function () {
     });
 
 });
-describe('Security cases', function () {
+describe.only('Security cases', function () {
     let adminMeta,minterMeta,spenderMeta,to1Meta
 
     before(async function () {
@@ -1870,6 +1870,7 @@ describe('Security cases', function () {
     describe('Transfer security', function () {
         this.timeout(1200000);
         it('Should revert: transfer with used tokenId',async () => {
+            await DirectMint(accounts.Minter, 100)
             const amount = 10
             preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             const toAddress = accounts.To1;
