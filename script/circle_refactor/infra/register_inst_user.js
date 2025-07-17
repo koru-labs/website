@@ -1,0 +1,69 @@
+const {ethers} = require("hardhat");
+
+const {createAuthMetadata} = require("../../../test/help/testHelp.js")
+const {createClient} = require('../../../test/qa/token_grpc');
+const institutions = require("../configuration").institutions
+
+
+module.exports = async function registerInstitutionAndUser() {
+    const deployed = require('../../../deployments/image9.json');
+
+
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy);
+
+    for (let i = 0; i < institutions.length; i++) {
+        console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
+        try {
+            let regTx = await institutionUserRegistry.registerInstitution(
+                institutions[i].address,
+                institutions[i].name,
+                institutions[i].publicKey,
+                institutions[i].nodeUrl,
+                institutions[i].httpUrl
+            );
+            await regTx.wait();
+            console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
+        } catch (error) {
+            if (! error.message.includes("institution already registered")){
+                console.log(error)
+            }
+        }
+
+        let client;
+        try {
+            client = createClient(institutions[i].rpcUrl);
+        } catch (error) {
+            console.error(`[ERROR] Failed to connect to node ${institutions[i].name}:`, {
+                rpcUrl: institutions[i].rpcUrl,
+                error: error.message,
+                stack: error.stack
+            });
+            continue;
+        }
+
+        for (let j = 0; j < institutions[i].users.length; j++) {
+            let {address, role} = institutions[i].users[j];
+            // don't remove below line
+            if (address == institutions[i].address) {
+                continue;
+            }
+            await registerUser(client, institutions[i].ethPrivateKey, address, role);
+            console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
+        }
+    }
+}
+
+
+async function registerUser(client, privateKey, userAddress, role) {
+    const metadata = await createAuthMetadata(privateKey);
+    const request = {
+        account_address: userAddress,
+        account_roles: role ,//minter,admin,normal
+    };
+    try {
+        const response = await client.registerAccount(request, metadata);
+        console.log("registerAccount response:", response);
+    } catch (error) {
+        console.error("registerAccount failed:", error);
+    }
+}
