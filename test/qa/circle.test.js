@@ -137,6 +137,7 @@ async function ReserveTokensAndTransfer(toAddress,amount,metadata) {
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
         let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,'0x'+response.transfer_token_id)
         await sleep(2000)
+        console.log("callPrivateTransfer:", receipt)
         return receipt
     }catch (error){
         const wrappedError = new Error('Transfer failed: ' + error.details);
@@ -167,22 +168,15 @@ async function ReserveTokensToTransfer(toAddress,amount,metadata) {
 }
 async function ReserveTokensToBurn(amount) {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    try {
-        const splitRequest = {
-            sc_address: config.contracts.PrivateERCToken,
-            token_type: '0',
-            from_address: accounts.Minter,
-            amount: amount
-        };
-        let response = await client.generateSplitToken(splitRequest,metadata);
-        console.log("Generate burn Proof response:", response);
-        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
-    }catch (error){
-        const wrappedError = new Error('Burn failed: ' + error.details);
-        wrappedError.code = error.code;
-        wrappedError.details = error.details;
-        throw wrappedError;
-    }
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        amount: amount
+    };
+    let response = await client.generateSplitToken(splitRequest,metadata);
+    console.log("Generate burn Proof response:", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
 
 }
 async function ReserveTokensAndTransferFrom(fromWallet,spenderWallet,fromAddress,toAddress,amount,fromMetadata){
@@ -365,25 +359,17 @@ async function DirectTransfer(from,receiver,amount) {
 }
 async function DirectBurn(address,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
-    try {
-        const splitRequest =
-            {
-                sc_address: config.contracts.PrivateERCToken,
-                token_type: '0',
-                from_address: address,
-                amount: amount
-            };
+    const splitRequest =
+        {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: address,
+            amount: amount
+        };
 
-        let response = await client.generateDirectBurn(splitRequest,minterMeta);
-        console.log("Generate transfer Proof response:", response);
-        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
-        // await sleep(3000);
-    }catch (error){
-        const wrappedError = new Error('Burn failed: ' + error.details);
-        wrappedError.code = error.code;
-        wrappedError.details = error.details;
-        throw wrappedError;
-    }
+    let response = await client.generateDirectBurn(splitRequest,minterMeta);
+    console.log("Generate transfer Proof response:", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
 }
 
 async function cancelAllSplitTokens(ownerWallet,scAddress){
@@ -422,6 +408,7 @@ describe.only("Function Cases",function (){
         // await updateAccountStatus(adminPrivateKey,client1,userInNode1,2)
     })
     describe("Check address balance with role auth",function (){
+        this.timeout(1200000);
         it('Admin role check balance: minter and normal',async () => {
             // admin role can check all user balance
             console.log(await getTokenBalanceByAdmin(accounts.Minter));
@@ -502,9 +489,9 @@ describe.only("Function Cases",function (){
         it('transfer to user1 inBank with 1',async () => {
             await DirectMint(accounts.Minter,100)
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
-            await ReserveTokensAndTransfer(toAddress1,amount,minterMeta);
-            postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
+            preBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
+            await ReserveTokensAndTransfer(accounts.To1,amount,minterMeta);
+            postBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
             expect(postBalance).to.equal(preBalance-amount);
@@ -530,7 +517,7 @@ describe.only("Function Cases",function (){
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
         it('transfer all amount',async () => {
-            await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
+            // await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken);
             const amount = await getTokenBalanceByAdmin(accounts.Minter);
             console.log("minter amount:",amount)
             preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
@@ -711,7 +698,6 @@ describe.only("Function Cases",function (){
             }else {
                 console.log("balance is not enough")
             }
-
         });
         it('burn all minter amount',async () => {
             const burn_amount = await getTokenBalanceByAdmin(accounts.Minter);
@@ -897,7 +883,8 @@ describe.only("Function Cases",function (){
             await ReserveTokensToTransfer(accounts.To1,10,minterMeta);
             await ReserveTokensToBurn(20);
             // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken))
-            console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta))
+            // console.log(await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta))
+            await sleep(3000)
             let splitTokens = await getSplitTokenList(client,accounts.Minter,config.contracts.PrivateERCToken,minterMeta)
             expect(splitTokens.split_tokens.length).not.to.equal(0);
         });
@@ -935,7 +922,6 @@ describe.only("Function Cases",function (){
         let totalSupplyPre,totalSupplyPost;
         const amount = 20;
         before(async function () {
-            await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
             await mint(accounts.Minter, amount);
             await mint(accounts.To1, amount);
         })
@@ -2280,7 +2266,6 @@ describe("Permission and BlackList", function () {
     });
 
 });
-
 describe('Security cases', function () {
     let adminMeta,minterMeta,spenderMeta,to1Meta
 

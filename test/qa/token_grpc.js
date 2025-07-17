@@ -108,13 +108,13 @@ function createClient(url) {
         return promisify(client.EncodeElgamalAmount.bind(client), request);
     };
 
-    client.getAddressAllowance = async function (ownerAddress, spenderAddress, scAddress) {
+    client.getAddressAllowance = async function (ownerAddress, spenderAddress, scAddress, metadata) {
         const request = {
             owner_address: ownerAddress,
             spender_address: spenderAddress,
             sc_address: scAddress
         };
-        return promisify(client.GetAddressAllowance.bind(client), request);
+        return promisify(client.GetAddressAllowance.bind(client), request, metadata);
     };
 
     // client.generateSplitToken = async function (request) {
@@ -134,12 +134,12 @@ function createClient(url) {
         return promisify(accountClient.GetMintAllowed.bind(client), request);
     };
 
-    client.getSplitTokenList = async function (owner_address, sc_address) {
+    client.getSplitTokenList = async function (owner_address, sc_address,metadata) {
         const request = {
             owner_address: owner_address,
             sc_address: sc_address,
         };
-        return promisify(client.GetSplitTokenList.bind(client), request);
+        return promisifyByMetadata(client.GetSplitTokenList.bind(client), request,metadata);
     };
 
     client.getSplitTokenDetail = async function (token_id) {
@@ -199,7 +199,7 @@ function createClient(url) {
             while (true) {
                 try {
                     const result = await callBack(requestId,metadata);
-
+                    console.log("wait for proof. status = ", result.status)
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)
                         return
@@ -207,7 +207,7 @@ function createClient(url) {
                         reject(result);
                         return
                     } else {
-                        console.log("wait for proof. status = ", result.status)
+                        // console.log("wait for proof. status = ", result.status)
                     }
                     await sleep(interval);
                 } catch (error) {
