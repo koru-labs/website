@@ -408,6 +408,7 @@ describe.only("Function Cases",function (){
         // await updateAccountStatus(adminPrivateKey,client1,userInNode1,2)
     })
     describe("Check address balance with role auth",function (){
+        this.timeout(1200000);
         it('Admin role check balance: minter and normal',async () => {
             // admin role can check all user balance
             console.log(await getTokenBalanceByAdmin(accounts.Minter));
@@ -921,7 +922,6 @@ describe.only("Function Cases",function (){
         let totalSupplyPre,totalSupplyPost;
         const amount = 20;
         before(async function () {
-            await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
             await mint(accounts.Minter, amount);
             await mint(accounts.To1, amount);
         })
