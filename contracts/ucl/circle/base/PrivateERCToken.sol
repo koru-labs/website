@@ -9,6 +9,7 @@ import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "./IPrivateERCToken.sol";
 import "../lib/TokenVerificationLib.sol";
+import "./TokenConverterBase.sol";
 
 
 import {TokenOperationsLib} from "../lib/TokenOperationsLib.sol";
@@ -21,11 +22,11 @@ import {Permissioned} from "./permissioned.sol";
 
 
 
-abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned , ReentrancyGuard {
+abstract contract PrivateERCToken is IPrivateERCToken, Ownable, Pausable, Blacklistable, Mintable, Permissioned, ReentrancyGuard, TokenConverterBase {
     // FiatTokenV1 compatible fields
     bool private initialized;
 
-    InstitutionUserRegistry private _institutionRegistration;
+    InstitutionUserRegistry internal _institutionRegistration;
     IL2Event _l2Event;
     mapping(address=>TokenModel.Account) accounts;
     mapping(address => TokenModel.ElGamal) public privateMinterAllowed;
