@@ -85,12 +85,12 @@ async function mint(address,amount) {
         to_address: address,
         amount: amount
     };
-    console.log("generateMintRequest:", generateRequest)
     const response = await client.generateMintProof(generateRequest,minterMeta);
-    console.log("generateMintRequest:", response)
+    console.log("generateMintProof:", response)
     const receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
     console.log("callPrivateMint:", receipt)
     let tx = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+    console.log("callPrivateMint:", tx)
     return  receipt
 }
 
@@ -298,6 +298,7 @@ async function DirectMint(receiver,amount) {
     const response = await client.generateDirectMint(generateRequest,minterMeta);
     console.log("Generate Mint Proof response:", response);
     await client.waitForActionCompletion(client.getMintProof, response.request_id,minterMeta)
+    await sleep(2000)
 }
 async function DirectTransfer(from,receiver,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
