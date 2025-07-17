@@ -68,6 +68,8 @@ abstract contract PrivateTokenApproval is
 
         TokenUtilsLib.addToken(_accounts, msg.sender, rollbackToken);
 
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, allowanceToken.id);
+
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
     }
 
