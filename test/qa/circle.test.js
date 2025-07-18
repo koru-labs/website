@@ -126,7 +126,7 @@ async function ReserveTokensAndTransfer(toAddress,amount,metadata) {
         console.log("Generate transfer Proof response:", response);
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
         let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,'0x'+response.transfer_token_id)
-        await sleep(2000)
+        await sleep(4000)
         console.log("callPrivateTransfer:", receipt)
         return receipt
     }catch (error){
@@ -231,7 +231,7 @@ async function ReserveTokensAndBurn(amount) {
         console.log("Generate burn Proof response:", response);
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
         let receipt = await callPrivateBurn(config.contracts.PrivateERCToken,minterWallet,'0x'+response.transfer_token_id)
-        await sleep(2000)
+        await sleep(4000)
         return receipt
     }catch (error){
         const wrappedError = new Error('Burn failed: ' + error.details);
@@ -298,7 +298,7 @@ async function DirectMint(receiver,amount) {
     const response = await client.generateDirectMint(generateRequest,minterMeta);
     console.log("Generate Mint Proof response:", response);
     await client.waitForActionCompletion(client.getMintProof, response.request_id,minterMeta)
-    await sleep(2000)
+    await sleep(4000)
 }
 async function DirectTransfer(from,receiver,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
@@ -1214,24 +1214,24 @@ describe("Function Cases",function (){
             const adminPrivateKey = adminWallet.privateKey
             it('Update user status to inactive with admin auth', async () => {
                 await updateAccountStatus(adminPrivateKey,client,normalWallet.address,0);
-                await sleep(2000);
+                await sleep(4000);
                 let response = await getAccount(adminPrivateKey,client, normalWallet.address);
                 expect(response.account_status).equal("ACCOUNT_STATUS_INACTIVE");
 
                 await updateAccountStatus(adminPrivateKey,client,newMinterWallet.address,0);
-                await sleep(2000);
+                await sleep(4000);
                 response = await getAccount(adminPrivateKey,client, newMinterWallet.address);
                 expect(response.account_status).equal("ACCOUNT_STATUS_INACTIVE");
             });
 
             it('Update user status to active with admin auth', async () => {
                 await updateAccountStatus(adminPrivateKey,client,normalWallet.address,2);
-                await sleep(2000);
+                await sleep(4000);
                 let response = await getAccount(adminPrivateKey,client, normalWallet.address);
                 expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
 
                 await updateAccountStatus(adminPrivateKey,client,newMinterWallet.address,2);
-                await sleep(2000);
+                await sleep(4000);
                 response = await getAccount(adminPrivateKey,client, newMinterWallet.address);
                 expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
             });
@@ -1884,7 +1884,7 @@ describe('Security cases', function () {
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
             let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,'0x'+response.transfer_token_id)
-            await sleep(2000)
+            await sleep(4000)
             postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             expect(postBalanceTo).equal(preBalanceTo + amount)
             await expect(callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,toAddress,'0x'+response.transfer_token_id)).to.revertedWith("PrivateERCToken: tokenId is not matched")
@@ -2008,7 +2008,7 @@ describe('Security cases', function () {
             if (tokenResult.status == "TOKEN_ACTION_STATUS_SUC") {
                 const tokenId = '0x'+response.transfer_token_id
                 await callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)
-                await sleep(2000);
+                await sleep(4000);
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
             }
         });
@@ -2028,7 +2028,7 @@ describe('Security cases', function () {
             let tokenResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta);
             if (tokenResult.status == "TOKEN_ACTION_STATUS_SUC") {
                 const tokenId = '0x'+response.transfer_token_id
-                await sleep(2000);
+                await sleep(4000);
                 console.log(await getTokenBalanceByAdmin(toAddress))
                 console.log(await getTokenBalanceByAdmin(accounts.Minter))
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
