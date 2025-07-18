@@ -2269,6 +2269,45 @@ describe('Security cases', function () {
         });
 
     })
+    describe('Revoke security',function () {
+        before(async function () {
+            await DirectMint(accounts.To1,50);
+            await DirectMint(accounts.Minter,50);
+        })
+        it('Should reverted: revoke with other wallet',async () => {
+            const amount = await getTokenBalanceByAdmin(accounts.To1);
+            console.log("amount 1:", amount)
+            let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
+            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
+            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,'0x'+response.transfer_token_id)).revertedWith("PrivateERCToken: no allowance exists for this spender")
+        });
+        it('Should reverted: revoke with token mismatch',async () => {
+            let response1 = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            let approvedToken1 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
+            expect(approvedToken1).to.equal('0x'+response1.transfer_token_id);
+
+            let response2 = await generateApprove(minterWallet,accounts.Minter,userInNode1,1,to1Meta)
+            let approvedToken2 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
+            expect(approvedToken2).to.equal('0x'+response2.transfer_token_id);
+
+            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
+
+        });
+        it('Should reverted: revoke with token transferred',async () => {
+            const preBalance = await getTokenBalanceByAdmin(accounts.To1);
+            let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
+            console.log("approvedToken:", approvedToken)
+            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
+            await callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,userInNode1,approvedToken)
+            await sleep(3000)
+            const postBalance = await getTokenBalanceByAdmin(accounts.To1);
+            expect(postBalance).to.equal(preBalance-1);
+            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,to1Wallet,accounts.Spender1,approvedToken)).revertedWith("PrivateERCToken: no allowance exists for this spender")
+
+        });
+    })
 });
 
 
