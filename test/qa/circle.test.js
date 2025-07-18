@@ -1818,7 +1818,7 @@ describe("Permission and BlackList", function () {
     });
 
 });
-describe.only('Security cases', function () {
+describe('Security cases', function () {
     let adminMeta,minterMeta,spenderMeta,to1Meta
 
     before(async function () {
