@@ -2248,7 +2248,7 @@ describe('Security cases', function () {
             //
         });
 
-        it.only('Should reverted: transferFrom token id and toAddress not matched', async () => {
+        it('Should reverted: transferFrom token id and toAddress not matched', async () => {
             const preBalance = await getTokenBalanceByAdmin(accounts.To1);
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
