@@ -6,7 +6,6 @@ import '../model/TokenModel.sol';
 abstract contract TokenConverterBase {
     // Convert USDC to private USDC
     function convert2pUSDC(
-        address account,
         uint256 amount,
         TokenModel.ElGamal calldata encryptedAmount,
         uint256[7] calldata publicInputs,
@@ -15,7 +14,6 @@ abstract contract TokenConverterBase {
     
     // Convert private USDC back to USDC
     function convert2USDC(
-        address account, 
         uint256 tokenId, 
         uint256 amount, 
         uint256[7] calldata publicInputs, 
