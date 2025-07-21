@@ -47,7 +47,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         uint256[8] calldata proof
     )
     external
-    override
     whenNotPaused
     notBlacklisted(msg.sender)
     returns (bool)
@@ -90,7 +89,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         );
         
         // Add token and update balance
-        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, entity);
+        TokenUtilsLib.addTokenWithBalance(_accounts, msg.sender, entity);
         
         // Use received token event
         TokenEventLib.triggerTokenReceivedEvent(
@@ -103,6 +102,11 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
             entity.amount
         );
         
+        // Update ERC20 balance
+        totalSupply_ -= amount;
+        _setBalance(msg.sender, _balanceOf(msg.sender) - amount);
+        emit Transfer(msg.sender, address(0), amount);
+
         return true;
     }
     
@@ -121,14 +125,13 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         uint256[8] calldata proof
     )
     external
-    override
     whenNotPaused
     notBlacklisted(msg.sender)
     returns (bool)
     {
         require(tokenId != 0, "PrivateUSDC: tokenId is zero");
         
-        TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
+        TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
         require(entity.status == TokenModel.TokenStatus.active, "token is not active");
         require(entity.owner == msg.sender, "PrivateUSDC: only owner can convert");
@@ -162,7 +165,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         // Remove token and update balance
-        TokenUtilsLib.removeTokensWithBalance(accounts, msg.sender, tokenIds);
+        TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, tokenIds);
         
         // direct call the _setBalance method in the inherited FiatTokenV1.sol
         totalSupply_ += amount;
