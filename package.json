@@ -47,6 +47,7 @@
     "wlin-minter2-test": "npx hardhat run test/wlin/second_minter_test.js --network ucl_L2",
     "wlin-inst-test": "npx hardhat run test/wlin/institution_registry_test.js --network ucl_L2",
     "wlin-proxy-test": "npx hardhat run test/wlin/proxy_test.js --network ucl_L2",
+    "wlin-local": "npx hardhat run test/wlin/eth2_test.js --network local",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
