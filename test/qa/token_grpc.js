@@ -33,6 +33,14 @@ function createClient(url) {
     const client = new TokenService(url, grpc.credentials.createInsecure());
     const accountClient = new AccountService(url, grpc.credentials.createInsecure());
 
+    // Proof generation methods
+    client.convertToPUSDC = async function (request, metadata) {
+        return promisifyByMetadata(client.ConvertToPUSDC.bind(client), request, metadata);
+    };
+    // Proof generation methods
+    client.convertToUSDC = async function (request, metadata) {
+        return promisifyByMetadata(client.ConvertToUSDC.bind(client), request, metadata);
+    };
 
     // Proof generation methods
     client.generateMintProof = async function (request, metadata) {
@@ -75,14 +83,14 @@ function createClient(url) {
         return promisifyByMetadata(client.GenerateDirectBurn.bind(client), request, metadata);
     };
 
-    client.getTokenActionStatus = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getTokenActionStatus = async function (request_id, metadata) {
+        const request = {request_id};
         return promisifyByMetadata(client.GetTokenActionStatus.bind(client), request, metadata);
     };
 
     // Status checking and polling methods
-    client.getActionStatus = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getActionStatus = async function (request_id, metadata) {
+        const request = {request_id};
         return promisify(client.GetActionStatus.bind(client), request, metadata);
     };
 
@@ -201,10 +209,12 @@ function createClient(url) {
                     const result = await callBack(requestId,metadata);
                     console.log("wait for proof. status = ", result.status)
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
+                        console.log("wait for proof. status = ", result.status)
                         resolve(result)
                         await sleep(1000)
                         return
                     } else if (result.status == "TOKEN_ACTION_STATUS_FAIL") {
+                        console.log("wait for proof. status = ", result.status)
                         reject(result);
                         return
                     } else {

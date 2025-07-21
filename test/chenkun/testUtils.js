@@ -6,12 +6,9 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 // const { createClient } = require('../qa/token_http');
-// const rpcUrl = "a5f8d3d4c9d084f8ead607b8fe85e09b-1456818969.us-west-1.elb.amazonaws.com:50051"
-// const rpcUrl = "http://127.0.0.1:8080"
-// const rpcUrl = "127.0.0.1:50051"
-// const rpcUrl = "http://qa-node3-node-http.hamsa-ucl.com:8080"
+const rpcUrl = "127.0.0.1:50051"
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl = "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051"
+// const rpcUrl = "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
 const {
@@ -29,6 +26,8 @@ const {
 const hre = require("hardhat");
 const grpc = require("@grpc/grpc-js");
 const {makeEmptyAccountState} = require("hardhat/internal/hardhat-network/provider/fork/AccountState");
+const deployed = require("../../deployments/image9.json");
+const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
 
 const l1CustomNetwork = {
     name: "BESU",
@@ -83,7 +82,6 @@ async function testDirectMintByAuth() {
     // console.log("Generate Mint Proof response:", response1);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata)
     console.timeEnd('testDirectMint'); // End timing
-    await sleep(3000)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Minter,metadata)
 }
 async function testDirectBurnByAuth() {
@@ -104,7 +102,6 @@ async function testDirectBurnByAuth() {
     console.timeEnd('testDirectBurn'); // End timing
     const endTime = Date.now(); // 获取结束时间戳
     console.log("Finished testDirectBurn at:", new Date(endTime).toISOString()); // 打印结束时间
-    await sleep(3000)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Minter,metadata)
 }
 async function testDirectTransferByAuth(){
@@ -124,7 +121,6 @@ async function testDirectTransferByAuth(){
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
     console.timeEnd('testDirectTransfer')
-    await sleep(1000)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Minter,metadata)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.To1,metadata2)
 
@@ -147,7 +143,7 @@ async function testTransferFromByAuth(){
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
     let receipt = await callPrivateTransferFrom(spenderWallet,config.contracts.PrivateERCToken,accounts.Minter,accounts.To1,'0x'+response.transfer_token_id)
     console.log("receipt", receipt)
-    await sleep(2000)
+    await sleep(5000)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Minter,metadata)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Spender1,metadata2)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.To1,metadata3)
@@ -192,7 +188,7 @@ async function testReserveTokensAndTransfer(){
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
 
     let receipt = await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,accounts.To1,'0x'+response.transfer_token_id)
-    await sleep(2000)
+    await sleep(1000)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.Minter,metadata)
     await getAddressBalance2(client,config.contracts.PrivateERCToken,accounts.To1,metadata2)
 }
@@ -213,9 +209,10 @@ async function testApproveTokensAndRevoke(){
         amount: amount
     };
 
-    let response = await client.generateApproveProof(splitRequest,metadata);
+    let response = await client.generateApproveProof(splitRequest,metadata3);
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
+    await sleep(2000)
     let receipt = await callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,'0x'+response.transfer_token_id)
     console.log("receipt", receipt)
 
@@ -261,16 +258,95 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 
     return metadata;
 }
+async function testInstituteInformation() {
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach(config.contracts.InstitutionUserRegistry);
+
+    let tx = await instRegistry.registerUser(accounts.Spender1);
+    await tx.wait();
+    let inst = await instRegistry.getUserManager(accounts.Spender1);
+    console.log("user registration ", inst);
+    let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Spender1);
+    console.log("user registration ", inst1);
+}
+
+async function testConvert2pUSDC() {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const convertToPUSDCResponse = {
+        amount: amount
+    };
+    let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
+    console.log("Generate Mint Proof response:", proofResult);
+    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+    const elAmount = {
+        cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+        cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+        cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+        cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
+    };
+    const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+    const input = proofResult.input.map(i => ethers.toBigInt(i));
+    if (proof.length !== 8) {
+        throw new Error(`proof array length is ${proof.length}, expected 8`);
+    }
+    if (input.length !== 7) {
+        throw new Error(`input array length is ${input.length}, expected 7`);
+    }
+
+    const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+    let receipt = await tx.wait();
+    console.log("receipt", receipt)
+    return receipt;
+
+}
+
+async function testConvert2USDC() {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    // const metadata2 = await createAuthMetadata(accounts.To1PrivateKey);
+    // const splitRequest = {
+    //     sc_address: config.contracts.PrivateERCToken,
+    //     token_type: '0',
+    //     from_address: accounts.Minter,
+    //     amount: amount
+    // };
+    // let response = await client.generateSplitToken(splitRequest,metadata);
+    // console.log("Generate transfer Proof response:", response);
+    // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
+    // let tokenId = response.transfer_token_id
+    let tokenId = '8535d638f7fc8bbaff808e02733530f176b159aba80d1febecc2c134f4970cb1'
+    const convertToPUSDCResponse = {
+        token_id: tokenId
+    };
+    let proofResult = await client.convertToUSDC(convertToPUSDCResponse, metadata);
+    console.log("Generate Mint Proof response:", proofResult);
+
+    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+    const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+    const input = proofResult.input.map(i => ethers.toBigInt(i));
+    const tx = await contract.convert2USDC('0x'+tokenId,proofResult.amount,input,proof);
+    let receipt = await tx.wait();
+    console.log("receipt", receipt)
+    return receipt;
+
+}
+// testConvert2pUSDC().then();
+// testConvert2USDC().then()
 
 
 // mintForStart().then();
 // testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then()
 // testReserveTokensAndCancel().then()
-// testApproveTokensAndRevoke().then()
+testApproveTokensAndRevoke().then()
+// testTransferFromByAuth().then();
 
 //   direct-transaction
 // testDirectMintByAuth().then()
 // testDirectBurnByAuth().then()
 // testDirectTransferByAuth().then()
-// testTransferFromByAuth().then();
+
+// testInstituteInformation().then()

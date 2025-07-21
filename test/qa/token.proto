@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package tokenproof.v1;
-//import "google/api/annotations.proto";
 import "annotations.proto";
 import "validate.proto";
 option go_package = "./token_grpc";
@@ -105,13 +104,25 @@ service TokenService {
     };
   };
 
-  // disable as the implementation is wrong
-  //  rpc GetMintAllowed          (MintAllowedRequest)           returns (MintAllowedResponse) {
-  //    option (google.api.http) = {
-  //      post: "/query/mintAllowed"
-  //      body: "*"
-  //    };
-  //  };
+  rpc ConvertToPUSDC     (ConvertToPUSDCRequest)          returns (ConvertToPUSDCResponse) {
+    option (google.api.http) = {
+      post: "/v1/convert/pUSDC"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "request ZK-server to covert amount to pUSDC"
+    };
+  };
+
+  rpc ConvertToUSDC     (ConvertToUSDCRequest)          returns (ConvertToUSDCResponse) {
+    option (google.api.http) = {
+      post: "/v1/convert/USDC"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "request ZK-server to covert ElGamal amount to USDC"
+    };
+  };
 
   rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse) {
     option (google.api.http) = {
@@ -172,11 +183,38 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_DIRECTTX_WAIT = 7;
   TOKEN_ACTION_STATUS_DIRECT_CALL_L1 = 8;
   TOKEN_ACTION_STATUS_CANCEL_ERROR = 9;
-  TOKEN_ACTION_STATUS_WAIT_EVENT = 10;
+  TOKEN_ACTION_STATUS_WAIT_L2_EVENT = 10;
+}
+
+message ConvertToPUSDCRequest {
+  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
+
+message ConvertToPUSDCResponse {
+  uint64 amount = 1;
+  ElGamal elgamal = 2;
+  repeated string proof = 3;
+  repeated string input = 4;
+  uint64 status_code = 5;
+
+}
+
+message ConvertToUSDCRequest {
+  string token_id = 1;
+}
+
+message ConvertToUSDCResponse {
+  string token_id = 1;
+  string owner_address = 2;
+  uint64 amount = 3;
+  ElGamal elgamal = 4;
+  repeated string proof = 5;
+  repeated string input = 6;
+  uint64 status_code = 7;
 }
 
 message ProofRequest {
-  string requestId = 1;
+  string request_id = 1;
 }
 
 message ElGamal {
