@@ -127,7 +127,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     returns (bool)
     {
         require(tokenId != 0, "PrivateUSDC: tokenId is zero");
-        require(msg.sender != address(0), "PrivateUSDC: convert to the zero address");
         
         TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
