@@ -202,6 +202,7 @@ function createClient(url) {
                     console.log("wait for proof. status = ", result.status)
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)
+                        await sleep(1000)
                         return
                     } else if (result.status == "TOKEN_ACTION_STATUS_FAIL") {
                         reject(result);

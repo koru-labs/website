@@ -6,6 +6,8 @@ import "../model/TokenModel.sol";
 import "./verify/MintAllowedTokenVerifier.sol";
 import "./verify/SplitTokenVerifier.sol";
 import "./verify/SplitAllowanceTokenVerifier.sol";
+import "./verify/Convert2pUSDCVerifier.sol";
+import "./verify/Convert2USDCVerifier.sol";
 
 library TokenVerificationLib {
 
@@ -104,5 +106,39 @@ library TokenVerificationLib {
         return;
     }
 
+    // Convert2pUSDC
+    function verifyConvert2pUSDC(TokenModel.VerifyTokenConvert2pUSDCParams calldata params) public view {
+        Convert2pUSDCVerifier.verifyProof(params.proof, params.publicInputs);
 
+        // publicInputs[0] & publicInputs[1] is cl; publicInputs[2] & publicInputs[3] is cr
+        require(params.encryptedAmount.cl_x == params.publicInputs[0]
+            && params.encryptedAmount.cl_y == params.publicInputs[1]
+            && params.encryptedAmount.cr_x == params.publicInputs[2]
+            && params.encryptedAmount.cr_y == params.publicInputs[3],  "encrypted amount not match");
+        // publicInputs[4] == amount
+        require(params.publicInputs[4] == params.amount, "amount is not match");
+        // publicInputs[5] & publicInputs[6] is to pk
+        TokenModel.GrumpkinPublicKey memory owner = params.institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
+        require(owner.x == params.publicInputs[5] && owner.y == params.publicInputs[6], "owner public key not match");
+
+        return;
+    }
+    
+    // Convert2USDC
+    function verifyConvert2USDC(TokenModel.VerifyTokenConvert2USDCParams calldata params) public view {
+        Convert2USDCVerifier.verifyProof(params.proof, params.publicInputs);
+
+        // amount elgamal check
+        require(params.encryptedAmount.cl_x == params.publicInputs[0] 
+            && params.encryptedAmount.cl_y == params.publicInputs[1] 
+            && params.encryptedAmount.cr_x == params.publicInputs[2] 
+            && params.encryptedAmount.cr_y == params.publicInputs[3], "encrypted amount not match");
+        // publicInputs[4] == amount, check
+        require(params.publicInputs[4] == params.amount, "amount is not match");
+        // publicInputs[5] and publicInputs[6] is owner pk
+        TokenModel.GrumpkinPublicKey memory owner = params.institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
+        require(owner.x == params.publicInputs[5] && owner.y == params.publicInputs[6], "owner public key not match");
+
+        return;
+    }
 }

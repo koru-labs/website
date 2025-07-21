@@ -11,7 +11,9 @@ const {
     deployMintAllowedTokenVerifier,
     deployTokenVerificationLib,
     deploySplitTokenVerifier,
-    deploySplitAllowanceTokenVerifier
+    deploySplitAllowanceTokenVerifier,
+    deployConvert2pUSDCVerifier,
+    deployConvert2USDCVerifier
 } = require("../infra/deploy_verifier");
 const {createAuthMetadata} = require("../../../test/help/testHelp.js")
 const {createClient} = require('../../../test/qa/token_grpc');
@@ -150,6 +152,8 @@ async function main() {
     await deployMintAllowedTokenVerifier(deployed);
     await deploySplitTokenVerifier(deployed);
     await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
+    await deployConvert2USDCVerifier(deployed);
+    await deployConvert2pUSDCVerifier(deployed);
     await deployTokenVerificationLib(deployed);
     console.log(deployed)
 
@@ -216,7 +220,7 @@ async function main() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
             "SignatureChecker": signatureChecker.target,
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib
+            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
         }
     });
     const event_address = deployed.contracts.HamsaL2Event;

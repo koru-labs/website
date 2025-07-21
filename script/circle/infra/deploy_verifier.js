@@ -52,6 +52,25 @@ async function deploySplitAllowanceTokenVerifier(deployed) {
     deployed.libraries.SplitAllowanceTokenVerifier = splitAllowanceTokenVerifier.target;
 }
 
+// Deploy Convert2pUSDCVerifier
+async function deployConvert2pUSDCVerifier(deployed) {
+    const Convert2pUSDCVerifier = await ethers.getContractFactory("Convert2pUSDCVerifier");
+    const convert2pUSDCVerifier = await Convert2pUSDCVerifier.deploy();
+    await convert2pUSDCVerifier.waitForDeployment();
+    console.log("Convert2pUSDCVerifier is deployed at :", convert2pUSDCVerifier.target);
+    deployed.libraries.Convert2pUSDCVerifier = convert2pUSDCVerifier.target;
+}
+
+// Deploy Convert2USDCVerifier
+async function deployConvert2USDCVerifier(deployed) {
+    const Convert2USDCVerifier = await ethers.getContractFactory("Convert2USDCVerifier");
+    const convert2USDCVerifier = await Convert2USDCVerifier.deploy();
+    await convert2USDCVerifier.waitForDeployment();
+    console.log("Convert2USDCVerifier is deployed at :", convert2USDCVerifier.target);
+    deployed.libraries.Convert2USDCVerifier = convert2USDCVerifier.target;
+    console.log("deployed.libraries.Convert2USDCVerifier :", deployed.libraries.Convert2USDCVerifier);
+}
+
 // deploy TokenVerificationLib.sol
 async function deployTokenVerificationLib(deployed) {
     console.log("Deploy TokenVerificationLib.sol...");
@@ -59,7 +78,9 @@ async function deployTokenVerificationLib(deployed) {
         libraries: {
             MintAllowedTokenVerifier: deployed.libraries.MintAllowedTokenVerifier,
             SplitTokenVerifier: deployed.libraries.SplitTokenVerifier, // Add the new library link
-            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier // Add the new library link
+            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier, // Add the new library link
+            Convert2pUSDCVerifier: deployed.libraries.Convert2pUSDCVerifier,
+            Convert2USDCVerifier: deployed.libraries.Convert2USDCVerifier
         }
     });
     const TokenVerificationLib = await TokenVerificationLibFactory.deploy();
@@ -75,3 +96,5 @@ exports.deployMintAllowedTokenVerifier = deployMintAllowedTokenVerifier;
 exports.deployTokenVerificationLib = deployTokenVerificationLib;
 exports.deploySplitTokenVerifier = deploySplitTokenVerifier;
 exports.deploySplitAllowanceTokenVerifier = deploySplitAllowanceTokenVerifier;
+exports.deployConvert2pUSDCVerifier = deployConvert2pUSDCVerifier;
+exports.deployConvert2USDCVerifier = deployConvert2USDCVerifier;

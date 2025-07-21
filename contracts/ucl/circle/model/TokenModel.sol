@@ -85,6 +85,24 @@ library TokenModel {
         uint256[22] publicInputs;
     }
 
+    struct VerifyTokenConvert2pUSDCParams {
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
+        uint256 amount;
+        ElGamal encryptedAmount;
+        uint256[8] proof;
+        uint256[7] publicInputs;
+    }
+
+    struct VerifyTokenConvert2USDCParams {
+        InstitutionUserRegistry institutionRegistration;
+        address owner;
+        uint256 amount;
+        ElGamal encryptedAmount;
+        uint256[8] proof;
+        uint256[7] publicInputs;
+    }
+
     struct GrumpkinPublicKey {
         uint256 x;
         uint256 y;
