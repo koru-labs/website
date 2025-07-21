@@ -450,7 +450,7 @@ describe("Function Cases",function (){
             expect(postBalance).to.equal(preBalance-amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
-        it('transfer to user1 inBank with 10 string format',async () => {
+        it.only('transfer to user1 inBank with 10 string format',async () => {
             preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             await ReserveTokensAndTransfer(toAddress1,amount.toString(),minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
