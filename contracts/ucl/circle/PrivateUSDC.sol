@@ -34,7 +34,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     
     /**
      * @dev Convert USDC to private USDC
-     * @param account The address that will receive the private USDC
      * @param amount The amount of USDC to convert
      * @param elAmount The ElGamal encrypted private USDC amount
      * @param publicInputs The public inputs for the proof
@@ -42,7 +41,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
      * @return True if the operation was successful
      */
     function convert2pUSDC(
-        address account, 
         uint256 amount, 
         TokenModel.ElGamal calldata elAmount, 
         uint256[7] calldata publicInputs,
@@ -52,16 +50,13 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     override
     whenNotPaused
     notBlacklisted(msg.sender)
-    notBlacklisted(account)
     returns (bool)
     {
-        require(account != address(0), "PrivateUSDC: convert to the zero address");
         require(amount > 0, "PrivateUSDC: convert amount not greater than 0");
-        require(msg.sender != account, "PrivateUSDC: convert to the same address");
 
         TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
             institutionRegistration: _institutionRegistration,
-            owner: account,
+            owner: msg.sender,
             amount: amount,
             encryptedAmount: elAmount,
             proof: proof,
@@ -73,7 +68,7 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         // Create TokenEntity
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
             id: TokenUtilsLib.hashElgamal(elAmount),
-            owner: account,
+            owner: msg.sender,
             status: TokenModel.TokenStatus.active,
             amount: elAmount,
             to: address(0),
@@ -95,13 +90,13 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         );
         
         // Add token and update balance
-        TokenUtilsLib.addTokenWithBalance(accounts, account, entity);
+        TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, entity);
         
         // Use received token event
         TokenEventLib.triggerTokenReceivedEvent(
             _l2Event, 
             address(this), 
-            account, 
+            msg.sender, 
             entity.id, 
             address(this), 
             entity.status, 
@@ -113,7 +108,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     
     /**
      * @dev Convert private USDC back to USDC
-     * @param account The address that will receive the USDC
      * @param tokenId The token ID of the private USDC to burn
      * @param amount The amount of USDC to convert to
      * @param publicInputs The public inputs for the proof
@@ -121,7 +115,6 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
      * @return True if the operation was successful
      */
     function convert2USDC(
-        address account, 
         uint256 tokenId, 
         uint256 amount, 
         uint256[7] calldata publicInputs,
@@ -131,16 +124,15 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
     override
     whenNotPaused
     notBlacklisted(msg.sender)
-    notBlacklisted(account)
     returns (bool)
     {
         require(tokenId != 0, "PrivateUSDC: tokenId is zero");
-        require(account != address(0), "PrivateUSDC: convert to the zero address");
+        require(msg.sender != address(0), "PrivateUSDC: convert to the zero address");
         
         TokenModel.TokenEntity memory entity = accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
         require(entity.status == TokenModel.TokenStatus.active, "token is not active");
-        require(entity.owner == account, "PrivateUSDC: only owner can convert");
+        require(entity.owner == msg.sender, "PrivateUSDC: only owner can convert");
 
         TokenModel.VerifyTokenConvert2USDCParams memory params = TokenModel.VerifyTokenConvert2USDCParams({
             institutionRegistration: _institutionRegistration,
@@ -175,9 +167,9 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         
         // direct call the _setBalance method in the inherited FiatTokenV1.sol
         totalSupply_ += amount;
-        _setBalance(account, _balanceOf(account) + amount);
+        _setBalance(msg.sender, _balanceOf(msg.sender) + amount);
 
-        emit Transfer(address(0), account, amount);
+        emit Transfer(address(0), msg.sender, amount);
 
         // Use burned token event instead of deleted event
         TokenEventLib.triggerTokenBurnedEvent(
