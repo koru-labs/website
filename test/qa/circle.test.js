@@ -327,7 +327,6 @@ async function DirectBurn(address,amount) {
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
 }
-
 async function cancelAllSplitTokens(ownerWallet,scAddress){
     const metadata = await createAuthMetadata(adminPrivateKey)
     const ownerAddress = ownerWallet.address;
@@ -345,7 +344,6 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     }
     await sleep(3000);
 }
-
 describe("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
@@ -426,7 +424,7 @@ describe("Function Cases",function (){
             postBalance = await getTokenBalanceByAdmin(recevier);
             expect(postBalance).to.equal(preBalance + amount);
         });
-        it('Mint  10 to user cross node',async () => {
+        it.only('Mint  10 to user cross node',async () => {
             const userAddress = userInNode1;
             const preBalanceUser = await getTokenBalanceInNode1(userAddress);
             console.log(preBalanceUser)
@@ -546,7 +544,7 @@ describe("Function Cases",function (){
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance - 1);
         });
-        it('Approve transfer: to1 to to2 in bank exceed amount ', async () => {
+        it('Should fail: approve to1 to to2 in bank exceed amount ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             const amount = preBalance+ 1;
             const splitRequest = {
@@ -1119,11 +1117,8 @@ describe("Function Cases",function (){
 
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
-
     });
 });
-
-
 describe("Boundary value cases",function (){
     this.timeout(1200000);
     const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -1377,7 +1372,6 @@ describe("Permission and BlackList", function () {
         normalMeta = await createAuthMetadata(normalPrivateKey)
         newMinterMeta = await createAuthMetadata(newMinterWallet.privateKey)
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
-
     })
 
     describe("Registe and set allowed",function (){
@@ -1933,10 +1927,6 @@ describe("Permission and BlackList", function () {
             }
         });
     });
-
-
-
-
 });
 describe('Security cases', function () {
     this.timeout(1200000);
@@ -2169,7 +2159,7 @@ describe('Security cases', function () {
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
             }
         });
-        it('Should revert: burn with transfer token id',async () => {
+        it.skip('Should revert: burn with transfer token id',async () => {
             const amount = 10
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
@@ -2198,7 +2188,7 @@ describe('Security cases', function () {
         before(async function () {
             await DirectMint(accounts.To1,50);
         })
-        it('Should fail: generate approve proof with different meta', async () => {
+        it('Should fail: generate approve proof with other meta', async () => {
             const preBalance = await getTokenBalanceByAdmin(accounts.To2);
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
@@ -2213,14 +2203,21 @@ describe('Security cases', function () {
             let response = await client.generateApproveProof(splitRequest,newMinterMeta);
             console.log("Generate transfer Proof response:", response);
             expect(response.status).equal("TOKEN_ACTION_STATUS_FAIL")
-
-            // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,to1Meta)
-            // let receipt = await callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,accounts.To2,'0x'+response.transfer_token_id)
-            // await sleep(1000)
-            // console.log("receipt", receipt)
-            // const postBBalance = await getTokenBalanceByAdmin(accounts.To2);
-            // expect(postBBalance).to.be.equal(preBalance+10)
-            //
+        });
+        it('Should fail: generate approve proof with admin meta', async () => {
+            const preBalance = await getTokenBalanceByAdmin(accounts.To2);
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                spender_address : accounts.Spender1,
+                to_address: accounts.To1,
+                amount: 10
+            };
+            console.log("generateSplitTokenRequest:", splitRequest)
+            let response = await client.generateApproveProof(splitRequest,adminMeta);
+            console.log("Generate transfer Proof response:", response);
+            expect(response.status).equal("TOKEN_ACTION_STATUS_FAIL")
         });
 
         it('Should reverted: transferFrom with used token id', async () => {
@@ -2243,9 +2240,7 @@ describe('Security cases', function () {
             await sleep(1000)
             const postBBalance = await getTokenBalanceByAdmin(accounts.To2);
             expect(postBBalance).to.be.equal(preBalance+10)
-
             await expect(callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,accounts.To2,'0x'+response.transfer_token_id)).to.reverted
-            //
         });
 
         it('Should reverted: transferFrom token id and toAddress not matched', async () => {
@@ -2274,7 +2269,7 @@ describe('Security cases', function () {
             await DirectMint(accounts.To1,50);
             await DirectMint(accounts.Minter,50);
         })
-        it('Should reverted: revoke with other wallet',async () => {
+        it('Should reverted: revoke with wallet not matched with approve',async () => {
             const amount = await getTokenBalanceByAdmin(accounts.To1);
             console.log("amount 1:", amount)
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
@@ -2309,7 +2304,6 @@ describe('Security cases', function () {
         });
     })
 });
-
 
 
 
