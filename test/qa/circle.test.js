@@ -424,7 +424,7 @@ describe("Function Cases",function (){
             postBalance = await getTokenBalanceByAdmin(recevier);
             expect(postBalance).to.equal(preBalance + amount);
         });
-        it.only('Mint  10 to user cross node',async () => {
+        it('Mint  10 to user cross node',async () => {
             const userAddress = userInNode1;
             const preBalanceUser = await getTokenBalanceInNode1(userAddress);
             console.log(preBalanceUser)
