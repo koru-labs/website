@@ -157,6 +157,11 @@ abstract contract PrivateTokenConverter is
         // Remove token and update balance
         TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, tokenIds);
 
+        // Remove rollback token
+        uint256[] memory rollbackTokenIds = new uint256[](1);
+        rollbackTokenIds[0] = entity.rollbackTokenId;
+        TokenUtilsLib.removeTokens(_accounts, msg.sender, rollbackTokenIds);
+
         // Call hook for public token balance update
         _updatePublicTokenBalance(msg.sender, amount, false);
 
