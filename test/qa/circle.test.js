@@ -1115,7 +1115,7 @@ describe("Function Cases",function (){
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
     });
-    describe("convertUSDC",function (){
+    describe("convert USDC and pUSDC",function (){
         this.timeout(1200000);
         let prePublicBalance,postPublicBalance;
         let prePrivateBalance,postPrivateBalance;
@@ -1490,6 +1490,66 @@ describe("Boundary value cases",function (){
             let response = await client.generateApproveProof(splitRequest,to1Meta);
             expect(response.status).equal("TOKEN_ACTION_STATUS_FAIL")
         });
+    })
+
+    describe("Convert with boundary values",function (){
+        this.timeout(1200000);
+        let prePublicBalance,postPublicBalance;
+        let prePrivateBalance,postPrivateBalance;
+
+        before(async function () {
+            // await DirectMint(accounts.Minter,100)
+            // await DirectMint(accounts.To1,100)
+        })
+
+        it('convert from USDC to pUSDC with amount 0', async () => {
+            prePublicBalance = await getPublicBalance(accounts.Minter)
+            console.log("prePublicBalance:",prePublicBalance)
+            const amount = 0;
+            if(prePublicBalance > amount){
+                const convertToPUSDCResponse = {
+                    amount: amount
+                };
+                let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, minterMeta);
+                console.log("Generate Mint Proof response:", proofResult);
+                const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+                const elAmount = {
+                    cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+                    cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+                    cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+                    cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
+                };
+                const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+                const input = proofResult.input.map(i => ethers.toBigInt(i));
+                const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+                let receipt = await tx.wait();
+                console.log(`convert to pUSDC tx: `,receipt);
+            }
+        });
+
+        it.only('convert from USDC to pUSDC with amount larger than balance', async () => {
+            prePublicBalance = await getPublicBalance(accounts.Minter)
+            console.log("prePublicBalance:",prePublicBalance)
+            const amount =prePublicBalance + 1 ;
+
+            const convertToPUSDCResponse = {
+                amount: amount
+            };
+            let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, minterMeta);
+            console.log("Generate Proof response:", proofResult);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const elAmount = {
+                cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+                cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+                cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+                cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
+            };
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            await expect(contract.convert2pUSDC(amount,elAmount,input,proof)).revertedWith("Insufficient amount")
+
+        });
+
     })
 
 })
