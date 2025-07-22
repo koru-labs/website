@@ -53,7 +53,7 @@ async function allowBanksInTokenSmartContract(deployed) {
     const L1Url = hardhatConfig.networks.ucl_L2.url;
     const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateUSDC, ownerWallet);
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
 
     for (let i = 0; i < config.institutions.length; i++) {
         let bankAddress = config.institutions[i].address;
@@ -87,7 +87,7 @@ async function setMinterAllowed(deployed) {
             "SignatureChecker": deployed.libraries.SignatureChecker
         }
     });
-    const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateUSDC);
+    const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
 
     for (const minter of minters) {
         await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
