@@ -148,6 +148,11 @@ async function getAddressBalance(grpcClient, scAddress, account) {
     return result
 }
 
+async function getPublicBalance(account) {
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken)
+    let amount = await contract.balanceOf(account)
+    return Number(amount)
+}
 async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateBalanceOf(account)
@@ -531,6 +536,7 @@ module.exports =  {
     callPrivateBurn,
     getAddressBalance,
     getAddressBalance2,
+    getPublicBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
     callPrivateCancel,

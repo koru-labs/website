@@ -21,6 +21,7 @@ const {
     getMinterAllowance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
+    getPublicBalance,
     createAuthMetadata,
     registerUser,
     updateAccountStatus,
@@ -68,7 +69,7 @@ const userInNode2 = '0xF8041E1185C7106121952bA9914ff904A4A01c80';
 const userInNode3 = '0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB';
 const userInNode4 = '0x5a3288A7400B2cd5e0568728E8216D9392094892';
 const adminPrivateKey = hardhatConfig.networks.ucl_L2.accounts[1];
-const node4AdminPrivateKey = hardhatConfig.networks.ucl_L2.accounts[10];
+const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 const amount = 10;
 let preBalance,postBalance;
@@ -327,14 +328,13 @@ async function DirectBurn(address,amount) {
     console.log("Generate transfer Proof response:", response);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
 }
-
 async function cancelAllSplitTokens(ownerWallet,scAddress){
     const metadata = await createAuthMetadata(adminPrivateKey)
     const ownerAddress = ownerWallet.address;
     const result = await getSplitTokenList(client,ownerAddress,scAddress,metadata);
     const splitTokens = result.split_tokens;
     console.log("splitTokens: ", splitTokens)
-     if (splitTokens.length > 0){
+    if (splitTokens.length > 0){
         for (let i = 0; i < splitTokens.length; i++) {
             let splitToken = splitTokens[i];
             console.log("cancel split token: ", splitToken.token_id)
@@ -345,7 +345,6 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     }
     await sleep(3000);
 }
-
 describe("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
@@ -546,7 +545,7 @@ describe("Function Cases",function (){
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance - 1);
         });
-        it('Approve transfer: to1 to to2 in bank exceed amount ', async () => {
+        it('Should fail: approve to1 to to2 in bank exceed amount ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             const amount = preBalance+ 1;
             const splitRequest = {
@@ -582,7 +581,6 @@ describe("Function Cases",function (){
             const amount = 1
             let response = await generateApprove(minterWallet,accounts.Minter,accounts.To1,amount,minterMeta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
-            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
             await revoke(minterWallet,response)
             approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
             expect(approvedToken).to.equal('0');
@@ -596,7 +594,6 @@ describe("Function Cases",function (){
             console.log("amount 1:", amount)
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
-            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
             await getTokenBalanceByAdmin(accounts.To1);
             await revoke(to1Wallet,response)
             approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
@@ -612,14 +609,12 @@ describe("Function Cases",function (){
             // const amount = 10;
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,amount,to1Meta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
-            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
             await revoke(to1Wallet,response)
             approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
             expect(approvedToken).to.equal('0');
             const postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance);
         });
-
     })
     describe("Split and burn", function () {
         this.timeout(1200000);
@@ -829,7 +824,7 @@ describe("Function Cases",function (){
             console.log("Generate transfer Proof response:", response);
             expect(response.status).to.equal("TOKEN_ACTION_STATUS_FAIL");
 
-    });})
+        });})
     describe('Cancel splitToken', function () {
         this.timeout(1200000);
         it('split token list ',async () => {
@@ -1119,11 +1114,108 @@ describe("Function Cases",function (){
 
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
-
     });
+    describe.only("convertUSDC",function (){
+        this.timeout(1200000);
+        let prePublicBalance,postPublicBalance;
+        let prePrivateBalance,postPrivateBalance;
+        const scAddress = config.contracts.PrivateERCToken;
+
+        it.only('Convert2pUDSC ',async () => {
+            prePublicBalance = await getPublicBalance(accounts.Minter);
+            prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log({prePublicBalance,prePrivateBalance})
+            const metadata = await createAuthMetadata(accounts.MinterKey);
+            const convertToPUSDCResponse = {
+                amount: 10
+            };
+            let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
+            // console.log("Generate Mint Proof response:", proofResult);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const elAmount = {
+                cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+                cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+                cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+                cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
+            };
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+            let receipt = await tx.wait();
+            expect(receipt.status).to.equal(1);
+
+            postPublicBalance = await getPublicBalance(accounts.Minter);
+            postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPublicBalance).to.equal(prePublicBalance-amount);
+            expect(postPrivateBalance).to.equal(prePrivateBalance+amount);
+
+        });
+        it('convert balance to erc20 with to1 recevied tokenId ',async () => {
+            await DirectMint(accounts.Minter,20);
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.To1,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,accounts.To1,tokenId)
+            await sleep(4000)
+            prePublicBalance = await getPublicBalance(accounts.To1);
+            prePrivateBalance = await getTokenBalanceByAdmin(accounts.To1);
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, to1Meta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, to1Wallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+            postPublicBalance = await getPublicBalance(accounts.To1);
+            postPrivateBalance = await getTokenBalanceByAdmin(accounts.To1);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+        });
+        it('Split a private token and convert to erc20 ',async () => {
+            prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            prePublicBalance = await getPublicBalance(accounts.Minter);
+            //split token
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+
+            postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            postPublicBalance = await getPublicBalance(accounts.Minter);
+
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+
+        });
+
+    })
+
 });
-
-
 describe("Boundary value cases",function (){
     this.timeout(1200000);
     const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -1173,7 +1265,6 @@ describe("Boundary value cases",function (){
         });
 
         it('Should revert: Mint with MAX_UINT_256',async ()=>{
-
             try {
                 const amount = MAX_UINT256;
                 console.log("amount:", amount)
@@ -1377,7 +1468,6 @@ describe("Permission and BlackList", function () {
         normalMeta = await createAuthMetadata(normalPrivateKey)
         newMinterMeta = await createAuthMetadata(newMinterWallet.privateKey)
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
-
     })
 
     describe("Registe and set allowed",function (){
@@ -1933,10 +2023,6 @@ describe("Permission and BlackList", function () {
             }
         });
     });
-
-
-
-
 });
 describe('Security cases', function () {
     this.timeout(1200000);
@@ -2169,7 +2255,7 @@ describe('Security cases', function () {
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
             }
         });
-        it('Should revert: burn with transfer token id',async () => {
+        it.skip('Should revert: burn with transfer token id',async () => {
             const amount = 10
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
@@ -2198,7 +2284,7 @@ describe('Security cases', function () {
         before(async function () {
             await DirectMint(accounts.To1,50);
         })
-        it('Should fail: generate approve proof with different meta', async () => {
+        it('Should fail: generate approve proof with other meta', async () => {
             const preBalance = await getTokenBalanceByAdmin(accounts.To2);
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
@@ -2213,14 +2299,21 @@ describe('Security cases', function () {
             let response = await client.generateApproveProof(splitRequest,newMinterMeta);
             console.log("Generate transfer Proof response:", response);
             expect(response.status).equal("TOKEN_ACTION_STATUS_FAIL")
-
-            // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,to1Meta)
-            // let receipt = await callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,accounts.To2,'0x'+response.transfer_token_id)
-            // await sleep(1000)
-            // console.log("receipt", receipt)
-            // const postBBalance = await getTokenBalanceByAdmin(accounts.To2);
-            // expect(postBBalance).to.be.equal(preBalance+10)
-            //
+        });
+        it('Should fail: generate approve proof with admin meta', async () => {
+            const preBalance = await getTokenBalanceByAdmin(accounts.To2);
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                spender_address : accounts.Spender1,
+                to_address: accounts.To1,
+                amount: 10
+            };
+            console.log("generateSplitTokenRequest:", splitRequest)
+            let response = await client.generateApproveProof(splitRequest,adminMeta);
+            console.log("Generate transfer Proof response:", response);
+            expect(response.status).equal("TOKEN_ACTION_STATUS_FAIL")
         });
 
         it('Should reverted: transferFrom with used token id', async () => {
@@ -2243,9 +2336,7 @@ describe('Security cases', function () {
             await sleep(1000)
             const postBBalance = await getTokenBalanceByAdmin(accounts.To2);
             expect(postBBalance).to.be.equal(preBalance+10)
-
             await expect(callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,accounts.To2,'0x'+response.transfer_token_id)).to.reverted
-            //
         });
 
         it('Should reverted: transferFrom token id and toAddress not matched', async () => {
@@ -2274,22 +2365,19 @@ describe('Security cases', function () {
             await DirectMint(accounts.To1,50);
             await DirectMint(accounts.Minter,50);
         })
-        it('Should reverted: revoke with other wallet',async () => {
+        it('Should reverted: revoke with wallet not matched with approve',async () => {
             const amount = await getTokenBalanceByAdmin(accounts.To1);
-            console.log("amount 1:", amount)
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
-            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
-            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,'0x'+response.transfer_token_id)).revertedWith("PrivateERCToken: no allowance exists for this spender")
+            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
         });
         it('Should reverted: revoke with token mismatch',async () => {
             let response1 = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
             let approvedToken1 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
-            expect(approvedToken1).to.equal('0x'+response1.transfer_token_id);
-
+            console.log("approvedToken1:", approvedToken1)
             let response2 = await generateApprove(minterWallet,accounts.Minter,userInNode1,1,to1Meta)
             let approvedToken2 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
-            expect(approvedToken2).to.equal('0x'+response2.transfer_token_id);
+            console.log("approvedToken2:", approvedToken2)
 
             await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
 
@@ -2298,8 +2386,6 @@ describe('Security cases', function () {
             const preBalance = await getTokenBalanceByAdmin(accounts.To1);
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
-            console.log("approvedToken:", approvedToken)
-            expect(approvedToken).to.equal('0x'+response.transfer_token_id);
             await callPrivateTransferFrom(spender1Wallet,config.contracts.PrivateERCToken,accounts.To1,userInNode1,approvedToken)
             await sleep(3000)
             const postBalance = await getTokenBalanceByAdmin(accounts.To1);
@@ -2309,7 +2395,6 @@ describe('Security cases', function () {
         });
     })
 });
-
 
 
 

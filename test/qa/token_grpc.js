@@ -33,7 +33,14 @@ function createClient(url) {
     const client = new TokenService(url, grpc.credentials.createInsecure());
     const accountClient = new AccountService(url, grpc.credentials.createInsecure());
 
-
+    // Proof generation methods
+    client.convertToPUSDC = async function (request, metadata) {
+        return promisifyByMetadata(client.ConvertToPUSDC.bind(client), request, metadata);
+    };
+    // Proof generation methods
+    client.convertToUSDC = async function (request, metadata) {
+        return promisifyByMetadata(client.ConvertToUSDC.bind(client), request, metadata);
+    };
     // Proof generation methods
     client.generateMintProof = async function (request, metadata) {
         return promisifyByMetadata(client.GenerateMintProof.bind(client), request, metadata);
