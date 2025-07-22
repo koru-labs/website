@@ -21,7 +21,7 @@ async function deployToken(deployed) {
     const privateUSDC = await PrivateUSDCFactory.deploy();
     await privateUSDC.waitForDeployment();
     console.log("PrivateUSDC is deployed at:", privateUSDC.target);
-    deployed.contracts.PrivateERCToken = privateUSDC.target;
+    deployed.contracts.PrivateUSDC = privateUSDC.target;
 
     console.log("Initializing PrivateUSDC...");
     const initTx = await privateUSDC.initialize(
