@@ -91,6 +91,10 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
         
         // Add token and update balance
         TokenUtilsLib.addTokenWithBalance(accounts, msg.sender, entity);
+
+        // direct call the _setBalance method in the inherited FiatTokenV1.sol
+        totalSupply_ -= amount;
+        _setBalance(msg.sender, _balanceOf(msg.sender) - amount);
         
         // Use received token event
         TokenEventLib.triggerTokenReceivedEvent(
