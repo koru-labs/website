@@ -298,7 +298,7 @@ async function DirectMint(receiver,amount) {
     };
     const response = await client.generateDirectMint(generateRequest,minterMeta);
     console.log("Generate Mint Proof response:", response);
-    await client.waitForActionCompletion(client.getMintProof, response.request_id,minterMeta)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
     await sleep(4000)
 }
 async function DirectTransfer(from,receiver,amount) {
@@ -1115,19 +1115,97 @@ describe("Function Cases",function (){
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
     });
-    describe.only("convertUSDC",function (){
+    describe("convertUSDC",function (){
         this.timeout(1200000);
         let prePublicBalance,postPublicBalance;
         let prePrivateBalance,postPrivateBalance;
-        const scAddress = config.contracts.PrivateERCToken;
 
-        it.only('Convert2pUDSC ',async () => {
+        before(async function (){
+            await DirectMint(accounts.Minter,100);
+            await DirectMint(accounts.To1,100);
+        })
+
+        it('Convert2USDC: convert from pUSDC to USDC for minter',async () => {
+            const amount = 50;
+            prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            prePublicBalance = await getPublicBalance(accounts.Minter);
+            console.log({prePublicBalance,prePrivateBalance})
+            //split token
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+
+            postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            postPublicBalance = await getPublicBalance(accounts.Minter);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+
+        });
+
+        it('Convert2USDC: convert from pUSDC to USDC for user',async () => {
+            const userAddress = accounts.To1;
+            const userMeta = to1Meta
+            const userWallet = to1Wallet
+            const amount = 50;
+            prePrivateBalance = await getTokenBalanceByAdmin(userAddress);
+            prePublicBalance = await getPublicBalance(userAddress);
+            console.log({prePublicBalance,prePrivateBalance})
+            //split token
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: userAddress,
+                to_address: userAddress,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,userMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,userMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, userMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+
+            postPrivateBalance = await getTokenBalanceByAdmin(userAddress);
+            postPublicBalance = await getPublicBalance(userAddress);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+
+        });
+
+        it('Convert2pUDSC: convert from USDC to pUSDC for minter',async () => {
             prePublicBalance = await getPublicBalance(accounts.Minter);
             prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
             console.log({prePublicBalance,prePrivateBalance})
+            const amount = 10;
             const metadata = await createAuthMetadata(accounts.MinterKey);
             const convertToPUSDCResponse = {
-                amount: 10
+                amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
             // console.log("Generate Mint Proof response:", proofResult);
@@ -1151,68 +1229,38 @@ describe("Function Cases",function (){
             expect(postPrivateBalance).to.equal(prePrivateBalance+amount);
 
         });
-        it('convert balance to erc20 with to1 recevied tokenId ',async () => {
-            await DirectMint(accounts.Minter,20);
-            const splitRequest = {
-                sc_address: config.contracts.PrivateERCToken,
-                token_type: '0',
-                from_address: accounts.Minter,
-                to_address: accounts.To1,
+        it('Convert2pUDSC: convert from USDC to pUSDC for user',async () => {
+            const userAddress = accounts.To1;
+            const userMeta = to1Meta
+            const userWallet = to1Wallet
+            prePublicBalance = await getPublicBalance(userAddress);
+            prePrivateBalance = await getTokenBalanceByAdmin(userAddress);
+            console.log({prePublicBalance,prePrivateBalance})
+            const amount = 10;
+            const convertToPUSDCResponse = {
                 amount: amount
             };
-            let response = await client.generateSplitToken(splitRequest,minterMeta);
-            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
-            const tokenId = '0x'+response.transfer_token_id;
-            await callPrivateTransfer(minterWallet,config.contracts.PrivateERCToken,accounts.To1,tokenId)
-            await sleep(4000)
-            prePublicBalance = await getPublicBalance(accounts.To1);
-            prePrivateBalance = await getTokenBalanceByAdmin(accounts.To1);
-            const convertToPUSDCResponse = {
-                token_id: response.transfer_token_id
+            let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, userMeta);
+            // console.log("Generate Mint Proof response:", proofResult);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
+            const elAmount = {
+                cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+                cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+                cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+                cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
             };
-            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, to1Meta);
-            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, to1Wallet);
             const proof = proofResult.proof.map(p => ethers.toBigInt(p));
             const input = proofResult.input.map(i => ethers.toBigInt(i));
-            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
-            await tx.wait();
-            postPublicBalance = await getPublicBalance(accounts.To1);
-            postPrivateBalance = await getTokenBalanceByAdmin(accounts.To1);
-            expect(postPublicBalance).to.equal(prePublicBalance+amount);
-            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+            let receipt = await tx.wait();
+            expect(receipt.status).to.equal(1);
+
+            postPublicBalance = await getPublicBalance(userAddress);
+            postPrivateBalance = await getTokenBalanceByAdmin(userAddress);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPublicBalance).to.equal(prePublicBalance-amount);
+            expect(postPrivateBalance).to.equal(prePrivateBalance+amount);
         });
-        it('Split a private token and convert to erc20 ',async () => {
-            prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            prePublicBalance = await getPublicBalance(accounts.Minter);
-            //split token
-            const splitRequest = {
-                sc_address: config.contracts.PrivateERCToken,
-                token_type: '0',
-                from_address: accounts.Minter,
-                amount: amount
-            };
-            let response = await client.generateSplitToken(splitRequest,minterMeta);
-            console.log("Generate transfer Proof response:", response);
-            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
-            const tokenId = '0x'+response.transfer_token_id;
-            const convertToPUSDCResponse = {
-                token_id: response.transfer_token_id
-            };
-            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
-            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
-            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
-            const input = proofResult.input.map(i => ethers.toBigInt(i));
-            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
-            await tx.wait();
-
-            postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            postPublicBalance = await getPublicBalance(accounts.Minter);
-
-            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
-            expect(postPublicBalance).to.equal(prePublicBalance+amount);
-
-        });
-
     })
 
 });

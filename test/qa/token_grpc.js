@@ -46,8 +46,8 @@ function createClient(url) {
         return promisifyByMetadata(client.GenerateMintProof.bind(client), request, metadata);
     };
 
-    client.getMintProof = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getMintProof = async function (request_id, metadata) {
+        const request = {request_id};
         return promisifyByMetadata(client.GetMintProof.bind(client), request, metadata);
     };
     //
@@ -82,14 +82,14 @@ function createClient(url) {
         return promisifyByMetadata(client.GenerateDirectBurn.bind(client), request, metadata);
     };
 
-    client.getTokenActionStatus = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getTokenActionStatus = async function (request_id, metadata) {
+        const request = {request_id};
         return promisifyByMetadata(client.GetTokenActionStatus.bind(client), request, metadata);
     };
 
     // Status checking and polling methods
-    client.getActionStatus = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getActionStatus = async function (request_id, metadata) {
+        const request = {request_id};
         return promisify(client.GetActionStatus.bind(client), request, metadata);
     };
 
@@ -132,8 +132,8 @@ function createClient(url) {
         return promisifyByMetadata(client.GenerateSplitToken.bind(client), request, metadata);
     };
 
-    client.getSplitToken = async function (requestId, metadata) {
-        const request = {requestId};
+    client.getSplitToken = async function (request_id, metadata) {
+        const request = {request_id};
         return promisify(client.GetSplitToken.bind(client), request, metadata);
     };
 
@@ -178,11 +178,11 @@ function createClient(url) {
     };
 
 
-    client.waitForProofCompletion = async function (callBack, requestId, interval = 4000) {
+    client.waitForProofCompletion = async function (callBack, request_id, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
-                    const result = await callBack(requestId);
+                    const result = await callBack(request_id);
 
                     if (result.proof !== "") {
                         resolve(result)
@@ -201,11 +201,11 @@ function createClient(url) {
         });
     };
 
-    client.waitForActionCompletion = async function (callBack, requestId,metadata, interval = 1000) {
+    client.waitForActionCompletion = async function (callBack, request_id,metadata, interval = 1000) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
-                    const result = await callBack(requestId,metadata);
+                    const result = await callBack(request_id,metadata);
                     console.log("wait for proof. status = ", result.status)
                     if (result.status == "TOKEN_ACTION_STATUS_SUC") {
                         resolve(result)
