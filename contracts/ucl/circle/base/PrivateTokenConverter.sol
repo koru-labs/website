@@ -123,7 +123,7 @@ abstract contract PrivateTokenConverter is
 
         TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
         require(entity.id != 0, "invalid token");
-        require(entity.status == TokenModel.TokenStatus.active, "token is not active");
+        require(entity.status == TokenModel.TokenStatus.active || entity.status == TokenModel.TokenStatus.inactive, "token is invalid");
         require(entity.owner == msg.sender, "PrivateTokenConverter: only owner can convert");
 
         TokenModel.VerifyTokenConvert2USDCParams memory params = TokenModel.VerifyTokenConvert2USDCParams({

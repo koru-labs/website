@@ -38,6 +38,9 @@ contract PrivateUSDC is PrivateERCToken, FiatTokenV2 {
      */
     function _updatePublicTokenBalance(address account, uint256 amount, bool isConvertToPrivate) internal override {
         if (isConvertToPrivate) {
+            // check balance
+            require(amount <= _balanceOf(account), "Insufficient amount");
+
             // Converting to private: decrease public balance
             totalSupply_ -= amount;
             _setBalance(account, _balanceOf(account) - amount);
