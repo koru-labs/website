@@ -49,8 +49,9 @@
     "wlin-proxy-test": "npx hardhat run test/wlin/proxy_test.js --network ucl_L2",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
+
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
-    "qa-circle2": "npx hardhat run test/qa/circle.test.js --network ucl_L2",
+
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:sol": "prettier --write \"**/*.sol\"",

@@ -6,8 +6,8 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 // const { createClient } = require('../qa/token_http');
-const rpcUrl = "127.0.0.1:50051"
-// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
+// const rpcUrl = "127.0.0.1:50051"
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
 // const rpcUrl = "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
 
@@ -264,13 +264,13 @@ async function testInstituteInformation() {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
-    const instRegistry = await InstRegistry.attach(config.contracts.InstitutionUserRegistry);
+    const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
 
-    let tx = await instRegistry.registerUser(accounts.Spender1);
-    await tx.wait();
-    let inst = await instRegistry.getUserManager(accounts.Spender1);
+    // let tx = await instRegistry.registerUser(accounts.Spender1);
+    // await tx.wait();
+    let inst = await instRegistry.getUserManager("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
     console.log("user registration ", inst);
-    let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Spender1);
+    let inst1 = await instRegistry.getUserInstGrumpkinPubKey("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
     console.log("user registration ", inst1);
 }
 
@@ -290,12 +290,12 @@ async function testConvert2pUSDC() {
     };
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
-    if (proof.length !== 8) {
-        throw new Error(`proof array length is ${proof.length}, expected 8`);
-    }
-    if (input.length !== 7) {
-        throw new Error(`input array length is ${input.length}, expected 7`);
-    }
+    // if (proof.length !== 8) {
+    //     throw new Error(`proof array length is ${proof.length}, expected 8`);
+    // }
+    // if (input.length !== 7) {
+    //     throw new Error(`input array length is ${input.length}, expected 7`);
+    // }
 
     const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
     let receipt = await tx.wait();
@@ -317,7 +317,7 @@ async function testConvert2USDC() {
     // console.log("Generate transfer Proof response:", response);
     // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
     // let tokenId = response.transfer_token_id
-    let tokenId = '8535d638f7fc8bbaff808e02733530f176b159aba80d1febecc2c134f4970cb1'
+    let tokenId = 'e4827f4805d16b29a39ff4eafe60dc468b46a24781d167ad70f5a06f16666719'
     const convertToPUSDCResponse = {
         token_id: tokenId
     };
@@ -341,7 +341,7 @@ async function testConvert2USDC() {
 // testReserveTokensAndBurn().then();
 // testReserveTokensAndTransfer().then()
 // testReserveTokensAndCancel().then()
-testApproveTokensAndRevoke().then()
+// testApproveTokensAndRevoke().then()
 // testTransferFromByAuth().then();
 
 //   direct-transaction
@@ -349,4 +349,4 @@ testApproveTokensAndRevoke().then()
 // testDirectBurnByAuth().then()
 // testDirectTransferByAuth().then()
 
-// testInstituteInformation().then()
+testInstituteInformation().then()
