@@ -210,7 +210,7 @@ async function getApprovedAllowance(scAddress,wallet,owner) {
     console.log("Approve owner: ", owner)
     let approvedToken = await contract.getAllowanceTokensFrom(owner)
     console.log("Approve token: ", '0x'+approvedToken.toString(16))
-    return approvedToken
+    return '0x'+approvedToken.toString(16)
 }
 
 async function getSplitTokenList(grpcClient,owner, scAddress,metadata){

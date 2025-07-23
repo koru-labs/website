@@ -767,7 +767,7 @@ describe("Function Cases",function (){
             await DirectMint(sender,amount);
             const preBalanceFrom = await getTokenBalanceByAdmin(sender);
             const preBalanceTo = await getTokenBalanceByAdmin(recevier);
-            await DirectTransfer(sender,recevier, amount,to1Meta);
+            await DirectTransfer(sender,recevier, amount,to1Meta);con
             const postBalanceFrom = await getTokenBalanceByAdmin(sender);
             const postBalanceTo = await getTokenBalanceByAdmin(recevier);
             expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
@@ -1207,7 +1207,7 @@ describe("Function Cases",function (){
             await DirectMint(accounts.To1,100);
         })
         it('Convert2USDC: convert from pUSDC to USDC for minter',async () => {
-            const amount = 50;
+            const amount = 10;
             prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
             prePublicBalance = await getPublicBalance(accounts.Minter);
             console.log({prePublicBalance,prePrivateBalance})
@@ -1244,7 +1244,7 @@ describe("Function Cases",function (){
             const userAddress = accounts.To1;
             const userMeta = to1Meta
             const userWallet = to1Wallet
-            const amount = 50;
+            const amount = 10;
             prePrivateBalance = await getTokenBalanceByAdmin(userAddress);
             prePublicBalance = await getPublicBalance(userAddress);
             console.log({prePublicBalance,prePrivateBalance})
@@ -2658,7 +2658,9 @@ describe('Security cases', function () {
         it('Should reverted: revoke with wallet not matched with approve',async () => {
             const amount = await getTokenBalanceByAdmin(accounts.To1);
             let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            console.log(response)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
+            console.log("approvedToken:", approvedToken)
             await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
         });
         it('Should reverted: revoke with token mismatch',async () => {
