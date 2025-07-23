@@ -1759,19 +1759,19 @@ describe("Permission and BlackList", function () {
 
     describe("Registe and set allowed",function (){
         this.timeout(1200000);
-        it.only('Registe user with exist admin auth', async () => {
-            // await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
-            // await sleep(10000);
-            // let response = await getAccount(adminPrivateKey,client, normalWallet.address);
-            // console.log("normal account: ",response)
-            // expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
-            // expect(response.account_roles).equal("normal");
+        it('Registe user with exist admin auth', async () => {
+            await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
+            await sleep(10000);
+            let response = await getAccount(adminPrivateKey,client, normalWallet.address);
+            console.log("normal account: ",response)
+            expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
+            expect(response.account_roles).equal("normal");
 
-            // await registerUser(adminPrivateKey,client, newAdminWallet.address, "admin,minter");
-            // await sleep(10000);
-            // response = await getAccount(adminPrivateKey,client, newAdminWallet.address);
-            // expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
-            // expect(response.account_roles).equal("admin,minter");
+            await registerUser(adminPrivateKey,client, newAdminWallet.address, "admin,minter");
+            await sleep(10000);
+            response = await getAccount(adminPrivateKey,client, newAdminWallet.address);
+            expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
+            expect(response.account_roles).equal("admin,minter");
 
             await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
             await sleep(15000);
@@ -1784,9 +1784,8 @@ describe("Permission and BlackList", function () {
         it('Set allowed for new minter ',async () => {
             // await registerConfigureMinter(newMinterWallet.address)
             await allowBanksInTokenSmartContract(newMinterWallet.address)
-            await getUserManager(newMinterWallet.address)
-            // await setMinterAllowed(newMinterWallet.address)
-            // await sleep(5000);
+            await setMinterAllowed(newMinterWallet.address)
+            await sleep(5000);
         });
         it('Repeat registration with different role ',async () => {
             const wallet = ethers.Wallet.createRandom();
@@ -2689,9 +2688,110 @@ describe('Security cases', function () {
 
     describe('Convert USDC and pUSDC security',function () {
         this.timeout(1200000)
+        let prePublicBalance,postPublicBalance;
+        let prePrivateBalance,postPrivateBalance;
+
         before(async function () {
-            // await DirectMint(accounts.Minter,50);
-            // await DirectMint(accounts.To1,50);
+            await DirectMint(accounts.Minter,100);
+            await DirectMint(accounts.To1,100);
+        })
+        it('Should reverted: convert to USDC with wallet not matched with proofResult',async ()=>{
+            //split token
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, to1Wallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            await expect(contract.convert2USDC(tokenId,proofResult.amount,input,proof)).revertedWith("invalid token")
+        })
+        it('Should reverted: convert to USDC with tokenId not matched with proofResult',async ()=>{
+            //split token
+            const splitRequest_10 = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: 10
+            };
+            let response_10 = await client.generateSplitToken(splitRequest_10,minterMeta);
+            console.log("Generate transfer Proof response:", response_10);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response_10.request_id,minterMeta)
+            const tokenId_10 = '0x'+response_10.transfer_token_id;
+            const convertToPUSDCResponse_10 = {
+                token_id: response_10.transfer_token_id
+            };
+            let proofResult_10 = await client.convertToUSDC(convertToPUSDCResponse_10, minterMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const proof_10 = proofResult_10.proof.map(p => ethers.toBigInt(p));
+            const input_10 = proofResult_10.input.map(i => ethers.toBigInt(i));
+
+            const splitRequest_20 = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: 20
+            };
+            let response_20 = await client.generateSplitToken(splitRequest_20,minterMeta);
+            console.log("Generate transfer Proof response:", response_10);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response_20.request_id,minterMeta)
+            const tokenId_20 = '0x'+response_20.transfer_token_id;
+            const convertToPUSDCResponse_20 = {
+                token_id: response_20.transfer_token_id
+            };
+            let proofResult_20 = await client.convertToUSDC(convertToPUSDCResponse_20, minterMeta);
+            const proof_20 = proofResult_20.proof.map(p => ethers.toBigInt(p));
+            const input_20 = proofResult_20.input.map(i => ethers.toBigInt(i));
+            await expect(contract.convert2USDC(tokenId_10,proofResult_20.amount,input_20,proof_20)).revertedWith("encrypted amount not match")
+            await cancelAllSplitTokens(minterWallet,config.contracts.PrivateERCToken)
+        })
+        it('Should reverted: convert to USDC with used tokenId',async ()=>{
+            prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            prePublicBalance = await getPublicBalance(accounts.Minter);
+            const amount = 50;
+            console.log({prePublicBalance,prePrivateBalance})
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+
+            postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            postPublicBalance = await getPublicBalance(accounts.Minter);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+
+            await expect(contract.convert2USDC(tokenId,proofResult.amount,input,proof)).revertedWith("invalid token")
+
         })
         it('Should reverted: convert to pUSDC with wallet not matched with proofResult',async () => {
             const userAddress = accounts.Minter;
@@ -2726,7 +2826,6 @@ describe('Security cases', function () {
             console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
 
         });
-
         it('Should reverted: convert to pUSDC with amount not matched with proofResult',async () => {
             const userAddress = accounts.Minter;
             const userMeta = minterMeta
@@ -2748,7 +2847,6 @@ describe('Security cases', function () {
             const input = proofResult.input.map(i => ethers.toBigInt(i));
             await expect(contract.convert2pUSDC(20,elAmount,input,proof)).revertedWith("amount is not match")
         });
-
         it('Should reverted: convert to pUSDC with used proof',async () => {
             const userAddress = accounts.Minter;
             const userMeta = minterMeta
@@ -2778,7 +2876,6 @@ describe('Security cases', function () {
             // console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
         });
 
-        // it('Should reverted: convert to USDC with amount is 0',async ())
 
     })
 });
