@@ -303,8 +303,7 @@ async function DirectMint(receiver,amount) {
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
     await sleep(4000)
 }
-async function DirectTransfer(from,receiver,amount) {
-    const minterMeta = await createAuthMetadata(accounts.MinterKey)
+async function DirectTransfer(from,receiver,amount,meta) {
     const splitRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -312,12 +311,11 @@ async function DirectTransfer(from,receiver,amount) {
         to_address : receiver,
         amount: amount
     };
-    let response = await client.generateDirectTransfer(splitRequest,minterMeta);
+    let response = await client.generateDirectTransfer(splitRequest,meta);
     console.log("Generate transfer Proof response:", response);
-    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,meta)
 }
-async function DirectBurn(address,amount) {
-    const minterMeta = await createAuthMetadata(accounts.MinterKey)
+async function DirectBurn(address,amount,meta) {
     const splitRequest =
         {
             sc_address: config.contracts.PrivateERCToken,
@@ -326,9 +324,9 @@ async function DirectBurn(address,amount) {
             amount: amount
         };
 
-    let response = await client.generateDirectBurn(splitRequest,minterMeta);
+    let response = await client.generateDirectBurn(splitRequest,meta);
     console.log("Generate transfer Proof response:", response);
-    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,meta)
 }
 async function cancelAllSplitTokens(ownerWallet,scAddress){
     const metadata = await createAuthMetadata(adminPrivateKey)
@@ -673,25 +671,25 @@ describe("Function Cases",function (){
             await DirectMint(accounts.Minter, 100);
         });
         it('Step2: transfer 30 to recevier1 in node ', async () => {
-            await DirectTransfer(accounts.Minter, accounts.To1, 30);
+            await DirectTransfer(accounts.Minter, accounts.To1, 30,minterMeta);
         });
         it('Step3: transfer 10 to recevier2 in node ', async () => {
-            await DirectTransfer(accounts.Minter, accounts.To2, 10);
+            await DirectTransfer(accounts.Minter, accounts.To2, 10,minterMeta);
         });
         it('Step4: transfer 10 to user cross node ', async () => {
-            await DirectTransfer(accounts.Minter, userAddress, 10);
+            await DirectTransfer(accounts.Minter, userAddress, 10,minterMeta);
         });
         it('Step5: transfer 10 from to1 to to2 in node ', async () => {
-            await DirectTransfer(accounts.To1, accounts.To2, 10);
+            await DirectTransfer(accounts.To1, accounts.To2, 10,to1Meta);
         });
         it('Step6: transfer 10 from to1 to user cross node ', async () => {
-            await DirectTransfer(accounts.To1, userAddress, 10);
+            await DirectTransfer(accounts.To1, userAddress, 10,to1Meta);
         });
         it('Step7: minter burn 10 ', async () => {
-            await DirectBurn(accounts.Minter, 10);
+            await DirectBurn(accounts.Minter, 10,minterMeta);
         });
         it('Step8: to1 burn 100 ', async () => {
-            await DirectBurn(accounts.To1, 10);
+            await DirectBurn(accounts.To1, 10,to1Meta);
         });
         it('Step9: check balance ', async () => {
             const postBalanceMinter = await getTokenBalanceByAdmin(accounts.Minter);
@@ -737,14 +735,15 @@ describe("Function Cases",function (){
     describe('Direct Transfer', function () {
         this.timeout(1200000);
         before(async function () {
-            await DirectMint(accounts.Minter, 20);
+            // await DirectMint(accounts.Minter, 20);
+            // await DirectMint(accounts.To1, 20);
         });
         it('Transfer from minter to user in bank ',async () => {
             const sender = accounts.Minter;
             const recevier = accounts.To1;
             const preBalanceFrom = await getTokenBalanceByAdmin(sender);
             const preBalanceTo = await getTokenBalanceByAdmin(recevier);
-            await DirectTransfer(sender,recevier, amount);
+            await DirectTransfer(sender,recevier, amount,minterMeta);
             const postBalanceFrom = await getTokenBalanceByAdmin(sender);
             const postBalanceTo = await getTokenBalanceByAdmin(recevier);
             expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
@@ -755,7 +754,7 @@ describe("Function Cases",function (){
             const recevier = userInNode1;
             const preBalanceFrom = await getTokenBalanceByAdmin(sender);
             const preBalanceTo = await getTokenBalanceInNode1(recevier);
-            await DirectTransfer(sender,recevier, amount);
+            await DirectTransfer(sender,recevier, amount,minterMeta);
             const postBalanceFrom = await getTokenBalanceByAdmin(sender);
             const postBalanceTo = await getTokenBalanceInNode1(recevier);
             expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
@@ -768,7 +767,7 @@ describe("Function Cases",function (){
             await DirectMint(sender,amount);
             const preBalanceFrom = await getTokenBalanceByAdmin(sender);
             const preBalanceTo = await getTokenBalanceByAdmin(recevier);
-            await DirectTransfer(sender,recevier, amount);
+            await DirectTransfer(sender,recevier, amount,to1Meta);
             const postBalanceFrom = await getTokenBalanceByAdmin(sender);
             const postBalanceTo = await getTokenBalanceByAdmin(recevier);
             expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
@@ -780,7 +779,7 @@ describe("Function Cases",function (){
             const recevier = userInNode1;
             const preBalanceFrom = await getTokenBalanceByAdmin(sender);
             const preBalanceTo = await getTokenBalanceInNode1(recevier);
-            await DirectTransfer(sender,recevier, amount);
+            await DirectTransfer(sender,recevier, amount,to1Meta);
             const postBalanceFrom = await getTokenBalanceByAdmin(sender);
             const postBalanceTo = await getTokenBalanceInNode1(recevier);
             expect(postBalanceFrom).to.equal(preBalanceFrom - amount);
@@ -798,7 +797,7 @@ describe("Function Cases",function (){
             const burner = accounts.Minter
             const preBalance = await getTokenBalanceByAdmin(burner);
             console.log("minter balance is before burn", preBalance)
-            await DirectBurn(burner, amount);
+            await DirectBurn(burner, amount,minterMeta);
             let postBalance = await getTokenBalanceByAdmin(burner);
             expect(postBalance).to.equal(preBalance - amount);
         });
@@ -806,7 +805,7 @@ describe("Function Cases",function (){
             const burner = accounts.To1
             const preBalance = await getTokenBalanceByAdmin(burner);
             console.log("burner balance is before burn", preBalance)
-            await DirectBurn(burner, amount);
+            await DirectBurn(burner, amount,to1Meta);
             let postBalance = await getTokenBalanceByAdmin(burner);
             expect(postBalance).to.equal(preBalance - amount);
         });
@@ -924,7 +923,7 @@ describe("Function Cases",function (){
         it('totalSupply_sub_after_directBurn ',async () => {
             await DirectMint(accounts.To1, amount);
             totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta);
-            await DirectBurn(accounts.To1,amount);
+            await DirectBurn(accounts.To1,amount,to1Meta);
             totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta);
             expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
             console.log("contract totalSupply is ",await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta));
@@ -949,7 +948,7 @@ describe("Function Cases",function (){
             console.log("totalSupplyPre: ",totalSupplyPre)
             const minterBalance = await getTokenBalanceByAdmin(accounts.Minter);
             if(minterBalance>=100){
-                await DirectTransfer(accounts.Minter,accounts.To1,amount);
+                await DirectTransfer(accounts.Minter,accounts.To1,amount,minterMeta);
                 totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta);
                 console.log("totalSupplyPost: ",totalSupplyPost)
                 expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -962,7 +961,7 @@ describe("Function Cases",function (){
             console.log("totalSupplyPre: ",totalSupplyPre)
             const minterBalance = await getTokenBalanceByAdmin(accounts.Minter);
             if(minterBalance>=amount){
-                await DirectTransfer(accounts.Minter,userInNode4,amount);
+                await DirectTransfer(accounts.Minter,userInNode4,amount,minterMeta);
                 totalSupplyPost = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta);
                 console.log("totalSupplyPost: ",totalSupplyPost)
                 expect(totalSupplyPost).to.equal(totalSupplyPre);
@@ -975,7 +974,7 @@ describe("Function Cases",function (){
             await DirectMint(accounts.Minter, 10);
             totalSupplyPre  = await getTotalSupplyNode3(client, config.contracts.PrivateERCToken,adminMeta);
             console.log("totalSupplyPre: ",totalSupplyPre)
-            const amount = 5;
+            const amount = 10;
             const prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
             const prePublicBalance = await getPublicBalance(accounts.Minter);
             console.log({prePublicBalance,prePrivateBalance})
