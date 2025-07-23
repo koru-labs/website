@@ -3,6 +3,7 @@ const config = require('./../../deployments/image9.json');
 const hardhatConfig = require("../../hardhat.config");
 const accounts = require("../../deployments/account.json");
 const grpc = require('@grpc/grpc-js');
+const deployed = require("../../deployments/image9.json");
 
 const l1CustomNetwork = {
     name: "BESU",
@@ -475,6 +476,45 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function registerConfigureMinter(address) {
+    // configure minter allowed amount
+    const minterAllowedAmount = {
+        "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
+        "cl_y": 17997503520096523373978760079614633178183544935372525079367653487073845131371n,
+        "cr_x": 2799658707790704252170544877645553735081603739176317448125814928308770685127n,
+        "cr_y": 10724405929777949929088094477911843117820716522007699467531083531418761611245n,
+    }
+    console.log("Configure minter allowed amount...")
+    const minters = [
+        {account: address, name: "Minter"},
+    ];
+    const l1CustomNetwork = {
+        name: "BESU",
+        chainId: 1337
+    };
+    const options = {
+        batchMaxCount: 1,
+        staticNetwork: true
+    };
+    const key = hardhatConfig.networks.ucl_L2.accounts[0];
+    const L1Url = hardhatConfig.networks.ucl_L2.url;
+    const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+    let ownerWallet = new ethers.Wallet(key, l1Provider);
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
+    try {
+        for (const minter of minters) {
+            await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
+            console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`)
+            const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
+            console.log("manager: ",await Institution.getUserManager(address))
+
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
 async function allowBanksInTokenSmartContract(minterAddress) {
     const l1CustomNetwork = {
         name: "BESU",
@@ -491,11 +531,44 @@ async function allowBanksInTokenSmartContract(minterAddress) {
     console.log(`PrivateERCToken : ${config.contracts.PrivateERCToken}`)
     const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
     console.log(`Add ${minterAddress} to contract`)
-    let tx = await privateUSDC.updateAllowedBank(minterAddress, true)
-    console.log(tx);
+    let tx = await privateUSDC.updateAllowedBank(minterAddress, true);
     await tx.wait();
-    const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
-    console.log("manager: ",await Institution.getUserManager(minterAddress))
+    console.log(tx);
+    // const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
+    // console.log("manager: ",await Institution.getUserManager(minterAddress))
+}
+
+async function getUserManager(address) {
+    // const l1CustomNetwork = {
+    //     name: "BESU",
+    //     chainId: 1337
+    // };
+    // const options = {
+    //     batchMaxCount: 1,
+    //     staticNetwork: true
+    // };
+    //
+    // const L1Url = hardhatConfig.networks.ucl_L2.url;
+    // const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
+    // const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
+    // console.log("manager: ",await Institution.getUserManager(minterAddress))
+
+    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+        }
+    });
+    const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
+
+    // let tx = await instRegistry.registerUser(accounts.Spender1);
+    // await tx.wait();
+    let inst = await instRegistry.getUserManager(address);
+    console.log("user registration ", inst);
+    let inst1 = await instRegistry.getUserInstGrumpkinPubKey(address);
+    console.log("user registration ", inst1);
+
+
 }
 
 async function setMinterAllowed(minterAddress) {
@@ -554,5 +627,7 @@ module.exports =  {
     sleep,
     getApprovedAllowance,
     allowBanksInTokenSmartContract,
-    setMinterAllowed
+    setMinterAllowed,
+    // registerConfigureMinter
+    getUserManager
 }
