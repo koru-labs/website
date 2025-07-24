@@ -27,9 +27,6 @@ async function createAuthHeaders(privateKey, messagePrefix = "login") {
 
     return {
         'Content-Type': 'application/json',
-        'address': wallet.address.toLowerCase(),
-        'signature': signature,
-        'message': message,
         'Grpc-Metadata-Address': wallet.address.toLowerCase(),
         'Grpc-Metadata-Signature': signature,
         'Grpc-Metadata-Message': message
