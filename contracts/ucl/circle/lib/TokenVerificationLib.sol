@@ -115,11 +115,13 @@ library TokenVerificationLib {
             && params.encryptedAmount.cl_y == params.publicInputs[1]
             && params.encryptedAmount.cr_x == params.publicInputs[2]
             && params.encryptedAmount.cr_y == params.publicInputs[3],  "encrypted amount not match");
-        // publicInputs[4] == amount
-        require(params.publicInputs[4] == params.amount, "amount is not match");
-        // publicInputs[5] & publicInputs[6] is to pk
+        // publicInputs[4] is user address
+        require(address(uint160(params.publicInputs[4])) == params.owner, "user address is not match");
+        // publicInputs[5] is amount
+        require(params.publicInputs[5] == params.amount, "amount is not match");
+        // publicInputs[6] & publicInputs[7] is owner pk
         TokenModel.GrumpkinPublicKey memory owner = params.institutionRegistration.getUserInstGrumpkinPubKey(params.owner);
-        require(owner.x == params.publicInputs[5] && owner.y == params.publicInputs[6], "owner public key not match");
+        require(owner.x == params.publicInputs[6] && owner.y == params.publicInputs[7], "owner public key not match");
 
         return;
     }
