@@ -20,7 +20,8 @@ abstract contract PrivateTokenData is Ownable {
     uint256 internal _publicTotalSupply;
     
     mapping(address => bool) internal _authorizedContracts;
-    
+    mapping(uint256 => bool) internal _usedElGamalHashes;
+
     modifier onlyAuthorized() {
         require(_authorizedContracts[msg.sender] || msg.sender == this.owner(), "PrivateTokenData: unauthorized access");
         _;

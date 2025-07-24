@@ -44,6 +44,9 @@ abstract contract PrivateTokenConverter is
     {
         require(amount > 0, "PrivateTokenConverter: convert amount not greater than 0");
 
+        uint256 elGamalHash = TokenUtilsLib.hashElgamal(elAmount);
+        require(!_usedElGamalHashes[elGamalHash], "PrivateTokenConverter: ElGamal hash already used");
+
         TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
             institutionRegistration: _institutionRegistration,
             owner: msg.sender,
@@ -57,7 +60,7 @@ abstract contract PrivateTokenConverter is
 
         // Create TokenEntity
         TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: TokenUtilsLib.hashElgamal(elAmount),
+            id: elGamalHash,
             owner: msg.sender,
             status: TokenModel.TokenStatus.active,
             amount: elAmount,
@@ -95,6 +98,8 @@ abstract contract PrivateTokenConverter is
 
         // Call hook for public token balance update
         _updatePublicTokenBalance(msg.sender, amount, true);
+
+        _usedElGamalHashes[elGamalHash] = true;
 
         return true;
     }
