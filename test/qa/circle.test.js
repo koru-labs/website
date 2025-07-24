@@ -83,6 +83,7 @@ let preAllowance,postAllowance;
 async function mint(address,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
+        from_address: accounts.Minter,
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: address,
@@ -293,6 +294,7 @@ function sleep(ms) {
 async function DirectMint(receiver,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
     const generateRequest = {
+        from_address: accounts.Minter,
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: receiver,
@@ -1227,6 +1229,7 @@ describe("Function Cases",function (){
                 token_id: response.transfer_token_id
             };
             let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            console.log("Generate convert Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
             const proof = proofResult.proof.map(p => ethers.toBigInt(p));
             const input = proofResult.input.map(i => ethers.toBigInt(i));
@@ -1264,6 +1267,7 @@ describe("Function Cases",function (){
                 token_id: response.transfer_token_id
             };
             let proofResult = await client.convertToUSDC(convertToPUSDCResponse, userMeta);
+            console.log("Generate convert Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
             const proof = proofResult.proof.map(p => ethers.toBigInt(p));
             const input = proofResult.input.map(i => ethers.toBigInt(i));
@@ -1286,6 +1290,7 @@ describe("Function Cases",function (){
                 amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
+            console.log("Generate convert Proof response:", proofResult);
             // console.log("Generate Mint Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
             const elAmount = {
@@ -1319,6 +1324,7 @@ describe("Function Cases",function (){
                 amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, userMeta);
+            console.log("Generate convert Proof response:", proofResult);
             // console.log("Generate Mint Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
             const elAmount = {
@@ -2718,6 +2724,7 @@ describe('Security cases', function () {
                 token_id: response.transfer_token_id
             };
             let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            console.log("Generate convert Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, to1Wallet);
             const proof = proofResult.proof.map(p => ethers.toBigInt(p));
             const input = proofResult.input.map(i => ethers.toBigInt(i));
@@ -2809,6 +2816,7 @@ describe('Security cases', function () {
                 amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, userMeta);
+            console.log("Generate convert Proof response:", proofResult);
             // console.log("Generate Mint Proof response:", proofResult);
             // const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
             let contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, to1Wallet);
@@ -2821,17 +2829,17 @@ describe('Security cases', function () {
             const proof = proofResult.proof.map(p => ethers.toBigInt(p));
             const input = proofResult.input.map(i => ethers.toBigInt(i));
 
-
-            let tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
-            let receipt = await tx.wait();
-            console.log("convert2pUSDC tx:", receipt);
-            expect(receipt.status).to.equal(1);
-            console.log("post usdc balance is 1 :",await getPublicBalance(userAddress))
-
-            let contract2 = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
-            tx = await contract2.convert2pUSDC(amount,elAmount,input,proof);
-            await tx.wait();
-            console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
+            await expect(contract.convert2pUSDC(amount,elAmount,input,proof)).revertedWith("user address is not match")
+            // let tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+            // let receipt = await tx.wait();
+            // console.log("convert2pUSDC tx:", receipt);
+            // expect(receipt.status).to.equal(1);
+            // console.log("post usdc balance is 1 :",await getPublicBalance(userAddress))
+            //
+            // let contract2 = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
+            // tx = await contract2.convert2pUSDC(amount,elAmount,input,proof);
+            // await tx.wait();
+            // console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
 
         });
         it('Should reverted: convert to pUSDC with amount not matched with proofResult',async () => {
@@ -2844,6 +2852,7 @@ describe('Security cases', function () {
                 amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, userMeta);
+            console.log("Generate convert Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
             const elAmount = {
                 cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
@@ -2865,6 +2874,7 @@ describe('Security cases', function () {
                 amount: amount
             };
             let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, userMeta);
+            console.log("Generate convert Proof response:", proofResult);
             const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, userWallet);
             const elAmount = {
                 cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
@@ -2878,7 +2888,7 @@ describe('Security cases', function () {
             let tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
             await tx.wait();
             console.log("post usdc balance is 1 :",await getPublicBalance(userAddress))
-            await expect(contract.convert2pUSDC(amount,elAmount,input,proof)).revertedWith("amount is not match")
+            await expect(contract.convert2pUSDC(amount,elAmount,input,proof)).revertedWith("PrivateTokenConverter: ElGamal hash already used")
             // tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
             // await tx.wait();
             // console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
@@ -2910,7 +2920,7 @@ describe("Event cases", function () {
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
     })
 
-    it.only('UserRegisteredEvent', async () => {
+    it('UserRegisteredEvent', async () => {
         await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
         await getEvents("UserRegisteredEvent")
 
