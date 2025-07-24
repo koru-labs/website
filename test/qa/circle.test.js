@@ -2883,11 +2883,43 @@ describe('Security cases', function () {
             // await tx.wait();
             // console.log("post usdc balance is 2 :",await getPublicBalance(userAddress))
         });
-
-
     })
 });
+describe("Event cases", function () {
+    this.timeout(1200000);
+    const normal = ethers.Wallet.createRandom();
+    const newMinter = ethers.Wallet.createRandom();
+    const newAdmin = ethers.Wallet.createRandom();
+    const normalWallet = new ethers.Wallet(normal.privateKey, l1Provider);
+    const newMinterWallet = new ethers.Wallet(newMinter.privateKey, l1Provider);
+    const newAdminWallet = new ethers.Wallet(newAdmin.privateKey, l1Provider);
+    const minterPrivateKey = minterWallet.privateKey
+    const normalPrivateKey = normalWallet.privateKey
 
+    let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta,normalMeta,newMinterMeta,newAdminMeta;
+
+    before(async function () {
+        adminMeta = await createAuthMetadata(adminPrivateKey)
+        minterMeta = await createAuthMetadata(accounts.MinterKey)
+        spenderMeta = await createAuthMetadata(accounts.Spender1Key)
+        to1Meta = await createAuthMetadata(accounts.To1PrivateKey);
+        node4AdminMeta = await createAuthMetadata(node4AdminPrivateKey);
+
+        normalMeta = await createAuthMetadata(normalPrivateKey)
+        newMinterMeta = await createAuthMetadata(newMinterWallet.privateKey)
+        newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
+    })
+
+    it.only('UserRegisteredEvent', async () => {
+        await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
+        await getEvents("UserRegisteredEvent")
+
+        await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
+        await getEvents("UserRegisteredEvent")
+
+    });
+
+});
 
 
 
