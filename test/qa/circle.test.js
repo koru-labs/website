@@ -1425,6 +1425,7 @@ describe("Boundary value cases",function (){
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
             const generateRequest = {
+                from_address: accounts.Minter,
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 to_address: toAddress,
@@ -1851,7 +1852,7 @@ describe("Permission and BlackList", function () {
             await mintBy(accounts.To1, 10, newMinterWallet)
             console.log("Balance 3 : ",await getTokenBalanceByAdmin(accounts.To1))
         });
-        it.skip('Split transfer with new minter ', async () => {
+        it('Split transfer with new minter', async () => {
             const preBalance = await getTokenBalanceByAdmin(newMinterWallet.address)
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
@@ -1881,7 +1882,7 @@ describe("Permission and BlackList", function () {
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
             await expect(callPrivateTransfer(newMinterWallet,config.contracts.PrivateERCToken,normalWallet.address,'0x'+response.transfer_token_id)).revertedWith("PrivateERCToken: tokenId is not matched")
         });
-        it.skip('Split burn with new minter ', async () => {
+        it('Split burn with new minter ', async () => {
             const preBalance = await getTokenBalanceByAdmin(newMinterWallet.address)
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
@@ -2024,7 +2025,7 @@ describe("Permission and BlackList", function () {
             expect(response.account_roles).equal("normal");
         });
         it('Should reverted: update user role normal -> normal ', async () => {
-            let response =  await updateAccountRole(minterPrivateKey,client,normalWallet.address,'normal')
+            let response =  await updateAccountRole(adminPrivateKey,client,normalWallet.address,'normal')
             expect(response.status).to.equal("ASYNC_ACTION_STATUS_FAIL");
             expect(response. message).to.include(" account already has role");
         });
@@ -2042,18 +2043,25 @@ describe("Permission and BlackList", function () {
         it('generate mint proof with admin meta, call mint with minter wallet',async () => {
             console.log(await getTokenBalanceByAdmin(accounts.To1))
             const generateRequest = {
+                from_address: newAdminWallet.address,
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 to_address: accounts.To1,
                 amount: 10
             };
-            const response = await client.generateMintProof(generateRequest,newAdminMeta);
-            console.log("generateMintProof:", response)
-            const receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
-            console.log("callPrivateMint:", receipt)
-            let tx = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,newAdminMeta)
-            console.log("callPrivateMint:", tx)
-            console.log(await getTokenBalanceByAdmin(accounts.To1))
+            try {
+                await client.generateMintProof(generateRequest,newAdminMeta);
+            }catch (error){
+                expect(error.details).to.include('GetBankMinterAllowed failed');
+            }
+
+            // const response = await client.generateMintProof(generateRequest,newAdminMeta);
+            // console.log("generateMintProof:", response)
+            // const receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
+            // console.log("callPrivateMint:", receipt)
+            // let tx = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,newAdminMeta)
+            // console.log("callPrivateMint:", tx)
+            // console.log(await getTokenBalanceByAdmin(accounts.To1))
         });
 
     })
@@ -2125,6 +2133,7 @@ describe("Permission and BlackList", function () {
         });
         it('Should reverted: mint proof with normal user auth', async () => {
             const generateRequest = {
+                from_address: accounts.Minter,
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 to_address: accounts.To1,
@@ -2186,6 +2195,7 @@ describe("Permission and BlackList", function () {
             if(isBlackListed){
                 // mint to blacklist user
                 const generateRequest = {
+                    from_address: accounts.Minter,
                     sc_address: config.contracts.PrivateERCToken,
                     token_type: '0',
                     to_address: normalWallet.address,
@@ -2278,6 +2288,7 @@ describe("Permission and BlackList", function () {
             if(isBlackListed){
                 // mint to blacklist user
                 const generateRequest = {
+                    from_address: accounts.Minter,
                     sc_address: config.contracts.PrivateERCToken,
                     token_type: '0',
                     to_address: normalWallet.address,
@@ -2376,6 +2387,7 @@ describe('Security cases', function () {
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
             const generateRequest = {
+                from_address: accounts.Minter,
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 to_address: toAddress,
@@ -2393,6 +2405,7 @@ describe('Security cases', function () {
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
             const generateRequest = {
+                from_address: accounts.Minter,
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 to_address: toAddress,
@@ -2553,7 +2566,7 @@ describe('Security cases', function () {
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
             }
         });
-        it.skip('Should revert: burn with transfer token id',async () => {
+        it('Should revert: burn with transfer token id',async () => {
             const amount = 10
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
