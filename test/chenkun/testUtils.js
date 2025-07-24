@@ -71,6 +71,7 @@ async function testDirectMintByAuth() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     console.time('testDirectMint'); // Start timing
     const generateRequest = {
+        from_address: accounts.Minter,
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: accounts.Minter,
@@ -345,8 +346,8 @@ async function testConvert2USDC() {
 // testTransferFromByAuth().then();
 
 //   direct-transaction
-// testDirectMintByAuth().then()
+testDirectMintByAuth().then()
 // testDirectBurnByAuth().then()
 // testDirectTransferByAuth().then()
 
-testInstituteInformation().then()
+// testInstituteInformation().then()
