@@ -33,7 +33,7 @@ abstract contract PrivateTokenConverter is
     function convert2pUSDC(
         uint256 amount,
         TokenModel.ElGamal calldata elAmount,
-        uint256[7] calldata publicInputs,
+        uint256[8] calldata publicInputs,
         uint256[8] calldata proof
     )
     external

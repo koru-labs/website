@@ -4,7 +4,7 @@ module.exports = {
         "TOKEN_EVENT_LIB": "",
         "HAMSAL2EVENT": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
         "INSTITUTION_REGISTRATION": "",
-        "PROXY_ADDRESS": "0x88112145367238aF918eF5BbCC130bBF072c8Bc1"
+        "PROXY_ADDRESS": "0xb5cf9450A40B8B9Af49f6BC17d1352034b0f4150"
     },
     institutions: [
         {

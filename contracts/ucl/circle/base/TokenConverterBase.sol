@@ -8,7 +8,7 @@ abstract contract TokenConverterBase {
     function convert2pUSDC(
         uint256 amount,
         TokenModel.ElGamal calldata encryptedAmount,
-        uint256[7] calldata publicInputs,
+        uint256[8] calldata publicInputs,
         uint256[8] calldata proof
     ) external virtual returns (bool);
     
