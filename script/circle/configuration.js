@@ -4,7 +4,7 @@ module.exports = {
         "TOKEN_EVENT_LIB": "",
         "HAMSAL2EVENT": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
         "INSTITUTION_REGISTRATION": "",
-        "PROXY_ADDRESS": "0xb5cf9450A40B8B9Af49f6BC17d1352034b0f4150"
+        "PROXY_ADDRESS": "0x23bf8C982088055c6608636b60574a7E8c9e2eE0"
     },
     institutions: [
         {
@@ -60,6 +60,7 @@ module.exports = {
                 {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},
                 {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},
                 {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},
+                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"minter"},
                 {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}  //this is account in wlin meta-mask
             ]
         },
