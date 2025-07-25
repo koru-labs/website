@@ -3,8 +3,8 @@ module.exports = {
     {
         "TOKEN_EVENT_LIB": "",
         "HAMSAL2EVENT": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
-        "INSTITUTION_REGISTRATION": "",
-        "PROXY_ADDRESS": "0x23bf8C982088055c6608636b60574a7E8c9e2eE0"
+        "INSTITUTION_REGISTRATION": "0xA9007C99DbFf061e38D6E127c07DDE0F41053B91",
+        "PROXY_ADDRESS": ""
     },
     institutions: [
         {
