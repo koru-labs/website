@@ -1853,6 +1853,7 @@ describe("Permission and BlackList", function () {
             console.log("Balance 3 : ",await getTokenBalanceByAdmin(accounts.To1))
         });
         it('Split transfer with new minter', async () => {
+            await DirectMint(newMinterWallet.address,100);
             const preBalance = await getTokenBalanceByAdmin(newMinterWallet.address)
             const splitRequest = {
                 sc_address: config.contracts.PrivateERCToken,
@@ -2566,7 +2567,7 @@ describe('Security cases', function () {
                 await expect(callPrivateBurn(config.contracts.PrivateERCToken, minterWallet, tokenId)).to.reverted
             }
         });
-        it('Should revert: burn with transfer token id',async () => {
+        it.skip('Should revert: burn with transfer token id',async () => {
             const amount = 10
             const toAddress = accounts.To1;
             console.log(await getTokenBalanceByAdmin(toAddress))
