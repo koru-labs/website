@@ -137,8 +137,9 @@ function createClient(url) {
         return promisify(client.GetSplitToken.bind(client), request, metadata);
     };
 
-    client.getMintAllowed = async function (request) {
-        return promisify(accountClient.GetMintAllowed.bind(client), request);
+    client.getMintAllowed = async function (request, metadata) {
+        // return promisify(accountClient.GetMintAllowed.bind(client), request);
+        return promisifyByMetadata(client.GetMintAllowed.bind(client), request, metadata);
     };
 
     client.getSplitTokenList = async function (owner_address, sc_address,metadata) {
