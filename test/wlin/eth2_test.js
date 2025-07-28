@@ -12,13 +12,13 @@ async function testBalance(){
     const balance = await ethers.provider.getBalance(sender.address)
     console.log("balance:", balance)
 
-    // const tx = await sender.sendTransaction({
-    //     to: to.address,
-    //     value: 3, // 0.01 ETH
-    // });
-    //
-    // let rc = await tx.wait();
-    // console.log("tx receipt:", rc);
+    const tx = await sender.sendTransaction({
+        to: to.address,
+        value: 3, // 0.01 ETH
+    });
+
+    let rc = await tx.wait();
+    console.log("tx receipt:", rc);
 }
 
 // testChainId().then();
