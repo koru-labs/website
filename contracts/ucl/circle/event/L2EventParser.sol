@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./L2EventDefinitions.sol";
+import "./RollupEvent.sol";
 
 contract L2EventParser {
     function parseTokenSCCreated(TokenSCCreatedEvent memory e) public view {}
@@ -32,4 +33,5 @@ contract L2EventParser {
     function parseTokenActionCompleted(TokenActionCompletedEvent memory e) public view {}
     function parseTokenCanceled(TokenCanceledEvent memory e) public view {}
 
+    function parseRollupMinted(RollupMintEvent memory e) public view {}
 }
