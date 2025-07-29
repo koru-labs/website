@@ -31,6 +31,7 @@ const {
     addToBlackList,
     removeFromBlackList,
     getEvents,
+    getHamsaEvents,
     getSplitTokenList,
     getAddressBalance2,
     callPrivateTransferFrom,
@@ -38,8 +39,8 @@ const {
     getApprovedAllowance,
     allowBanksInTokenSmartContract,
     setMinterAllowed,
-    registerConfigureMinter,
-    getUserManager
+    getUserManager,
+    assertEventsContain
 } = require("../help/testHelp")
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
@@ -519,8 +520,8 @@ describe("Function Cases",function (){
         let preBalance,postBalance;
 
         before(async function () {
-            await mint(accounts.Minter,10);
-            await mint(accounts.To1,10);
+            await mint(accounts.Minter,100);
+            await mint(accounts.To1,100);
         });
 
         it('Approve transfer: minter to to1 ', async () => {
@@ -570,10 +571,9 @@ describe("Function Cases",function (){
     describe("Approve and revoke", function () {
         this.timeout(1200000);
         let preBalance,postBalance;
-
         before(async function () {
-            await mint(accounts.Minter,10);
-            await mint(accounts.To1,10);
+            await mint(accounts.Minter,100);
+            await mint(accounts.To1,100);
         });
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
@@ -603,7 +603,6 @@ describe("Function Cases",function (){
             await getTokenBalanceByAdmin(accounts.To1);
 
         });
-
         it('Approve and revoke: to1 to user cross bank all amount', async () => {
             const preBalance = await getTokenBalanceByAdmin(accounts.To1);
             const amount = await getTokenBalanceByAdmin(accounts.To1);
@@ -737,8 +736,8 @@ describe("Function Cases",function (){
     describe('Direct Transfer', function () {
         this.timeout(1200000);
         before(async function () {
-            // await DirectMint(accounts.Minter, 20);
-            // await DirectMint(accounts.To1, 20);
+            await DirectMint(accounts.Minter, 20);
+            await DirectMint(accounts.To1, 20);
         });
         it('Transfer from minter to user in bank ',async () => {
             const sender = accounts.Minter;
@@ -1203,7 +1202,6 @@ describe("Function Cases",function (){
         this.timeout(1200000);
         let prePublicBalance,postPublicBalance;
         let prePrivateBalance,postPrivateBalance;
-
         before(async function (){
             await DirectMint(accounts.Minter,100);
             await DirectMint(accounts.To1,100);
@@ -1346,7 +1344,6 @@ describe("Function Cases",function (){
             expect(postPrivateBalance).to.equal(prePrivateBalance+amount);
         });
     })
-
 });
 describe("Boundary value cases",function (){
     this.timeout(1200000);
@@ -2691,12 +2688,14 @@ describe('Security cases', function () {
             let response1 = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
             let approvedToken1 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
             console.log("approvedToken1:", approvedToken1)
-            let response2 = await generateApprove(minterWallet,accounts.Minter,userInNode1,1,to1Meta)
+
+            let response2 = await generateApprove(minterWallet,accounts.Minter,userInNode1,1,minterMeta)
+            console.log(response2)
             let approvedToken2 = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
             console.log("approvedToken2:", approvedToken2)
 
-            // await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
-            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: no allowance exists for this spender")
+            await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: allowance tokenId mismatch")
+            // await expect(callPrivateRevoke(config.contracts.PrivateERCToken,minterWallet,accounts.Spender1,approvedToken1)).revertedWith("PrivateERCToken: no allowance exists for this spender")
 
         });
         it('Should reverted: revoke with token transferred',async () => {
@@ -2934,15 +2933,182 @@ describe("Event cases", function () {
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
     })
 
-    it('UserRegisteredEvent', async () => {
-        await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
-        await getEvents("UserRegisteredEvent")
+    describe('Triggerred Event to backend', function () {
+        this.timeout(1200000);
+        let events
+        it('UserRegistered', async () => {
+            await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
+            let response = await getAccount(adminPrivateKey,client, normalWallet.address);
+            console.log("normal account: ",response)
+            await sleep(5000);
 
-        await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
-        await getEvents("UserRegisteredEvent")
+            events = await getHamsaEvents()
+            assertEventsContain(events,['UserRegistered'])
+            // expect(events[0].args[3]).equal("UserRegistered")
+            await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
+            await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
 
+        });
+        it('MinterAllowedSet',async () => {
+            await allowBanksInTokenSmartContract(newMinterWallet.address)
+            await setMinterAllowed(newMinterWallet.address)
+            await sleep(5000);
+            events = await getHamsaEvents()
+            assertEventsContain(events,['MinterAllowedSet'])
+        });
+        it('UserRemoved', async () => {
+            await updateAccountStatus(adminPrivateKey,client,normalWallet.address,0);
+            await sleep(4000);
+            let response = await getAccount(adminPrivateKey,client, normalWallet.address);
+            expect(response.account_status).equal("ACCOUNT_STATUS_INACTIVE");
+            events = await getHamsaEvents()
+            assertEventsContain(events,['UserRemoved'])
+
+            await updateAccountStatus(adminPrivateKey,client,normalWallet.address,2);
+            await sleep(4000);
+            response = await getAccount(adminPrivateKey,client, normalWallet.address);
+            expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
+            events = await getHamsaEvents()
+            assertEventsContain(events,['UserRegistered'])
+        });
+        it('Mint',async () => {
+            await DirectMint(accounts.Minter, 50)
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            assertEventsContain(events,["TokenActionCompleted","TokenMinted","TokenMintAllowedUpdated"])
+
+        });
+        it('Transfer',async () => {
+            await DirectTransfer(accounts.Minter, accounts.To1, 20,minterMeta)
+            events = await getHamsaEvents()
+            assertEventsContain(events,["TokenDeleted","TokenActionCompleted","TokenReceived","TokenDeleted"])
+        });
+        it('Burn ',async () => {
+            await DirectBurn(accounts.Minter, 10,minterMeta)
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            expect(events[0].args[3]).equal("TokenBurned")
+            expect(events[1].args[3]).equal("TokenDeleted")
+            assertEventsContain(events,["TokenBurned","TokenDeleted"])
+        });
+        it('Approve transfer', async () => {
+            preBalance = await getTokenBalanceByAdmin(accounts.To1);
+            await ReserveTokensAndTransferFrom(to1Wallet,spender1Wallet,accounts.To1,accounts.To2,1,to1Meta)
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            // expect(events[0].args[3]).equal("TokenDeleted")
+            // expect(events[1].args[3]).equal("TokenReceived")
+            // expect(events[1].args[3]).equal("TokenActionCompleted")
+            assertEventsContain(events,["TokenBurned","TokenDeleted","TokenActionCompleted"])
+        });
+        it('Approve and revoke: minter to to1 ', async () => {
+            // const amount = await getTokenBalanceByAdmin(accounts.Minter);
+            const amount = 1
+            let response = await generateApprove(minterWallet,accounts.Minter,accounts.To1,amount,minterMeta)
+            let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
+            await revoke(minterWallet,response)
+            approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.Minter)
+            expect(approvedToken).to.equal('0x0');
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            // expect(events[0].args[3]).equal("TokenCanceled")
+            // expect(events[1].args[3]).equal("TokenDeleted")
+            // expect(events[1].args[3]).equal("TokenActionCompleted")
+            assertEventsContain(events,["TokenCanceled","TokenDeleted","TokenActionCompleted"])
+        });
+        it('Convert2USDC',async () => {
+            await DirectMint(accounts.Minter,20)
+            const amount = 10;
+            const prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            const prePublicBalance = await getPublicBalance(accounts.Minter);
+            console.log({prePublicBalance,prePrivateBalance})
+            //split token
+            const splitRequest = {
+                sc_address: config.contracts.PrivateERCToken,
+                token_type: '0',
+                from_address: accounts.Minter,
+                to_address: accounts.Minter,
+                amount: amount
+            };
+            let response = await client.generateSplitToken(splitRequest,minterMeta);
+            console.log("Generate transfer Proof response:", response);
+            await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+            const tokenId = '0x'+response.transfer_token_id;
+            const convertToPUSDCResponse = {
+                token_id: response.transfer_token_id
+            };
+            let proofResult = await client.convertToUSDC(convertToPUSDCResponse, minterMeta);
+            console.log("Generate convert Proof response:", proofResult);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            let tx = await contract.convert2USDC(tokenId,proofResult.amount,input,proof);
+            await tx.wait();
+
+            const postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            const postPublicBalance = await getPublicBalance(accounts.Minter);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPrivateBalance).to.equal(prePrivateBalance-amount);
+            expect(postPublicBalance).to.equal(prePublicBalance+amount);
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            expect(events[0].args[3]).equal("TokenBurned")
+            expect(events[1].args[3]).equal("TokenDeleted")
+            expect(events[2].args[3]).equal("TokenMintAllowedUpdated")
+            expect(events[3].args[3]).equal("TokenMinted")
+            expect(events[4].args[3]).equal("TokenActionCompleted")
+
+
+        });
+        it('Convert2pUDSC: convert from USDC to pUSDC for minter',async () => {
+            const prePublicBalance = await getPublicBalance(accounts.Minter);
+            const prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log({prePublicBalance,prePrivateBalance})
+            const amount = 10;
+            const metadata = await createAuthMetadata(accounts.MinterKey);
+            const convertToPUSDCResponse = {
+                amount: amount
+            };
+            let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
+            console.log("Generate convert Proof response:", proofResult);
+            // console.log("Generate Mint Proof response:", proofResult);
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+            const elAmount = {
+                cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
+                cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
+                cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
+                cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
+            };
+            const proof = proofResult.proof.map(p => ethers.toBigInt(p));
+            const input = proofResult.input.map(i => ethers.toBigInt(i));
+            const tx = await contract.convert2pUSDC(amount,elAmount,input,proof);
+            let receipt = await tx.wait();
+            expect(receipt.status).to.equal(1);
+
+            const postPublicBalance = await getPublicBalance(accounts.Minter);
+            const postPrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log({postPublicBalance,postPrivateBalance})
+            expect(postPublicBalance).to.equal(prePublicBalance-amount);
+            expect(postPrivateBalance).to.equal(prePrivateBalance+amount);
+            events = await getHamsaEvents()
+            // for (i = 0; i < events.length; i++){
+            //     console.log(events[i].args[3])
+            // }
+            // expect(events[0].args[3]).equal("TokenSupplyUpdated")
+            // expect(events[1].args[3]).equal("TokenReceived")
+            assertEventsContain(events,["TokenSupplyUpdated","TokenReceived"])
+        });
     });
-
 });
 
 

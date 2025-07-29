@@ -1,4 +1,5 @@
 const {ethers} = require("hardhat")
+const { expect } = require("chai");
 const config = require('./../../deployments/image9.json');
 const hardhatConfig = require("../../hardhat.config");
 const accounts = require("../../deployments/account.json");
@@ -406,7 +407,6 @@ async function getEvents(eventName){
         const event_address = config.contracts.PrivateERCToken;
         const l1Bridge = await ethers.getContractAt("PrivateUSDC", event_address);
 
-
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
         const startBlock = endBlock - 3000;  // 起始区块
         const batchSize = 1000;  // 每次查询的区块范围
@@ -417,15 +417,14 @@ async function getEvents(eventName){
         for (let fromBlock = startBlock; fromBlock <= endBlock; fromBlock += batchSize) {
             const toBlock = Math.min(fromBlock + batchSize - 1, endBlock);
 
-            console.log(`Fetching events from block ${fromBlock} to ${toBlock}...`);
-
+            console.log(`Fetching events  from block ${fromBlock} to ${toBlock}...`);
+            console.log("eventName:",eventName)
             // 获取指定事件名称的事件
             const events = await l1Bridge.queryFilter(eventName, fromBlock, toBlock);
-
+            console.log("events:",events)
             if (events.length === 0) {
                 console.log(`No events found from block ${fromBlock} to ${toBlock}`);
             }
-
             events.forEach(event => {
                 console.log('Event Name:', event.eventName);  // 事件名称
                 console.log('Event Data:', event.args);   // 事件数据
@@ -436,39 +435,32 @@ async function getEvents(eventName){
         console.error('Error fetching events:', err);
     }
 }
-async function getEventsWithBlock(eventName,fromBlock,toBlock){
+async function getHamsaEvents(){
     try {
-        const event_address = config.contracts.PrivateERCToken;
-        const l1Bridge = await ethers.getContractAt("PrivateUSDC", event_address);
-
+        const event_address = config.contracts.HamsaL2Event;
+        const l1Bridge = await ethers.getContractAt("HamsaL2Event", event_address);
 
         const endBlock = await l1Provider.getBlockNumber();  // 最新区块
-        const startBlock = endBlock - 3000;  // 起始区块
-        const batchSize = 1000;  // 每次查询的区块范围
+        const startBlock = Math.max(0, endBlock - 100);  // 最多查100个区块
+        const batchSize = 100;  // 查询的区块范围
 
-        // 事件名称（确保事件名称正确）
-        // const eventName = "TokenSplitDebugEvent";  // 请根据实际情况修改事件名称
+        console.log(`Fetching events from block ${startBlock} to ${endBlock}...`);
 
-        for (let fromBlock = startBlock; fromBlock <= endBlock; fromBlock += batchSize) {
-            const toBlock = Math.min(fromBlock + batchSize - 1, endBlock);
+        // 获取指定事件名称的事件
+        const events = await l1Bridge.queryFilter('EventReceived', startBlock, endBlock);
 
-            console.log(`Fetching events from block ${fromBlock} to ${toBlock}...`);
-
-            // 获取指定事件名称的事件
-            const events = await l1Bridge.queryFilter(eventName, fromBlock, toBlock);
-
-            if (events.length === 0) {
-                console.log(`No events found from block ${fromBlock} to ${toBlock}`);
-            }
-
-            events.forEach(event => {
-                console.log('Event Name:', event.eventName);  // 事件名称
-                console.log('Event Data:', event.args);   // 事件数据
-                console.log('-----------------------------');
-            });
+        if (events.length === 0) {
+            console.log(`No events found from block ${startBlock} to ${endBlock}`);
+            return [];
+        } else {
+            console.log(`Found ${events.length} events from block ${startBlock} to ${endBlock}`);
+            // 按区块号降序排列，返回最新的事件
+            events.sort((a, b) => b.blockNumber - a.blockNumber);
+            return events;
         }
     } catch (err) {
         console.error('Error fetching events:', err);
+        return [];
     }
 }
 
@@ -602,6 +594,17 @@ async function setMinterAllowed(minterAddress) {
     }
 }
 
+function assertEventsContain(events, expectedEventNames) {
+    const actualEventNames = events
+        .filter(event => event && event.args && event.args.length > 3)
+        .map(event => event.args[3]);
+
+    expectedEventNames.forEach(eventName => {
+        expect(actualEventNames).to.include(eventName);
+    });
+}
+
+
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
@@ -629,5 +632,7 @@ module.exports =  {
     allowBanksInTokenSmartContract,
     setMinterAllowed,
     // registerConfigureMinter
-    getUserManager
+    getUserManager,
+    getHamsaEvents,
+    assertEventsContain
 }

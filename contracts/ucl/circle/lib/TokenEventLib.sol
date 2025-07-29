@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../model/TokenModel.sol";
 import "../event/IL2Event.sol";
 import "../event/L2EventDefinitions.sol";
+import "../event/RollupEvent.sol";
 
 library TokenEventLib {
 
@@ -315,5 +316,39 @@ library TokenEventLib {
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, eventAccount, "TokenActionCompleted", body);
+    }
+
+    function triggerRollupForMint( IL2Event _l2Event, address eventSource,
+        TokenModel.TokenEntity memory entity,  uint256[8] memory proof, uint256[22] calldata publicInputs) public {
+    }
+
+    function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity) public {
+    }
+
+    function triggerRollupForSplit( IL2Event _l2Event, address eventSource, uint256[] memory consumedTokenIds, TokenModel.TokenEntity memory changeToken, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    }
+
+    function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token) public {
+    }
+
+    function triggerRollupForCancel( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    }
+
+    function triggerRollupForConversionMint( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token,  uint256[8] calldata proof,
+            uint256[8] calldata publicInputs) public {
+    }
+
+    function triggerRollupForConversionBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token,  uint256[8] calldata proof,
+        uint256[7] calldata publicInputs) public {
+    }
+
+    function triggerRollupForApproval( IL2Event _l2Event, address eventSource, uint256[] memory consumedTokenIds, TokenModel.TokenEntity memory changeToken, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    }
+
+    function triggerRollupForTransferFrom( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    }
+
+    function triggerRollupForRevokeApproval( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+
     }
 } 
