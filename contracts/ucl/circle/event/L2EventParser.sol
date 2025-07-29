@@ -32,4 +32,5 @@ contract L2EventParser {
     function parseTokenActionCompleted(TokenActionCompletedEvent memory e) public view {}
     function parseTokenCanceled(TokenCanceledEvent memory e) public view {}
 
+    function parseRollupMinted(RollupMintEvent memory e) public view {}
 }
