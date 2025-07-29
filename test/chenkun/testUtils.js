@@ -124,6 +124,7 @@ async function mintForStart() {
     const generateRequest = {
       sc_address: config.contracts.PrivateERCToken,
       token_type: '0',
+      from_address:accounts.Minter,
       to_address: accounts.Minter,
       amount: 100
     };
@@ -163,6 +164,7 @@ async function testDirectMintByAuth() {
     const generateRequest = {
       sc_address: config.contracts.PrivateERCToken,
       token_type: '0',
+      from_address:accounts.Minter,
       to_address: accounts.Minter,
       amount: 100
     };
@@ -632,7 +634,7 @@ async function testGetMintAllowed() {
 async function runTests() {
   try {
     // Basic tests
-    // await mintForStart();
+    await mintForStart();
     
     // Token operation tests
     // await testReserveTokensAndBurn();
@@ -650,7 +652,7 @@ async function runTests() {
     // await testInstituteInformation();
     // await testConvert2pUSDC();
     // await testConvert2USDC();
-    await testGetMintAllowed();
+    // await testGetMintAllowed();
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);

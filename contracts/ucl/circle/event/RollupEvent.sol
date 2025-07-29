@@ -34,3 +34,7 @@ import "../model/TokenModel.sol";
         uint256 cr_x;
         uint256 cr_y;
     }
+
+    struct RollupEvent {
+        uint256[8] proof;
+    }

@@ -320,6 +320,11 @@ library TokenEventLib {
 
     function triggerRollupForMint( IL2Event _l2Event, address eventSource,
         TokenModel.TokenEntity memory entity,  uint256[8] memory proof, uint256[22] calldata publicInputs) public {
+        RollupEvent memory e = RollupEvent({
+            proof : proof
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "TokenActionCompleted", body);
     }
 
     function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity) public {
