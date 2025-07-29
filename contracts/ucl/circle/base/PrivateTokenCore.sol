@@ -135,6 +135,7 @@ abstract contract PrivateTokenCore is
         TokenUtilsLib.addTokenWithBalance(_accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
+        TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, proof, publicInputs);
 
         emit PrivateMint(to, amount);
         return true;
@@ -162,6 +163,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, tokenId);
 
         emit PrivateBurn(msg.sender, supplyDecrease);
+        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  entity);
     }
 
     function privateSplitToken(
@@ -202,8 +204,8 @@ abstract contract PrivateTokenCore is
 
         transferToken.rollbackTokenId = rollBackToken.id;
         TokenUtilsLib.addToken(_accounts, from, transferToken);
-
         TokenUtilsLib.addToken(_accounts, from, rollBackToken);
+        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  consumedTokenIds,changeToken, transferToken, rollBackToken);
     }
 
     function privateTransfer(
@@ -246,6 +248,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
+        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this),  tokenEntity);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
@@ -269,6 +272,7 @@ abstract contract PrivateTokenCore is
         transferTokens[0] = tokenId;
         TokenUtilsLib.removeTokens(_accounts, transferToken.owner, transferTokens);
         TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, tokenId);
+        TokenEventLib.triggerRollupForCancel(_l2Event, address(this), transferToken, rollbackToken);
         return true;
     }
 }
