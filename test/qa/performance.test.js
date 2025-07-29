@@ -14,7 +14,7 @@ const client = createClient(rpcUrl)
 const client1 = createClient(rpcUrl_1)
 
 const {
-    createAuthMetadata,
+    createAuthMetadata, getAddressBalance2,
 } = require("../help/testHelp")
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
@@ -79,7 +79,6 @@ async function DirectMint(receiver,amount) {
     await sleep(4000)
 }
 
-
 describe("Split Transfer Performance Test", function () {
     this.timeout(12000000); // 设置较长的超时时间
 
@@ -111,7 +110,7 @@ describe("Split Transfer Performance Test", function () {
     });
 
     // 修改批量transfer函数，使用递增的nonce
-    it.only("Performance test: Batch split transfers with sequential nonce", async function () {
+    it("Performance test: Batch split transfers with sequential nonce", async function () {
         const BATCH_SIZE = PERFORMANCE_TEST_COUNT; // 增加到100个token进行测试
         console.log(`Starting batch performance test with ${BATCH_SIZE} split transfers with sequential nonce`);
 
@@ -334,3 +333,89 @@ describe("Split Transfer Performance Test", function () {
 });
 
 
+describe.only("Batch Split Token Generation Test", function () {
+    this.timeout(1200000); // 20分钟超时
+
+    const BATCH_SIZE_PER_ACCOUNT = 20; // 每个账户执行10次，总共5*10=50次
+    let minterMeta;
+    let splitTokenResults = [];
+    const TRANSFER_AMOUNT = 1;
+    let receiverAccounts = [
+        {
+            address: accounts.Minter,
+            key: accounts.MinterKey
+        },
+        {
+            address: accounts.Minter2,
+            key: accounts.Minter2Key
+        },
+        {
+            address: accounts.Minter3,
+            key: accounts.Minter3Key
+        },
+        {
+            address: accounts.To1,
+            key: accounts.To1PrivateKey
+        },
+        {
+            address: accounts.Spender1,
+            key: accounts.Spender1Key
+        }
+    ];
+    // before(async function () {
+    //     console.log("准备测试环境...");
+    //     minterMeta = await createAuthMetadata(accounts.MinterKey);
+    //
+    //     // 确保发送方有足够的代币
+    //     const totalAmountNeeded = TRANSFER_AMOUNT * BATCH_SIZE_PER_ACCOUNT + 50;
+    //     await DirectMint(accounts.Minter, totalAmountNeeded);
+    //     await DirectMint(accounts.Minter2, totalAmountNeeded);
+    //     await DirectMint(accounts.Minter3, totalAmountNeeded);
+    //     await DirectMint(accounts.Spender1, totalAmountNeeded);
+    //     await DirectMint(accounts.To1, totalAmountNeeded);
+    //     // 验证所有接收方地址
+    //     for (const addressMap of receiverAccounts) {
+    //         await getAddressBalance2(addressMap.address);
+    //     }
+    //     console.log("所有地址验证成功");
+    // });
+
+    it("批量生成分割代币请求", async function () {
+        console.log("开始批量生成分割代币请求...");
+        const startTime = Date.now();
+
+        const accountPromises = receiverAccounts.map(async (receiverAddress, accountIndex) => {
+            const accountResults = [];
+            let meta = await createAuthMetadata(receiverAddress.key);
+            let address = receiverAddress.address;
+            for (let i = 0; i < BATCH_SIZE_PER_ACCOUNT; i++) {
+                const splitRequest = {
+                    sc_address: config.contracts.PrivateERCToken,
+                    token_type: '0',
+                    from_address: address,
+                    to_address: accounts.To2,
+                    amount: TRANSFER_AMOUNT
+                };
+
+                try {
+                    console.log(`提交请求 ${i + 1}/${BATCH_SIZE_PER_ACCOUNT} 到 ${address}`);
+                    const response = await client.generateSplitToken(splitRequest, meta);
+                    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,meta)
+                    console.log(`请求 ${i + 1} 提交成功，请求ID: ${response.request_id}`);
+                    await sleep(500)
+                } catch (error) {
+                    console.error(`请求失败 (账户 ${accountIndex + 1}, 请求 ${i + 1}):`, error.toString());
+                }
+            }
+
+            return accountResults;
+        });
+
+        // 并发执行所有账户的请求
+        await Promise.all(accountPromises);
+        
+        const endTime = Date.now();
+        const totalTime = endTime - startTime;
+        console.log(`\n所有分割代币请求已提交，总耗时: ${totalTime}ms`);
+    });
+});
