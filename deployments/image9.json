@@ -1,26 +1,26 @@
 {
   "libraries": {
-    "CurveBabyJubJub": "0x7faF61669a2E33DfE1b36eBdD22caD9E68f92336",
-    "CurveBabyJubJubHelper": "0x16C89DaCE23E1d6F158dd45142A21678CD86b006",
-    "MintAllowedTokenVerifier": "0x6fc2C35fB99b35E1b65C0d9673e385e865cD7b66",
-    "SplitTokenVerifier": "0x6dB4Da419b41FBfb7B31d0ff87190900857ff0Ab",
-    "SplitAllowanceTokenVerifier": "0x81F12484483295D75D42Fc2343E6e170a8Aa7f9E",
-    "Convert2pUSDCVerifier": "0xc88C483554D82551ddaa17baddB911962Ee8f1Cb",
-    "Convert2USDCVerifier": "0x1473B48BF295a96D058b30eabD54D1cDe97bf531",
-    "TokenVerificationLib": "0xF27bDc10b21e0C4e0cdCcFB9320bc9639EF989a5",
-    "SignatureChecker": "0x0855317A88E19c5509679965a7F319AECb3c5Ec6",
-    "TokenEventLib": "0x7Ef76e932Ebaa8836Cf955DDCB898445B69fbFB5",
-    "TokenUtilsLib": "0x1743CBd10f1f09a233787a37C45B3609e2FA2d81"
+    "CurveBabyJubJub": "0x5dEe3743edE8fD450157402fe8BDB3473336acC0",
+    "CurveBabyJubJubHelper": "0x71212ec663140f9C4d2339c532932f95a39F6821",
+    "MintAllowedTokenVerifier": "0x7AffE0A14E94c50717f4720AF3af0c46ad344B1a",
+    "SplitTokenVerifier": "0x4F2f3c68836a8F09D2D560e59879Aa054f71D509",
+    "SplitAllowanceTokenVerifier": "0x2544Cd589aAbff0ba9724690a4105231d6a8e39D",
+    "Convert2pUSDCVerifier": "0x80238AD5B21A9f253094073256d602f53131F82b",
+    "Convert2USDCVerifier": "0xa0ccb72f27FD7CB05a454908A69A241CB3B20f51",
+    "TokenVerificationLib": "0x4c2Df2fe415A89DBa4D398952776067080dAA89F",
+    "SignatureChecker": "0x0F6c73223373f814E820226536B9a6eDCe8eaC4f",
+    "TokenEventLib": "0xCD7a5D6AE8097D95F8f51d3EB706FB0D6784EAec",
+    "TokenUtilsLib": "0xcF6E57b5B29cb6f2e349AbfD56BDe2183C5F2830"
   },
   "contracts": {
-    "HamsaL2Event": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
-    "InstitutionUserRegistry": "0xb16236C6776e8988CD4D0251F350bCa06CE9c5bB",
-    "InstUserProxy": "0xA9007C99DbFf061e38D6E127c07DDE0F41053B91",
-    "PrivateERCToken": "0x609FD5FDcdbB7E3f105965861CABa8AE3BAd2479"
+    "HamsaL2Event": "0x0CFeFcC2aC5642f5D6102BA5DBFd127aDe5c6a65",
+    "InstitutionUserRegistry": "0xd4784A9E5Fa0194043eF1cf943743Cc3Ac80b03C",
+    "InstUserProxy": "0xef93045a4Eb01a06ba6b3a2d809676803bDBf362",
+    "PrivateERCToken": "0x42Ed2cAc958750Cb43af0040b7023b209dBFA065"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-07-25T03:11:01.429Z",
+    "timestamp": "2025-07-29T06:46:12.422Z",
     "network": "ucl_L2",
     "chainId": "1337"
   }
