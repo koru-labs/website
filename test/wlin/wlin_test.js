@@ -107,6 +107,7 @@ async function mintForStart() {
         amount: 10
     };
     let metaData= await createAuthMetadata(accounts.MinterKey)
+    console.log("meta: ", metaData)
     let response = await client.generateMintProof(generateRequest, metaData);
     console.log("Generate Mint Proof response:", response);
 

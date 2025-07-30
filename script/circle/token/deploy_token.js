@@ -91,7 +91,7 @@ async function setMinterAllowed(deployed) {
     const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
 
     for (const minter of minters) {
-        await privateUSDC.configurePrivacyMinter(accounts.Minter, minterAllowedAmount);
+        await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
         console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`)
     }
 }

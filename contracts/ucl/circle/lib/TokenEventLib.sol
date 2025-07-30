@@ -320,6 +320,23 @@ library TokenEventLib {
 
     function triggerRollupForMint( IL2Event _l2Event, address eventSource,
         TokenModel.TokenEntity memory entity,  uint256[8] memory proof, uint256[22] calldata publicInputs) public {
+
+        RollupToken memory token = RollupToken({
+            tokenId: entity.id,
+            owner: entity.owner,
+            status: entity.status,
+            amount: entity.amount,
+            to: entity.to,
+            rollbackTokenId:entity.rollbackTokenId
+        });
+
+        RollupMintEvent memory e = RollupMintEvent({
+            token: token,
+            proof : proof,
+            publicInputs: publicInputs
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupMint", body);
     }
 
     function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity) public {
