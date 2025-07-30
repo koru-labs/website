@@ -28,6 +28,7 @@ async function deployLibs(deployed) {
     await deployConvert2USDCVerifier(deployed);
     await deployTokenVerificationLib(deployed);
 
+
     const SignatureChecker = await ethers.getContractFactory("SignatureChecker")
     const signatureChecker = await SignatureChecker.deploy();
     await signatureChecker.waitForDeployment()

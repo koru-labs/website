@@ -77,8 +77,8 @@ async function deployTokenVerificationLib(deployed) {
     const TokenVerificationLibFactory = await ethers.getContractFactory("TokenVerificationLib", {
         libraries: {
             MintAllowedTokenVerifier: deployed.libraries.MintAllowedTokenVerifier,
-            SplitTokenVerifier: deployed.libraries.SplitTokenVerifier, // Add the new library link
-            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier, // Add the new library link
+            SplitTokenVerifier: deployed.libraries.SplitTokenVerifier,
+            SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier,
             Convert2pUSDCVerifier: deployed.libraries.Convert2pUSDCVerifier,
             Convert2USDCVerifier: deployed.libraries.Convert2USDCVerifier
         }
