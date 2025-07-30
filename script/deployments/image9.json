@@ -1,0 +1,23 @@
+{
+  "libraries": {
+    "CurveBabyJubJub": "0xbe232EaF7eD0e808022d7Af07F6837e4E5A28330",
+    "CurveBabyJubJubHelper": "0x1e0E83f1A014430EDc6767b49b2d56C89123870E",
+    "MintAllowedTokenVerifier": "0x0a0c19c632e01D630D5FCD7Ef6F4c4b2c5c6974A",
+    "SplitTokenVerifier": "0x4e6EA1f8A18F76D99DB3bd0F6409F46919692554",
+    "SplitAllowanceTokenVerifier": "0x8d088904a8a6b47054a79F08ac7B9741d2880739",
+    "TokenVerificationLib": "0x1a8eFCA03B9A5623f5FCFbAdAc50594000E299eB",
+    "TokenEventLib": "0xD5A292Dcd634Cd7c7d8Ca692eF00b0f65c9a7E4a",
+    "SignatureChecker": "0xC17258cb52E0c6E2fa664423cA3C108C9449B4d2"
+  },
+  "contracts": {
+    "HamsaL2Event": "0xdB297CC1D97B6E9F0e61aEf5FC2d98cA70Ac77fC",
+    "InstitutionUserRegistry": "0x34fD516922585FEFEfd31d83e8d33565E2325fE5",
+    "PrivateERCToken": "0x3009FffAAad3FCCe1121Ed2BFD124163d72e0E4D"
+  },
+  "accounts": {},
+  "metadata": {
+    "timestamp": "2025-07-11T04:28:30.736Z",
+    "network": "ucl_L2",
+    "chainId": "1337"
+  }
+}
