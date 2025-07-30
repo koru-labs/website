@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             "TOKEN_EVENT_LIB": "",
-            "HAMSAL2EVENT": "0xADf58Ec60826663e8c8A442ce8EE302Ad9373108",
-            "INSTITUTION_REGISTRATION": "0xeB427A4C71D2791688D566B5472fDb82fF0A6C2A",
-            "PROXY_ADDRESS": "0x15b1bD8A257bBf17C8d8e6fCD86d8eEe4c5898E7"
+            "HAMSAL2EVENT": "0xBD906a754468202E6322C068406aB48fAdF02227",
+            "INSTITUTION_REGISTRATION": "0xD046787bB645173609e5A5b352c27CFDE6ac3afc",
+            "PROXY_ADDRESS": "0x358820A757aA47D2076132fc0aF0c18330E5f37F"
         },
     institutions: [
         // {
@@ -43,7 +43,7 @@ module.exports = {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            rpcUrl: "localhost:50051",
+            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -52,7 +52,7 @@ module.exports = {
             },
             privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
             users: [
-                {address: "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB", role:"minter"},
+                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role:"minter"},
                 {address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732", role:"admin,minter"},
                 {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},
                 {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},
