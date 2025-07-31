@@ -422,6 +422,7 @@ message Token {
   uint64 amount = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
   string from_address = 5;
   string to_address = 6;
+  TokenActionStatusEnum status = 7;
 }
 
 message SplitTokenDetailRequest {
