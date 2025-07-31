@@ -21,5 +21,12 @@ async function testBalance(){
     console.log("tx receipt:", rc);
 }
 
+async function testBlockNumber() {
+    let block = await ethers.provider.getBlock("latest" );
+    console.log(block);
+
+}
+
 // testChainId().then();
 testBalance().then();
+// testBlockNumber().then();
