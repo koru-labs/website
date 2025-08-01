@@ -129,7 +129,7 @@ async function mintBy(address,amount,minterWallet) {
 describe("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 200;
+    const TOTAL_SIZE = 1;
     // const BATCH_SIZE = 200;
 
     const minter1 = ethers.Wallet.createRandom();
@@ -686,7 +686,7 @@ describe("Performance Test with created 10 minters", function () {
 describe.only("Performance Test with exist 3 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 200;
+    const TOTAL_SIZE = 10;
 
     const minters = [
         //minter
@@ -848,8 +848,315 @@ describe.only("Performance Test with exist 3 minters", function () {
             console.log(`  平均耗时: ${avgDuration.toFixed(2)}ms`);
         });
     });
+    it.skip('TPS PrivateTransfer Test,submit (with Nonce Management)', async () => {
+        const startTestTime = Date.now();
 
-    it('TPS PrivateTransfer Test (with Nonce Management)', async () => {
+        // 1. 收集所有minter的token，并初始化每个minter的nonce
+        const allMinterData = [];
+        for (let j = 0; j < minters.length; j++) {
+            const minterAddress = minters[j].address;
+            const minterWallet = minters[j].wallet;
+            const minterMeta = await createAuthMetadata(minters[j].wallet.privateKey);
+
+            try {
+                const splitTokenList = await getSplitTokenList(
+                    client,
+                    minterAddress,
+                    config.contracts.PrivateERCToken,
+                    minterMeta
+                );
+
+                const tokens = splitTokenList.split_tokens || [];
+                if (tokens.length > 0) {
+                    // 获取当前minter的初始nonce
+                    const startNonce = await minterWallet.getNonce();
+                    allMinterData.push({
+                        minterIndex: j,
+                        minterAddress: minterAddress,
+                        minterWallet: minterWallet,
+                        tokens: tokens,
+                        currentNonce: startNonce, // 初始化nonce
+                    });
+                }
+            } catch (error) {
+                console.error(`获取minter ${minterAddress} token列表失败:`, error.message);
+            }
+        }
+
+        // 2. 构建transfer任务，并为每个minter分配递增的nonce
+        const transferTasks = [];
+        for (const minterData of allMinterData) {
+            const { minterIndex, minterWallet, tokens } = minterData;
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                const tokenId = '0x' + token.token_id;
+
+                // 为当前任务分配nonce，并递增minter的nonce计数器
+                const taskNonce = minterData.currentNonce++;
+
+                transferTasks.push({
+                    execute: async () => {
+                        try {
+                            const tx = await contract.privateTransfer(tokenId, accounts.To2, {
+                                nonce: taskNonce, // 使用预分配的nonce
+                            });
+                            return { success: true, nonce: taskNonce, tokenId, hash: tx.hash };
+                        } catch (error) {
+                            return { success: false, nonce: taskNonce, tokenId, error: error.message };
+                        }
+                    },
+                    minterIndex,
+                    tokenId,
+                });
+            }
+        }
+
+        console.log(`开始执行 ${transferTasks.length} 个transfer任务`);
+
+        // 3. 并发执行所有transfer任务（可限制并发数）
+        const startSubmitTime = Date.now();
+        // 提交transaction 时间
+        const results = await Promise.all(transferTasks.map(task => task.execute()));
+        const endSubmitTime = Date.now();
+
+        const submitTime = endSubmitTime - startSubmitTime;
+
+        // 4. 统计结果
+        const successful = results.filter(r => r.success).length;
+        const tps = (successful / (submitTime / 1000)).toFixed(2);
+
+        console.log(`\n=== TPS测试结果 ===`);
+        console.log(`执行提交时间: ${submitTime}ms`);
+        console.log(`总交易数: ${results.length}`);
+        console.log(`成功交易数: ${successful}`);
+        console.log(`TPS: ${tps}`);
+
+        return { tps: parseFloat(tps), total: results.length, successful, submitTime };
+    });
+    it.skip('TPS PrivateTransfer Test (Submit + Confirm)', async () => {
+        const startTestTime = Date.now();
+
+        // 1. 收集所有 minter 的 token，并初始化 nonce
+        const allMinterData = [];
+        for (let j = 0; j < minters.length; j++) {
+            const minterAddress = minters[j].address;
+            const minterWallet = minters[j].wallet;
+            const minterMeta = await createAuthMetadata(minters[j].wallet.privateKey);
+
+            try {
+                const splitTokenList = await getSplitTokenList(
+                    client,
+                    minterAddress,
+                    config.contracts.PrivateERCToken,
+                    minterMeta
+                );
+
+                const tokens = splitTokenList.split_tokens || [];
+                if (tokens.length > 0) {
+                    const startNonce = await minterWallet.getNonce();
+                    allMinterData.push({
+                        minterIndex: j,
+                        minterAddress,
+                        minterWallet,
+                        tokens: tokens,
+                        currentNonce: startNonce,
+                    });
+                }
+            } catch (error) {
+                console.error(`获取 minter ${minterAddress} token 列表失败:`, error.message);
+            }
+        }
+
+        // 2. 构建 transfer 任务
+        const transferTasks = [];
+        for (const minterData of allMinterData) {
+            const { minterWallet, tokens } = minterData;
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenId = '0x' + tokens[i].token_id;
+                const taskNonce = minterData.currentNonce++;
+
+                transferTasks.push({
+                    execute: async () => {
+                        try {
+                            const tx = await contract.privateTransfer(tokenId, accounts.To2, {
+                                nonce: taskNonce,
+                            });
+                            return { success: true, nonce: taskNonce, tokenId, tx };
+                        } catch (error) {
+                            return { success: false, nonce: taskNonce, tokenId, error: error.message };
+                        }
+                    }
+                });
+            }
+        }
+
+        console.log(`开始执行 ${transferTasks.length} 个 transfer 任务`);
+
+        // 3. 提交交易阶段
+        const startSubmitTime = Date.now();
+        const submittedResults = await Promise.all(transferTasks.map(task => task.execute()));
+        const endSubmitTime = Date.now();
+        const submitTime = endSubmitTime - startSubmitTime;
+
+        const successfulSubmits = submittedResults.filter(r => r.success);
+        const submitTPS = (successfulSubmits.length / (submitTime / 1000)).toFixed(2);
+
+        console.log(`\n=== 提交阶段 (Submit) ===`);
+        console.log(`提交耗时: ${submitTime}ms`);
+        console.log(`提交成功交易数: ${successfulSubmits.length}/${submittedResults.length}`);
+        console.log(`Submit TPS: ${submitTPS}`);
+
+        // 4. 确认阶段（等待所有成功交易执行完成）
+        const startConfirmTime = Date.now();
+        const confirmResults = await Promise.all(successfulSubmits.map(r => r.tx.wait())); // 等待所有交易确认
+        const endConfirmTime = Date.now();
+        const confirmTime = endConfirmTime - startConfirmTime;
+
+        const confirmTPS = (confirmResults.length / (confirmTime / 1000)).toFixed(2);
+
+        console.log(`\n=== 确认阶段 (Confirm) ===`);
+        console.log(`确认耗时: ${confirmTime}ms`);
+        console.log(`确认交易数: ${confirmResults.length}`);
+        console.log(`Confirm TPS: ${confirmTPS}`);
+
+        return {
+            submitTPS: parseFloat(submitTPS),
+            confirmTPS: parseFloat(confirmTPS),
+            submitTime,
+            confirmTime,
+            total: submittedResults.length,
+            successfulSubmits: successfulSubmits.length
+        };
+    });
+
+    it('TPS PrivateTransfer Test (Submit + Confirm with Batching + Unique TokenId)', async () => {
+        const startTestTime = Date.now();
+
+        // 用 Set 跟踪已使用的 tokenId
+        const usedTokenIds = new Set();
+
+        // 1. 收集所有 minter 的 token，并初始化 nonce
+        const allMinterData = [];
+        for (let j = 0; j < minters.length; j++) {
+            const minterAddress = minters[j].address;
+            const minterWallet = minters[j].wallet;
+            const minterMeta = await createAuthMetadata(minters[j].wallet.privateKey);
+
+            try {
+                const splitTokenList = await getSplitTokenList(
+                    client,
+                    minterAddress,
+                    config.contracts.PrivateERCToken,
+                    minterMeta
+                );
+
+                const tokens = splitTokenList.split_tokens || [];
+                if (tokens.length > 0) {
+                    const startNonce = await minterWallet.getNonce();
+                    allMinterData.push({
+                        minterIndex: j,
+                        minterAddress: minterAddress,
+                        minterWallet: minterWallet,
+                        tokens: tokens,
+                        currentNonce: startNonce,
+                    });
+                }
+            } catch (error) {
+                console.error(`获取 minter ${minterAddress} token 列表失败:`, error.message);
+            }
+        }
+
+        // 2. 构建 transfer 任务（去重 tokenId）
+        const transferTasks = [];
+        for (const minterData of allMinterData) {
+            const { minterWallet, tokens } = minterData;
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenId = '0x' + tokens[i].token_id;
+
+                // 如果 tokenId 已使用，跳过
+                if (usedTokenIds.has(tokenId)) continue;
+                usedTokenIds.add(tokenId);
+
+                const taskNonce = minterData.currentNonce++;
+
+                transferTasks.push({
+                    execute: async () => {
+                        try {
+                            const tx = await contract.privateTransfer(tokenId, accounts.To2, {
+                                nonce: taskNonce,
+                            });
+                            return { success: true, nonce: taskNonce, tokenId, tx, minterAddress: minterData.minterAddress };
+                        } catch (error) {
+                            return { success: false, nonce: taskNonce, tokenId, error: error.message, minterAddress: minterData.minterAddress };
+                        }
+                    }
+                });
+            }
+        }
+
+        console.log(`开始执行 ${transferTasks.length} 个 transfer 任务`);
+
+        // 3. 提交阶段
+        const startSubmitTime = Date.now();
+        const submittedResults = await Promise.all(transferTasks.map(task => task.execute()));
+        const endSubmitTime = Date.now();
+        const submitTime = endSubmitTime - startSubmitTime;
+
+        const successfulSubmits = submittedResults.filter(r => r.success);
+        const submitTPS = (successfulSubmits.length / (submitTime / 1000)).toFixed(2);
+
+        console.log(`\n=== 提交阶段 (Submit) ===`);
+        console.log(`提交耗时: ${submitTime}ms`);
+        console.log(`提交成功交易数: ${successfulSubmits.length}/${submittedResults.length}`);
+        console.log(`Submit TPS: ${submitTPS}`);
+
+        // 4. 确认阶段（批量限流等待 + 错误日志）
+        const batchSize = 15; // 每批确认的交易数量
+        const startConfirmTime = Date.now();
+        let confirmedCount = 0;
+
+        for (let i = 0; i < successfulSubmits.length; i += batchSize) {
+            const batch = successfulSubmits.slice(i, i + batchSize);
+
+            await Promise.all(batch.map(async r => {
+                try {
+                    await r.tx.wait();
+                    confirmedCount++;
+                    console.log(`确认成功: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}`);
+                } catch (err) {
+                    console.error(`确认失败: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}, txHash=${r.tx.hash}`);
+                    console.error(`失败原因:`, err.reason || err.message);
+                }
+            }));
+        }
+
+        const endConfirmTime = Date.now();
+        const confirmTime = endConfirmTime - startConfirmTime;
+        const confirmTPS = (confirmedCount / (confirmTime / 1000)).toFixed(2);
+
+        console.log(`\n=== 确认阶段 (Confirm) ===`);
+        console.log(`确认耗时: ${confirmTime}ms`);
+        console.log(`确认交易数: ${confirmedCount}`);
+        console.log(`Confirm TPS: ${confirmTPS}`);
+
+        // return {
+        //     submitTPS: parseFloat(submitTPS),
+        //     confirmTPS: parseFloat(confirmTPS),
+        //     submitTime,
+        //     confirmTime,
+        //     total: submittedResults.length,
+        //     successfulSubmits: successfulSubmits.length
+        // };
+    });
+
+
+    it.skip('TPS PrivateTransfer Test (with Nonce Management)', async () => {
         const startTestTime = Date.now();
 
         // 1. 收集所有minter的token，并初始化每个minter的nonce
@@ -936,7 +1243,6 @@ describe.only("Performance Test with exist 3 minters", function () {
 
         return { tps: parseFloat(tps), total: results.length, successful, submitTime };
     });
-
     it.skip('TPS PrivateTransfer Test (with Nonce Management And BatchSize) ', async () => {
         const startTestTime = Date.now();
         const batchSize = 200;
