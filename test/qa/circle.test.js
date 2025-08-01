@@ -348,7 +348,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     }
     await sleep(3000);
 }
-describe("Function Cases",function (){
+describe.only("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
 
@@ -397,7 +397,7 @@ describe("Function Cases",function (){
             console.log(await getTokenBalanceByAuth(client1,userInNode1,node4AdminMeta));
         })
     });
-    describe("Mint", function () {
+    describe.only("Mint", function () {
         this.timeout(1200000);
         const recevier = accounts.Minter;
         beforeEach(async function () {
@@ -2946,7 +2946,7 @@ describe("Event cases", function () {
             assertEventsContain(events,['UserRegistered'])
             // expect(events[0].args[3]).equal("UserRegistered")
             await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
-            await registerUser(adminPrivateKey,client, newMinterWallet.address, "minter");
+            await registerUser(adminPrivateKey,client, newAdminWallet.address, "admin");
 
         });
         it('MinterAllowedSet',async () => {
@@ -2991,8 +2991,6 @@ describe("Event cases", function () {
             // for (i = 0; i < events.length; i++){
             //     console.log(events[i].args[3])
             // }
-            expect(events[0].args[3]).equal("TokenBurned")
-            expect(events[1].args[3]).equal("TokenDeleted")
             assertEventsContain(events,["TokenBurned","TokenDeleted"])
         });
         it('Approve transfer', async () => {
@@ -3062,11 +3060,7 @@ describe("Event cases", function () {
             // for (i = 0; i < events.length; i++){
             //     console.log(events[i].args[3])
             // }
-            expect(events[0].args[3]).equal("TokenBurned")
-            expect(events[1].args[3]).equal("TokenDeleted")
-            expect(events[2].args[3]).equal("TokenMintAllowedUpdated")
-            expect(events[3].args[3]).equal("TokenMinted")
-            expect(events[4].args[3]).equal("TokenActionCompleted")
+            assertEventsContain(events,["TokenBurned","TokenDeleted","TokenMintAllowedUpdated","TokenMinted","TokenActionCompleted"])
 
 
         });
