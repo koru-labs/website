@@ -146,7 +146,35 @@ abstract contract PrivateTokenApproval is
 
         emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
     }
-    
+
+    function privateRevokeApprovalFrom(address owner, uint256 allowanceTokenId) external whenNotPaused
+    notBlacklisted(msg.sender) notBlacklisted(owner) onlyAllowedBank nonReentrant virtual {
+        require(owner != address(0), "PrivateERCToken: owner is the zero address");
+        require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
+
+        uint256 onChainAllowanceTokenId = _accounts[owner].allowances[msg.sender];
+        require(onChainAllowanceTokenId != 0, "PrivateERCToken: no allowance exists for this spender");
+        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance tokenId mismatch");
+
+        TokenModel.TokenEntity memory allowanceToken = _accounts[owner].assets[onChainAllowanceTokenId];
+        require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
+        require(allowanceToken.owner == owner, "PrivateERCToken: owner is not the token owner");
+        require(allowanceToken.rollbackTokenId != 0, "PrivateERCToken: rollback token not found");
+
+        TokenModel.TokenEntity storage rollbackToken = _accounts[owner].assets[allowanceToken.rollbackTokenId];
+        require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
+        rollbackToken.status = TokenModel.TokenStatus.active;
+
+        uint256[] memory allowanceTokenIds = new uint256[](1);
+        allowanceTokenIds[0] = allowanceTokenId;
+        TokenUtilsLib.removeTokens(_accounts, owner, allowanceTokenIds);
+        TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), owner, allowanceTokenId);
+
+        TokenUtilsLib.removeAllowanceRecord(_accounts, owner, msg.sender);
+
+        emit PrivateApprovalRevoked(owner, msg.sender, allowanceTokenId);
+    }
+
     function getAllowanceTokens(address spender) external view virtual returns (uint256) {
         return _accounts[msg.sender].allowances[spender];
     }

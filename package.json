@@ -50,6 +50,7 @@
     "wlin-eth-test": "npx hardhat run test/wlin/eth2_test.js --network eth_dev",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
+    "mc-test-zkcsc" : "npx hardhat run test/mc/test_zkcsc.js --network ucl_L2",
 
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
 
