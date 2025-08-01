@@ -319,7 +319,7 @@ library TokenEventLib {
     }
 
     function triggerRollupForMint( IL2Event _l2Event, address eventSource,
-        TokenModel.TokenEntity memory entity,  uint256[8] memory proof, uint256[22] calldata publicInputs) public {
+        TokenModel.TokenEntity memory entity, uint256[22] calldata publicInputs) public {
 
         RollupToken memory token = RollupToken({
             tokenId: entity.id,
@@ -332,7 +332,6 @@ library TokenEventLib {
 
         RollupMintEvent memory e = RollupMintEvent({
             token: token,
-            proof : proof,
             publicInputs: publicInputs
         });
         bytes memory body = abi.encode(e);
@@ -340,9 +339,37 @@ library TokenEventLib {
     }
 
     function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity) public {
+        RollupToken memory token = RollupToken({
+            tokenId: entity.id,
+            owner: entity.owner,
+            status: entity.status,
+            amount: entity.amount,
+            to: entity.to,
+            rollbackTokenId:entity.rollbackTokenId
+        });
+        RollupBurnEvent memory e = RollupBurnEvent({
+            token: token
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupBurn", body);
     }
 
-    function triggerRollupForSplit( IL2Event _l2Event, address eventSource, uint256[] memory consumedTokenIds, TokenModel.TokenEntity memory changeToken, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    function triggerRollupForSplit( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity, uint256[] memory consumedTokenIds, uint256[20] calldata publicInputs) public {
+        RollupToken memory token = RollupToken({
+            tokenId: entity.id,
+            owner: entity.owner,
+            status: entity.status,
+            amount: entity.amount,
+            to: entity.to,
+            rollbackTokenId:entity.rollbackTokenId
+        });
+        RollupSplitEvent memory e = RollupSplitEvent({
+            token: token,
+            consumedTokenIds: consumedTokenIds,
+            publicInputs: publicInputs
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupSplit", body);
     }
 
     function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token) public {
