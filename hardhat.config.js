@@ -75,7 +75,7 @@ module.exports = {
             ],
         },
         eth_dev: {
-            url: 'http://eth-dev2.hamsa-ucl.com:32818',
+            url: 'http://eth-dev2.hamsa-ucl.com:32872',
             accounts: [
                 "bcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31",  // kurtosis account
                 "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
