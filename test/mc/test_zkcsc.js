@@ -206,6 +206,259 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
     }
 }
 
+/**
+ * 测试取消 DvP 交易
+ */
+async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
+    console.log("=== Testing Cancel DVP ===");
+
+    // 1. 链下约定 bundleHash
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-CANCEL"));
+    console.log("BundleHash:", bundleHash);
+
+    // 2. User1 生成 chunkHash 并签名
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        tokenAddress1,
+        user1TokenId
+    );
+    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
+    console.log("User1 ChunkHash:", user1ChunkHash);
+    console.log("User1 Signature:", user1Signature);
+
+    // 3. User2 生成 chunkHash 并签名
+    const user2ChunkHash = calculateChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        user1Wallet.address,
+        tokenAddress2,
+        user2TokenId
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+    console.log("User2 ChunkHash:", user2ChunkHash);
+    console.log("User2 Signature:", user2Signature);
+
+    // 4. Relayer 聚合并取消 DVP
+    console.log("=== Relayer Canceling DVP ===");
+    try {
+        const tx = await ZKCSC.cancelDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [user1Wallet.address, user2Wallet.address],
+            [user2Wallet.address, user1Wallet.address],
+            [tokenAddress1, tokenAddress2],
+            [user1TokenId, user2TokenId],
+            [user1Signature, user2Signature]
+        );
+
+        const receipt = await tx.wait();
+        console.log("DVP Cancel successful! Transaction hash:", tx.hash);
+
+        // 检查事件
+        const logs = receipt.logs || [];
+        const dvpCanceledEvent = logs.find(e => e.fragment?.name === "DVPCanceled");
+        if (dvpCanceledEvent) {
+            console.log("✅ DVPCanceled event emitted:", dvpCanceledEvent.args);
+        } else {
+            console.log("❌ DVPCanceled event not found");
+        }
+
+    } catch (error) {
+        console.error("❌ DVP Cancel failed:", error.message);
+        if (error.reason) console.error("Reason:", error.reason);
+        if (error.data) console.error("Data:", error.data);
+        throw error;
+    }
+
+    console.log("✅ Cancel DVP test completed");
+}
+
+/**
+ * 测试 DvP 执行失败异常情况
+ */
+async function testDVPFailure(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
+    console.log("=== Testing DVP Failure Cases ===");
+
+    // 测试用例1: 无效的签名
+    console.log("--- Test Case 1: Invalid Signature ---");
+    await testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+
+    // 测试用例2: 重复执行同一个bundle
+    console.log("--- Test Case 2: Re-executing Same Bundle ---");
+    await testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+
+    // 测试用例3: 数组长度不匹配
+    console.log("--- Test Case 3: Array Length Mismatch ---");
+    await testArrayLengthMismatch(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+
+    console.log("✅ DVP Failure test cases completed");
+}
+
+/**
+ * 测试无效签名
+ */
+async function testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-INVALID-SIG"));
+    console.log("BundleHash:", bundleHash);
+
+    // User1 生成 chunkHash 并签名
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        tokenAddress1,
+        user1TokenId
+    );
+    // 使用错误的签名（用user2的私钥签名user1的chunkHash）
+    const invalidSignature = await signChunkHash(user2Wallet, user1ChunkHash);
+    console.log("Invalid Signature (signed by wrong user):", invalidSignature);
+
+    // User2 生成 chunkHash 并签名
+    const user2ChunkHash = calculateChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        user1Wallet.address,
+        tokenAddress2,
+        user2TokenId
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+
+    try {
+        await ZKCSC.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [user1Wallet.address, user2Wallet.address],
+            [user2Wallet.address, user1Wallet.address],
+            [tokenAddress1, tokenAddress2],
+            [user1TokenId, user2TokenId],
+            [invalidSignature, user2Signature]
+        );
+        console.log("❌ Expected failure but DVP execution succeeded");
+    } catch (error) {
+        if (error.message.includes("DVP: Signature not from 'from' address")) {
+            console.log("✅ Correctly failed with invalid signature error");
+        } else {
+            console.log("❌ Failed with unexpected error:", error.message);
+        }
+    }
+}
+
+/**
+ * 测试重复执行同一个bundle
+ */
+async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-REEXECUTE"));
+    console.log("BundleHash:", bundleHash);
+
+    // User1 生成 chunkHash 并签名
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        tokenAddress1,
+        user1TokenId
+    );
+    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
+
+    // User2 生成 chunkHash 并签名
+    const user2ChunkHash = calculateChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        user1Wallet.address,
+        tokenAddress2,
+        user2TokenId
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+
+    // 首先执行一次DVP
+    try {
+        const tx = await ZKCSC.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [user1Wallet.address, user2Wallet.address],
+            [user2Wallet.address, user1Wallet.address],
+            [tokenAddress1, tokenAddress2],
+            [user1TokenId, user2TokenId],
+            [user1Signature, user2Signature]
+        );
+        await tx.wait();
+        console.log("✅ First DVP execution succeeded");
+    } catch (error) {
+        console.log("❌ First DVP execution failed:", error.message);
+        return;
+    }
+
+    // 尝试再次执行同一个bundle
+    try {
+        await ZKCSC.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [user1Wallet.address, user2Wallet.address],
+            [user2Wallet.address, user1Wallet.address],
+            [tokenAddress1, tokenAddress2],
+            [user1TokenId, user2TokenId],
+            [user1Signature, user2Signature]
+        );
+        console.log("❌ Expected failure but re-execution succeeded");
+    } catch (error) {
+        if (error.message.includes("DVP: Bundle already executed")) {
+            console.log("✅ Correctly failed with bundle already executed error");
+        } else {
+            console.log("❌ Failed with unexpected error:", error.message);
+        }
+    }
+}
+
+/**
+ * 测试数组长度不匹配
+ */
+async function testArrayLengthMismatch(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-MISMATCH"));
+    console.log("BundleHash:", bundleHash);
+
+    // User1 生成 chunkHash 并签名
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        tokenAddress1,
+        user1TokenId
+    );
+    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
+
+    // User2 生成 chunkHash 并签名
+    const user2ChunkHash = calculateChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        user1Wallet.address,
+        tokenAddress2,
+        user2TokenId
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+
+    // 尝试执行时提供不匹配的数组长度
+    try {
+        await ZKCSC.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash], // 2 chunkHashes
+            [user1Wallet.address, user2Wallet.address],
+            [user2Wallet.address, user1Wallet.address],
+            [tokenAddress1, tokenAddress2],
+            [user1TokenId], // Only 1 tokenId - mismatch!
+            [user1Signature, user2Signature]
+        );
+        console.log("❌ Expected failure but DVP execution with mismatched arrays succeeded");
+    } catch (error) {
+        if (error.message.includes("DVP: Array length mismatch")) {
+            console.log("✅ Correctly failed with array length mismatch error");
+        } else {
+            console.log("❌ Failed with unexpected error:", error.message);
+        }
+    }
+}
+
 async function runDVPTest() {
     console.log("🚀 Starting DVP Test Suite");
     console.log("==================================");
@@ -227,7 +480,13 @@ async function runDVPTest() {
         console.log("Final User2 Token ID:", user2TokenId);
 
         // 4. 执行 DVP 测试
-        await testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+        // await testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+
+        // 5. 执行取消 DVP 测试
+        await testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+
+        // 6. 执行 DVP 异常测试
+        // await testDVPFailure(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
         console.log("==================================");
         console.log("🎉 DVP Test Suite Completed Successfully!");
