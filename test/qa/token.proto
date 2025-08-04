@@ -159,6 +159,15 @@ service TokenService {
       description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
     };
   };
+  rpc GetApproveTokenList       (ApproveTokenListRequest)        returns (ApproveTokenListResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/approve/tokens"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
+    };
+  };
   rpc GetSplitTokenDetail       (SplitTokenDetailRequest)        returns (SplitTokenDetailResponse) {
     option (google.api.http) = {
       post: "/v1/query/split/tokens/detail"
@@ -239,7 +248,7 @@ message GenerateSplitRequest {
   string from_address = 3;
   string to_address = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
   uint64 amount = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
+  string comment = 6;
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["sc_address", "from_address", "amount"]
@@ -255,7 +264,7 @@ message GenerateApproveRequest {
   string to_address =4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
   string spender_address =5;
   uint64 amount = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-
+  string comment = 7;
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["sc_address","from_address", "amount"]
@@ -286,6 +295,7 @@ message GenerateTransferRequest {
   string from_address = 3 ;
   string to_address = 4 ;
   uint64 amount = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}] ;
+  string comment = 6;
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
@@ -300,6 +310,7 @@ message GenerateBurnRequest {
   uint64 token_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
   string from_address = 3 ;
   uint64 amount = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  string comment = 5;
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
@@ -411,7 +422,23 @@ message SplitTokenListRequest {
   };
 }
 
+message ApproveTokenListRequest {
+  string owner_address = 1 ;
+  string sc_address = 2 ;
+
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema:{
+      required:["owner_address", "sc_address"]
+    },
+    example: "{\"ownerAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\"}"
+  };
+}
+
 message SplitTokenListResponse {
+  repeated Token split_tokens = 1;
+}
+
+message ApproveTokenListResponse {
   repeated Token split_tokens = 1;
 }
 
@@ -422,7 +449,9 @@ message Token {
   uint64 amount = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
   string from_address = 5;
   string to_address = 6;
-  TokenActionStatusEnum status = 7;
+  string spender_address = 7;
+  string comment = 8;
+  TokenActionStatusEnum status = 9;
 }
 
 message SplitTokenDetailRequest {

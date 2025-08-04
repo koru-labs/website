@@ -150,6 +150,14 @@ function createClient(url) {
         return promisifyByMetadata(client.GetSplitTokenList.bind(client), request,metadata);
     };
 
+    client.getApproveTokenList = async function (owner_address, sc_address,metadata) {
+        const request = {
+            owner_address: owner_address,
+            sc_address: sc_address,
+        };
+        return promisifyByMetadata(client.GetApproveTokenList.bind(client), request,metadata);
+    };
+
     client.getSplitTokenDetail = async function (token_id) {
         const request = {
             token_id: token_id,
