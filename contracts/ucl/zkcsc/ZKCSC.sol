@@ -5,15 +5,10 @@ import "../circle/base/IPrivateERCToken.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-
 contract ZKCSC is ReentrancyGuard {
     using ECDSA for bytes32;
 
-    event DVPExecuted(
-        bytes32 indexed bundleHash,
-        address indexed relayer,
-        uint256 totalTransfers
-    );
+    event DVPExecuted(bytes32 indexed bundleHash, address indexed relayer, uint256 totalTransfers);
 
     event TransferFailed(
         bytes32 indexed bundleHash,
@@ -39,10 +34,10 @@ contract ZKCSC is ReentrancyGuard {
         require(n > 0, "DVP: No transfers provided");
         require(
             n == froms.length &&
-            n == tos.length &&
-            n == tokenAddresses.length &&
-            n == tokenIds.length &&
-            n == signatures.length,
+                n == tos.length &&
+                n == tokenAddresses.length &&
+                n == tokenIds.length &&
+                n == signatures.length,
             "DVP: Array length mismatch"
         );
 
@@ -59,29 +54,55 @@ contract ZKCSC is ReentrancyGuard {
             try this.recoverSigner(chunkHashes[i], signatures[i]) returns (address recovered) {
                 signer = recovered;
             } catch {
-                emit TransferFailed(bundleHash, tokenAddresses[i], tokenIds[i], froms[i], tos[i], "Signature recovery failed");
+                emit TransferFailed(
+                    bundleHash,
+                    tokenAddresses[i],
+                    tokenIds[i],
+                    froms[i],
+                    tos[i],
+                    "Signature recovery failed"
+                );
                 revert("DVP: Invalid signature");
             }
 
             require(signer == froms[i], "DVP: Signature not from 'from' address");
 
-            try IPrivateERCToken(tokenAddresses[i]).privateTransferFrom(
-                tokenIds[i],
-                froms[i],
-                tos[i]
-            ) returns (bool success) {
+            try IPrivateERCToken(tokenAddresses[i]).privateTransferFrom(tokenIds[i], froms[i], tos[i]) returns (
+                bool success
+            ) {
                 if (!success) {
-                    emit TransferFailed(bundleHash, tokenAddresses[i], tokenIds[i], froms[i], tos[i], "privateTransferFrom returned false");
-                    IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]);
+                    emit TransferFailed(
+                        bundleHash,
+                        tokenAddresses[i],
+                        tokenIds[i],
+                        froms[i],
+                        tos[i],
+                        "privateTransferFrom returned false"
+                    );
+                    try IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]) {} catch {}
                     revert("DVP: Transfer failed");
                 }
             } catch Error(string memory reason) {
-                emit TransferFailed(bundleHash, tokenAddresses[i], tokenIds[i], froms[i], tos[i], string(abi.encodePacked("Transfer reverted: ", reason)));
-                IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]);
+                emit TransferFailed(
+                    bundleHash,
+                    tokenAddresses[i],
+                    tokenIds[i],
+                    froms[i],
+                    tos[i],
+                    string(abi.encodePacked("Transfer reverted: ", reason))
+                );
+                try IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]) {} catch {}
                 revert("DVP: Transfer failed");
             } catch (bytes memory /*lowLevelData*/) {
-                emit TransferFailed(bundleHash, tokenAddresses[i], tokenIds[i], froms[i], tos[i], "Unknown low-level transfer error");
-                IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]);
+                emit TransferFailed(
+                    bundleHash,
+                    tokenAddresses[i],
+                    tokenIds[i],
+                    froms[i],
+                    tos[i],
+                    "Unknown low-level transfer error"
+                );
+                try IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]) {} catch {}
                 revert("DVP: Transfer failed");
             }
         }
@@ -100,13 +121,7 @@ contract ZKCSC is ReentrancyGuard {
         address tokenAddress,
         uint256 tokenId
     ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
-            bundleHash,
-            from,
-            to,
-            tokenAddress,
-            tokenId
-        ));
+        return keccak256(abi.encode(bundleHash, from, to, tokenAddress, tokenId));
     }
 
     function hasBundleExecuted(bytes32 bundleHash) external view returns (bool) {
