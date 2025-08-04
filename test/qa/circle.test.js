@@ -123,7 +123,8 @@ async function ReserveTokensAndTransfer(toAddress,amount,metadata) {
         token_type: '0',
         from_address: accounts.Minter,
         to_address: toAddress,
-        amount: amount
+        amount: amount,
+        comment:"transfer"
     };
     console.log("generateSplitTokenRequest:", splitRequest)
     try {
@@ -147,7 +148,8 @@ async function TransferSplitProof(toAddress,amount,metadata) {
         token_type: '0',
         from_address: accounts.Minter,
         to_address: toAddress,
-        amount: amount
+        amount: amount,
+        comment:"transfer"
     };
     let response = await client.generateSplitToken(splitRequest,metadata);
     console.log("Generate transfer Proof response:", response);
@@ -160,7 +162,8 @@ async function BurnSplitProof(amount) {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        amount: amount
+        amount: amount,
+        comment:"burn"
     };
     let response = await client.generateSplitToken(splitRequest,metadata);
     console.log("Generate burn Proof response:", response);
@@ -175,7 +178,8 @@ async function ReserveTokensAndTransferFrom(fromWallet,spenderWallet,fromAddress
         from_address: fromAddress,
         spender_address : accounts.Spender1,
         to_address: toAddress,
-        amount: amount
+        amount: amount,
+        comment:"ApproveTransfer"
     };
     console.log("generateSplitTokenRequest:", splitRequest)
     try {
@@ -200,7 +204,8 @@ async function generateApprove(fromWallet,fromAddress,toAddress,amount,fromMetad
         from_address: fromAddress,
         spender_address : accounts.Spender1,
         to_address: toAddress,
-        amount: amount
+        amount: amount,
+        comment:"ApproveTransfer"
     };
     console.log("generateSplitTokenRequest:", splitRequest)
     try {
@@ -230,7 +235,8 @@ async function ReserveTokensAndBurn(amount) {
             sc_address: config.contracts.PrivateERCToken,
             token_type: '0',
             from_address: accounts.Minter,
-            amount: amount
+            amount: amount,
+            comment:"Burn"
         };
         let response = await client.generateSplitToken(splitRequest,metadata);
         console.log("Generate burn Proof response:", response);
@@ -312,7 +318,8 @@ async function DirectTransfer(from,receiver,amount,meta) {
         token_type: '0',
         from_address: from,
         to_address : receiver,
-        amount: amount
+        amount: amount,
+        comment:"Transfer"
     };
     let response = await client.generateDirectTransfer(splitRequest,meta);
     console.log("Generate transfer Proof response:", response);
@@ -324,7 +331,8 @@ async function DirectBurn(address,amount,meta) {
             sc_address: config.contracts.PrivateERCToken,
             token_type: '0',
             from_address: address,
-            amount: amount
+            amount: amount,
+            comment:"Burn"
         };
 
     let response = await client.generateDirectBurn(splitRequest,meta);
@@ -819,7 +827,8 @@ describe.only("Function Cases",function (){
                     sc_address: config.contracts.PrivateERCToken,
                     token_type: '0',
                     from_address: burner,
-                    amount: amount
+                    amount: amount,
+                    comment: "Burn"
                 };
 
             let response = await client.generateDirectBurn(splitRequest,minterMeta);
@@ -985,7 +994,8 @@ describe.only("Function Cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'Convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -1173,7 +1183,8 @@ describe.only("Function Cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -1188,7 +1199,8 @@ describe.only("Function Cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 // to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate burn Proof response:", response);
@@ -1217,7 +1229,8 @@ describe.only("Function Cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -1255,7 +1268,8 @@ describe.only("Function Cases",function (){
                 token_type: '0',
                 from_address: userAddress,
                 to_address: userAddress,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,userMeta);
             console.log("Generate transfer Proof response:", response);
@@ -1525,7 +1539,8 @@ describe("Boundary value cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress1,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateSplitToken(splitRequest,minterMeta);
@@ -1551,7 +1566,8 @@ describe("Boundary value cases",function (){
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To2,
-                amount: amount
+                amount: amount,
+                comment: 'approve'
             };
             let response = await client.generateApproveProof(splitRequest,to1Meta);
             console.log("Generate transfer Proof response:", response);
@@ -1566,7 +1582,8 @@ describe("Boundary value cases",function (){
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To2,
-                amount: amount
+                amount: amount,
+                comment: 'approve'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateApproveProof(splitRequest,to1Meta);
@@ -1712,7 +1729,8 @@ describe("Boundary value cases",function (){
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -1857,7 +1875,8 @@ describe("Permission and BlackList", function () {
                 token_type: '0',
                 from_address: newMinterWallet.address,
                 to_address: normalWallet.address,
-                amount: 5
+                amount: 5,
+                comment: 'transfer'
             };
             let response = await client.generateSplitToken(splitRequest,newMinterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,newMinterMeta)
@@ -1874,7 +1893,8 @@ describe("Permission and BlackList", function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: normalWallet.address,
-                amount: 5
+                amount: 5,
+                comment: 'transfer'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
@@ -1886,7 +1906,8 @@ describe("Permission and BlackList", function () {
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 from_address: newMinterWallet.address,
-                amount: 5
+                amount: 5,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,newMinterMeta);
             console.log("Generate burn Proof response:", response);
@@ -1898,7 +1919,8 @@ describe("Permission and BlackList", function () {
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
                 from_address: accounts.Minter,
-                amount: 5
+                amount: 5,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate burn Proof response:", response);
@@ -2431,7 +2453,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
@@ -2450,7 +2473,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateSplitToken(splitRequest,minterMeta);
@@ -2466,7 +2490,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateSplitToken(splitRequest,minterMeta);
@@ -2486,7 +2511,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response1 = await client.generateSplitToken(splitRequest,minterMeta);
@@ -2519,7 +2545,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 // to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'transfer'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             let tokenResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta);
@@ -2538,7 +2565,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 // to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             let tokenResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta);
@@ -2553,7 +2581,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 // to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             let tokenResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta);
@@ -2574,7 +2603,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: toAddress,
-                amount: amount
+                amount: amount,
+                comment: 'burn'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             let tokenResult = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta);
@@ -2601,7 +2631,8 @@ describe('Security cases', function () {
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To2,
-                amount: 10
+                amount: 10,
+                comment: 'approve'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             // console.log("minter address: ",newMinter.address)
@@ -2618,7 +2649,8 @@ describe('Security cases', function () {
                 from_address: accounts.Minter,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To1,
-                amount: 10
+                amount: 10,
+                comment: 'approve'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateApproveProof(splitRequest,newAdminMeta);
@@ -2634,7 +2666,8 @@ describe('Security cases', function () {
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To2,
-                amount: 10
+                amount: 10,
+                comment: 'approve'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             console.log("minter address: ",newMinter.address)
@@ -2657,7 +2690,8 @@ describe('Security cases', function () {
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: accounts.To2,
-                amount: 10
+                amount: 10,
+                comment: 'approve'
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             console.log("minter address: ",newMinter.address)
@@ -2727,7 +2761,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -2750,7 +2785,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: 10
+                amount: 10,
+                comment: 'convert'
             };
             let response_10 = await client.generateSplitToken(splitRequest_10,minterMeta);
             console.log("Generate transfer Proof response:", response_10);
@@ -2769,7 +2805,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: 20
+                amount: 20,
+                comment: 'convert'
             };
             let response_20 = await client.generateSplitToken(splitRequest_20,minterMeta);
             console.log("Generate transfer Proof response:", response_10);
@@ -2794,7 +2831,8 @@ describe('Security cases', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);
@@ -3034,7 +3072,8 @@ describe("Event cases", function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.Minter,
-                amount: amount
+                amount: amount,
+                comment: 'convert'
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             console.log("Generate transfer Proof response:", response);

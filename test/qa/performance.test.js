@@ -232,7 +232,8 @@ describe("Performance Test with created 10 minters", function () {
                     token_type: '0',
                     from_address: minter.address,
                     to_address: accounts.To2,
-                    amount: 1
+                    amount: 1,
+                    comment: "transfer"
                 };
 
                 try {
@@ -280,7 +281,8 @@ describe("Performance Test with created 10 minters", function () {
                     token_type: '0',
                     from_address: minter.address,
                     to_address: accounts.To2,
-                    amount: 1
+                    amount: 1,
+                    comment: "transfer"
                 };
                 try {
                     const requestStartTime = Date.now();
@@ -686,7 +688,7 @@ describe("Performance Test with created 10 minters", function () {
 describe.only("Performance Test with exist 3 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 10;
+    const TOTAL_SIZE = 100;
 
     const minters = [
         //minter
@@ -734,7 +736,8 @@ describe.only("Performance Test with exist 3 minters", function () {
                     token_type: '0',
                     from_address: minter.address,
                     to_address: accounts.To2,
-                    amount: 1
+                    amount: 1,
+                    comment: "transfer"
                 };
 
                 try {
@@ -782,7 +785,8 @@ describe.only("Performance Test with exist 3 minters", function () {
                     token_type: '0',
                     from_address: minter.address,
                     to_address: accounts.To2,
-                    amount: 1
+                    amount: 1,
+                    comment:"transfer"
                 };
                 try {
                     const requestStartTime = Date.now();
@@ -1116,13 +1120,17 @@ describe.only("Performance Test with exist 3 minters", function () {
         console.log(`提交成功交易数: ${successfulSubmits.length}/${submittedResults.length}`);
         console.log(`Submit TPS: ${submitTPS}`);
 
+        console.log(`\n=== 等待transfer 确认===`);
         // 4. 确认阶段（批量限流等待 + 错误日志）
-        const batchSize = 15; // 每批确认的交易数量
+        const batchSize = 20; // 每批确认的交易数量
         const startConfirmTime = Date.now();
         let confirmedCount = 0;
 
-        for (let i = 0; i < successfulSubmits.length; i += batchSize) {
-            const batch = successfulSubmits.slice(i, i + batchSize);
+        // 按照 nonce 排序，确保按顺序处理
+        const sortedSuccessfulSubmits = successfulSubmits.sort((a, b) => a.nonce - b.nonce);
+
+        for (let i = 0; i < sortedSuccessfulSubmits.length; i += batchSize) {
+            const batch = sortedSuccessfulSubmits.slice(i, i + batchSize);
 
             await Promise.all(batch.map(async r => {
                 try {
