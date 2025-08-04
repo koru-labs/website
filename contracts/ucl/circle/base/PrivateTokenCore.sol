@@ -117,8 +117,9 @@ abstract contract PrivateTokenCore is
             cr_x: publicInputs[6],
             cr_y: publicInputs[7]
         });
-        _privateMinterAllowed[msg.sender] = newAllowed;
+
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, _privateMinterAllowed[msg.sender], newAllowed);
+        _privateMinterAllowed[msg.sender] = newAllowed;
 
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
         (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyIncrease);
