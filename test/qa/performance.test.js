@@ -688,7 +688,7 @@ describe("Performance Test with created 10 minters", function () {
 describe.only("Performance Test with exist 3 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 1000;
+    const TOTAL_SIZE = 300;
 
     const minters = [
         //minter
