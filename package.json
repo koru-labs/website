@@ -48,6 +48,7 @@
     "wlin-inst-test": "npx hardhat run test/wlin/institution_registry_test.js --network ucl_L2",
     "wlin-proxy-test": "npx hardhat run test/wlin/proxy_test.js --network ucl_L2",
     "wlin-eth-test": "npx hardhat run test/wlin/eth2_test.js --network eth_dev",
+    "wlin-perf": "npx hardhat run test/wlin/performance_test.js --network ucl_L2",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
 
