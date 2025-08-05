@@ -25,7 +25,7 @@ contract HamsaL2Event is IL2Event {
 
     function sendRollupEvent(address eventSource, string memory topic, bytes memory eventBody) public {
         rollupEventCont ++;
-        string memory eventId=Strings.toString(eventCont);
+        string memory eventId=Strings.toString(rollupEventCont);
 
         emit RollupEventReceived(
             eventId,
