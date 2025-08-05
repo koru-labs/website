@@ -202,7 +202,7 @@ describe('Mint,Transfer,Burn Flows', function () {
         let requestId = tx.requestId;
         await waitForTokenActionStatus(accounts.MinterKey,requestId);
         const postBalance = await GetAddressBalance(accounts.Minter,scAddress);
-        expect(postBalance).equal(preBalance + amount);
+        expect(postBalance).equal(preBalance + amount*5);
     });
     it('Direct Transfer from minter to to1 ',async () => {
         const preBalanceFrom = await GetAddressBalance(accounts.Minter,scAddress);

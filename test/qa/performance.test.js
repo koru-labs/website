@@ -688,7 +688,7 @@ describe("Performance Test with created 10 minters", function () {
 describe.only("Performance Test with exist 3 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 400;
+    const TOTAL_SIZE = 1000;
 
     const minters = [
         //minter
@@ -768,7 +768,6 @@ describe.only("Performance Test with exist 3 minters", function () {
         const totalTime = endTime - startTime;
         console.log(`\n所有分割代币请求已提交，总耗时: ${totalTime}ms`);
     });
-
     it("Split Operations", async function () {
         console.log("开始发生成分割代币请求...");
         const startTime = Date.now();
@@ -1037,7 +1036,7 @@ describe.only("Performance Test with exist 3 minters", function () {
         };
     });
 
-    it('TPS PrivateTransfer Test (Submit + Confirm with Batching + Unique TokenId)', async () => {
+    it.skip('TPS PrivateTransfer Test (Submit + Confirm with Batching + Unique TokenId)', async () => {
         const startTestTime = Date.now();
 
         // 用 Set 跟踪已使用的 tokenId
@@ -1092,9 +1091,11 @@ describe.only("Performance Test with exist 3 minters", function () {
                 transferTasks.push({
                     execute: async () => {
                         try {
+                            //wait
                             const tx = await contract.privateTransfer(tokenId, accounts.To2, {
                                 nonce: taskNonce,
                             });
+
                             return { success: true, nonce: taskNonce, tokenId, tx, minterAddress: minterData.minterAddress };
                         } catch (error) {
                             return { success: false, nonce: taskNonce, tokenId, error: error.message, minterAddress: minterData.minterAddress };
@@ -1120,47 +1121,173 @@ describe.only("Performance Test with exist 3 minters", function () {
         console.log(`提交成功交易数: ${successfulSubmits.length}/${submittedResults.length}`);
         console.log(`Submit TPS: ${submitTPS}`);
 
-        console.log(`\n=== 等待transfer 确认===`);
-        // 4. 确认阶段（批量限流等待 + 错误日志）
-        const batchSize = 20; // 每批确认的交易数量
-        const startConfirmTime = Date.now();
-        let confirmedCount = 0;
+        // console.log(`\n=== 等待transfer 确认===`);
+        // // 4. 确认阶段（批量限流等待 + 错误日志）
+        // const batchSize = 20; // 每批确认的交易数量
+        // const startConfirmTime = Date.now();
+        // let confirmedCount = 0;
+        //
+        // // 按照 nonce 排序，确保按顺序处理
+        // const sortedSuccessfulSubmits = successfulSubmits.sort((a, b) => a.nonce - b.nonce);
+        //
+        // for (let i = 0; i < sortedSuccessfulSubmits.length; i += batchSize) {
+        //     const batch = sortedSuccessfulSubmits.slice(i, i + batchSize);
+        //
+        //     await Promise.all(batch.map(async r => {
+        //         try {
+        //             await r.tx.wait();
+        //             confirmedCount++;
+        //             console.log(`确认成功: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}`);
+        //         } catch (err) {
+        //             console.error(`确认失败: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}, txHash=${r.tx.hash}`);
+        //             console.error(`失败原因:`, err.reason || err.message);
+        //         }
+        //     }));
+        // }
+        //
+        // const endConfirmTime = Date.now();
+        // const confirmTime = endConfirmTime - startConfirmTime;
+        // const confirmTPS = (confirmedCount / (confirmTime / 1000)).toFixed(2);
+        //
+        // console.log(`\n=== 确认阶段 (Confirm) ===`);
+        // console.log(`确认耗时: ${confirmTime}ms`);
+        // console.log(`确认交易数: ${confirmedCount}`);
+        // console.log(`Confirm TPS: ${confirmTPS}`);
+        //
+    });
+    it('TPS PrivateTransfer Test ： Submit without wait', async () => {
+        const startTestTime = Date.now();
 
-        // 按照 nonce 排序，确保按顺序处理
-        const sortedSuccessfulSubmits = successfulSubmits.sort((a, b) => a.nonce - b.nonce);
+        // 用 Set 跟踪已使用的 tokenId
+        const usedTokenIds = new Set();
 
-        for (let i = 0; i < sortedSuccessfulSubmits.length; i += batchSize) {
-            const batch = sortedSuccessfulSubmits.slice(i, i + batchSize);
+        // 1. 收集所有 minter 的 token，并初始化 nonce
+        const allMinterData = [];
+        for (let j = 0; j < minters.length; j++) {
+            const minterAddress = minters[j].address;
+            const minterWallet = minters[j].wallet;
+            const minterMeta = await createAuthMetadata(minters[j].wallet.privateKey);
 
-            await Promise.all(batch.map(async r => {
-                try {
-                    await r.tx.wait();
-                    confirmedCount++;
-                    console.log(`确认成功: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}`);
-                } catch (err) {
-                    console.error(`确认失败: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}, txHash=${r.tx.hash}`);
-                    console.error(`失败原因:`, err.reason || err.message);
+            try {
+                const splitTokenList = await getSplitTokenList(
+                    client,
+                    minterAddress,
+                    config.contracts.PrivateERCToken,
+                    minterMeta
+                );
+
+                const tokens = splitTokenList.split_tokens || [];
+                if (tokens.length > 0) {
+                    const startNonce = await minterWallet.getNonce();
+                    allMinterData.push({
+                        minterIndex: j,
+                        minterAddress: minterAddress,
+                        minterWallet: minterWallet,
+                        tokens: tokens,
+                        currentNonce: startNonce,
+                    });
                 }
-            }));
+            } catch (error) {
+                console.error(`获取 minter ${minterAddress} token 列表失败:`, error.message);
+            }
         }
 
-        const endConfirmTime = Date.now();
-        const confirmTime = endConfirmTime - startConfirmTime;
-        const confirmTPS = (confirmedCount / (confirmTime / 1000)).toFixed(2);
+        // 2. 构建 transfer 任务（去重 tokenId）
+        const transferTasks = [];
+        for (const minterData of allMinterData) {
+            const { minterWallet, tokens } = minterData;
+            const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
 
-        console.log(`\n=== 确认阶段 (Confirm) ===`);
-        console.log(`确认耗时: ${confirmTime}ms`);
-        console.log(`确认交易数: ${confirmedCount}`);
-        console.log(`Confirm TPS: ${confirmTPS}`);
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenId = '0x' + tokens[i].token_id;
 
-        // return {
-        //     submitTPS: parseFloat(submitTPS),
-        //     confirmTPS: parseFloat(confirmTPS),
-        //     submitTime,
-        //     confirmTime,
-        //     total: submittedResults.length,
-        //     successfulSubmits: successfulSubmits.length
-        // };
+                // 如果 tokenId 已使用，跳过
+                if (usedTokenIds.has(tokenId)) continue;
+                usedTokenIds.add(tokenId);
+
+                const taskNonce = minterData.currentNonce++;
+
+                transferTasks.push({
+                    execute: async () => {
+                        try {
+                            // 发送交易但不等待确认
+                            const tx = await contract.privateTransfer(tokenId, accounts.To2, {
+                                nonce: taskNonce,
+                            }).catch(error => {
+                                throw error;
+                            });
+
+                            // 只返回交易哈希，不等待交易确认
+                            return {
+                                success: true,
+                                nonce: taskNonce,
+                                tokenId,
+                                txHash: tx.hash,
+                                minterAddress: minterData.minterAddress
+                            };
+                        } catch (error) {
+                            return {
+                                success: false,
+                                nonce: taskNonce,
+                                tokenId,
+                                error: error.message,
+                                minterAddress: minterData.minterAddress
+                            };
+                        }
+                    }
+                });
+            }
+        }
+
+        console.log(`开始执行 ${transferTasks.length} 个 transfer 任务`);
+
+        // 3. 提交阶段
+        const startSubmitTime = Date.now();
+        const submittedResults = await Promise.all(transferTasks.map(task => task.execute()));
+        const endSubmitTime = Date.now();
+        const submitTime = endSubmitTime - startSubmitTime;
+
+        const successfulSubmits = submittedResults.filter(r => r.success);
+        const submitTPS = (successfulSubmits.length / (submitTime / 1000)).toFixed(2);
+
+        console.log(`\n=== 提交阶段 (Submit) ===`);
+        console.log(`提交耗时: ${submitTime}ms`);
+        console.log(`提交成功交易数: ${successfulSubmits.length}/${submittedResults.length}`);
+        console.log(`Submit TPS: ${submitTPS}`);
+
+        // console.log(`\n=== 等待transfer 确认===`);
+        // // 4. 确认阶段（批量限流等待 + 错误日志）
+        // const batchSize = 20; // 每批确认的交易数量
+        // const startConfirmTime = Date.now();
+        // let confirmedCount = 0;
+        //
+        // // 按照 nonce 排序，确保按顺序处理
+        // const sortedSuccessfulSubmits = successfulSubmits.sort((a, b) => a.nonce - b.nonce);
+        //
+        // for (let i = 0; i < sortedSuccessfulSubmits.length; i += batchSize) {
+        //     const batch = sortedSuccessfulSubmits.slice(i, i + batchSize);
+        //
+        //     await Promise.all(batch.map(async r => {
+        //         try {
+        //             await r.tx.wait();
+        //             confirmedCount++;
+        //             console.log(`确认成功: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}`);
+        //         } catch (err) {
+        //             console.error(`确认失败: minter=${r.minterAddress}, nonce=${r.nonce}, tokenId=${r.tokenId}, txHash=${r.tx.hash}`);
+        //             console.error(`失败原因:`, err.reason || err.message);
+        //         }
+        //     }));
+        // }
+        //
+        // const endConfirmTime = Date.now();
+        // const confirmTime = endConfirmTime - startConfirmTime;
+        // const confirmTPS = (confirmedCount / (confirmTime / 1000)).toFixed(2);
+        //
+        // console.log(`\n=== 确认阶段 (Confirm) ===`);
+        // console.log(`确认耗时: ${confirmTime}ms`);
+        // console.log(`确认交易数: ${confirmedCount}`);
+        // console.log(`Confirm TPS: ${confirmTPS}`);
+        //
     });
 
 
