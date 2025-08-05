@@ -4,7 +4,7 @@ const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
-const pLimit = require('p-limit').default;
+const pLimit = require('p-limit');
 const Bottleneck = require('bottleneck');
 
 
