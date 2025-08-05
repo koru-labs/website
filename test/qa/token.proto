@@ -425,6 +425,7 @@ message SplitTokenListRequest {
 message ApproveTokenListRequest {
   string owner_address = 1 ;
   string sc_address = 2 ;
+  string spender_address = 3 ;
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
