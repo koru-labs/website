@@ -130,19 +130,19 @@ async function mintBy(address,amount,minterWallet) {
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 1000;
-    // const BATCH_SIZE = 200;
+    const TOTAL_SIZE = 2000;
+    const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
     const minter3 = ethers.Wallet.createRandom();
-    // const minter4 = ethers.Wallet.createRandom();
-    // const minter5 = ethers.Wallet.createRandom();
-    // const minter6 = ethers.Wallet.createRandom();
-    // const minter7 = ethers.Wallet.createRandom();
-    // const minter8 = ethers.Wallet.createRandom();
-    // const minter9 = ethers.Wallet.createRandom();
-    // const minter10 = ethers.Wallet.createRandom();
+    const minter4 = ethers.Wallet.createRandom();
+    const minter5 = ethers.Wallet.createRandom();
+    const minter6 = ethers.Wallet.createRandom();
+    const minter7 = ethers.Wallet.createRandom();
+    const minter8 = ethers.Wallet.createRandom();
+    const minter9 = ethers.Wallet.createRandom();
+    const minter10 = ethers.Wallet.createRandom();
 
     const minters = [
 
@@ -158,34 +158,34 @@ describe.only("Performance Test with created 10 minters", function () {
             address: minter3.address,
             wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
         },
-        // {
-        //     address: minter4.address,
-        //     wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter5.address ,
-        //     wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter6.address,
-        //     wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter7.address,
-        //     wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter8.address,
-        //     wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter9.address,
-        //     wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter10.address,
-        //     wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
-        // }
+        {
+            address: minter4.address,
+            wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
+        },
+        {
+            address: minter5.address ,
+            wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
+        },
+        {
+            address: minter6.address,
+            wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
+        },
+        {
+            address: minter7.address,
+            wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
+        },
+        {
+            address: minter8.address,
+            wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
+        },
+        {
+            address: minter9.address,
+            wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
+        },
+        {
+            address: minter10.address,
+            wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
+        }
     ]
 
     it('Registe ', async () => {
@@ -1030,7 +1030,7 @@ describe.only("Performance Test with created 10 minters", function () {
         });
     });
     it('TPS PrivateTransfer Test ： Sign First Then Batch Send RPC Requests', async () => {
-        const BATCH_SIZE = 1000;
+        // const BATCH_SIZE = 1000;
         const startTestTime = Date.now();
 
         // 并行收集所有 minter 的 token 数据
