@@ -130,7 +130,7 @@ async function mintBy(address,amount,minterWallet) {
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 200;
+    const TOTAL_SIZE = 1000;
     // const BATCH_SIZE = 200;
 
     const minter1 = ethers.Wallet.createRandom();
@@ -628,8 +628,8 @@ describe.only("Performance Test with created 10 minters", function () {
         return { tps: parseFloat(tps), total: results.length, successful, executionTime };
     });
 
-    it.skip('TPS PrivateTransfer Test ： Submit with Minter Parallelization and Batching', async () => {
-        const BATCH_SIZE = 200; // 设置批量大小为100
+    it('TPS PrivateTransfer Test ： Submit with Minter Parallelization and Batching', async () => {
+        const BATCH_SIZE = 500; // 设置批量大小为100
         const startTestTime = Date.now();
 
         // 并行收集所有 minter 的 token 数据
@@ -784,7 +784,7 @@ describe.only("Performance Test with created 10 minters", function () {
         });
     });
 
-    it('TPS PrivateTransfer Test ： Submit with Batch RPC Requests', async () => {
+    it.skip('TPS PrivateTransfer Test ： Submit with Batch RPC Requests', async () => {
         const BATCH_SIZE = 100;
         const startTestTime = Date.now();
 
@@ -1276,6 +1276,7 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`Minter ${minterAddr}: ${stats.success}/${stats.total} 成功`);
         });
     });
+
 
 
 
