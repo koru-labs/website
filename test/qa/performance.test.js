@@ -215,7 +215,7 @@ describe.only("Performance Test with created 10 minters", function () {
             // expect(postBalance - preBalance).equal(amount)
             for (let j = 0; j < 10; j++){
                 await mintBy(minters[i].address, amount,minters[i].wallet)
-                // await sleep(2000)
+                await sleep(2000)
                 console.log(`第${i+1}轮mint完成`)
                 console.log(await getTokenBalanceByAdmin(minters[i].address))
             // }
@@ -785,7 +785,7 @@ describe.only("Performance Test with created 10 minters", function () {
     });
 
     it('TPS PrivateTransfer Test ： Submit with Batch RPC Requests', async () => {
-        const BATCH_SIZE = 500;
+        const BATCH_SIZE = 1000;
         const startTestTime = Date.now();
 
         // 并行收集所有 minter 的 token 数据
