@@ -150,10 +150,11 @@ function createClient(url) {
         return promisifyByMetadata(client.GetSplitTokenList.bind(client), request,metadata);
     };
 
-    client.getApproveTokenList = async function (owner_address, sc_address,metadata) {
+    client.getApproveTokenList = async function (owner_address, sc_address,spenderAddress,metadata) {
         const request = {
             owner_address: owner_address,
             sc_address: sc_address,
+            spender_address: spenderAddress,
         };
         return promisifyByMetadata(client.GetApproveTokenList.bind(client), request,metadata);
     };
@@ -216,7 +217,8 @@ function createClient(url) {
                 try {
                     const result = await callBack(request_id,metadata);
                     console.log("wait for proof. status = ", result.status)
-                    if (result.status == "TOKEN_ACTION_STATUS_SUC") {
+                    if (result.status == "TOKEN_ACTION_STATUS_SUC" || result.status == "TOKEN_ACTION_STATUS_CALL_L1" ) {
+                    // if (result.status == "TOKEN_ACTION_STATUS_SUC" ) {
                         resolve(result)
                         await sleep(1000)
                         return

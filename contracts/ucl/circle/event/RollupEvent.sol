@@ -44,12 +44,17 @@ import "../model/TokenModel.sol";
         uint256 rollbackTokenId;
     }
 
-    struct RollupEvent {
-        uint256[8] proof;
-    }
-
     struct RollupMintEvent {
         RollupToken token;
-        uint256[8] proof;
         uint256[22] publicInputs;
+    }
+
+    struct RollupBurnEvent {
+        RollupToken token;
+    }
+
+    struct RollupSplitEvent {
+        RollupToken token;
+        uint256[] consumedTokenIds;
+        uint256[20] publicInputs;
     }
