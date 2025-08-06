@@ -136,13 +136,13 @@ describe.only("Performance Test with created 10 minters", function () {
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
     const minter3 = ethers.Wallet.createRandom();
-    const minter4 = ethers.Wallet.createRandom();
-    const minter5 = ethers.Wallet.createRandom();
-    const minter6 = ethers.Wallet.createRandom();
-    const minter7 = ethers.Wallet.createRandom();
-    const minter8 = ethers.Wallet.createRandom();
-    const minter9 = ethers.Wallet.createRandom();
-    const minter10 = ethers.Wallet.createRandom();
+    // const minter4 = ethers.Wallet.createRandom();
+    // const minter5 = ethers.Wallet.createRandom();
+    // const minter6 = ethers.Wallet.createRandom();
+    // const minter7 = ethers.Wallet.createRandom();
+    // const minter8 = ethers.Wallet.createRandom();
+    // const minter9 = ethers.Wallet.createRandom();
+    // const minter10 = ethers.Wallet.createRandom();
 
     const minters = [
 
@@ -158,34 +158,34 @@ describe.only("Performance Test with created 10 minters", function () {
             address: minter3.address,
             wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
         },
-        {
-            address: minter4.address,
-            wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
-        },
-        {
-            address: minter5.address ,
-            wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
-        },
-        {
-            address: minter6.address,
-            wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
-        },
-        {
-            address: minter7.address,
-            wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
-        },
-        {
-            address: minter8.address,
-            wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
-        },
-        {
-            address: minter9.address,
-            wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
-        },
-        {
-            address: minter10.address,
-            wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
-        }
+        // {
+        //     address: minter4.address,
+        //     wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter5.address ,
+        //     wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter6.address,
+        //     wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter7.address,
+        //     wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter8.address,
+        //     wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter9.address,
+        //     wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter10.address,
+        //     wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
+        // }
     ]
 
     it('Registe ', async () => {
@@ -206,7 +206,7 @@ describe.only("Performance Test with created 10 minters", function () {
         }
     });
     it('Mint', async () => {
-        const amount = TOTAL_SIZE/10 + 10;
+        const amount = TOTAL_SIZE/10 + 100;
         for (let i = 0; i < minters.length; i++){
             // const preBalance = await getTokenBalanceByAdmin(minters[i].address);
             // await mintBy(minters[i].address, amount,minters[i].wallet)
@@ -305,7 +305,6 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`  平均耗时: ${avgDuration.toFixed(2)}ms`);
         });
     });
-
     it.skip('TPS PrivateTransfer Test ： Submit without transaction hash', async () => {
         const startTestTime = Date.now();
 
@@ -406,7 +405,6 @@ describe.only("Performance Test with created 10 minters", function () {
         // console.log(`Submit TPS: ${submitTPS}`);
 
     });
-
     it.skip('TPS PrivateTransfer Test ： Submit without transaction hash and batchSize', async () => {
         const BATCH_SIZE = 200; // 批量大小，默认为 10，可以根据需要调整BATCH_SIZE
         const startTestTime = Date.now();
@@ -526,7 +524,6 @@ describe.only("Performance Test with created 10 minters", function () {
 
 
     });
-
     it.skip('TPS PrivateTransfer Test (with Nonce Management And BatchSize) ', async () => {
         const startTestTime = Date.now();
         const batchSize = 200;
@@ -627,7 +624,6 @@ describe.only("Performance Test with created 10 minters", function () {
 
         return { tps: parseFloat(tps), total: results.length, successful, executionTime };
     });
-
     it.skip('TPS PrivateTransfer Test ： Submit with Minter Parallelization and Batching', async () => {
         const BATCH_SIZE = 500; // 设置批量大小为100
         const startTestTime = Date.now();
@@ -783,8 +779,7 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`Minter ${minterAddr}: ${stats.success}/${stats.total} 成功`);
         });
     });
-
-    it('TPS PrivateTransfer Test ： Submit with Batch RPC Requests', async () => {
+    it.skip('TPS PrivateTransfer Test ： Submit with Batch RPC Requests', async () => {
         const BATCH_SIZE = 1000;
         const startTestTime = Date.now();
 
@@ -1033,9 +1028,8 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`Minter ${minterAddr}: ${stats.success}/${stats.total} 成功`);
         });
     });
-
-    it.skip('TPS PrivateTransfer Test ： Sign First Then Batch Send RPC Requests', async () => {
-        const BATCH_SIZE = 100;
+    it('TPS PrivateTransfer Test ： Sign First Then Batch Send RPC Requests', async () => {
+        const BATCH_SIZE = 1000;
         const startTestTime = Date.now();
 
         // 并行收集所有 minter 的 token 数据
@@ -1276,9 +1270,6 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`Minter ${minterAddr}: ${stats.success}/${stats.total} 成功`);
         });
     });
-
-
-
 
 });
 
