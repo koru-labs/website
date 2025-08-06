@@ -304,6 +304,7 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`  成功: ${result.totalSuccess}/${TOTAL_SIZE}`);
             console.log(`  平均耗时: ${avgDuration.toFixed(2)}ms`);
         });
+        await sleep(20000)
     });
     it.skip('TPS PrivateTransfer Test ： Submit without transaction hash', async () => {
         const startTestTime = Date.now();
@@ -1093,8 +1094,6 @@ describe.only("Performance Test with created 10 minters", function () {
                 const txData = await contract.privateTransfer.populateTransaction(tokenId, accounts.To2, {
                     nonce: taskNonce,
                 });
-                console.log(txData.length)
-
                 minterTasks.push({
                     minterWallet: minterWallet,
                     txData: txData,
