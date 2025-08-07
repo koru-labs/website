@@ -192,10 +192,12 @@ function createClient(url) {
         return new Promise(async (resolve, reject) => {
             while (true) {
                 try {
-                    const result = await callBack(request_id);
-
-                    if (result.proof !== "") {
+                    const result = await callBack(request_id,metadata);
+                    console.log("wait for proof. status = ", result.status)
+                    if (result.status == "TOKEN_ACTION_STATUS_SUC" || result.status == "TOKEN_ACTION_STATUS_CALL_L1" ) {
+                        // if (result.status == "TOKEN_ACTION_STATUS_SUC" ) {
                         resolve(result)
+                        await sleep(1000)
                         return
                     } else {
                         console.log("wait for proof. status = ", result.status)
