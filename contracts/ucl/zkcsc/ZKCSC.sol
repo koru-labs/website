@@ -10,7 +10,7 @@ contract ZKCSC is ReentrancyGuard {
 
     event DVPExecuted(bytes32 indexed bundleHash, address indexed relayer, uint256 totalTransfers);
     event DVPCanceled(bytes32 indexed bundleHash, address indexed relayer, uint256 totalTransfers);
-
+    event ApprovalRevoked(bytes32 indexed bundleHash, address indexed from, address indexed tokenAddress, uint256 tokenId, bool success);
 
     mapping(bytes32 => bool) public bundleExecuted;
 
@@ -27,10 +27,10 @@ contract ZKCSC is ReentrancyGuard {
         require(n > 0, "DVP: No transfers provided");
         require(
             n == froms.length &&
-                n == tos.length &&
-                n == tokenAddresses.length &&
-                n == tokenIds.length &&
-                n == signatures.length,
+            n == tos.length &&
+            n == tokenAddresses.length &&
+            n == tokenIds.length &&
+            n == signatures.length,
             "DVP: Array length mismatch"
         );
 
@@ -96,10 +96,19 @@ contract ZKCSC is ReentrancyGuard {
 
             require(signer == froms[i], "DVP: Signature not from 'from' address");
 
-            try IPrivateERCToken(tokenAddresses[i]).privateRevokeApprovalFrom(froms[i], tokenIds[i]){}catch{}
+            bool success = _revokeApproval(tokenAddresses[i], froms[i], tokenIds[i]);
+            emit ApprovalRevoked(bundleHash, froms[i], tokenAddresses[i], tokenIds[i], success);
         }
 
         emit DVPCanceled(bundleHash, msg.sender, n);
+    }
+
+    function _revokeApproval(address tokenAddress, address from, uint256 tokenId) internal returns (bool) {
+        try IPrivateERCToken(tokenAddress).privateRevokeApprovalFrom(from, tokenId) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     function recoverSigner(bytes32 chunkHash, bytes calldata signature) external pure returns (address) {

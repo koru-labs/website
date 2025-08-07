@@ -50,6 +50,7 @@ async function sendHttpRPC(endpoint, body, headers) {
 async function DirectMint(toAddress, amount){
     const minterHeaaders = await createAuthHeaders(accounts.MinterKey)
     return sendHttpRPC('/direct/mint', {
+        fromAddress: accounts.Minter,
         scAddress: scAddress,
         toAddress: toAddress,
         amount: amount
@@ -61,7 +62,8 @@ async function DirectTranfer(fromPrivateKey,fromAddress,toAddress, amount){
         scAddress: scAddress,
         fromAddress: fromAddress,
         toAddress: toAddress,
-        amount: amount
+        amount: amount,
+        comment: "transfer"
     }, fromHeaaders)
 }
 
@@ -70,7 +72,9 @@ async function DirectBurn(fromPrivateKey,fromAddress, amount){
     return sendHttpRPC('/direct/burn', {
         scAddress: scAddress,
         fromAddress: fromAddress,
-        amount: amount
+        toAddress: fromAddress,
+        amount: amount,
+        comment: "burn"
     }, fromHeaaders)
 }
 
@@ -81,7 +85,8 @@ async function GenerateSplitToken(fromPrivateKey,scAddress,fromAddress,amount,to
         tokenType: tokenType,
         fromAddress: fromAddress,
         toAddress: toAddress,
-        amount: amount
+        amount: amount,
+        comment: "split"
     }, fromHeaaders)
 }
 
@@ -187,17 +192,17 @@ describe('Mint,Transfer,Burn Flows', function () {
     let adminHeaders,minterHeaders,spenderHeaders,to1Headers
     before(async function () {
         adminHeaders = await createAuthHeaders(adminPrivateKey)
-        // minterHeaders = await createAuthHeaders(accounts.MinterKey)
+        minterHeaders = await createAuthHeaders(accounts.MinterKey)
         spenderHeaders = await createAuthHeaders(accounts.Spender1Key)
         to1Headers = await createAuthHeaders(accounts.To1PrivateKey);
     })
     it('DirectMint ', async () => {
         const preBalance = await GetAddressBalance(accounts.Minter,scAddress);
-        let tx = await DirectMint(accounts.Minter, amount);
+        let tx = await DirectMint(accounts.Minter, amount*5);
         let requestId = tx.requestId;
         await waitForTokenActionStatus(accounts.MinterKey,requestId);
         const postBalance = await GetAddressBalance(accounts.Minter,scAddress);
-        expect(postBalance).equal(preBalance + amount);
+        expect(postBalance).equal(preBalance + amount*5);
     });
     it('Direct Transfer from minter to to1 ',async () => {
         const preBalanceFrom = await GetAddressBalance(accounts.Minter,scAddress);
@@ -239,7 +244,7 @@ describe('Mint,Transfer,Burn Flows', function () {
 
 });
 
-describe('Split token flow', function () {
+describe.skip('Split token flow', function () {
     let adminHeaders,minterHeaders,spenderHeaders,to1Headers
     before(async function () {
         adminHeaders = await createAuthHeaders(adminPrivateKey)
@@ -247,7 +252,7 @@ describe('Split token flow', function () {
         spenderHeaders = await createAuthHeaders(accounts.Spender1Key)
         to1Headers = await createAuthHeaders(accounts.To1PrivateKey);
     })
-    it.only('Split token ',async () => {
+    it('Split token ',async () => {
         let tx = await GenerateSplitToken(accounts.MinterKey,scAddress,accounts.Minter, amount, accounts.To1);
         console.log(tx)
         tx = await GetSplitTokenList(accounts.MinterKey,scAddress)

@@ -348,6 +348,38 @@ async function testReserveTokensAndBurn() {
   }
 }
 
+async function testReserveTokensAndGetToken() {
+  try {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+
+    const splitRequest = {
+      sc_address: config.contracts.PrivateERCToken,
+      token_type: '0',
+      from_address: accounts.Minter,
+      to_address: accounts.To1,
+      amount: CONSTANTS.defaultAmount
+    };
+
+    console.log("Splitting token...");
+    let response = await client.generateSplitToken(splitRequest, metadata);
+    console.log("Token split response:", response);
+    let response1 = await client.generateSplitToken(splitRequest, metadata);
+    console.log("Token split response:", response1);
+    let response2 = await client.generateSplitToken(splitRequest, metadata);
+    console.log("Token split response:", response2);
+
+    // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+    let tokens = await client.getSplitTokenList(accounts.Minter, config.contracts.PrivateERCToken,metadata);
+    console.log("Get split token list response:", tokens);
+
+    return tokens;
+  } catch (error) {
+    console.error(`Reserve tokens and burn test failed: ${error.message}`);
+    throw error;
+  }
+}
+
 /**
  * Test reserve tokens and transfer
  * @returns {Promise<void>}
@@ -490,30 +522,21 @@ async function testReserveTokensAndCancel() {
  * Test institution information
  * @returns {Promise<void>}
  */
+const deployed = require("../../deployments/image9.json");
 async function testInstituteInformation() {
-  try {
-    const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
-      libraries: {
-        "TokenEventLib": deployed.libraries.TokenEventLib,
-      }
-    });
-    
-    const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
-    let address = '0x7655D272072B8614Bfcf9be7c1583b46738bd242';
-    
-    console.log("Getting user manager information...");
-    let inst = await instRegistry.getUserManager(address);
-    console.log("User registration information:", inst);
-    
-    console.log("Getting user Grumpkin public key...");
-    let inst1 = await instRegistry.getUserInstGrumpkinPubKey(address);
-    console.log("User Grumpkin public key:", inst1);
-    
-    return { manager: inst, pubKey: inst1 };
-  } catch (error) {
-    console.error(`Get institution information failed: ${error.message}`);
-    throw error;
-  }
+  const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
+    libraries: {
+      "TokenEventLib": deployed.libraries.TokenEventLib,
+    }
+  });
+  const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
+
+  // let tx = await instRegistry.registerUser(accounts.Spender1);
+  // await tx.wait();
+  let inst = await instRegistry.getUserManager(accounts.Owner);
+  console.log("user registration ", inst);
+  let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Owner);
+  console.log("user registration ", inst1);
 }
 
 /**
@@ -634,7 +657,7 @@ async function testGetMintAllowed() {
 async function runTests() {
   try {
     // Basic tests
-    await mintForStart();
+    // await mintForStart();
     
     // Token operation tests
     // await testReserveTokensAndBurn();
@@ -644,7 +667,7 @@ async function runTests() {
     // await testTransferFromByAuth();
     
     // Direct transaction tests
-    // await testDirectMintByAuth();
+    await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     
@@ -653,6 +676,7 @@ async function runTests() {
     // await testConvert2pUSDC();
     // await testConvert2USDC();
     // await testGetMintAllowed();
+    // await testReserveTokensAndGetToken();
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);
@@ -678,5 +702,6 @@ module.exports = {
   testConvert2USDC,
   createAuthMetadata,
   checkBalance,
-  testGetMintAllowed
+  testGetMintAllowed,
+  testReserveTokensAndGetToken
 };
