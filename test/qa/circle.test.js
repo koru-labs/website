@@ -356,7 +356,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     }
     await sleep(3000);
 }
-describe.only("Function Cases",function (){
+describe("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
 
@@ -405,7 +405,7 @@ describe.only("Function Cases",function (){
             console.log(await getTokenBalanceByAuth(client1,userInNode1,node4AdminMeta));
         })
     });
-    describe.only("Mint", function () {
+    describe("Mint", function () {
         this.timeout(1200000);
         const recevier = accounts.Minter;
         beforeEach(async function () {
@@ -1781,7 +1781,7 @@ describe("Permission and BlackList", function () {
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
     })
 
-    describe("Registe and set allowed",function (){
+    describe.only("Registe and set allowed",function (){
         this.timeout(1200000);
         it('Registe user with exist admin auth', async () => {
             await registerUser(adminPrivateKey,client, normalWallet.address, "normal");
