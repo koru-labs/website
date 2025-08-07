@@ -32,8 +32,8 @@ const user1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const user2Wallet = new ethers.Wallet(accounts.To2PrivateKey, l1Provider);
 
 // token合约地址
-const tokenAddress1 = "0x0CFeFcC2aC5642f5D6102BA5DBFd127aDe5c6a65"; // User1 的 token 所在合约
-const tokenAddress2 = "0x838Ff21edCD5EbFC6dC2DAaa99BF1CD35ae0274b"; // User2 的 token 所在合约
+const tokenAddress1 = "0x62A8ed153B4a3E5D3C35B5Ad7e6e2F55E7eeb9Cd"; // User1 的 token 所在合约
+const tokenAddress2 = "0x5c8397236503268E5dE1403740452e1b86C839B8"; // User2 的 token 所在合约
 
 async function mintForStart(tokenAddress, wallet, account) {
     console.log(`=== Starting Mint Process for ${account} ===`);
@@ -63,7 +63,8 @@ async function approveTokens(tokenAddress, wallet, account, spenderAccount, toAc
         from_address: account,
         spender_address: spenderAccount, // spender
         to_address: toAccount, // to
-        amount: 1
+        amount: 1,
+        comment: 'approve'
     };
     let response = await client.generateApproveProof(approveRequest, metadata);
     console.log("Generate Approve Proof response:", response);
@@ -257,7 +258,9 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
         console.log("DVP Cancel successful! Transaction hash:", tx.hash);
 
         // 检查事件
-        const logs = receipt.logs || [];
+        const logs = receipt.logs || receipt.events || [];
+        console.log("All events:", logs);
+
         const dvpCanceledEvent = logs.find(e => e.fragment?.name === "DVPCanceled");
         if (dvpCanceledEvent) {
             console.log("✅ DVPCanceled event emitted:", dvpCanceledEvent.args);
@@ -265,10 +268,29 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
             console.log("❌ DVPCanceled event not found");
         }
 
+        // 检查ApprovalRevoked事件
+        const approvalRevokedEvents = logs.filter(e => e.fragment?.name === "ApprovalRevoked");
+        if (approvalRevokedEvents.length > 0) {
+            console.log("ApprovalRevoked events:", approvalRevokedEvents);
+            approvalRevokedEvents.forEach((event, index) => {
+                console.log(`ApprovalRevoked event ${index}:`, event.args);
+            });
+        } else {
+            console.log("No ApprovalRevoked events found");
+        }
+
     } catch (error) {
         console.error("❌ DVP Cancel failed:", error.message);
         if (error.reason) console.error("Reason:", error.reason);
         if (error.data) console.error("Data:", error.data);
+
+        // 尝试获取更多错误信息
+        try {
+            console.error("Error object:", JSON.stringify(error, null, 2));
+        } catch (e) {
+            console.error("Could not stringify error:", e.message);
+        }
+
         throw error;
     }
 
