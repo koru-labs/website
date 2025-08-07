@@ -64,7 +64,7 @@ abstract contract PrivateTokenApproval is
         allowanceToken.to = to;
         TokenUtilsLib.addToken(_accounts, msg.sender, allowanceToken);
 
-        _accounts[msg.sender].allowances[spender] = allowanceToken.id;
+        TokenUtilsLib.addAllowanceRecord(_accounts, msg.sender, spender, allowanceToken.id);
 
         TokenUtilsLib.addToken(_accounts, msg.sender, rollbackToken);
 
@@ -87,8 +87,15 @@ abstract contract PrivateTokenApproval is
         require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
         require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
 
-        uint256 allowanceTokenId = _accounts[from].allowances[msg.sender];
-        require(allowanceTokenId == tokenId, "PrivateERCToken: invalid allowance tokenId");
+        uint256[] memory allowanceTokens = _accounts[from].allowances[msg.sender];
+        bool isAuthorized = false;
+        for (uint256 i = 0; i < allowanceTokens.length; i++) {
+            if (allowanceTokens[i] == tokenId) {
+                isAuthorized = true;
+                break;
+            }
+        }
+        require(isAuthorized, "PrivateERCToken: invalid allowance tokenId");
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = allowanceToken.rollbackTokenId;
@@ -111,7 +118,7 @@ abstract contract PrivateTokenApproval is
         TokenUtilsLib.addTokenWithBalance(_accounts, allowanceToken.to, allowanceToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
 
-        TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender);
+        TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender, tokenId);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokens[0]);
 
@@ -124,11 +131,17 @@ abstract contract PrivateTokenApproval is
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
-        uint256 onChainAllowanceTokenId = _accounts[msg.sender].allowances[spender];
-        require(onChainAllowanceTokenId != 0, "PrivateERCToken: no allowance exists for this spender");
-        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance tokenId mismatch");
+        uint256[] memory onChainAllowanceTokens = _accounts[msg.sender].allowances[spender];
+        bool tokenFound = false;
+        for (uint256 i = 0; i < onChainAllowanceTokens.length; i++) {
+            if (onChainAllowanceTokens[i] == allowanceTokenId) {
+                tokenFound = true;
+                break;
+            }
+        }
+        require(tokenFound, "PrivateERCToken: allowance tokenId not found for this spender");
 
-        TokenModel.TokenEntity memory allowanceToken = _accounts[msg.sender].assets[onChainAllowanceTokenId];
+        TokenModel.TokenEntity memory allowanceToken = _accounts[msg.sender].assets[allowanceTokenId];
         require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
         require(allowanceToken.owner == msg.sender, "PrivateERCToken: caller is not the token owner");
         require(allowanceToken.rollbackTokenId != 0, "PrivateERCToken: rollback token not found");
@@ -142,16 +155,16 @@ abstract contract PrivateTokenApproval is
         TokenUtilsLib.removeTokens(_accounts, allowanceToken.owner, allowanceTokenIds);
         TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), allowanceToken.owner, allowanceTokenId);
 
-        TokenUtilsLib.removeAllowanceRecord(_accounts, msg.sender, spender);
+        TokenUtilsLib.removeAllowanceRecord(_accounts, msg.sender, spender, allowanceTokenId);
 
         emit PrivateApprovalRevoked(msg.sender, spender, allowanceTokenId);
     }
     
-    function getAllowanceTokens(address spender) external view virtual returns (uint256) {
+    function getAllowanceTokens(address spender) external view virtual returns (uint256[] memory) {
         return _accounts[msg.sender].allowances[spender];
     }
 
-    function getAllowanceTokensFrom(address owner) external view virtual returns (uint256) {
+    function getAllowanceTokensFrom(address owner) external view virtual returns (uint256[] memory) {
         return _accounts[owner].allowances[msg.sender];
     }
 }

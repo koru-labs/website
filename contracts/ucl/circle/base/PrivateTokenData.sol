@@ -79,12 +79,12 @@ abstract contract PrivateTokenData is Ownable {
         delete _accounts[account].assets[tokenId];
     }
     
-    function getAccountAllowance(address account, address spender) external view returns (uint256) {
+    function getAccountAllowance(address account, address spender) external view returns (uint256[] memory) {
         return _accounts[account].allowances[spender];
     }
     
     function setAccountAllowance(address account, address spender, uint256 tokenId) external onlyAuthorized {
-        _accounts[account].allowances[spender] = tokenId;
+        _accounts[account].allowances[spender].push(tokenId);
     }
     
     function deleteAccountAllowance(address account, address spender) external onlyAuthorized {
