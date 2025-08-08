@@ -195,6 +195,10 @@ abstract contract PrivateTokenCore is
             publicInputs: publicInputs
         });
         TokenVerificationLib.verifyTokenSplit(params);
+        TokenModel.TokenEntity[] memory consumedTokens = new TokenModel.TokenEntity[](consumedTokenIds.length);
+        for (uint256 i = 0; i < consumedTokenIds.length; i++) {
+            consumedTokens[i] = _accounts[from].assets[consumedTokenIds[i]];
+        }
 
         TokenUtilsLib.removeTokens(_accounts, from, consumedTokenIds);
 
@@ -206,9 +210,7 @@ abstract contract PrivateTokenCore is
         transferToken.rollbackTokenId = rollBackToken.id;
         TokenUtilsLib.addToken(_accounts, from, transferToken);
         TokenUtilsLib.addToken(_accounts, from, rollBackToken);
-
-
-        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  transferToken,consumedTokenIds,publicInputs);
+        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  transferToken, consumedTokens,publicInputs);
     }
 
     function privateTransfer(
