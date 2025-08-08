@@ -962,7 +962,7 @@ describe("DVP with different token contract in node3", function () {
         expect(tokenIds).to.not.include(tokenId2);
         console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
     });
-    it.only("Cancel DVP to release approved token after revoke", async () => {
+    it("Cancel DVP to release approved token after revoke", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -997,6 +997,344 @@ describe("DVP with different token contract in node3", function () {
         console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
 
     });
+    it.only("Should Reverted: executeDVP with missing parameters", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 测试参数数量不匹配的情况
+        console.log("=== Testing DVP with mismatched array lengths ===");
+
+        // 1. chunkHashes 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash], // 只有一个 chunkHash
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Array length mismatch");
+
+        // 2. fromAddresses 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address], // 只有一个 fromAddress
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Array length mismatch");
+
+        // 3. toAddresses 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address], // 只有一个 toAddress
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Array length mismatch");
+
+        // 4. tokenAddresses 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1], // 只有一个 tokenAddress
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Array length mismatch");
+
+        // 5. tokenIds 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1], // 只有一个 tokenId
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Array length mismatch");
+
+        // 6. signatures 数量少于其他参数
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature] // 只有一个 signature
+        )).revertedWith("DVP: Array length mismatch");
+
+        console.log("✅ All missing parameter tests passed");
+    });
+
+    it("Should Reverted: executeDVP with invalid chunkHash", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 测试无效的 chunkHash
+        console.log("=== Testing DVP with invalid chunkHash ===");
+
+        // 1. 使用无效的 chunkHash (不匹配的参数)
+        const invalidChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId2 // 错误的 tokenId
+        );
+
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [invalidChunkHash, user2ChunkHash], // 第一个 chunkHash 无效
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature] // 签名与 chunkHash 不匹配
+        )).revertedWith("DVP: Invalid chunkHash");
+
+        // 2. 使用完全随机的 chunkHash
+        const randomChunkHash = ethers.keccak256(ethers.toUtf8Bytes("randomChunkHash"));
+        const randomSignature = await signChunkHash(minterWallet, randomChunkHash);
+
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [randomChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [randomSignature, user2Signature]
+        )).revertedWith("DVP: Invalid chunkHash");
+
+        console.log("✅ All invalid chunkHash tests passed");
+    });
+
+    it("Should Reverted: executeDVP with mismatched addresses", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 测试地址混淆的情况
+        console.log("=== Testing DVP with mismatched addresses ===");
+
+        // 1. 交换 fromAddresses 和 toAddresses
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [to1Wallet.address, minterWallet.address], // 交换了地址
+            [minterWallet.address, to1Wallet.address], // 交换了地址
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Invalid chunkHash");
+
+        // 2. 使用错误的 token 地址
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress2, scAddress1], // 交换了 token 地址
+            [tokenId1, tokenId2],
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Invalid chunkHash");
+
+        // 3. 使用错误的 tokenId
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId2, tokenId1], // 交换了 tokenId
+            [user1Signature, user2Signature]
+        )).revertedWith("DVP: Invalid chunkHash");
+
+        console.log("✅ All mismatched addresses tests passed");
+    });
+
+    it.only("Should Reverted: executeDVP with invalid signatures", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 测试无效签名的情况
+        console.log("=== Testing DVP with invalid signatures ===");
+
+        // 1. 使用错误的签名 (交换签名)
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            [user2Signature, user1Signature] // 交换了签名
+        )).revertedWith("DVP: Signature not from 'from' address");
+
+        // 2. 使用无效的签名格式
+        await expect(zkcsc.executeDVP(
+            bundleHash,
+            [user1ChunkHash, user2ChunkHash],
+            [minterWallet.address, to1Wallet.address],
+            [to1Wallet.address, minterWallet.address],
+            [scAddress1, scAddress2],
+            [tokenId1, tokenId2],
+            ["0xInvalidSignature", user2Signature] // 无效签名
+        )).reverted;
+
+        console.log("✅ All invalid signatures tests passed");
+    });
+
 
 });
 
