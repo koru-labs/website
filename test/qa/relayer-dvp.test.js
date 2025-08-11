@@ -272,7 +272,7 @@ describe("DVP with different token contract in node3", function () {
 
     });
 
-    it("ZKCSC relay test", async () => {
+    it("relayCaller excuteDVP test", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -349,6 +349,108 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance1.user).equal(preBalance1.user + amount1);
         expect(postBalance2.minter).equal(preBalance2.minter + amount2);
         expect(postBalance2.user).equal(preBalance2.user - amount2);
+    });
+    it("relayCaller cancelDVP test", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        // excute dvp with relayerCaller
+        console.log("=== Testing DVP ===");
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 4. Relayer 聚合并执行 DVP
+        console.log("=== Relayer Executing DVP ===");
+        const chunkHashes = [user1ChunkHash, user2ChunkHash];
+        const froms =[minterWallet.address, to1Wallet.address];
+        const tos = [to1Wallet.address, minterWallet.address];
+        const tokenAddresses = [scAddress1, scAddress2];
+        const tokenIds = [tokenId1, tokenId2];
+        const signatures = [user1Signature, user2Signature];
+
+        console.log("=== Dvp Cancel Reqeusts ===")
+        console.log({bundleHash, chunkHashes, froms, tos, tokenAddresses, tokenIds, signatures})
+        let tx = await relayerCaller.callCancelDVP(
+            bundleHash,
+            chunkHashes,
+            froms,
+            tos,
+            tokenAddresses,
+            tokenIds,
+            signatures
+        );
+        await tx.wait();
+
+        postBalance1 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
+        }
+        postBalance2 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress2),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress2)
+        }
+        console.log("PostBalance : ",{postBalance1,postBalance2})
+        expect(postBalance1.minter).equal(preBalance1.minter);
+        expect(postBalance1.user).equal(preBalance1.user);
+        expect(postBalance2.minter).equal(preBalance2.minter);
+        expect(postBalance2.user).equal(preBalance2.user);
+
+        const minterApprovedTokenList = await getApproveTokenList(client,minterWallet.address,scAddress1,zkcscAddress,minterMeta)
+        let split_tokens = minterApprovedTokenList.split_tokens
+        console.log("Minter Approved Token List:", split_tokens);
+
+        // 提取所有token_id到一个数组中
+        let ApprovedtokenIds = split_tokens.map(token => '0x' + token.token_id);
+        console.log("minter Approved Token IDs:", tokenIds);
+
+        // 验证tokenId1不在已批准的token列表中
+        expect(ApprovedtokenIds).to.not.include(tokenId1);
+        console.log(`✅ Passed: ${tokenId1} is not in minter approved token list`);
+
+        const to1ApprovedTokenList = await getApproveTokenList(client,to1Wallet.address,scAddress2,zkcscAddress,to1Meta)
+        split_tokens = to1ApprovedTokenList.split_tokens
+        console.log("To1 Approved Token List:", split_tokens);
+
+        // 提取所有token_id到一个数组中
+        ApprovedtokenIds = split_tokens.map(token => '0x' + token.token_id);
+        console.log("Token IDs:", tokenIds);
+
+        // 验证tokenId1不在已批准的token列表中
+        expect(ApprovedtokenIds).to.not.include(tokenId2);
+        console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
     });
 
 });
