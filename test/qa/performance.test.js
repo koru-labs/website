@@ -130,7 +130,7 @@ async function mintBy(address,amount,minterWallet) {
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 2000;
+    const TOTAL_SIZE = 1000;
     const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
@@ -210,8 +210,8 @@ describe.only("Performance Test with created 10 minters", function () {
         // const amount = 200;
         for (let i = 0; i < minters.length; i++){
             // const preBalance = await getTokenBalanceByAdmin(minters[i].address);
-            // await mintBy(minters[i].address, amount,minters[i].wallet)
-
+            // await mintBy(minters[i].address, TOTAL_SIZE + 100,minters[i].wallet)
+            // await sleep(2000)
             // const postBalance = await getTokenBalanceByAdmin(minters[i].address);
             // expect(postBalance - preBalance).equal(amount)
             for (let j = 0; j < 10; j++){
@@ -219,8 +219,8 @@ describe.only("Performance Test with created 10 minters", function () {
                 await sleep(2000)
                 console.log(`第${i+1}轮mint完成`)
                 console.log(await getTokenBalanceByAdmin(minters[i].address))
-            // }
-        }}
+            }
+        }
     });
 
     it("Split Operations", async function () {
