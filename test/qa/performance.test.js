@@ -130,12 +130,13 @@ async function mintBy(address,amount,minterWallet) {
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 1000;
+    const TOTAL_SIZE = 100;
     const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
     const minter3 = ethers.Wallet.createRandom();
+
     // const minter4 = ethers.Wallet.createRandom();
     // const minter5 = ethers.Wallet.createRandom();
     // const minter6 = ethers.Wallet.createRandom();
