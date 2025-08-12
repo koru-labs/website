@@ -186,10 +186,10 @@ async function ReserveTokensAndTransferFrom(fromWallet,spenderWallet,fromAddress
         let response = await client.generateApproveProof(splitRequest,fromMetadata);
         console.log("Generate transfer Proof response:", response);
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,fromMetadata)
-        let receipt = await callPrivateTransferFrom(spenderWallet,config.contracts.PrivateERCToken,fromAddress,toAddress,'0x'+response.transfer_token_id)
+        await callPrivateTransferFrom(spenderWallet,config.contracts.PrivateERCToken,fromAddress,toAddress,'0x'+response.transfer_token_id)
         await sleep(1000)
-        console.log("receipt", receipt)
-        return receipt
+        // console.log("receipt", receipt)
+        // return receipt
     }catch (error){
         console.log(error)
         return error
@@ -262,6 +262,7 @@ async function getTokenBalanceByAuth(grpcClient, account, metadata){
 async function getTokenBalanceByAdmin(account){
     const metadata = await  createAuthMetadata(adminPrivateKey)
     let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, account, metadata)
+    console.log("balance: ", balance)
     return Number(balance.balance)
 }
 
@@ -526,8 +527,9 @@ describe("Function Cases",function (){
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
         it('minter burn 10', async () => {
-            await mint(accounts.Minter,20);
+            await DirectMint(accounts.Minter,20);
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log("minter balance:",preBalance)
             await ReserveTokensAndBurn(amount);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             expect(postBalance).to.equal(preBalance - amount);
