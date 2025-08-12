@@ -221,8 +221,7 @@ async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
 
 async function getApproveTokenList(grpcClient,ownerAddress, scAddress,spenderAddress,metadata){
     console.log({ownerAddress, scAddress,spenderAddress})
-    // const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,spenderAddress, metadata);
-    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,"", metadata);
+    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,spenderAddress, metadata);
     return grpcResult;
 }
 

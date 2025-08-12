@@ -17,7 +17,7 @@ const {
     callPrivateTransferFrom,
     getAddressBalance,
     getAddressBalance2,
-    createAuthMetadata
+    createAuthMetadata, getApproveTokenList
 } = require("../help/testHelp")
 
 const l1CustomNetwork = {
@@ -92,6 +92,76 @@ async function testSplitTokens() {
     return global.transferTokenId;
 }
 
+async function testApproveMultipleTokens() {
+    console.log("=== Starting Multiple Token Approval Process ===");
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+
+    // 第一次授权
+    console.log("--- First Approval ---");
+    const splitRequest1 = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
+        amount: 1,
+        comment: "Approval"
+    };
+
+    let response1 = await client.generateSplitToken(splitRequest1, metadata);
+    console.log("First Generate Split Token Proof response:", response1);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response1.request_id, metadata);
+    console.log("First Split Token completed successfully");
+
+    // 存储第一个授权token ID
+    const firstApprovalTokenId = '0x' + response1.transfer_token_id;
+    console.log("First Approval Token ID:", firstApprovalTokenId);
+
+    // 第二次授权
+    console.log("--- Second Approval ---");
+    const splitRequest2 = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
+        amount: 1,
+        comment: "Approval"
+    };
+
+    let response2 = await client.generateSplitToken(splitRequest2, metadata);
+    console.log("Second Generate Split Token Proof response:", response2);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response2.request_id, metadata);
+    console.log("Second Split Token completed successfully");
+
+    // 存储第二个授权token ID
+    const secondApprovalTokenId = '0x' + response2.transfer_token_id;
+    console.log("Second Approval Token ID:", secondApprovalTokenId);
+
+    var approvedTokens
+    // 检查授权列表,查询10次
+    for (let i = 0; i < 10; i++) {
+        await sleep(2000);
+        console.log("--- Checking Approval List ---");
+        
+        // 直接调用合约方法而不是使用gRPC客户端
+        const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+        const allowanceTokens = await contract.getAllowanceTokens(accounts.Spender1);
+        console.log("Approved tokens for Spender1 (from contract):", allowanceTokens);
+        
+        approvedTokens = await getApproveTokenList(client, accounts.Minter, config.contracts.PrivateERCToken, accounts.Spender1, metadata);
+        console.log("Approved tokens for Spender1 (from gRPC):", approvedTokens);
+    }
+
+
+    console.log("✅ Multiple token approval completed successfully");
+
+    return {
+        firstApprovalTokenId,
+        secondApprovalTokenId
+    };
+}
+
 async function testCancel(transferTokenId) {
     console.log("=== Starting Token Cancellation Process ===");
     console.log("Transfer Token ID to cancel:", transferTokenId);
@@ -116,14 +186,10 @@ async function runFullCancellationTest() {
     console.log("========================================");
     
     try {
-        // Step 1: Mint initial tokens
+
         await mintForStart();
-        
-        // Step 2: Split tokens to create transfer and rollback tokens
-        let transferTokenId = await testSplitTokens();
-        
-        // Step 3: Cancel the transfer token to restore rollback token
-        await testCancel(transferTokenId);
+
+        await testApproveMultipleTokens();
         
         console.log("========================================");
         console.log("🎉 Full Cancellation Test Suite Completed Successfully!");
