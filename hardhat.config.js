@@ -98,7 +98,7 @@ module.exports = {
             ],
         },
         ucl_L2_cluster: {
-            url: "http://L2-node1.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
+            url: "http://L2-node3.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
             accounts: [
                 "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732 //// node3 manager address (circle manager, master minter, blackList)
                 "32ef95df4ea8de4f6b5518106e97dbb3e5b97cdbb4a33adfeaa9f14e729f51eb", //from 0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8
@@ -117,7 +117,7 @@ module.exports = {
                 "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca", //4568E35F2c4590Bde059be615015AaB6cc873004
                 "5ce8c4aea462de54d0a8ecbfe5cc8c8ac18926979c66a66e5a463ba8506401c0", //fE5acd71116FB8a03510FF171222F01164609c97，admin,do not use business processes
             ],
-            chainId: 1337
+            chainId: 51001
         }
     },
 
