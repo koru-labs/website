@@ -130,8 +130,8 @@ async function mintBy(address,amount,minterWallet) {
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 100;
-    const BATCH_SIZE = 1000;
+    const TOTAL_SIZE = 2000;
+    const BATCH_SIZE = 3000;
 
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
@@ -201,6 +201,7 @@ describe.only("Performance Test with created 10 minters", function () {
 
     it('Set allowance', async () => {
         for (let i = 0; i< minters.length; i++){
+            console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(minters[i].address)
             await sleep(5000)
@@ -216,6 +217,7 @@ describe.only("Performance Test with created 10 minters", function () {
             // const postBalance = await getTokenBalanceByAdmin(minters[i].address);
             // expect(postBalance - preBalance).equal(amount)
             for (let j = 0; j < 10; j++){
+                console.log(`mintBy ${minters[i].address} ${j+1} 轮开始}`)
                 await mintBy(minters[i].address, amount,minters[i].wallet)
                 await sleep(2000)
                 console.log(`第${i+1}轮mint完成`)
@@ -712,6 +714,7 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`Minter ${minterAddr}: ${stats.success}/${stats.total} 成功`);
         });
     });
+
     it('TPS PrivateTransfer Test ： Sign First Then Batch Send RPC Requests', async () => {
         // const BATCH_SIZE = 1000;
         const startTestTime = Date.now();
