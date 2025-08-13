@@ -60,36 +60,81 @@ library Classification {
     function classify(uint256[] memory input) public pure returns (ArrayPosition[] memory positions) {
         require(input.length == EXPECTED_LENGTH, "Invalid input length");
         positions = new ArrayPosition[](18);
-        for (uint256 i = 0; i < 18; i++) {
-            positions[i] = getArrayPositionsByStep(input, i);
-        }
-        return positions;
-    }
 
-    // 根据arrayIndex和steps确定数组的位置
-    function getArrayPositionsByStep(uint256[] memory input, uint256 arrayIndex) internal pure returns (ArrayPosition memory position) {
-        require(input.length == EXPECTED_LENGTH, "Invalid input length");
-        
-        // 根据arrayIndex确定不同数组的步长
-        uint256 stepSize;
-        if (arrayIndex < 2) {
-            // MergeToken数组: 2 * 2 * MERGE_COUNT
-            stepSize = 4 * MERGE_COUNT;
-        } else if (arrayIndex < 10) {
-            // 非convert数组: 2
-            stepSize = 2;
-        } else if (arrayIndex < 12) {
-            // Amount数组: 1
-            stepSize = 1;
-        } else {
-            // Convert相关数组: 2
-            stepSize = 2;
-        }
-        
-        // 计算起始位置
-        position.start = arrayIndex * STEPS * stepSize;
-        position.end = position.start + STEPS * stepSize;
-        
-        return position;
+        // 计算每个数组的偏移量
+        uint256 offset = 0;
+
+        // MergeTokenCLArray (0)
+        positions[0] = ArrayPosition(offset, offset + 2 * MERGE_COUNT * STEPS);
+        offset += 2 * MERGE_COUNT * STEPS;
+
+        // MergeTokenCRArray (1)
+        positions[1] = ArrayPosition(offset, offset + 2 * MERGE_COUNT * STEPS);
+        offset += 2 * MERGE_COUNT * STEPS;
+
+        // ChangeTokenCLArray (2)
+        positions[2] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ChangeTokenCRArray (3)
+        positions[3] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // TransTokenCLArray (4)
+        positions[4] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // TransTokenCRArray (5)
+        positions[5] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // RollbackTokenCLArray (6)
+        positions[6] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // RollbackTokenCRArray (7)
+        positions[7] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // SpenderPkArray (8)
+        positions[8] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ReceiverPkArray (9)
+        positions[9] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // BackupPkArray (10)
+        positions[10] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ConvertPkArray (11)
+        positions[11] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // AmountSpendArray (12)
+        positions[12] = ArrayPosition(offset, offset + 1 * STEPS);
+        offset += 1 * STEPS;
+
+        // AmountReceivedArray (13)
+        positions[13] = ArrayPosition(offset, offset + 1 * STEPS);
+        offset += 1 * STEPS;
+
+        // ConvertTokenReceivedCLArray (14)
+        positions[14] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ConvertTokenReceivedCRArray (15)
+        positions[15] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ConvertTokenSpendCLArray (16)
+        positions[16] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
+
+        // ConvertTokenSpendCRArray (17)
+        positions[17] = ArrayPosition(offset, offset + 2 * STEPS);
+
+        return positions;
     }
 }
