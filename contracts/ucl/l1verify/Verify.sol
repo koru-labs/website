@@ -30,13 +30,17 @@ contract Verify {
             // 检查是否为{0,1}组合
             if (input[mergeTokenCLArrayPosition.start + 0 + i*MERGE_COUNT*2] == 0 && input[mergeTokenCLArrayPosition.start + 1 + i*MERGE_COUNT*2] == 1) {
                 //如果是，说明是一个convert交易，不用解析上半部分的“5拆3逻辑”（进入第2步）
-                if(convertTokenReceivedCRArrayPosition.start == CONVERT_ZERO_X && input[convertTokenReceivedCRArrayPosition.start + 1] == CONVERT_ZERO_Y) {
+                if(input[convertTokenReceivedCRArrayPosition.start + i * 2] == CONVERT_ZERO_X && input[convertTokenReceivedCRArrayPosition.start + 1 + i * 2] == CONVERT_ZERO_Y) {
                    //如果是，说明是private token转成amount的交易，应该处理
+                    require(input[positions[17].start + i * 2] == CONVERT_ZERO_X && input[positions[17].start + 1 + i * 2] == CONVERT_ZERO_Y, "all tokens are empty");
+                    //handlePrivateToAmount();
                 }else{
                     //如果不是，说明是amount 转成private token的交易，应该处理
+                    //handleAmountToPrivate();
                 }
             }else{
                 //如果不是，则解析“5拆3”的token，忽略converts（continue）
+                //handleTransaction();
             }
         }
         return true;
