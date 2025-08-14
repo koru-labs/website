@@ -23,7 +23,7 @@ async function main() {
 
 
     let maxTps = 0;
-    const BATCH_SIZE = 1500; // 每批发送的交易数量
+    const BATCH_SIZE = 4000; // 每批发送的交易数量
 
     try {
         let nonce = await provider.getTransactionCount(sender.address);
