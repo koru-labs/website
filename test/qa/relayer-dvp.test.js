@@ -209,10 +209,10 @@ async function signChunkHash(wallet, chunkHash) {
 
 describe("DVP with different token contract in node3", function () {
     this.timeout(1200000)
-    const scAddress1 = '0x4e7d8fF47A4754945a9D42106a6e923BA450D8bD';
-    const scAddress2 = '0x3456344AB83d8771d8F8E3A269262fb1D32BEfca';
-    const zkcscAddress = '0xf4DeC7DD923d2D1cf8C67a4F23412d7D670F2125';
-    const relayerCallerAddress = '0x43F4B6770D578A8E06337005AAE1617c53462163';
+    const scAddress1 = '0x75804f4Bcd050b38dC9138e8A95F2ABd7A303b40';
+    const scAddress2 = '0x009361e8032C83b83A4A02D642B247988A45f784';
+    const zkcscAddress = '0x60B9222666D9587936c51decC7e093F7aDe27046';
+    const relayerCallerAddress = '0x2e2E31e9fF6343f31730f1463C74E94b697e6c30';
     const MAX_UINT256 = ethers.MaxUint256;
     const MIN_UINT256 = ethers.MinInt256;
 
@@ -242,7 +242,7 @@ describe("DVP with different token contract in node3", function () {
         }
     });
 
-    it.skip("Mint to user", async () => {
+    it("Mint to user", async () => {
         await DirectMint(accounts.Minter,amount,scAddress1);
         await DirectMint(accounts.To1,amount,scAddress2);
         postBalance1 = {
@@ -265,12 +265,12 @@ describe("DVP with different token contract in node3", function () {
         zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
     });
     it.skip('Deploy relayerCaller ',async () => {
-        // let relayerCallerFactory = await ethers.getContractFactory("RelayerCaller");
-        // relayerCaller = await relayerCallerFactory.deploy(zkcsc.target);
-        // await relayerCaller.waitForDeployment();
-        // console.log("RelayerCaller Deployed at:", relayerCaller.target)
+        let relayerCallerFactory = await ethers.getContractFactory("RelayerCaller");
+        relayerCaller = await relayerCallerFactory.deploy(zkcsc.target);
+        await relayerCaller.waitForDeployment();
+        console.log("RelayerCaller Deployed at:", relayerCaller.target)
 
-        relayerCaller = await ethers.getContractAt("RelayerCaller", relayerCallerAddress);
+        // relayerCaller = await ethers.getContractAt("RelayerCaller", relayerCallerAddress);
 
     });
 

@@ -49,11 +49,16 @@
     "wlin-proxy-test": "npx hardhat run test/wlin/proxy_test.js --network ucl_L2",
     "wlin-eth-test": "npx hardhat run test/wlin/eth2_test.js --network eth_dev",
     "wlin-perf": "npx hardhat run test/wlin/performance_test.js --network ucl_L2",
+    "wlin-cluster": "npx hardhat run test/wlin/simpleToken_test.js --network ucl_L2_cluster",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2",
-    "mc-test-zkcsc" : "npx hardhat run test/mc/test_zkcsc.js --network ucl_L2",
 
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
+    "qa-circle-tps": "npx hardhat test test/qa/performance.test.js --network ucl_L2",
+    "qa-circle-dvp": "npx hardhat test test/qa/dvp.test.js --network ucl_L2",
+    "qa-circle-relayerdvp": "npx hardhat test test/qa/relayer-dvp.test.js --network ucl_L2",
+    "qa-circle-jenkins": "npx hardhat test test/qa/jenkins.test.js --network ucl_L2",
+    "qa-circle-grpc": "npx hardhat test test/qa/grpc.test.js --network ucl_L2",
 
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
