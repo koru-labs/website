@@ -30,3 +30,12 @@ import "../model/TokenModel.sol";
         TokenModel.TokenEntity[] consumedTokens;
         uint256[20] publicInputs;
     }
+
+    struct RollupTransferEvent {
+        address from;
+        TokenModel.TokenEntity token;
+    }
+
+    struct RollupBurnEvent {
+        TokenModel.TokenEntity token;
+    }

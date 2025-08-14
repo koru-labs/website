@@ -330,6 +330,11 @@ library TokenEventLib {
     }
 
     function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory entity) public {
+        RollupBurnEvent memory e = RollupBurnEvent({
+            token: entity
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupBurn", body);
     }
 
     function triggerRollupForSplit( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory entity,
@@ -343,7 +348,13 @@ library TokenEventLib {
         _l2Event.sendRollupEvent(eventSource, "RollupSplit", body);
     }
 
-    function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token) public {
+    function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, address fromAddress, TokenModel.TokenEntity memory token) public {
+        RollupTransferEvent memory e = RollupTransferEvent({
+            from: fromAddress,
+            token: token
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupTransfer", body);
     }
 
     function triggerRollupForCancel( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {

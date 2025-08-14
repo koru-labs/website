@@ -253,7 +253,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
-        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this),  tokenEntity);
+        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this),  msg.sender,tokenEntity);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
