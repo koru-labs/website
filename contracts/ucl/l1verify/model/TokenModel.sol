@@ -22,7 +22,7 @@ library TokenModel {
 
     struct Account {
         ElGamal balance;
-        mapping(uint256 => uint256) assets; //pk -> tokenId
+        mapping(uint256 => uint256) assets; //tokenId -> tokenId
         mapping(uint256 => uint256) allowances;
     }
 

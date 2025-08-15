@@ -26,6 +26,16 @@ contract Handle is PrivateTokenData{
         uint256 y;
     }
 
+    // mint
+    function mint(uint256 receiverPkX,uint256 tokenId) public {
+        TokenUtilsLib.addToken(_accounts, receiverPkX, tokenId);
+    }
+
+    // burn
+    function burn(uint256 spenderPkX,uint256 tokenId) public {
+        TokenUtilsLib.removeToken(_accounts,spenderPkX, tokenId);
+    }
+
     // 验证
     function handle(uint256[8] calldata proof, uint256[103] calldata inputs) public returns (bool) {
         Verifier.verifyProof(proof, inputs);
@@ -44,6 +54,8 @@ contract Handle is PrivateTokenData{
         Classification.ArrayPosition memory transTokenCLArrayPosition = positions[4];
         Classification.ArrayPosition memory rollbackTokenCLArrayPosition = positions[6];
         Classification.ArrayPosition memory SpenderPkArrayPosition = positions[8];
+        Classification.ArrayPosition memory ReceiverPkArrayPosition = positions[9];
+        Classification.ArrayPosition memory BackupPkArrayPosition = positions[10];
         Classification.ArrayPosition memory convertPkArrayPosition = positions[11];
         Classification.ArrayPosition memory convertTokenReceivedCLArrayPosition = positions[14];
         Classification.ArrayPosition memory convertTokenReceivedCRArrayPosition = positions[15];
@@ -81,7 +93,9 @@ contract Handle is PrivateTokenData{
                 uint256[] memory transferTokenCLArray = sliceArray(input, transTokenCLArrayPosition.start+i*2, transTokenCLArrayPosition.start+i*2+2);
                 uint256[] memory rollbackTokenCLArray = sliceArray(input, rollbackTokenCLArrayPosition.start+i*2, rollbackTokenCLArrayPosition.start+i*2+2);
                 uint256[] memory spenderPkArray = sliceArray(input, SpenderPkArrayPosition.start+i*2, SpenderPkArrayPosition.start+i*2+2);
-                processTokenSplit(mergeTokenCLArray,changeTokenCLArray[0],transferTokenCLArray[0],rollbackTokenCLArray[0],spenderPkArray[0]);
+                uint256[] memory receiverPkArray = sliceArray(input, ReceiverPkArrayPosition.start+i*2, ReceiverPkArrayPosition.start+i*2+2);
+                uint256[] memory backupPkArray = sliceArray(input, BackupPkArrayPosition.start+i*2, BackupPkArrayPosition.start+i*2+2);
+                processTokenSplit(mergeTokenCLArray,changeTokenCLArray[0],transferTokenCLArray[0],rollbackTokenCLArray[0],spenderPkArray[0],receiverPkArray[0],backupPkArray[0]);
             }
         }
         return true;
@@ -98,7 +112,7 @@ contract Handle is PrivateTokenData{
     }
 
     // processTokenSplit
-    function processTokenSplit(uint256[] memory mergeTokenCLArray,uint256 changeTokenCLX,uint256 transferTokenCLX,uint256 rollbackTokenCLX,uint256 spenderPkX) public  {
+    function processTokenSplit(uint256[] memory mergeTokenCLArray,uint256 changeTokenCLX,uint256 transferTokenCLX,uint256 rollbackTokenCLX,uint256 spenderPkX,uint256 receiverPkX,uint256 backupPkX) public  {
         uint256[] memory mergeTokenCLXs = new uint256[](mergeTokenCLArray.length / 2);
 
         uint256 count = 0;
@@ -119,9 +133,10 @@ contract Handle is PrivateTokenData{
         TokenUtilsLib.removeTokens(_accounts, spenderPkX, actualMergeTokenCLXs);
 
         _rollBackTokens[transferTokenCLX] = rollbackTokenCLX;
-        TokenUtilsLib.addToken(_accounts, spenderPkX, changeTokenCLX);
+
+        TokenUtilsLib.addToken(_accounts, receiverPkX, changeTokenCLX);
         TokenUtilsLib.addToken(_accounts, spenderPkX, transferTokenCLX);
-        TokenUtilsLib.addToken(_accounts, spenderPkX, rollbackTokenCLX);
+        TokenUtilsLib.addToken(_accounts, backupPkX, rollbackTokenCLX);
     }
 
     // processPrivateToAmount

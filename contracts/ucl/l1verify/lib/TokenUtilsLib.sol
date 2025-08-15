@@ -29,6 +29,14 @@ library TokenUtilsLib {
         accounts[to].assets[token] = token;
     }
 
+    function removeToken(
+        mapping(uint256 => TokenModel.Account) storage accounts,
+        uint256 to,
+        uint256 tokenId
+    ) external {
+        delete accounts[to].assets[tokenId];
+    }
+
     function removeTokens(
         mapping(uint256 => TokenModel.Account) storage accounts,
         uint256 to,
