@@ -1,10 +1,10 @@
 module.exports = {
     "ADDRESSES":
         {
-            "TOKEN_EVENT_LIB": "0xD7dcA143E87F541f2EFcC201fE1547F231B0F4e0",
-            "HAMSAL2EVENT": "0x697db1f34614aCEc27CCEC76cC99FC15256b25Ef",
-            "INSTITUTION_REGISTRATION": "0x7E32c21E47970c0a163abF3a6cedeC3a072f04Bd",
-            "PROXY_ADDRESS": "0x4D4E0e5895953E58B1549fDc020F582c30149040"
+            "TOKEN_EVENT_LIB": "",
+            "HAMSAL2EVENT": "0xf480453AF6D4432112112dA9D48c07D5D0E7C351",
+            "INSTITUTION_REGISTRATION": "0xa20F484078bfC449dE4DAb2d441707562BC9229f",
+            "PROXY_ADDRESS": "0xce85112109328f2A918b7186bf1076902916Ef3a"
         },
     institutions: [
         // {
@@ -60,7 +60,7 @@ module.exports = {
                 {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},
                 {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},
                 {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},
-                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"minter"},
+                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"normal"},
                 {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}  //this is account in wlin meta-mask
             ]
         },
@@ -72,12 +72,12 @@ module.exports = {
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
-                x: "20939066757645918795634673682728216909767846507882077869735730662556512988867",
-                y: "10484302653646958667875402192638179073860126846729616349907290732560904524336",
+                x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
+                y: "3128266901887868401076427103054188770721597970324357252676559377941490258192",
             },
-            privateKey: "1269647837676258859940892295235950289673852489198963778624801308185618508021",
+            privateKey: "1225488842017272744135636207705567620992992264873252888631714276279179716352",
             users: [
-                {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "normal"}
+                {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter"},
             ]
         }
     ]

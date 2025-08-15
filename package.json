@@ -56,6 +56,7 @@
     "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2",
     "qa-circle-tps": "npx hardhat test test/qa/performance.test.js --network ucl_L2",
     "qa-circle-dvp": "npx hardhat test test/qa/dvp.test.js --network ucl_L2",
+    "qa-circle-dvp2": "npx hardhat test test/qa/dvp2node.test.js --network ucl_L2",
     "qa-circle-relayerdvp": "npx hardhat test test/qa/relayer-dvp.test.js --network ucl_L2",
     "qa-circle-jenkins": "npx hardhat test test/qa/jenkins.test.js --network ucl_L2",
     "qa-circle-grpc": "npx hardhat test test/qa/grpc.test.js --network ucl_L2",

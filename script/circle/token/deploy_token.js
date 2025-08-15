@@ -76,7 +76,37 @@ async function setMinterAllowed(deployed) {
     const minters = [
         {account: accounts.Minter, name: "Minter"},
         {account: accounts.Minter2, name: "Minter2"},
-        {account: accounts.Minter3, name: "Minter3"}
+        {account: accounts.Minter3, name: "Minter3"},
+        // {account: accounts.Node4Minter, name: "MinterNode4"}
+    ];
+
+    const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
+        libraries: {
+            "TokenEventLib": deployed.libraries.TokenEventLib,
+            "TokenUtilsLib": deployed.libraries.TokenUtilsLib,
+            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
+            "SignatureChecker": deployed.libraries.SignatureChecker
+        }
+    });
+    const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
+
+    for (const minter of minters) {
+        await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
+        console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`);
+    }
+}
+async function setMinterAllowedNode4(deployed) {
+    const minterAllowedAmount = {
+        "cl_x": 18337151451771335392785870672133861240784843750980578638191845863693185387011n,
+        "cl_y": 5672986448346330714753587689305845077336948440684914954151361706899949405217n,
+        "cr_x": 2120696420283048261210174687845823089962366568753327180246396120676137019125n,
+        "cr_y": 20146536384521784019653772037596715315934699643177935835102654846676674600125n,
+    }
+
+    console.log("Configuring minter allowed amount...");
+
+    const minters = [
+        {account: accounts.Node4Minter, name: "Minter"},
     ];
 
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
@@ -98,6 +128,7 @@ async function setMinterAllowed(deployed) {
 module.exports = {
     deployToken,
     allowBanksInTokenSmartContract,
-    setMinterAllowed
+    setMinterAllowed,
+    setMinterAllowedNode4
 };
 
