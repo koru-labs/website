@@ -62,6 +62,8 @@ abstract contract PrivateTokenCore is
         minters[minter] = true;
         _privateMinterAllowed[minter] = privateAllowedAmount;
         TokenEventLib.triggerMinterAllowedSetEvent(_l2Event, address(this), minter, msg.sender, privateAllowedAmount);
+        TokenModel.GrumpkinPublicKey memory minterPk = _institutionRegistration.getUserInstGrumpkinPubKey(minter);
+        TokenEventLib.triggerRollupForMintAllowedSet(_l2Event, address(this), msg.sender, minter,minterPk, privateAllowedAmount);
         return true;
     }
     
@@ -145,6 +147,7 @@ abstract contract PrivateTokenCore is
     function privateBurn(uint256 tokenId) external onlyAllowedBank nonReentrant virtual {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
+        TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[entity.rollbackTokenId];
         require(entity.id != 0, "invalid token");
 
         TokenModel.ElGamal memory supplyDecrease = _accounts[msg.sender].assets[tokenId].amount;
@@ -163,8 +166,10 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply, _numberOfTotalSupplyChanges);
         TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, tokenId);
 
+        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+        TokenModel.GrumpkinPublicKey memory toPk = _institutionRegistration.getUserInstGrumpkinPubKey(entity.to);
+        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  toPk, backupPk, entity, backupEntity);
         emit PrivateBurn(msg.sender, supplyDecrease);
-        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  entity);
     }
 
     function privateSplitToken(
@@ -229,6 +234,7 @@ abstract contract PrivateTokenCore is
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
+        TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
         require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
 
         uint256[] memory rollbackTokens = new uint256[](1);
@@ -253,7 +259,9 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
-        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this),  tokenEntity);
+
+        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
         return true;
     }
