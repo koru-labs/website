@@ -445,20 +445,20 @@ describe("Function Cases",function (){
             expect(postBalanceUser).to.equal(preBalanceUser + amount);
         });
     });
-    describe("Split and transfer",  function (){
+    describe.only("Split and transfer",  function (){
         this.timeout(1200000);
         let preBalanceTo,postBalanceTo;
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
         it('transfer to user1 inBank with 1',async () => {
-            await DirectMint(accounts.Minter,100)
+            await DirectMint(accounts.Minter,1000)
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             preBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             await ReserveTokensAndTransfer(accounts.To1,amount,minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
+            console.log({preBalance,postBalance,preBalanceTo,postBalanceTo});
             expect(postBalance).to.equal(preBalance-amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });

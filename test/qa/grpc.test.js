@@ -151,28 +151,43 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// async function DirectMint(receiver,amount) {
+//     const minterMeta = await createAuthMetadata(accounts.MinterKey)
+//     const generateRequest = {
+//         sc_address: config.contracts.PrivateERCToken,
+//         token_type: '0',
+//         to_address: receiver,
+//         amount: amount
+//     };
+//     try {
+//         const response = await client.generateDirectMint(generateRequest,minterMeta);
+//         console.log("Generate Mint Proof response:", response);
+//         const receipt = await client.waitForActionCompletion(client.getMintProof, response.request_id,minterMeta)
+//         // const receipt = await client.waitForActionCompletion(client.getMintProof, response,minterMeta)
+//         console.log("receipt", receipt)
+//
+//         await sleep(3000);
+//     }catch (error){
+//         const wrappedError = new Error('Minting failed: ' + error.details);
+//         wrappedError.code = error.code;
+//         wrappedError.details = error.details;
+//         throw wrappedError;
+//     }
+// }
+
 async function DirectMint(receiver,amount) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
     const generateRequest = {
+        from_address: accounts.Minter,
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         to_address: receiver,
         amount: amount
     };
-    try {
-        const response = await client.generateDirectMint(generateRequest,minterMeta);
-        console.log("Generate Mint Proof response:", response);
-        const receipt = await client.waitForActionCompletion(client.getMintProof, response.request_id,minterMeta)
-        // const receipt = await client.waitForActionCompletion(client.getMintProof, response,minterMeta)
-        //console.log("receipt", receipt)
-
-        // await sleep(3000);
-    }catch (error){
-        const wrappedError = new Error('Minting failed: ' + error.details);
-        wrappedError.code = error.code;
-        wrappedError.details = error.details;
-        throw wrappedError;
-    }
+    const response = await client.generateDirectMint(generateRequest,minterMeta);
+    console.log("Generate Mint Proof response:", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+    await sleep(4000)
 }
 
 const MAX_UINT256 = ethers.MaxUint256;
@@ -251,7 +266,8 @@ describe('Privacy Proof', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.To1,
-                amount: 10
+                amount: 10,
+                comment: "Transfer"
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
@@ -269,7 +285,8 @@ describe('Privacy Proof', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 // to_address: accounts.To1,
-                amount: 10
+                amount: 10,
+                comment: "Burn"
             };
             let response = await client.generateSplitToken(splitRequest,minterMeta);
             await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
@@ -286,7 +303,8 @@ describe('Privacy Proof', function () {
                 token_type: '0',
                 from_address: accounts.Minter,
                 to_address: accounts.To1,
-                amount: 0
+                amount: 0,
+                comment: "Transfer"
             };
             try {
                 await client.generateSplitToken(splitRequest,minterMeta);
@@ -310,7 +328,8 @@ describe('Privacy Proof', function () {
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: userInNode1,
-                amount: 10
+                amount: 10,
+                comment: "ApproveToTransfer"
             };
             console.log("generateSplitTokenRequest:", splitRequest)
             let response = await client.generateApproveProof(splitRequest,to1Meta);
@@ -326,14 +345,9 @@ describe('Privacy Proof', function () {
                 from_address: accounts.To1,
                 spender_address : accounts.Spender1,
                 to_address: userInNode1,
-                amount: 0
+                amount: 0,
+                comment: "ApproveToTransfer"
             };
-            // console.log("generateSplitTokenRequest:", splitRequest)
-            // let response = await client.generateApproveProof(splitRequest,to1Meta);
-            // console.log("Generate transfer Proof response:", response);
-            // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,to1Meta)
-            // expect(response.status).to.equal("TOKEN_ACTION_STATUS_PROVE_SUC")
-
             try {
                 await client.generateApproveProof(splitRequest,to1Meta);
             }catch (error){
