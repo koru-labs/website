@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const  {
     deployLibs,
-    deployL2Event,
+    deployL2Event, deployL1Handle,
 } = require("./deploy_infra")
 const {deployInstProxy, deployInstUserRegistry} = require("./deploy_inst_user_registry")
 
@@ -23,6 +23,7 @@ async function main() {
 
     await deployLibs(deployed)
     await deployL2Event(deployed)
+    await deployL1Handle(deployed)
     await deployInstUserRegistry(deployed)
     await deployInstProxy(deployed)
     await saveDeploymentInfo(deployed,hre, ethers, fs, path)
