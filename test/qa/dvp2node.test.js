@@ -423,6 +423,7 @@ describe("DVP with different token contract in node3", function () {
             token1: await getTokenBalanceNode4(node4_user,scAddress1),
             token2: await getTokenBalanceNode4(node4_user,scAddress2)
         }
+        console.log("PreBalance: ",{preBalance1,preBalance2})
         console.log("PostBalance : ",{postBalance1,postBalance2})
         expect(postBalance1.token1).equal(preBalance1.token1 - amount1);
         expect(postBalance1.token2).equal(preBalance1.token2 + amount2);
