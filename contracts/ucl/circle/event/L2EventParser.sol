@@ -37,4 +37,5 @@ contract L2EventParser {
     function parseRollupSplit(RollupSplitEvent memory e) public view {}
     function parseRollupBurned(RollupBurnEvent memory e) public view {}
     function parseRollupTransferred(RollupTransferEvent memory e) public view {}
+    function parseRollupMintAllowedSet(RollupMintAllowedSetEvent memory e) public view {}
 }

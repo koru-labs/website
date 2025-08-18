@@ -32,10 +32,24 @@ import "../model/TokenModel.sol";
     }
 
     struct RollupTransferEvent {
-        address from;
-        TokenModel.TokenEntity token;
+        address fromAddress;
+        address toAddress;
+        TokenModel.GrumpkinPublicKey pk;
+        TokenModel.ElGamal tokenAmount;
     }
 
     struct RollupBurnEvent {
-        TokenModel.TokenEntity token;
+        address fromAddress;
+        address toAddress;
+        TokenModel.GrumpkinPublicKey toPk;
+        TokenModel.GrumpkinPublicKey backupPk;
+        TokenModel.ElGamal toAmount;
+        TokenModel.ElGamal backupAmount;
+    }
+
+    struct RollupMintAllowedSetEvent {
+        address ownerAddress;
+        address minterAddress;
+        TokenModel.GrumpkinPublicKey minterPk;
+        TokenModel.ElGamal tokenAmount;
     }
