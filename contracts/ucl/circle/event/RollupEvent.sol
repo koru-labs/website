@@ -20,41 +20,36 @@ import "../model/TokenModel.sol";
     }
 
 
-//    struct RollupToken {
-//        uint256 tokenId;
-//        address tokenSCAddress;
-//        uint256 tokenType;
-//        address owner;
-//        address manager;
-//        TokenModel.TokenStatus status;
-//        RollupEventTypeEnum eventType;
-//
-//        uint256 cl_x;
-//        uint256 cl_y;
-//        uint256 cr_x;
-//        uint256 cr_y;
-//    }
-
-    struct RollupToken {
-        uint256 tokenId;
-        address owner;
-        TokenModel.TokenStatus status;
-        TokenModel.ElGamal amount;
-        address to;
-        uint256 rollbackTokenId;
-    }
-
     struct RollupMintEvent {
-        RollupToken token;
+        TokenModel.TokenEntity token;
         uint256[22] publicInputs;
     }
 
-    struct RollupBurnEvent {
-        RollupToken token;
+    struct RollupSplitEvent {
+        TokenModel.TokenEntity token;
+        TokenModel.TokenEntity[] consumedTokens;
+        uint256[20] publicInputs;
     }
 
-    struct RollupSplitEvent {
-        RollupToken token;
-        uint256[] consumedTokenIds;
-        uint256[20] publicInputs;
+    struct RollupTransferEvent {
+        address fromAddress;
+        address toAddress;
+        TokenModel.GrumpkinPublicKey pk;
+        TokenModel.ElGamal tokenAmount;
+    }
+
+    struct RollupBurnEvent {
+        address fromAddress;
+        address toAddress;
+        TokenModel.GrumpkinPublicKey toPk;
+        TokenModel.GrumpkinPublicKey backupPk;
+        TokenModel.ElGamal toAmount;
+        TokenModel.ElGamal backupAmount;
+    }
+
+    struct RollupMintAllowedSetEvent {
+        address ownerAddress;
+        address minterAddress;
+        TokenModel.GrumpkinPublicKey minterPk;
+        TokenModel.ElGamal tokenAmount;
     }

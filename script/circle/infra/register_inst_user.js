@@ -47,7 +47,21 @@ module.exports = async function registerInstitutionAndUser() {
             if (address == institutions[i].address) {
                 continue;
             }
+            // RPC call contract to register user
             await registerUser(client, institutions[i].ethPrivateKey, address, role);
+
+            //JS call contract to register user
+            // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
+            // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy, wallet);
+            // try {
+            //     let regTx = await institutionUserRegistry.registerUser(address);
+            //     await regTx.wait();
+            // } catch (error) {
+            //     if (!error.message.includes("User already registered")) {
+            //         console.log(error)
+            //     }
+            //     continue;
+            // }
             console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
         }
     }

@@ -356,7 +356,7 @@ async function cancelAllSplitTokens(ownerWallet,scAddress){
     }
     await sleep(3000);
 }
-describe.only("Function Cases",function (){
+describe("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
 
@@ -405,7 +405,7 @@ describe.only("Function Cases",function (){
             console.log(await getTokenBalanceByAuth(client1,userInNode1,node4AdminMeta));
         })
     });
-    describe.only("Mint", function () {
+    describe("Mint", function () {
         this.timeout(1200000);
         const recevier = accounts.Minter;
         beforeEach(async function () {
@@ -445,20 +445,20 @@ describe.only("Function Cases",function (){
             expect(postBalanceUser).to.equal(preBalanceUser + amount);
         });
     });
-    describe("Split and transfer",  function (){
+    describe.only("Split and transfer",  function (){
         this.timeout(1200000);
         let preBalanceTo,postBalanceTo;
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
         it('transfer to user1 inBank with 1',async () => {
-            await DirectMint(accounts.Minter,100)
+            await DirectMint(accounts.Minter,1000)
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             preBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             await ReserveTokensAndTransfer(accounts.To1,amount,minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(accounts.To1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            console.log({preBalance,postBalance,preBalanceTo,postBalanceTo})
+            console.log({preBalance,postBalance,preBalanceTo,postBalanceTo});
             expect(postBalance).to.equal(preBalance-amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
@@ -1781,7 +1781,7 @@ describe("Permission and BlackList", function () {
         newAdminMeta = await createAuthMetadata(newAdminWallet.privateKey)
     })
 
-    describe("Registe and set allowed",function (){
+    describe.only("Registe and set allowed",function (){
         this.timeout(1200000);
         it('Registe user with exist admin auth', async () => {
             await registerUser(adminPrivateKey,client, normalWallet.address, "normal");

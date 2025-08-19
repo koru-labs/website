@@ -5,7 +5,8 @@ const path = require("path");
 
 const { deployToken,
     allowBanksInTokenSmartContract,
-    setMinterAllowed} = require("./deploy_token")
+    setMinterAllowed, setMinterAllowedNode4
+} = require("./deploy_token")
 
 const {loadExistingDeployments, saveDeploymentInfo} = require("../deploy_help");
 
@@ -14,7 +15,8 @@ async function main() {
 
     await deployToken(deployed)
     await allowBanksInTokenSmartContract(deployed);
-    await setMinterAllowed(deployed)
+    await setMinterAllowed(deployed);
+    // await setMinterAllowedNode4(deployed);
     await saveDeploymentInfo(deployed,hre, ethers, fs, path)
 }
 
