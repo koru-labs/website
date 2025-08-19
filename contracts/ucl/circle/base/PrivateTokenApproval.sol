@@ -169,4 +169,8 @@ abstract contract PrivateTokenApproval is
 
         emit PrivateApprovalRevoked(owner, msg.sender, allowanceTokenId);
     }
+
+    function isAllowanceExists(address owner,address spender, uint256 tokenId) external view returns (bool) {
+        return TokenUtilsLib.isAllowanceExists(_accounts, owner, spender, tokenId);
+    }
 }

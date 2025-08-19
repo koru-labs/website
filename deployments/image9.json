@@ -17,11 +17,11 @@
     "L1Handle": "0xb55bc7E045876a72DD88fBd17887c36d26326Ed4",
     "InstitutionUserRegistry": "0xB85c4dBd44c501438794068d3c1A1bB749EDBF74",
     "InstUserProxy": "0xc6ba91179658c68bf6fD43c33a6f56BE6aa1636A",
-    "PrivateERCToken": "0x33d7e8865c27DE2241F2270B4E5DeD831aAfe4a3"
+    "PrivateERCToken": "0xBf4C865D5C8F1324A535171E4774f6b97793c313"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-08-19T08:55:28.450Z",
+    "timestamp": "2025-08-19T09:35:18.098Z",
     "network": "ucl_L2",
     "chainId": "1337"
   }
