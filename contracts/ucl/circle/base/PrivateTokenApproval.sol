@@ -87,15 +87,7 @@ abstract contract PrivateTokenApproval is
         require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
         require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
 
-        uint256[] memory allowanceTokens = _accounts[from].allowances[msg.sender];
-        bool isAuthorized = false;
-        for (uint256 i = 0; i < allowanceTokens.length; i++) {
-            if (allowanceTokens[i] == tokenId) {
-                isAuthorized = true;
-                break;
-            }
-        }
-        require(isAuthorized, "PrivateERCToken: invalid allowance tokenId");
+        require(TokenUtilsLib.isAllowanceExists(_accounts, from, msg.sender, tokenId), "PrivateERCToken: invalid allowance tokenId");
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = allowanceToken.rollbackTokenId;
@@ -131,15 +123,7 @@ abstract contract PrivateTokenApproval is
         require(spender != address(0), "PrivateERCToken: spender is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
-        uint256[] memory onChainAllowanceTokens = _accounts[msg.sender].allowances[spender];
-        bool tokenFound = false;
-        for (uint256 i = 0; i < onChainAllowanceTokens.length; i++) {
-            if (onChainAllowanceTokens[i] == allowanceTokenId) {
-                tokenFound = true;
-                break;
-            }
-        }
-        require(tokenFound, "PrivateERCToken: allowance tokenId not found for this spender");
+        require(TokenUtilsLib.isAllowanceExists(_accounts, msg.sender, spender, allowanceTokenId), "PrivateERCToken: allowance tokenId not found for this spender");
 
         TokenModel.TokenEntity memory allowanceToken = _accounts[msg.sender].assets[allowanceTokenId];
         require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
@@ -165,11 +149,9 @@ abstract contract PrivateTokenApproval is
         require(owner != address(0), "PrivateERCToken: owner is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
-        uint256 onChainAllowanceTokenId = _accounts[owner].allowances[msg.sender];
-        require(onChainAllowanceTokenId != 0, "PrivateERCToken: no allowance exists for this spender");
-        require(allowanceTokenId == onChainAllowanceTokenId, "PrivateERCToken: allowance tokenId mismatch");
+        require(TokenUtilsLib.isAllowanceExists(_accounts, owner, msg.sender, allowanceTokenId), "PrivateERCToken: no allowance exists for this spender");
 
-        TokenModel.TokenEntity memory allowanceToken = _accounts[owner].assets[onChainAllowanceTokenId];
+        TokenModel.TokenEntity memory allowanceToken = _accounts[owner].assets[allowanceTokenId];
         require(allowanceToken.id != 0, "PrivateERCToken: allowance token not found in assets");
         require(allowanceToken.owner == owner, "PrivateERCToken: owner is not the token owner");
         require(allowanceToken.rollbackTokenId != 0, "PrivateERCToken: rollback token not found");
@@ -183,16 +165,8 @@ abstract contract PrivateTokenApproval is
         TokenUtilsLib.removeTokens(_accounts, owner, allowanceTokenIds);
         TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), owner, allowanceTokenId);
 
-        TokenUtilsLib.removeAllowanceRecord(_accounts, owner, msg.sender);
+        TokenUtilsLib.removeAllowanceRecord(_accounts, owner, msg.sender, allowanceTokenId);
 
         emit PrivateApprovalRevoked(owner, msg.sender, allowanceTokenId);
-    }
-    
-    function getAllowanceTokens(address spender) external view virtual returns (uint256[] memory) {
-        return _accounts[msg.sender].allowances[spender];
-    }
-
-    function getAllowanceTokensFrom(address owner) external view virtual returns (uint256[] memory) {
-        return _accounts[owner].allowances[msg.sender];
     }
 }

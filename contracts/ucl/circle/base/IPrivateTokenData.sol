@@ -22,9 +22,6 @@ interface IPrivateTokenData {
     function getAccountToken(address account, uint256 tokenId) external view returns (TokenModel.TokenEntity memory);
     function setAccountToken(address account, uint256 tokenId, TokenModel.TokenEntity memory token) external;
     function deleteAccountToken(address account, uint256 tokenId) external;
-    function getAccountAllowance(address account, address spender) external view returns (uint256);
-    function setAccountAllowance(address account, address spender, uint256 tokenId) external;
-    function deleteAccountAllowance(address account, address spender) external;
     
     function getPrivateMinterAllowed(address minter) external view returns (TokenModel.ElGamal memory);
     function setPrivateMinterAllowed(address minter, TokenModel.ElGamal memory allowed) external;

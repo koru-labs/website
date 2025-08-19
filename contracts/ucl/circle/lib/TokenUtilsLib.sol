@@ -178,7 +178,7 @@ library TokenUtilsLib {
         address spender,
         uint256 tokenId
     ) external {
-        accounts[owner].allowances[spender].push(tokenId);
+        accounts[owner].allowances[spender][tokenId] = true;
     }
     
     function removeAllowanceRecord(
@@ -187,14 +187,19 @@ library TokenUtilsLib {
         address spender,
         uint256 tokenId
     ) external returns (bool) {
-        uint256[] storage allowanceTokens = accounts[owner].allowances[spender];
-        for (uint256 i = 0; i < allowanceTokens.length; i++) {
-            if (allowanceTokens[i] == tokenId) {
-                allowanceTokens[i] = allowanceTokens[allowanceTokens.length - 1];
-                allowanceTokens.pop();
-                return true;
-            }
+        if (accounts[owner].allowances[spender][tokenId]) {
+            delete accounts[owner].allowances[spender][tokenId];
+            return true;
         }
         return false;
+    }
+
+    function isAllowanceExists(
+        mapping(address => TokenModel.Account) storage accounts,
+        address owner,
+        address spender,
+        uint256 tokenId
+    ) external view returns (bool) {
+        return accounts[owner].allowances[spender][tokenId];
     }
 }

@@ -22,7 +22,4 @@ interface IPrivateTokenApproval {
     function privateRevokeApproval(address spender, uint256 allowanceTokenId) external;
 
     function privateRevokeApprovalFrom(address owner, uint256 allowanceTokenId) external;
-
-    function getAllowanceTokens(address spender) external view returns (uint256);
-    function getAllowanceTokensFrom(address owner) external view returns (uint256);
 }

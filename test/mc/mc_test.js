@@ -146,8 +146,9 @@ async function testApproveMultipleTokens() {
         
         // 直接调用合约方法而不是使用gRPC客户端
         const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
-        const allowanceTokens = await contract.getAllowanceTokens(accounts.Spender1);
-        console.log("Approved tokens for Spender1 (from contract):", allowanceTokens);
+        console.log("需要查询授权列表，原查询方法废弃")
+        // const allowanceTokens = await contract.getAllowanceTokens(accounts.Spender1);
+        // console.log("Approved tokens for Spender1 (from contract):", allowanceTokens);
         
         approvedTokens = await getApproveTokenList(client, accounts.Minter, config.contracts.PrivateERCToken, accounts.Spender1, metadata);
         console.log("Approved tokens for Spender1 (from gRPC):", approvedTokens);
