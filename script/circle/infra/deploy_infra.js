@@ -11,6 +11,7 @@ const {
     deployConvert2pUSDCVerifier,
     deployConvert2USDCVerifier
 } = require("./deploy_verifier");
+const hardhatConfig = require("../../../hardhat.config");
 
 
 const Fixed_Addresses = require("../configuration").ADDRESSES;
@@ -39,8 +40,7 @@ async function deployLibs(deployed) {
     await tokenEventLib.waitForDeployment();
     console.log("TokenEventLib is deployed at :", tokenEventLib.target);
     deployed.libraries.TokenEventLib = tokenEventLib.target;
-
-    const TokenUtilsLibFactory = await ethers.getContractFactory("TokenUtilsLib", {
+    const TokenUtilsLibFactory = await ethers.getContractFactory("contracts/ucl/circle/lib/TokenUtilsLib.sol:TokenUtilsLib", {
         libraries: {
             "CurveBabyJubJubHelper": deployed.libraries.CurveBabyJubJubHelper
         }
@@ -70,9 +70,61 @@ async function deployL2Event(deployed) {
     console.log("HamsaL2Event deployment finished");
 }
 
+async function deployL1Handle(deployed) {
+    console.log("L1Handle deployment starts");
+
+    const l1CustomNetwork = {
+        name: "ETH",
+        chainId: 3151908
+    };
+
+    const options = {
+        batchMaxCount: 1,
+        staticNetwork: true
+    };
+
+    const L1Url = hardhatConfig.networks.eth_dev.url;
+    const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+
+    const wallet = new ethers.Wallet(hardhatConfig.networks.eth_dev.accounts[0], l1Provider);
+
+    if (Fixed_Addresses.L1HANDLE == "") {
+        const Classification = await ethers.getContractFactory("contracts/ucl/l1verify/Classification.sol:Classification",wallet);
+        const classification = await Classification.deploy();
+        await classification.waitForDeployment();
+        console.log("L1 Classification is deploy at :", await classification.getAddress());
+
+        const TokenUtilsLib = await ethers.getContractFactory("contracts/ucl/l1verify/lib/TokenUtilsLib.sol:TokenUtilsLib",wallet);
+        const tokenUtilsLib = await TokenUtilsLib.deploy();
+        await tokenUtilsLib.waitForDeployment();
+        console.log("L1 TokenUtilsLib is deploy at :", await tokenUtilsLib.getAddress());
+
+        const Verifier = await ethers.getContractFactory("contracts/ucl/l1verify/lib/verify/Verifier.sol:Verifier",wallet);
+        const verifier = await Verifier.deploy();
+        await verifier.waitForDeployment();
+        console.log("Verifier is deploy at :", await verifier.getAddress());
+
+        const L1Handle = await ethers.getContractFactory("Handle", {
+            libraries: {
+                "contracts/ucl/l1verify/Classification.sol:Classification": await classification.getAddress(),
+                "contracts/ucl/l1verify/lib/TokenUtilsLib.sol:TokenUtilsLib": await tokenUtilsLib.getAddress(),
+                "contracts/ucl/l1verify/lib/verify/Verifier.sol:Verifier": await verifier.getAddress()
+            }
+        },wallet);
+        const handle = await L1Handle.deploy();
+        await handle.waitForDeployment();
+        console.log("L1Handle is deploy at :", handle.target);
+        deployed.contracts.L1Handle = handle.target;
+    } else {
+        deployed.contracts.L1Handle = Fixed_Addresses.L1HANDLE
+    }
+    console.log("L1HANDLE deployment finished");
+}
+
 
 
 module.exports= {
      deployLibs,
-     deployL2Event
+     deployL2Event,
+     deployL1Handle
 }
