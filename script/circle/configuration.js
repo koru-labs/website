@@ -61,7 +61,7 @@ module.exports = {
                 {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},
                 {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},
                 {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},
-                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"normal"},
+                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"minter"},
                 {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}  //this is account in wlin meta-mask
             ]
         },
