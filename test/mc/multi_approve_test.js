@@ -32,7 +32,7 @@ const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
-const spenderWallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
+const spenderWallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -66,160 +66,42 @@ async function mintForStart(amount = 100) {
     return response;
 }
 
-async function testApproveMultipleTokens() {
-    console.log("=== Starting Multiple Token Approval Process ===");
-
-    // 先铸造一些代币
-    await mintForStart(50);
+async function testApproveToken() {
+    console.log("=== Starting Token Approval Process ===");
 
     const metadata = await createAuthMetadata(accounts.MinterKey);
-
-    // 第一次授权
-    console.log("--- First Approval ---");
     const splitRequest1 = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
         from_address: accounts.Minter,
-        to_address: accounts.Spender1,
+        spender_address: accounts.Spender1,
+        to_address: accounts.To1,
         amount: 10,
-        comment: "Approval"
+        comment:"123"
     };
-
-    let response1 = await client.generateSplitToken(splitRequest1, metadata);
+    let response1 = await client.generateApproveProof(splitRequest1, metadata);
     console.log("First Generate Split Token Proof response:", response1);
 
     await client.waitForActionCompletion(client.getTokenActionStatus, response1.request_id, metadata);
     console.log("First Split Token completed successfully");
 
-    // 存储第一个授权token ID
-    let firstApprovalTokenId = response1.transfer_token_id;
-    // 确保tokenId是正确的数字格式
-    if (typeof firstApprovalTokenId === 'string' && firstApprovalTokenId.startsWith('0x')) {
-        firstApprovalTokenId = BigInt(firstApprovalTokenId);
-    } else if (typeof firstApprovalTokenId === 'string') {
-        firstApprovalTokenId = BigInt('0x' + firstApprovalTokenId);
-    }
-    console.log("First Approval Token ID:", firstApprovalTokenId);
+    let tokenId = "0x"+response1.transfer_token_id;
+    console.log("Token ID:", tokenId);
 
-    // 第二次授权
-    console.log("--- Second Approval ---");
-    const splitRequest2 = {
-        sc_address: config.contracts.PrivateERCToken,
-        token_type: '0',
-        from_address: accounts.Minter,
-        to_address: accounts.Spender1,
-        amount: 15,
-        comment: "Approval"
-    };
-
-    let response2 = await client.generateSplitToken(splitRequest2, metadata);
-    console.log("Second Generate Split Token Proof response:", response2);
-
-    await client.waitForActionCompletion(client.getTokenActionStatus, response2.request_id, metadata);
-    console.log("Second Split Token completed successfully");
-
-    // 存储第二个授权token ID
-    let secondApprovalTokenId = response2.transfer_token_id;
-    // 确保tokenId是正确的数字格式
-    if (typeof secondApprovalTokenId === 'string' && secondApprovalTokenId.startsWith('0x')) {
-        secondApprovalTokenId = BigInt(secondApprovalTokenId);
-    } else if (typeof secondApprovalTokenId === 'string') {
-        secondApprovalTokenId = BigInt('0x' + secondApprovalTokenId);
-    }
-    console.log("Second Approval Token ID:", secondApprovalTokenId);
-
-    // 检查授权列表
-    console.log("--- Checking Approval List ---");
-    
-    // 使用isAllowanceExists检查授权是否成功
-    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken);
-    
-    // 检查第一个token是否已授权
-    console.log("Checking first token approval:");
-    console.log("- Owner:", accounts.Minter);
-    console.log("- Spender:", accounts.Spender1);
-    console.log("- Token ID:", firstApprovalTokenId.toString());
-    
-    try {
-        const isFirstTokenApproved = await contract.isAllowanceExists(accounts.Minter, accounts.Spender1, firstApprovalTokenId);
-        console.log("First token approved:", isFirstTokenApproved);
-    } catch (error) {
-        console.error("Error checking first token approval:", error.message);
-        // 尝试直接从区块链读取数据以诊断问题
-        try {
-            const minterAccount = await contract._accounts(accounts.Minter);
-            console.log("Minter account data:", minterAccount);
-        } catch (accountError) {
-            console.error("Error reading minter account:", accountError.message);
-        }
-    }
-    
-    // 检查第二个token是否已授权
-    console.log("Checking second token approval:");
-    console.log("- Owner:", accounts.Minter);
-    console.log("- Spender:", accounts.Spender1);
-    console.log("- Token ID:", secondApprovalTokenId.toString());
-    
-    try {
-        const isSecondTokenApproved = await contract.isAllowanceExists(accounts.Minter, accounts.Spender1, secondApprovalTokenId);
-        console.log("Second token approved:", isSecondTokenApproved);
-    } catch (error) {
-        console.error("Error checking second token approval:", error.message);
-        // 尝试直接从区块链读取数据以诊断问题
-        try {
-            const minterAccount = await contract._accounts(accounts.Minter);
-            console.log("Minter account data:", minterAccount);
-        } catch (accountError) {
-            console.error("Error reading minter account:", accountError.message);
-        }
-    }
-
-    // 验证两个token都已成功授权
-    // 注释掉断言以便我们能看到更多调试信息
-    /*
-    assert(isFirstTokenApproved, "First token should be approved");
-    assert(isSecondTokenApproved, "Second token should be approved");
-    */
-
-    console.log("✅ Multiple token approval completed successfully");
-
-    return {
-        firstApprovalTokenId,
-        secondApprovalTokenId,
-        approvedTokens
-    };
+    return  tokenId;
 }
 
-async function testTransferFromMultipleApprovedTokens(approvalData) {
-    console.log("=== Starting Transfer From Multiple Approved Tokens ===");
+async function testTransferFrom(tokenId) {
+    console.log("Executing authorized transfer...");
 
-    const { firstApprovalTokenId, secondApprovalTokenId } = approvalData;
-
-    // 使用 spender 钱包执行 transferFrom 操作
-    console.log("--- Transferring First Approved Token ---");
-    try {
-        const receipt1 = await callPrivateTransferFrom(spenderWallet, config.contracts.PrivateERCToken, accounts.Minter, accounts.To1, firstApprovalTokenId);
-        console.log("First transferFrom receipt:", receipt1);
-        console.log("✅ First token transferred successfully");
-    } catch (error) {
-        console.error("❌ First transferFrom failed:", error.message);
-        throw error;
-    }
-
-    // 等待一段时间
-    await sleep(2000);
-
-    console.log("--- Transferring Second Approved Token ---");
-    try {
-        const receipt2 = await callPrivateTransferFrom(spenderWallet, config.contracts.PrivateERCToken, accounts.Minter, accounts.To1, secondApprovalTokenId);
-        console.log("Second transferFrom receipt:", receipt2);
-        console.log("✅ Second token transferred successfully");
-    } catch (error) {
-        console.error("❌ Second transferFrom failed:", error.message);
-        throw error;
-    }
-
-    console.log("✅ Multiple token transferFrom completed successfully");
+    let receipt = await callPrivateTransferFrom(
+        spenderWallet,
+        config.contracts.PrivateERCToken,
+        accounts.Minter,
+        accounts.To1,
+        tokenId
+    );
+    console.log("Authorized transfer receipt:", receipt);
 }
 
 async function runMultiApproveTest() {
@@ -227,13 +109,16 @@ async function runMultiApproveTest() {
     console.log("=====================================");
 
     try {
-        // 步骤1: 授权多个token给同一用户
-        let approvalData = await testApproveMultipleTokens();
+        await mintForStart(50);
 
-        // 步骤2: 使用被授权的token执行transferFrom操作
-        await testTransferFromMultipleApprovedTokens(approvalData);
+        let tokenId = await testApproveToken();
 
-        console.log("=====================================");
+        await testTransferFrom(tokenId)
+
+        let tokenId2 = await testApproveToken();
+
+        await testTransferFrom(tokenId2)
+
         console.log("🎉 Multi Approve Test Suite Completed Successfully!");
 
     } catch (error) {
