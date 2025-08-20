@@ -119,6 +119,10 @@ async function runMultiApproveTest() {
 
         await testTransferFrom(tokenId2)
 
+        const metadata = await createAuthMetadata(accounts.To1PrivateKey);
+        let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata)
+        console.log("To1 balance after TransferFrom:", balance);
+
         console.log("🎉 Multi Approve Test Suite Completed Successfully!");
 
     } catch (error) {
