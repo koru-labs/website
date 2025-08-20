@@ -331,11 +331,12 @@ library TokenEventLib {
 
 
     function triggerRollupForMint( IL2Event _l2Event, address eventSource,
-        TokenModel.TokenEntity memory entity, uint256[22] calldata publicInputs) public {
+        TokenModel.TokenEntity memory entity, uint256[22] calldata publicInputs, uint256[8] calldata proof) public {
 
         RollupMintEvent memory e = RollupMintEvent({
             token: entity,
-            publicInputs: publicInputs
+            publicInputs: publicInputs,
+            proof: proof
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupMint", body);
@@ -355,13 +356,7 @@ library TokenEventLib {
         _l2Event.sendRollupEvent(eventSource, "RollupBurn", body);
     }
 
-    function triggerRollupForSplit( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory entity,
-        TokenModel.TokenEntity[] memory consumedTokens, uint256[20] calldata publicInputs) public {
-        RollupSplitEvent memory e = RollupSplitEvent({
-            token: entity,
-            consumedTokens: consumedTokens,
-            publicInputs: publicInputs
-        });
+    function triggerRollupForSplit( IL2Event _l2Event, address eventSource,  RollupSplitEvent memory e) public {
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupSplit", body);
     }

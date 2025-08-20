@@ -13,8 +13,8 @@ const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
  */
 const CONSTANTS = {
   // RPC URL configuration
-  rpcUrl: "127.0.0.1:50051",
-  // rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+  // rpcUrl: "127.0.0.1:50051",
+  rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
@@ -200,7 +200,8 @@ async function testDirectBurnByAuth() {
       sc_address: config.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      comment:"123"
     };
 
     let response = await client.generateDirectBurn(splitRequest, metadata);
@@ -277,7 +278,8 @@ async function testTransferFromByAuth() {
       from_address: accounts.Minter,
       spender_address: accounts.Spender1,
       to_address: accounts.To1,
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      comment:"123"
     };
 
     console.log("Generating approval proof...");
@@ -664,10 +666,10 @@ async function runTests() {
     // await testReserveTokensAndTransfer();
     // await testReserveTokensAndCancel();
     // await testApproveTokensAndRevoke();
-    // await testTransferFromByAuth();
+    await testTransferFromByAuth();
     
     // Direct transaction tests
-    await testDirectMintByAuth();
+    // await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     

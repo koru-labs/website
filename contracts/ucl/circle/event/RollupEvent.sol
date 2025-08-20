@@ -23,12 +23,14 @@ import "../model/TokenModel.sol";
     struct RollupMintEvent {
         TokenModel.TokenEntity token;
         uint256[22] publicInputs;
+        uint256[8] proof;
     }
 
     struct RollupSplitEvent {
         TokenModel.TokenEntity token;
         TokenModel.TokenEntity[] consumedTokens;
         uint256[20] publicInputs;
+        uint256[8] proof;
     }
 
     struct RollupTransferEvent {

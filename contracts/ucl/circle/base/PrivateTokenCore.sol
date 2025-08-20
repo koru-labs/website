@@ -138,7 +138,7 @@ abstract contract PrivateTokenCore is
         TokenUtilsLib.addTokenWithBalance(_accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
-        TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs);
+        TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof);
 
         emit PrivateMint(to, amount);
         return true;
@@ -215,7 +215,13 @@ abstract contract PrivateTokenCore is
         transferToken.rollbackTokenId = rollBackToken.id;
         TokenUtilsLib.addToken(_accounts, from, transferToken);
         TokenUtilsLib.addToken(_accounts, from, rollBackToken);
-        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  transferToken, consumedTokens,publicInputs);
+        RollupSplitEvent memory e = RollupSplitEvent({
+            token: transferToken,
+            consumedTokens: consumedTokens,
+            publicInputs: publicInputs,
+            proof: proof
+        });
+        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  e);
     }
 
     function privateTransfer(
