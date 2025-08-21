@@ -113,8 +113,8 @@ async function deployL1Handle(deployed) {
         console.log("L1Handle is deploy at :", handle.target);
         deployed.contracts.L1Handle = handle.target;
     } else {
-        deployed.contracts.L1Handle = Fixed_Addresses.L1HANDLE
-        console.log("Use already deployed L1Handle:", Fixed_Addresses.L1HANDLE);
+        deployed.contracts.L1Handle = Fixed_Addresses.L1_HANDLE
+        console.log("Use already deployed L1Handle:", Fixed_Addresses.L1_HANDLE);
     }
     console.log("L1HANDLE deployment finished");
 }

@@ -666,10 +666,10 @@ async function runTests() {
     // await testReserveTokensAndTransfer();
     // await testReserveTokensAndCancel();
     // await testApproveTokensAndRevoke();
-    await testTransferFromByAuth();
+    // await testTransferFromByAuth();
     
     // Direct transaction tests
-    // await testDirectMintByAuth();
+    await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     
