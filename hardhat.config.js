@@ -15,6 +15,7 @@ module.exports = {
                 },
             },
             viaIR: true,
+            evmVersion: "cancun" // 添加这一行以启用EIP-4844支持
         },
     },
     mocha: {
