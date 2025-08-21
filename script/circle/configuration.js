@@ -2,10 +2,11 @@ module.exports = {
     "ADDRESSES":
         {
             "TOKEN_EVENT_LIB": "",
-            "HAMSAL2EVENT": "0xe433dDFa361dFC512064a31BAa54978E12AaB4dC",
-            "L1HANDLE": "0x3286338a3271d41353B4B4cC4D353913B2FD094b",
+            "HAMSAL2EVENT": "",
+            "L1_HANDLE": "0x3286338a3271d41353B4B4cC4D353913B2FD094b",
+            "L1_BLOB_COMMITMENT_VERIFY": "0x89a37F5cd42162B56DE8A48bDe38A6E97C965675",
             "INSTITUTION_REGISTRATION": "",
-            "PROXY_ADDRESS": "0x7C6e6e15dA8b60059fd8579fA9C076EC4D39e407"
+            "PROXY_ADDRESS": ""
         },
     institutions: [
         // {
