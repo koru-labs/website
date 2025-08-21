@@ -245,7 +245,7 @@ abstract contract PrivateTokenCore is
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = tokenEntity.rollbackTokenId;
-        TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, rollbackTokens);
+        TokenUtilsLib.precompiledRemoveTokensWithBalance(_accounts, msg.sender, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
@@ -261,7 +261,7 @@ abstract contract PrivateTokenCore is
         tokenEntity.owner = to;
         tokenEntity.status = TokenModel.TokenStatus.active;
 
-        TokenUtilsLib.addTokenWithBalance(_accounts, tokenEntity.to, tokenEntity);
+        TokenUtilsLib.precompiledAddTokenWithBalance(_accounts, tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
