@@ -678,7 +678,7 @@ describe.only("Function Cases",function (){
     });
     describe('PrivateCancel', function () {
         this.timeout(1200000);
-        it.only('split token list ',async () => {
+        it('split token list ',async () => {
             await DirectMint(accounts.Minter, 50);
             await GenerateTransferSplitProof(accounts.To1,10,minterMeta);
             await GenerateBurnSplitProof(20);
