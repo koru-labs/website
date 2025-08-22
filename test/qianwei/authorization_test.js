@@ -159,7 +159,7 @@ async function testGetAccountForHttp() {
 }
 
 
-// testRegisterAccount().then();
+testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();

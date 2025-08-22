@@ -32,6 +32,7 @@ module.exports = async function registerInstitutionAndUser() {
         let client;
         try {
             client = createClient(institutions[i].rpcUrl);
+            console.log(`Connected to node ${institutions[i].rpcUrl}`);
         } catch (error) {
             console.error(`[ERROR] Failed to connect to node ${institutions[i].name}:`, {
                 rpcUrl: institutions[i].rpcUrl,
