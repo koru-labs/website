@@ -520,10 +520,10 @@ describe.only("Function Cases",function (){
         this.timeout(1200000);
         let preBalance,postBalance;
 
-        // before(async function () {
-        //     await mint(accounts.Minter,100);
-        //     await mint(accounts.To1,100);
-        // });
+        before(async function () {
+            await mint(accounts.Minter,100);
+            await mint(accounts.To1,100);
+        });
 
         it('Approve transfer: minter to to1 ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
