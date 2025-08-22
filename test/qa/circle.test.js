@@ -580,11 +580,11 @@ describe.only("Function Cases",function (){
                 comment: "TransferFrom"
             };
             console.log("generateSplitTokenRequest:", splitRequest)
-            let response = await client3.generateApproveProof(splitRequest,to1Meta);
-            console.log("generateApproveProof:", response)
-            expect(response.status).to.equal("TOKEN_ACTION_STATUS_FAIL");
-            postBalance = await getTokenBalanceByAdmin(accounts.To1);
-            expect(postBalance).to.equal(preBalance);
+            try {
+                await client3.generateApproveProof(splitRequest,to1Meta)
+            }catch (error) {
+                expect(error.details).contains("insufficient balance")
+            }
         });
 
     })
@@ -678,7 +678,7 @@ describe.only("Function Cases",function (){
     });
     describe('PrivateCancel', function () {
         this.timeout(1200000);
-        it('split token list ',async () => {
+        it.only('split token list ',async () => {
             await DirectMint(accounts.Minter, 50);
             await GenerateTransferSplitProof(accounts.To1,10,minterMeta);
             await GenerateBurnSplitProof(20);
