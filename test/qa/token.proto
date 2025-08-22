@@ -17,6 +17,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 // Token service interface
 service TokenService {
+
   rpc GenerateMintProof       (GenerateMintRequest)         returns (MintProofResponse) {
     option (google.api.http) = {
       post: "/v1/proof/mint"
@@ -24,6 +25,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "Submit request to generate proof for token mint. This is an asynchronous call. To query the proof,  call /query/proof/mint using the returned request_id in the response"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GenerateSplitToken      (GenerateSplitRequest)         returns (SplitTokenResponse) {
@@ -33,6 +50,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "submit request to split user balance for future transaction (e.g. transfer, burn). This is an asynchronous call. To query the token Id, call /query/split/token using the returned request_id in the response "
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -43,6 +76,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "submit request to split user balance for future transaction (e.g. approve). This is an asynchronous call. To query the token Id, call /query/split/token using the returned request_id in the response "
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -53,6 +102,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "execute the mint process in one function call"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GenerateDirectTransfer      (GenerateTransferRequest)         returns (GenerateProofResponse) {
@@ -62,6 +127,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "execute the transfer process in one function call"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse) {
@@ -71,6 +152,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "execute the burn process in one function call"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -82,6 +179,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query the generated mint proof using requestId"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse) {
@@ -91,6 +204,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query account balance from ZK-server db"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse) {
@@ -100,6 +229,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "request ZK-server to decode ElGamal amount"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -110,6 +255,23 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "request ZK-server to covert amount to pUSDC"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+            default: "abc"
+          }
+        ]
+      }
     };
   };
 
@@ -120,6 +282,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "request ZK-server to covert ElGamal amount to USDC"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -130,6 +308,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query the generated tokenId using requestId"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetTokenActionStatus     (ProofRequest)                 returns (TokenActionStatusResponse) {
@@ -139,6 +333,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query the generated tokenId using requestId"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse) {
@@ -148,6 +358,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "request ZK-server to encode amount in ElGamal format"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse) {
@@ -157,6 +383,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetApproveTokenList       (ApproveTokenListRequest)        returns (ApproveTokenListResponse) {
@@ -166,6 +408,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetSplitTokenDetail       (SplitTokenDetailRequest)        returns (SplitTokenDetailResponse) {
@@ -175,6 +433,22 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -185,8 +459,50 @@ service TokenService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query the mint allowed amount using sc_address"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
+
+  rpc GetTokenAmount       (TokenAmountRequest)        returns (TokenAmountResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/token/amount"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "query the token amount using token_id"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
+    };
+  }
 }
 
 // Token action status enum
@@ -258,16 +574,16 @@ message GenerateSplitRequest {
 }
 
 message GenerateApproveRequest {
-  string sc_address =1 ;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3;
-  string to_address =4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
-  string spender_address =5;
+  string sc_address = 1 ;
+  uint64 token_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
+  string from_address = 3;
+  string to_address = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
+  string spender_address = 5;
   uint64 amount = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
   string comment = 7;
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
-      required:["sc_address","from_address", "amount"]
+      required:["sc_address", "from_address", "amount"]
     },
     example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"toAddress\": \"0x4312488937D47A007De24d48aB82940C809EEb2b\", \"amount\":1 }",
   };
@@ -351,6 +667,14 @@ message DecodeAmountResponse {
   uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
 
+message TokenAmountRequest {
+  string token_id = 1;
+}
+
+message TokenAmountResponse {
+  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
+
 message MintProofResponse {
   string request_id = 1;
   string sc_address = 2;
@@ -426,7 +750,6 @@ message ApproveTokenListRequest {
   string owner_address = 1 ;
   string sc_address = 2 ;
   string spender_address = 3 ;
-
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["owner_address", "sc_address"]
@@ -479,6 +802,22 @@ service AccountService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "register an account to the system"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc UpdateAccountStatus   (UpdateAccountStatusRequest)         returns (AsyncActionResponse)
@@ -489,6 +828,22 @@ service AccountService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "update account status"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc UpdateAccountRole   (UpdateAccountRoleRequest)         returns (AsyncActionResponse)
@@ -499,6 +854,22 @@ service AccountService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "update account role"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 
@@ -510,6 +881,22 @@ service AccountService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query async action status"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
   rpc GetAccount   (GetAccountRequest)         returns (GetAccountResponse)
@@ -520,6 +907,22 @@ service AccountService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       description: "query account status"
+      parameters: {
+        headers:[
+          {
+            name: "message"
+            type: STRING
+            description: "message to sign"
+            required: true
+          },
+          {
+            name: "signature"
+            type: STRING
+            description: "message signature"
+            required: true
+          }
+        ]
+      }
     };
   };
 }
