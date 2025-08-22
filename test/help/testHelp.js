@@ -284,7 +284,7 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const signature = await wallet.signMessage(message);
 
     const metadata = new grpc.Metadata();
-    metadata.set('address', wallet.address.toLowerCase());
+    // metadata.set('address', wallet.address.toLowerCase());
     metadata.set('signature', signature);
     metadata.set('message', message);
 
