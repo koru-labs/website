@@ -44,7 +44,6 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-
     const tx = await contract.privateTransfer(tokenId,to);
     console.log("tx")
     let receipt = await tx.wait();
@@ -206,6 +205,14 @@ async function getPublicTotalSupply(scAddress) {
     return amount[0]
 }
 
+// async function getApprovedAllowance(scAddress,wallet,owner) {
+//     const contract = await ethers.getContractAt("PrivateERCToken", scAddress,wallet)
+//     console.log("Approve owner: ", owner)
+//     let approvedToken = await contract.getAllowanceTokensFrom(owner)
+//     console.log("Approve token: ", '0x'+approvedToken.toString(16))
+//     return '0x'+approvedToken.toString(16)
+// }
+
 async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
     const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress, metadata);
     return grpcResult;
@@ -213,8 +220,15 @@ async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
 
 async function getApproveTokenList(grpcClient,ownerAddress, scAddress,spenderAddress,metadata){
     console.log({ownerAddress, scAddress,spenderAddress})
-    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,spenderAddress, metadata);
+    // const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,spenderAddress, metadata);
+    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,"", metadata);
     return grpcResult;
+}
+
+async function isAllowanceExists(scAddress,owner,spender,tokenId) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+    const result = await contract.isAllowanceExists(owner,spender,tokenId)
+    return result
 }
 
 function hexToDecimal(hexString) {
@@ -528,36 +542,16 @@ async function allowBanksInTokenSmartContract(minterAddress) {
 }
 
 async function getUserManager(address) {
-    // const l1CustomNetwork = {
-    //     name: "BESU",
-    //     chainId: 1337
-    // };
-    // const options = {
-    //     batchMaxCount: 1,
-    //     staticNetwork: true
-    // };
-    //
-    // const L1Url = hardhatConfig.networks.ucl_L2.url;
-    // const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
-    // const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
-    // console.log("manager: ",await Institution.getUserManager(minterAddress))
-
     const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
         libraries: {
             "TokenEventLib": deployed.libraries.TokenEventLib,
         }
     });
     const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
-
-    // let tx = await instRegistry.registerUser(accounts.Spender1);
-    // await tx.wait();
     let inst = await instRegistry.getUserManager(address);
     console.log("user registration ", inst);
     let inst1 = await instRegistry.getUserInstGrumpkinPubKey(address);
     console.log("user registration ", inst1);
-
-
 }
 
 async function setMinterAllowed(minterAddress) {
@@ -609,6 +603,15 @@ function assertEventsContain(events, expectedEventNames) {
     });
 }
 
+async function getMinterAllowed(grpcClient,meta) {
+    const Request = {
+        sc_address: config.contracts.PrivateERCToken,
+        address: accounts.Minter
+    };
+    const grpcResult = await grpcClient.getMintAllowed(Request, meta);
+    return Number(grpcResult.amount);
+}
+
 
 module.exports =  {
     callPrivateMint,
@@ -640,4 +643,6 @@ module.exports =  {
     getHamsaEvents,
     assertEventsContain,
     getApproveTokenList,
+    isAllowanceExists,
+    getMinterAllowed
 }

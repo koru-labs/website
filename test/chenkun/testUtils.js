@@ -13,8 +13,8 @@ const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
  */
 const CONSTANTS = {
   // RPC URL configuration
-  // rpcUrl: "127.0.0.1:50051",
-  rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+  rpcUrl: "127.0.0.1:50051",
+  // rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
@@ -200,8 +200,7 @@ async function testDirectBurnByAuth() {
       sc_address: config.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
-      amount: CONSTANTS.defaultAmount,
-      comment:"123"
+      amount: CONSTANTS.defaultAmount
     };
 
     let response = await client.generateDirectBurn(splitRequest, metadata);
@@ -278,8 +277,7 @@ async function testTransferFromByAuth() {
       from_address: accounts.Minter,
       spender_address: accounts.Spender1,
       to_address: accounts.To1,
-      amount: CONSTANTS.defaultAmount,
-      comment:"123"
+      amount: CONSTANTS.defaultAmount
     };
 
     console.log("Generating approval proof...");
@@ -533,11 +531,13 @@ async function testInstituteInformation() {
   });
   const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
 
-  // let tx = await instRegistry.registerUser(accounts.Spender1);
+  let tx = await instRegistry.registerUser("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+  await tx.wait();
+  // let tx = await instRegistry.removeUser("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
   // await tx.wait();
-  let inst = await instRegistry.getUserManager(accounts.Owner);
+  let inst = await instRegistry.getUserManager("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
   console.log("user registration ", inst);
-  let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Owner);
+  let inst1 = await instRegistry.getUserInstGrumpkinPubKey("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
   console.log("user registration ", inst1);
 }
 
@@ -666,7 +666,7 @@ async function runTests() {
     // await testReserveTokensAndTransfer();
     // await testReserveTokensAndCancel();
     // await testApproveTokensAndRevoke();
-    await testTransferFromByAuth();
+    // await testTransferFromByAuth();
     
     // Direct transaction tests
     // await testDirectMintByAuth();
@@ -674,7 +674,7 @@ async function runTests() {
     // await testDirectTransferByAuth();
     
     // Other tests
-    // await testInstituteInformation();
+    await testInstituteInformation();
     // await testConvert2pUSDC();
     // await testConvert2USDC();
     // await testGetMintAllowed();
