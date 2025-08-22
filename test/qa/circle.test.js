@@ -473,7 +473,7 @@ describe.only("Function Cases",function (){
             expect(postBalance).to.equal(preBalance - amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
-        it.only('transfer all amount',async () => {
+        it('transfer all amount',async () => {
             await cancelAllSplitTokens(minterWallet);
             await revokeAllApprovedTokens(minterWallet)
             const amount = await getTokenBalanceByAdmin(accounts.Minter);
