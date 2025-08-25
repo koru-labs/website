@@ -143,6 +143,12 @@ function createClient(url) {
         return promisifyByMetadata(client.GetMintAllowed.bind(client), request, metadata);
     };
 
+
+    client.getAddressBalanceDetail = async function (request, metadata) {
+        // return promisify(accountClient.GetMintAllowed.bind(client), request);
+        return promisifyByMetadata(client.GetAddressBalanceDetail.bind(client), request, metadata);
+    };
+
     client.getSplitTokenList = async function (owner_address, sc_address,metadata) {
         const request = {
             owner_address: owner_address,

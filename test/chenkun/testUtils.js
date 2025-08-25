@@ -200,7 +200,8 @@ async function testDirectBurnByAuth() {
       sc_address: config.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      comment:"123"
     };
 
     let response = await client.generateDirectBurn(splitRequest, metadata);
@@ -277,7 +278,8 @@ async function testTransferFromByAuth() {
       from_address: accounts.Minter,
       spender_address: accounts.Spender1,
       to_address: accounts.To1,
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      comment:"123"
     };
 
     console.log("Generating approval proof...");
@@ -531,13 +533,11 @@ async function testInstituteInformation() {
   });
   const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
 
-  let tx = await instRegistry.registerUser("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
-  await tx.wait();
-  // let tx = await instRegistry.removeUser("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+  // let tx = await instRegistry.registerUser(accounts.Spender1);
   // await tx.wait();
-  let inst = await instRegistry.getUserManager("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+  let inst = await instRegistry.getUserManager(accounts.Owner);
   console.log("user registration ", inst);
-  let inst1 = await instRegistry.getUserInstGrumpkinPubKey("0xbA268f776F70caDB087e73020dfE41c7298363Ed");
+  let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Owner);
   console.log("user registration ", inst1);
 }
 
@@ -647,10 +647,26 @@ async function testGetMintAllowed() {
     throw error;
   }
 }
+async function testGetBalance() {
+  try {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
 
-/**
- * ===== Test Runner =====
- */
+    const splitRequest = {
+      sc_address: config.contracts.PrivateERCToken,
+      owner_address: accounts.Minter
+    };
+
+    console.log("get mint allowed token...");
+    let response = await client.getAddressBalanceDetail(splitRequest, metadata);
+    console.log("get mint allowed token response:", response);
+    let response1 = await client.getAccountBalance(config.contracts.PrivateERCToken,accounts.Minter, metadata);
+    console.log("get mint allowed token response:", response1);
+    return response;
+  } catch (error) {
+    console.error(`get mint allowed token failed: ${error.message}`);
+    throw error;
+  }
+}
 
 /**
  * Run all tests
@@ -674,11 +690,14 @@ async function runTests() {
     // await testDirectTransferByAuth();
     
     // Other tests
-    await testInstituteInformation();
+    // await testInstituteInformation();
     // await testConvert2pUSDC();
     // await testConvert2USDC();
     // await testGetMintAllowed();
     // await testReserveTokensAndGetToken();
+
+    await testGetBalance();
+
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);
