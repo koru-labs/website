@@ -78,5 +78,5 @@ async function deployBlobCommitmentVerify() {
 
 
 
-deployHandle().then();
-// deployBlobCommitmentVerify().then();
+// deployHandle().then();
+deployBlobCommitmentVerify().then();
