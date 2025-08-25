@@ -12,6 +12,23 @@ import { Mintable } from "../../../usdc/v1/Mintable.sol";
 import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface ISimpleToken {
+    function callPrecompiledAdd(
+        uint256 p1LeftX, uint256 p1LeftY, uint256 p1RightX, uint256 p1RightY,
+        uint256 p2LeftX, uint256 p2LeftY, uint256 p2RightX, uint256 p2RightY
+    ) external;
+
+    function callPrecompiledSub(
+        uint256 p1LeftX, uint256 p1LeftY, uint256 p1RightX, uint256 p1RightY,
+        uint256 p2LeftX, uint256 p2LeftY, uint256 p2RightX, uint256 p2RightY
+    ) external;
+
+    function leftX() external view returns (uint256);
+    function leftY() external view returns (uint256);
+    function rightX() external view returns (uint256);
+    function rightY() external view returns (uint256);
+}
+
 abstract contract PrivateTokenCore is
     PrivateTokenData,
     Pausable,
@@ -23,6 +40,106 @@ abstract contract PrivateTokenCore is
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
+
+    // SimpleToken contract address
+    ISimpleToken private constant SIMPLE_TOKEN = ISimpleToken(0xC18CBB980CFe3Ce0b17abcd85c22D33B41a91Fe4);
+
+    function testPrecompiledAddElGamal()  public returns (TokenModel.ElGamal memory result) {
+        SIMPLE_TOKEN.callPrecompiledSub(
+            1463258969157495261733570538540181977130579675090198357062141424033234175598,
+        18299754645155352494766254287765202991660105695976987833632682998078753632464,
+        3212723329707048726491729837727736711756526356461758555492206236201915443443,
+        3821913711665546775377100180240310658018017196018514525667837109879756220212,
+            6359106160748120634611313560042619320966721978049254024144172324911482720926,
+        17154972078712537590572808720699077895524703396670925012048160867205402911125,
+        270875916053418098161206121738924516812276921996978195073375036194294459635,
+        3004931266583371913933675323544375719963304861475635318751127696782870256724
+        );
+
+        result = TokenModel.ElGamal({
+            cl_x: SIMPLE_TOKEN.leftX(),
+            cl_y: SIMPLE_TOKEN.leftY(),
+            cr_x: SIMPLE_TOKEN.rightX(),
+            cr_y: SIMPLE_TOKEN.rightY()
+        });
+    }
+
+    /**
+     * @dev Adds two ElGamal tokens using Simple contract's precompiled function at address 0x2040
+     */
+    function precompiledAddElGamal(TokenModel.ElGamal memory token1, TokenModel.ElGamal memory token2)
+        internal returns (TokenModel.ElGamal memory result)
+    {
+        SIMPLE_TOKEN.callPrecompiledAdd(
+            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
+            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
+        );
+
+        result = TokenModel.ElGamal({
+            cl_x: SIMPLE_TOKEN.leftX(),
+            cl_y: SIMPLE_TOKEN.leftY(),
+            cr_x: SIMPLE_TOKEN.rightX(),
+            cr_y: SIMPLE_TOKEN.rightY()
+        });
+    }
+
+    /**
+     * @dev Subtracts two ElGamal tokens using Simple contract's precompiled function at address 0x2050
+     */
+    function precompiledSubElGamal(TokenModel.ElGamal memory token1, TokenModel.ElGamal memory token2)
+        internal returns (TokenModel.ElGamal memory result)
+    {
+        SIMPLE_TOKEN.callPrecompiledSub(
+            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
+            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
+        );
+
+        result = TokenModel.ElGamal({
+            cl_x: SIMPLE_TOKEN.leftX(),
+            cl_y: SIMPLE_TOKEN.leftY(),
+            cr_x: SIMPLE_TOKEN.rightX(),
+            cr_y: SIMPLE_TOKEN.rightY()
+        });
+    }
+
+    /**
+     * @dev Adds a token with updated balance using precompiled contract
+     */
+    function precompiledAddTokenWithBalance(
+        address to,
+        TokenModel.TokenEntity memory entity
+    ) internal {
+        TokenModel.Account storage toAccount = _accounts[to];
+        toAccount.balance = precompiledAddElGamal(toAccount.balance, entity.amount);
+        toAccount.assets[entity.id] = entity;
+    }
+
+    /**
+     * @dev Removes tokens with updated balance using precompiled contract
+     */
+    function precompiledRemoveTokensWithBalance(
+        address to,
+        uint256[] memory tokenIds
+    ) internal {
+        TokenModel.Account storage toAccount = _accounts[to];
+        // Collect token amounts for batch calculation
+        TokenModel.ElGamal[] memory tokenAmounts = new TokenModel.ElGamal[](tokenIds.length);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            tokenAmounts[i] = toAccount.assets[tokenIds[i]].amount;
+        }
+        // Calculate total subtraction
+        TokenModel.ElGamal memory totalSubtraction = TokenModel.ElGamal(0, 0, 0, 0);
+        for (uint256 i = 0; i < tokenAmounts.length; i++) {
+            totalSubtraction = precompiledAddElGamal(totalSubtraction, tokenAmounts[i]);
+        }
+        toAccount.balance = precompiledSubElGamal(toAccount.balance, totalSubtraction);
+
+        // Delete tokens
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            delete toAccount.assets[tokenIds[i]];
+        }
+    }
+
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
@@ -245,7 +362,7 @@ abstract contract PrivateTokenCore is
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = tokenEntity.rollbackTokenId;
-        TokenUtilsLib.precompiledRemoveTokensWithBalance(_accounts, msg.sender, rollbackTokens);
+        TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
@@ -261,7 +378,7 @@ abstract contract PrivateTokenCore is
         tokenEntity.owner = to;
         tokenEntity.status = TokenModel.TokenStatus.active;
 
-        TokenUtilsLib.precompiledAddTokenWithBalance(_accounts, tokenEntity.to, tokenEntity);
+        TokenUtilsLib.addTokenWithBalance(_accounts, tokenEntity.to, tokenEntity);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
@@ -269,6 +386,7 @@ abstract contract PrivateTokenCore is
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
         TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+        testPrecompiledAddElGamal();
         return true;
     }
 

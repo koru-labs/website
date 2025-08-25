@@ -1,6 +1,6 @@
 const {ethers} = require("hardhat");
 
-const simpleTokenAddress = "0x61f3D27725BEcF3C3724f37493b6365a301ea12E";
+const simpleTokenAddress = "0xC18CBB980CFe3Ce0b17abcd85c22D33B41a91Fe4";
 
 
 
@@ -143,7 +143,7 @@ async function testReadSdkResults() {
 // testCallingSoliditySdkAdd().then();
 // testReadSdkResults().then();
 //
-// testCallingPrecompiledSub().then();
+testCallingPrecompiledSub().then();
 // testReadPrecompiledResults().then();
 // testCallingSoliditySdkSub().then();
 // testReadSdkResults().then();
