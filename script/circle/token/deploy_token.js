@@ -63,6 +63,25 @@ async function allowBanksInTokenSmartContract(deployed) {
     }
 }
 
+
+function extractMinterUsers() {
+    const minterUsers = [];
+    config.institutions.forEach(institution => {
+        if (institution.users) {
+            institution.users.forEach(user => {
+                if (user.role && user.role.includes('minter')) {
+                    minterUsers.push({
+                        account: user.address,
+                        name: `Minter_${user.address}`
+                    });
+                }
+            });
+        }
+    });
+    return minterUsers;
+}
+
+
 async function setMinterAllowed(deployed) {
     const minterAllowedAmount = {
         "cl_x": 17965178807605681775593476527901391566646357775548805416191630067931921590266n,
@@ -73,12 +92,8 @@ async function setMinterAllowed(deployed) {
 
     console.log("Configuring minter allowed amount...");
 
-    const minters = [
-        {account: accounts.Minter, name: "Minter"},
-        {account: accounts.Minter2, name: "Minter2"},
-        {account: accounts.Minter3, name: "Minter3"},
-        // {account: accounts.Node4Minter, name: "MinterNode4"}
-    ];
+    // add minter users
+    const minters = extractMinterUsers();
 
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
@@ -94,7 +109,17 @@ async function setMinterAllowed(deployed) {
         await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
         console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`);
     }
+    // await sleep(10000)
+    // for (const minter of minters){
+    //     const allowedAmount = await privateUSDC.getPrivateMinterAllowed(minter.account);
+    //     console.log(`Minter allowed amount for ${minter.name} (${minter.account}):`, allowedAmount);
+    // }
 }
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function setMinterAllowedNode4(deployed) {
     const minterAllowedAmount = {
         "cl_x": 18337151451771335392785870672133861240784843750980578638191845863693185387011n,
