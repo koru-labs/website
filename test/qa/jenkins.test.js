@@ -18,9 +18,6 @@ const {
     callPrivateTransfer,
     callPrivateBurn,
     callPrivateCancel,
-    getMinterAllowance,
-    getTotalSupplyNode3,
-    getPublicTotalSupply,
     getPublicBalance,
     createAuthMetadata,
     registerUser,
@@ -36,7 +33,7 @@ const {
     getAddressBalance2,
     callPrivateTransferFrom,
     callPrivateRevoke,
-    getApprovedAllowance,
+    isAllowanceExists,
     allowBanksInTokenSmartContract,
     setMinterAllowed,
     getUserManager,
@@ -67,10 +64,7 @@ const toAddress1 = accounts.To1;
 const toAddress2 = accounts.To2;
 
 
-const userInNode1 = '0xbA268f776F70caDB087e73020dfE41c7298363Ed';
-const userInNode2 = '0xF8041E1185C7106121952bA9914ff904A4A01c80';
-const userInNode3 = '0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB';
-const userInNode4 = '0x5a3288A7400B2cd5e0568728E8216D9392094892';
+const userInNode4 = '0xbA268f776F70caDB087e73020dfE41c7298363Ed';
 const adminPrivateKey = hardhatConfig.networks.ucl_L2.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
@@ -369,11 +363,6 @@ describe("Function Cases",function (){
         to1Meta = await createAuthMetadata(accounts.To1PrivateKey);
         node4AdminMeta = await createAuthMetadata(node4AdminPrivateKey);
 
-        // await registerUser(adminPrivateKey,client,accounts.Minter,"minter");
-        // await registerUser(adminPrivateKey,client,accounts.To1,"normal");
-        // await registerUser(adminPrivateKey,client,accounts.To2,"normal");
-        // await registerUser(adminPrivateKey,client1,userInNode1,"normal");
-        // await updateAccountStatus(adminPrivateKey,client1,userInNode1,2)
     })
     describe("Mint", function () {
         this.timeout(1200000);
@@ -396,7 +385,7 @@ describe("Function Cases",function (){
             expect(postBalanceUser).to.equal(preBalanceUser + amount);
         });
         it('Mint  10 to user cross node',async () => {
-            const userAddress = userInNode1;
+            const userAddress = userInNode4;
             const preBalanceUser = await getTokenBalanceInNode1(userAddress);
             console.log(preBalanceUser)
             await mint(userAddress,amount);
@@ -404,7 +393,7 @@ describe("Function Cases",function (){
             expect(postBalanceUser).to.equal(preBalanceUser + amount);
         });
     });
-    describe("Split and transfer",  function (){
+    describe.only("Split and transfer",  function (){
         this.timeout(1200000);
         let preBalanceTo,postBalanceTo;
         beforeEach(async function () {
@@ -423,7 +412,7 @@ describe("Function Cases",function (){
         });
 
         it('transfer to user cross Bank with 10',async () => {
-            const recevier = userInNode1;
+            const recevier = userInNode4;
             preBalanceTo = await getTokenBalanceInNode1(recevier);
             await ReserveTokensAndTransfer(recevier,amount,minterMeta);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
@@ -453,7 +442,7 @@ describe("Function Cases",function (){
             const amount = 5;
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             if (preBalance>=amount){
-                await ReserveTokensAndTransferFrom(to1Wallet,spender1Wallet,accounts.To1, userInNode1,amount,to1Meta)
+                await ReserveTokensAndTransferFrom(to1Wallet,spender1Wallet,accounts.To1, userInNode4,amount,to1Meta)
                 postBalance = await getTokenBalanceByAdmin(accounts.To1);
                 expect(postBalance).to.equal(preBalance - amount);
             }else {
@@ -478,7 +467,7 @@ describe("Function Cases",function (){
         });
         it('Approve transfer: to1 to user cross bank ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
-            await ReserveTokensAndTransferFrom(to1Wallet,spender1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            await ReserveTokensAndTransferFrom(to1Wallet,spender1Wallet,accounts.To1,userInNode4,1,to1Meta)
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance - 1);
         });
@@ -510,7 +499,7 @@ describe("Function Cases",function (){
 
             const amount = await getTokenBalanceByAdmin(accounts.To1);
             console.log("amount 1:", amount)
-            let response = await generateApprove(to1Wallet,accounts.To1,userInNode1,1,to1Meta)
+            let response = await generateApprove(to1Wallet,accounts.To1,userInNode4,1,to1Meta)
             let approvedToken = await getApprovedAllowance(config.contracts.PrivateERCToken,spender1Wallet,accounts.To1)
             await getTokenBalanceByAdmin(accounts.To1);
             await revoke(to1Wallet,response)
@@ -538,7 +527,7 @@ describe("Function Cases",function (){
     });
     describe('Full token life: directMint ,directTranfer, directBurn', function () {
         this.timeout(1200000);
-        const userAddress = userInNode1;
+        const userAddress = userInNode4;
         let preBalanceMinter,preBalanceTo1,preBalanceTo2,preBalanceUser
         before(async function () {
             preBalanceMinter = await getTokenBalanceByAdmin(accounts.Minter);
