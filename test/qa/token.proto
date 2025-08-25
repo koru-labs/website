@@ -192,6 +192,12 @@ service TokenService {
       description: "query the mint allowed amount using sc_address"
     };
   };
+  rpc GetTokenAmount       (TokenAmountRequest)        returns (TokenAmountResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/token/amount"
+      body: "*"
+    };
+  }
 }
 
 // Token action status enum
@@ -208,7 +214,13 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_CANCEL_ERROR = 9;
   TOKEN_ACTION_STATUS_WAIT_L2_EVENT = 10;
 }
+message TokenAmountRequest {
+  string token_id = 1;
+}
 
+message TokenAmountResponse {
+  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
 message ConvertToPUSDCRequest {
   uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
