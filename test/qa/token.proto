@@ -177,7 +177,12 @@ service TokenService {
       description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
     };
   };
-
+  rpc GetAddressBalanceDetail       (BalanceRequest)               returns (AddressBalanceDetailResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/balance/detail"
+      body: "*"
+    };
+  };
   rpc GetMintAllowed       (MintAllowedRequest)        returns (MintAllowedResponse) {
     option (google.api.http) = {
       post: "/v1/query/mint/allowed"
@@ -229,6 +234,13 @@ message ConvertToUSDCResponse {
   repeated string proof = 5;
   repeated string input = 6;
   uint64 status_code = 7;
+}
+
+message AddressBalanceDetailResponse {
+  uint64 total_balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 available_balance = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 transfer_balance = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 approved_balance = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
 
 message ProofRequest {
