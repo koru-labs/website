@@ -202,4 +202,80 @@ library TokenUtilsLib {
     ) external view returns (bool) {
         return accounts[owner].allowances[spender][tokenId];
     }
+
+    function precompiledAddElGamal(
+        TokenModel.ElGamal memory token1,
+        TokenModel.ElGamal memory token2
+    ) internal returns (TokenModel.ElGamal memory result) {
+        bytes memory input = abi.encode(
+            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
+            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
+        );
+        (bool success, bytes memory data) = address(0x2040).call(input);
+        require(success, "Precompiled addition failed");
+
+        (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
+
+        result = TokenModel.ElGamal({
+            cl_x: leftX,
+            cl_y: leftY,
+            cr_x: rightX,
+            cr_y: rightY
+        });
+    }
+
+    function precompiledSubElGamal(
+        TokenModel.ElGamal memory token1,
+        TokenModel.ElGamal memory token2
+    ) internal returns (TokenModel.ElGamal memory result) {
+        bytes memory input = abi.encode(
+            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
+            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
+        );
+        (bool success, bytes memory data) = address(0x2050).call(input);
+        require(success, "Precompiled subtraction failed");
+
+        (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
+
+        result = TokenModel.ElGamal({
+            cl_x: leftX,
+            cl_y: leftY,
+            cr_x: rightX,
+            cr_y: rightY
+        });
+    }
+
+    function precompiledAddTokenWithBalance(
+        mapping(address => TokenModel.Account) storage accounts,
+        address to,
+        TokenModel.TokenEntity memory entity
+    ) external {
+        TokenModel.Account storage toAccount = accounts[to];
+        toAccount.balance = precompiledAddElGamal(toAccount.balance, entity.amount);
+        toAccount.assets[entity.id] = entity;
+    }
+
+    function precompiledRemoveTokensWithBalance(
+        mapping(address => TokenModel.Account) storage accounts,
+        address to,
+        uint256[] memory tokenIds
+    ) external {
+        TokenModel.Account storage toAccount = accounts[to];
+        // Collect token amounts for batch calculation
+        TokenModel.ElGamal[] memory tokenAmounts = new TokenModel.ElGamal[](tokenIds.length);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            tokenAmounts[i] = toAccount.assets[tokenIds[i]].amount;
+        }
+        // Calculate total subtraction
+        TokenModel.ElGamal memory totalSubtraction = TokenModel.ElGamal(0, 0, 0, 0);
+        for (uint256 i = 0; i < tokenAmounts.length; i++) {
+            totalSubtraction = precompiledAddElGamal(totalSubtraction, tokenAmounts[i]);
+        }
+        toAccount.balance = precompiledSubElGamal(toAccount.balance, totalSubtraction);
+
+        // Delete tokens
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            delete toAccount.assets[tokenIds[i]];
+        }
+    }
 }
