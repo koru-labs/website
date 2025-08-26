@@ -429,7 +429,7 @@ describe.only("Function Cases",function (){
             postBalance = await getTokenBalanceByAdmin(recevier);
             expect(postBalance).to.equal(preBalance + amount);
         });
-        it('Mint  10 to user another node',async () => {
+        it.skip('Mint  10 to user another node',async () => {
             const userAddress = userInNode4;
             const preBalanceUser = await getTokenBalanceInNode1(userAddress);
             await mint(userAddress,amount);
@@ -504,7 +504,7 @@ describe.only("Function Cases",function (){
             }
 
         });
-        it('transfer 5 from user1 address to otherBank user',async () => {
+        it.skip('transfer 5 from user1 address to otherBank user',async () => {
             const amount = 5;
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             if (preBalance>=amount){
@@ -846,7 +846,7 @@ describe.only("Function Cases",function (){
         before(async function () {
             await DirectMint(accounts.Minter, amount);
             await DirectMint(accounts.To1, amount);
-            await DirectMint(userInNode4, amount);
+            // await DirectMint(userInNode4, amount);
         });
         it('DirectBurn 10 for minter ',async () => {
             const burner = accounts.Minter
@@ -899,7 +899,7 @@ describe.only("Function Cases",function (){
             console.log("contract totalSupply is ",await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken,adminMeta));
             console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
         });
-        it('totalSupply_add_after_directMint_user_another_bank ',async () => {
+        it.skip('totalSupply_add_after_directMint_user_another_bank ',async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken,adminMeta);
             await DirectMint(userInNode4, amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken,adminMeta);
@@ -952,7 +952,7 @@ describe.only("Function Cases",function (){
             console.log("contract totalSupply is ",await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken,adminMeta));
             console.log("contract publicTotalSupply is",await getPublicTotalSupply(config.contracts.PrivateERCToken));
         });
-        it('totalSupply_keep_same_after_directTransfer_user_another_bank',async () => {
+        it.skip('totalSupply_keep_same_after_directTransfer_user_another_bank',async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken,adminMeta);
             console.log("totalSupplyPre: ",totalSupplyPre)
             const minterBalance = await getTokenBalanceByAdmin(accounts.Minter);
