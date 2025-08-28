@@ -20,7 +20,7 @@ const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0x4568E35F2c4590Bde059be615015AaB6cc873004";//test
+const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -29,7 +29,7 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const signature = await wallet.signMessage(message);
 
     const metadata = new grpc.Metadata();
-    metadata.set('address', wallet.address.toLowerCase());
+    // metadata.set('address', wallet.address.toLowerCase());
     metadata.set('signature', signature);
     metadata.set('message', message);
 
@@ -159,9 +159,9 @@ async function testGetAccountForHttp() {
 }
 
 
-testRegisterAccount().then();
+// testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
-// testUpdateAccountRole().then();
+testUpdateAccountRole().then();
 // testGetAccount().then();
 // testGetAccountForHttp().then();
