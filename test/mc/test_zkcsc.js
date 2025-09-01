@@ -32,8 +32,8 @@ const user1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const user2Wallet = new ethers.Wallet(accounts.To2PrivateKey, l1Provider);
 
 // token合约地址
-const tokenAddress1 = "0x62A8ed153B4a3E5D3C35B5Ad7e6e2F55E7eeb9Cd"; // User1 的 token 所在合约
-const tokenAddress2 = "0x5c8397236503268E5dE1403740452e1b86C839B8"; // User2 的 token 所在合约
+const tokenAddress1 = "0x8f73980725C9741C693Af5f3847544BE3C171dfa"; // User1 的 token 所在合约
+const tokenAddress2 = "0xFEF2A9a94ad68cB59651698f06fE37d790d0D16B"; // User2 的 token 所在合约
 
 async function mintForStart(tokenAddress, wallet, account) {
     console.log(`=== Starting Mint Process for ${account} ===`);
@@ -150,12 +150,23 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
     try {
         const tx = await ZKCSC.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [tokenAddress1, tokenAddress2],
-            [user1TokenId, user2TokenId],
-            [user1Signature, user2Signature]
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenId,
+                    signature: user1Signature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenId,
+                    signature: user2Signature
+                }
+            ],
+            [] // burnRequests (暂时不测试burn)
         );
 
         const receipt = await tx.wait();
@@ -246,12 +257,23 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
     try {
         const tx = await ZKCSC.cancelDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [tokenAddress1, tokenAddress2],
-            [user1TokenId, user2TokenId],
-            [user1Signature, user2Signature]
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenId,
+                    signature: user1Signature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenId,
+                    signature: user2Signature
+                }
+            ],
+            [] // burnRequests (暂时不测试burn)
         );
 
         const receipt = await tx.wait();
@@ -350,12 +372,23 @@ async function testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenI
     try {
         await ZKCSC.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [tokenAddress1, tokenAddress2],
-            [user1TokenId, user2TokenId],
-            [invalidSignature, user2Signature]
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenId,
+                    signature: invalidSignature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenId,
+                    signature: user2Signature
+                }
+            ],
+            [] // burnRequests
         );
         console.log("❌ Expected failure but DVP execution succeeded");
     } catch (error) {
@@ -398,12 +431,23 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
     try {
         const tx = await ZKCSC.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [tokenAddress1, tokenAddress2],
-            [user1TokenId, user2TokenId],
-            [user1Signature, user2Signature]
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenId,
+                    signature: user1Signature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenId,
+                    signature: user2Signature
+                }
+            ],
+            [] // burnRequests
         );
         await tx.wait();
         console.log("✅ First DVP execution succeeded");
@@ -416,12 +460,23 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
     try {
         await ZKCSC.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [tokenAddress1, tokenAddress2],
-            [user1TokenId, user2TokenId],
-            [user1Signature, user2Signature]
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenId,
+                    signature: user1Signature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenId,
+                    signature: user2Signature
+                }
+            ],
+            [] // burnRequests
         );
         console.log("❌ Expected failure but re-execution succeeded");
     } catch (error) {
@@ -502,13 +557,13 @@ async function runDVPTest() {
         console.log("Final User2 Token ID:", user2TokenId);
 
         // 4. 执行 DVP 测试
-        // await testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+        await testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
         // 5. 执行取消 DVP 测试
         await testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
         // 6. 执行 DVP 异常测试
-        // await testDVPFailure(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+        await testDVPFailure(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
         console.log("==================================");
         console.log("🎉 DVP Test Suite Completed Successfully!");
