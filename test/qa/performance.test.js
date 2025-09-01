@@ -189,7 +189,7 @@ describe.only("Performance Test with created 10 minters", function () {
         // }
     ]
 
-    it.only('Registe ', async () => {
+    it('Registe ', async () => {
         for (let i = 0; i < minters.length; i++){
             await registerUser(adminPrivateKey,client, minters[i].address, "minter");
             await sleep(10000);
@@ -199,7 +199,7 @@ describe.only("Performance Test with created 10 minters", function () {
         }
     });
 
-    it.only('Set allowance', async () => {
+    it('Set allowance', async () => {
         for (let i = 0; i< minters.length; i++){
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
