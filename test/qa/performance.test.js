@@ -15,7 +15,7 @@ const client1 = createClient(rpcUrl_1)
 
 const {
     createAuthMetadata, registerUser, allowBanksInTokenSmartContract, setMinterAllowed, getAddressBalance2,
-    callPrivateMint, getAccount,
+    callPrivateMint, getAccount,getMinterAllowed
 } = require("../help/testHelp")
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
@@ -189,7 +189,7 @@ describe.only("Performance Test with created 10 minters", function () {
         // }
     ]
 
-    it('Registe ', async () => {
+    it.only('Registe ', async () => {
         for (let i = 0; i < minters.length; i++){
             await registerUser(adminPrivateKey,client, minters[i].address, "minter");
             await sleep(10000);
@@ -199,12 +199,14 @@ describe.only("Performance Test with created 10 minters", function () {
         }
     });
 
-    it('Set allowance', async () => {
+    it.only('Set allowance', async () => {
         for (let i = 0; i< minters.length; i++){
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(minters[i].address)
-            await sleep(5000)
+            await sleep(10000)
+            const minterMeta = await createAuthMetadata(minters[i].wallet.privateKey)
+            console.log(await getMinterAllowed(client,minterMeta))
         }
     });
     it('Mint', async () => {
