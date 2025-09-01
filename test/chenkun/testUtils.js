@@ -685,7 +685,7 @@ async function runTests() {
     // await testTransferFromByAuth();
     
     // Direct transaction tests
-    // await testDirectMintByAuth();
+    await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     

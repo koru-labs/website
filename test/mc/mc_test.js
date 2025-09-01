@@ -29,6 +29,36 @@ const options = {
     staticNetwork: true
 };
 
+const CONSTANTS = {
+    // RPC URL configuration
+    // rpcUrl: "127.0.0.1:50051",
+    rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+    // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
+
+    // Network configuration
+    network: {
+        name: "BESU",
+        chainId: 1337
+    },
+
+    // Provider options
+    providerOptions: {
+        batchMaxCount: 1,
+        staticNetwork: true
+    },
+
+    // Test amount
+    defaultAmount: 1,
+
+    // Wait times (milliseconds)
+    waitTimes: {
+        short: 1000,
+        medium: 2000,
+        long: 5000
+    }
+};
+
+
 const L1Url = hardhatConfig.networks.ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
@@ -182,27 +212,6 @@ async function testCancel(transferTokenId) {
     console.log("✅ Cancel completed successfully");
 }
 
-async function runFullCancellationTest() {
-    console.log("🚀 Starting Full Cancellation Test Suite");
-    console.log("========================================");
-    
-    try {
-
-        await mintForStart();
-
-        await testApproveMultipleTokens();
-        
-        console.log("========================================");
-        console.log("🎉 Full Cancellation Test Suite Completed Successfully!");
-        
-    } catch (error) {
-        console.error("❌ Test suite failed:", error.message);
-        console.error("Stack trace:", error.stack);
-        throw error;
-    }
-}
-
-// Individual test functions for debugging
 async function checkBalance(account) {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, account, metadata);
@@ -212,7 +221,6 @@ async function checkBalance(account) {
 
 async function checkToken(account, tokenId) {
     try {
-        // This function is not available in the current testHelp, so we'll skip it
         console.log("Token checking not available, skipping...");
         return null;
     } catch (error) {
@@ -221,19 +229,71 @@ async function checkToken(account, tokenId) {
     }
 }
 
-// Export functions for individual testing
-module.exports = {
-    mintForStart,
-    testSplitTokens,
-    testCancel,
-    runFullCancellationTest,
-    checkBalance,
-    checkToken
-};
+async function testTransfer() {
+    try {
+        const metadata = await createAuthMetadata(accounts.MinterKey);
+        const metadata2 = await createAuthMetadata(accounts.To1PrivateKey);
 
-// Run the full test suite
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: accounts.To1,
+            amount: CONSTANTS.defaultAmount,
+            comment:"123"
+        };
+
+        console.log("Splitting token...");
+        let response = await client.generateSplitToken(splitRequest, metadata);
+        console.log("Token split response:", response);
+
+        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+        console.log("Transferring split token...");
+        let receipt = await callPrivateTransfer(
+            minterWallet,
+            config.contracts.PrivateERCToken,
+            accounts.To1,
+            '0x' + response.transfer_token_id
+        );
+
+        await sleep(CONSTANTS.waitTimes.short);
+
+        console.log("Checking balances after transfer...");
+        await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+        await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata2);
+
+        return receipt;
+    } catch (error) {
+        console.error(`Reserve tokens and transfer test failed: ${error.message}`);
+        throw error;
+    }
+}
+
+async function runMainTestProcess() {
+    console.log("🚀 Start");
+    console.log("========================================");
+    
+    try {
+
+        await mintForStart();
+
+        await testTransfer();
+        
+        console.log("========================================");
+        console.log("🎉 Test Suite Completed Successfully!");
+        
+    } catch (error) {
+        console.error("❌ Test suite failed:", error.message);
+        console.error("Stack trace:", error.stack);
+        throw error;
+    }
+}
+
+
+
 if (require.main === module) {
-    runFullCancellationTest().then(() => {
+    runMainTestProcess().then(() => {
         console.log("All tests completed!");
         process.exit(0);
     }).catch((error) => {
