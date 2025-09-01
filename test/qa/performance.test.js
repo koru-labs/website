@@ -131,7 +131,7 @@ describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
     const TOTAL_SIZE = 1000;
-    const BATCH_SIZE = 300;
+    const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
