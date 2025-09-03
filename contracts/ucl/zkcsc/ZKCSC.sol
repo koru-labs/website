@@ -8,6 +8,21 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract ZKCSC is ReentrancyGuard {
     using ECDSA for bytes32;
 
+    struct PrivateTransferFromRequest {
+        address from;
+        address to;
+        address tokenAddress;
+        uint256 tokenId;
+        bytes signature;
+    }
+
+    struct PrivateBurnRequest {
+        address from;
+        address tokenAddress;
+        uint256 tokenId;
+        bytes signature;
+    }
+
     event DVPExecuted(bytes32 indexed bundleHash, address indexed relayer, uint256 totalTransfers);
     event DVPCanceled(bytes32 indexed bundleHash, address indexed relayer, uint256 totalTransfers);
     event ApprovalRevoked(bytes32 indexed bundleHash, address indexed from, address indexed tokenAddress, uint256 tokenId, bool success);
@@ -16,91 +31,110 @@ contract ZKCSC is ReentrancyGuard {
 
     function executeDVP(
         bytes32 bundleHash,
-        bytes32[] calldata chunkHashes,
-        address[] calldata froms,
-        address[] calldata tos,
-        address[] calldata tokenAddresses,
-        uint256[] calldata tokenIds,
-        bytes[] calldata signatures
+        PrivateTransferFromRequest[] calldata transferFromRequests,
+        PrivateBurnRequest[] calldata burnRequests
     ) external nonReentrant {
-        uint256 n = chunkHashes.length;
-        require(n > 0, "DVP: No transfers provided");
-        require(
-            n == froms.length &&
-            n == tos.length &&
-            n == tokenAddresses.length &&
-            n == tokenIds.length &&
-            n == signatures.length,
-            "DVP: Array length mismatch"
-        );
-
+        uint256 totalTransferFroms = transferFromRequests.length;
+        uint256 totalBurns = burnRequests.length;
+        uint256 totalOps = totalTransferFroms + totalBurns;
+        
+        require(totalOps > 0, "DVP: No operations provided");
         require(!bundleExecuted[bundleHash], "DVP: Bundle already executed");
         bundleExecuted[bundleHash] = true;
 
-        bytes32 computedChunkHash;
         address signer;
 
-        for (uint256 i = 0; i < n; i++) {
-            computedChunkHash = _hashChunk(bundleHash, froms[i], tos[i], tokenAddresses[i], tokenIds[i]);
-            require(computedChunkHash == chunkHashes[i], "DVP: Invalid chunkHash");
-
-            try this.recoverSigner(chunkHashes[i], signatures[i]) returns (address recovered) {
+        // Process transferFrom requests
+        for (uint256 i = 0; i < totalTransferFroms; i++) {
+            PrivateTransferFromRequest calldata req = transferFromRequests[i];
+            
+            // Verify signature
+            bytes32 chunkHash = _hashTransferFrom(bundleHash, req);
+            try this.recoverSigner(chunkHash, req.signature) returns (address recovered) {
                 signer = recovered;
             } catch {
-                revert("DVP: Invalid signature");
+                revert("DVP: Invalid signature for transferFrom");
             }
-
-            require(signer == froms[i], "DVP: Signature not from 'from' address");
-
-            IPrivateERCToken(tokenAddresses[i]).privateTransferFrom(tokenIds[i], froms[i], tos[i]);
+            
+            require(signer == req.from, "DVP: Signature not from 'from' address for transferFrom");
+            
+            // Execute transferFrom
+            IPrivateERCToken(req.tokenAddress).privateTransferFrom(req.tokenId, req.from, req.to);
         }
 
-        emit DVPExecuted(bundleHash, msg.sender, n);
+        // Process burn requests
+        for (uint256 i = 0; i < totalBurns; i++) {
+            PrivateBurnRequest calldata req = burnRequests[i];
+            
+            // Verify signature
+            bytes32 chunkHash = _hashBurn(bundleHash, req);
+            try this.recoverSigner(chunkHash, req.signature) returns (address recovered) {
+                signer = recovered;
+            } catch {
+                revert("DVP: Invalid signature for burn");
+            }
+            
+            require(signer == req.from, "DVP: Signature not from 'from' address for burn");
+            
+            // Execute burn
+            IPrivateERCToken(req.tokenAddress).privateBurn(req.tokenId);
+        }
+
+        emit DVPExecuted(bundleHash, msg.sender, totalOps);
     }
 
     function cancelDVP(
         bytes32 bundleHash,
-        bytes32[] calldata chunkHashes,
-        address[] calldata froms,
-        address[] calldata tos,
-        address[] calldata tokenAddresses,
-        uint256[] calldata tokenIds,
-        bytes[] calldata signatures
+        PrivateTransferFromRequest[] calldata transferFromRequests,
+        PrivateBurnRequest[] calldata burnRequests
     ) external nonReentrant {
-        uint256 n = chunkHashes.length;
-        require(n > 0, "DVP: No transfers provided");
-        require(
-            n == froms.length &&
-            n == tos.length &&
-            n == tokenAddresses.length &&
-            n == tokenIds.length &&
-            n == signatures.length,
-            "DVP: Array length mismatch"
-        );
-
+        uint256 totalTransferFroms = transferFromRequests.length;
+        uint256 totalBurns = burnRequests.length;
+        uint256 totalOps = totalTransferFroms + totalBurns;
+        
+        require(totalOps > 0, "DVP: No operations provided");
         require(!bundleExecuted[bundleHash], "DVP: Bundle already executed");
         bundleExecuted[bundleHash] = true;
 
-        bytes32 computedChunkHash;
         address signer;
 
-        for (uint256 i = 0; i < n; i++) {
-            computedChunkHash = _hashChunk(bundleHash, froms[i], tos[i], tokenAddresses[i], tokenIds[i]);
-            require(computedChunkHash == chunkHashes[i], "DVP: Invalid chunkHash");
-
-            try this.recoverSigner(chunkHashes[i], signatures[i]) returns (address recovered) {
+        // Process transferFrom requests (revoke approval)
+        for (uint256 i = 0; i < totalTransferFroms; i++) {
+            PrivateTransferFromRequest calldata req = transferFromRequests[i];
+            
+            // Verify signature
+            bytes32 chunkHash = _hashTransferFrom(bundleHash, req);
+            try this.recoverSigner(chunkHash, req.signature) returns (address recovered) {
                 signer = recovered;
             } catch {
-                revert("DVP: Invalid signature");
+                revert("DVP: Invalid signature for transferFrom");
             }
-
-            require(signer == froms[i], "DVP: Signature not from 'from' address");
-
-            bool success = _revokeApproval(tokenAddresses[i], froms[i], tokenIds[i]);
-            emit ApprovalRevoked(bundleHash, froms[i], tokenAddresses[i], tokenIds[i], success);
+            
+            require(signer == req.from, "DVP: Signature not from 'from' address for transferFrom");
+            
+            // Revoke approval
+            bool success = _revokeApproval(req.tokenAddress, req.from, req.tokenId);
+            emit ApprovalRevoked(bundleHash, req.from, req.tokenAddress, req.tokenId, success);
         }
 
-        emit DVPCanceled(bundleHash, msg.sender, n);
+        // Process burn requests (no action needed)
+        for (uint256 i = 0; i < totalBurns; i++) {
+            PrivateBurnRequest calldata req = burnRequests[i];
+            
+            // Verify signature
+            bytes32 chunkHash = _hashBurn(bundleHash, req);
+            try this.recoverSigner(chunkHash, req.signature) returns (address recovered) {
+                signer = recovered;
+            } catch {
+                revert("DVP: Invalid signature for burn");
+            }
+            
+            require(signer == req.from, "DVP: Signature not from 'from' address for burn");
+            
+            // No action needed for burn cancellation
+        }
+
+        emit DVPCanceled(bundleHash, msg.sender, totalOps);
     }
 
     function _revokeApproval(address tokenAddress, address from, uint256 tokenId) internal returns (bool) {
@@ -115,14 +149,12 @@ contract ZKCSC is ReentrancyGuard {
         return chunkHash.toEthSignedMessageHash().recover(signature);
     }
 
-    function _hashChunk(
-        bytes32 bundleHash,
-        address from,
-        address to,
-        address tokenAddress,
-        uint256 tokenId
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(bundleHash, from, to, tokenAddress, tokenId));
+    function _hashTransferFrom(bytes32 bundleHash, PrivateTransferFromRequest calldata req) internal pure returns (bytes32) {
+        return keccak256(abi.encode(bundleHash, req.from, req.to, req.tokenAddress, req.tokenId));
+    }
+
+    function _hashBurn(bytes32 bundleHash, PrivateBurnRequest calldata req) internal pure returns (bytes32) {
+        return keccak256(abi.encode(bundleHash, req.from, req.tokenAddress, req.tokenId));
     }
 
     function hasBundleExecuted(bytes32 bundleHash) external view returns (bool) {
