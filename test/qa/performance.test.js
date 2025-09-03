@@ -15,7 +15,7 @@ const client1 = createClient(rpcUrl_1)
 
 const {
     createAuthMetadata, registerUser, allowBanksInTokenSmartContract, setMinterAllowed, getAddressBalance2,
-    callPrivateMint, getAccount,
+    callPrivateMint, getAccount,getMinterAllowed
 } = require("../help/testHelp")
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
@@ -131,7 +131,7 @@ describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
     const TOTAL_SIZE = 1000;
-    const BATCH_SIZE = 300;
+    const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
     const minter2 = ethers.Wallet.createRandom();
@@ -204,7 +204,9 @@ describe.only("Performance Test with created 10 minters", function () {
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(minters[i].address)
-            await sleep(5000)
+            await sleep(10000)
+            const minterMeta = await createAuthMetadata(minters[i].wallet.privateKey)
+            console.log(await getMinterAllowed(client,minterMeta))
         }
     });
     it('Mint', async () => {
