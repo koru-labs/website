@@ -4,7 +4,8 @@ const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
-import pLimit from "p-limit";
+const pLimit = require("p-limit");
+
 
 const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
 const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
