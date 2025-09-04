@@ -130,7 +130,8 @@ async function mintBy(address,amount,minterWallet) {
 
 const MAX_CONCURRENCY = 3;
 async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatches, providerUrl, allResults) {
-    console.log(`正在发送批次 ${batchIndex+1}/${totalBatches}, 批次大小: ${batchSignedTxs.length}`);
+    const startTime = Date.now();
+    console.log(`正在发送批次 ${batchIndex+1}/${totalBatches}, 批次大小: ${batchSignedTxs.length}, 开始时间: ${new Date(startTime).toISOString()}`);
 
     const batchPayload = batchSignedTxs.map((signedTx, index) => ({
         jsonrpc: "2.0",
@@ -147,6 +148,8 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
         });
 
         const responseData = await response.json();
+        const endTime = Date.now();
+        const duration = endTime - startTime;
 
         if (Array.isArray(responseData)) {
             responseData.forEach((result) => {
@@ -182,8 +185,13 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
                 });
             });
         }
+
+        console.log(`批次 ${batchIndex+1}/${totalBatches} 发送完成, 结束时间: ${new Date(endTime).toISOString()}, 耗时: ${duration}ms`);
     } catch (error) {
-        console.error(`批次请求失败:`, error.message);
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        console.error(`批次 ${batchIndex+1}/${totalBatches} 请求失败, 结束时间: ${new Date(endTime).toISOString()}, 耗时: ${duration}ms, 错误:`, error.message);
+
         batchMetadata.forEach((metadata) => {
             allResults.push({
                 success: false,
@@ -195,6 +203,7 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
         });
     }
 }
+
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
@@ -1159,7 +1168,7 @@ describe.only("Performance Test with created 10 minters", function () {
             });
         }
 
-    // 用 p-limit 限制并发为 3
+        // 用 p-limit 限制并发为 3
         const limit = pLimit(MAX_CONCURRENCY);
         await Promise.all(
             batches.map(({ batchSignedTxs, batchMetadata, batchIndex }) =>

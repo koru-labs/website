@@ -201,6 +201,7 @@ function createClient(url) {
                 try {
                     const result = await callBack(request_id,metadata);
                     console.log("wait for proof. status = ", result.status)
+
                     if (result.status == "TOKEN_ACTION_STATUS_SUC" || result.status == "TOKEN_ACTION_STATUS_CALL_L1" ) {
                         // if (result.status == "TOKEN_ACTION_STATUS_SUC" ) {
                         resolve(result)
