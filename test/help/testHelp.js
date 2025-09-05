@@ -42,9 +42,18 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 }
 
 
-async function callPrivateTransfer(wallet, scAddress, to, tokenId) {
+async function callPrivateTransfer(wallet, scAddress, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransfer(tokenId,to);
+    const tx = await contract.privateTransfer(tokenId);
+    console.log("tx")
+    let receipt = await tx.wait();
+    console.log("Result:", receipt);
+    return receipt;
+}
+
+async function callPrivateTransfers(wallet, scAddress, tokenIds) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateTransfers(tokenIds);
     console.log("tx")
     let receipt = await tx.wait();
     console.log("Result:", receipt);
@@ -616,6 +625,7 @@ async function getMinterAllowed(grpcClient,meta) {
 module.exports =  {
     callPrivateMint,
     callPrivateTransfer,
+    callPrivateTransfers,
     callPrivateTransferFrom,
     callPrivateBurn,
     getAddressBalance,

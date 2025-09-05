@@ -243,23 +243,20 @@ abstract contract PrivateTokenCore is
     }
 
     function privateTransfer(
-        uint256 tokenId,
-        address to
+        uint256 tokenId
     )
     external
     whenNotPaused
     notBlacklisted(msg.sender)
-    notBlacklisted(to)
     onlyAllowedBank
     nonReentrant
     virtual
     returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
-        require(to != address(0), "PrivateERCToken: to is the zero address");
         TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
-        require(tokenEntity.to == to, "PrivateERCToken: tokenId is not matched");
+        address to = tokenEntity.to;
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = tokenEntity.rollbackTokenId;
@@ -272,14 +269,16 @@ abstract contract PrivateTokenCore is
         uint256[] memory oldTokens = new uint256[](1);
         oldTokens[0] = tokenEntity.id;
         TokenUtilsLib.removeTokens(_accounts, msg.sender, oldTokens);
-
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
         tokenEntity.rollbackTokenId = 0;
         tokenEntity.owner = to;
         tokenEntity.status = TokenModel.TokenStatus.active;
 
-        TokenUtilsLib.precompiledAddTokenWithBalance(_accounts, tokenEntity.to, tokenEntity);
+        TokenModel.Account storage toAccount = _accounts[tokenEntity.to];
+        toAccount.balance = precompiledAddElGamal(toAccount.balance, tokenEntity.amount);
+        toAccount.assets[tokenEntity.id] = tokenEntity;
+
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
@@ -287,6 +286,63 @@ abstract contract PrivateTokenCore is
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
         TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity);
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+        return true;
+    }
+
+    function privateTransfers(
+        uint256[] calldata tokenIds
+    )
+    external
+    whenNotPaused
+    notBlacklisted(msg.sender)
+    onlyAllowedBank
+    nonReentrant
+    virtual
+    returns (bool)
+    {
+        trackTimeConsumption(tokenIds[0],"privateTransfers start");
+        // 简单的for循环，每个token都走完整的privateTransfer流程
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+
+            TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
+            TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
+            address to = tokenEntity.to;
+
+            uint256[] memory rollbackTokens = new uint256[](1);
+            rollbackTokens[0] = tokenEntity.rollbackTokenId;
+            TokenUtilsLib.precompiledRemoveTokensWithBalance(_accounts, msg.sender, rollbackTokens);
+
+            uint256[] memory consumedTokens = new uint256[](2);
+            consumedTokens[0] = tokenEntity.id;
+            consumedTokens[1] = tokenEntity.rollbackTokenId;
+
+            uint256[] memory oldTokens = new uint256[](1);
+            oldTokens[0] = tokenEntity.id;
+            TokenUtilsLib.removeTokens(_accounts, msg.sender, oldTokens);
+            TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+
+            tokenEntity.rollbackTokenId = 0;
+            tokenEntity.owner = to;
+            tokenEntity.status = TokenModel.TokenStatus.active;
+
+            TokenModel.Account storage toAccount = _accounts[tokenEntity.to];
+            toAccount.balance = precompiledAddElGamal(toAccount.balance, tokenEntity.amount);
+            toAccount.assets[tokenEntity.id] = tokenEntity;
+
+            TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
+
+            TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
+
+            TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, to, backupPk, backupEntity);
+
+            emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+        }
+
+        trackTimeConsumption(tokenIds[0],"privateTransfers end");
+
         return true;
     }
 
@@ -311,5 +367,33 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, tokenId);
         TokenEventLib.triggerRollupForCancel(_l2Event, address(this), transferToken, rollbackToken);
         return true;
+    }
+
+    function trackTimeConsumption(uint256 traceId,string memory stepName) internal  returns (bool){
+        bytes memory data = abi.encode(traceId, stepName);
+
+        (bool success, ) = 0x0000000000000000000000000000000000002060.call(data);
+        return success;
+    }
+
+    function precompiledAddElGamal(
+        TokenModel.ElGamal memory token1,
+        TokenModel.ElGamal memory token2
+    ) internal returns (TokenModel.ElGamal memory result) {
+        bytes memory input = abi.encode(
+            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
+            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
+        );
+        (bool success, bytes memory data) = address(0x2040).call(input);
+        require(success, "Precompiled addition failed");
+
+        (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
+
+        result = TokenModel.ElGamal({
+            cl_x: leftX,
+            cl_y: leftY,
+            cr_x: rightX,
+            cr_y: rightY
+        });
     }
 }

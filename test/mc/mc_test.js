@@ -12,6 +12,7 @@ const client = createClient(rpcUrl)
 const {
     callPrivateMint,
     callPrivateTransfer,
+    callPrivateTransfers,
     callPrivateBurn,
     callPrivateApprove,
     callPrivateTransferFrom,
@@ -250,11 +251,10 @@ async function testTransfer() {
         await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
 
         console.log("Transferring split token...");
-        let receipt = await callPrivateTransfer(
+        let receipt = await callPrivateTransfers(
             minterWallet,
             config.contracts.PrivateERCToken,
-            accounts.To1,
-            '0x' + response.transfer_token_id
+            ['0x' + response.transfer_token_id]
         );
 
         await sleep(CONSTANTS.waitTimes.short);
