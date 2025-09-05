@@ -12,13 +12,19 @@ library TokenEventLib {
         IL2Event _l2Event,
         address tokenSCAddress,
         address deployer,
-        TokenModel.TokenSCTypeEnum TokenSCType
+        TokenModel.TokenSCTypeEnum TokenSCType,
+        string memory tokenName,
+        string memory tokenSymbol,
+        uint8 tokenDecimals
     ) public {
 
         TokenSCCreatedEvent memory e = TokenSCCreatedEvent({
-            TokenSCAddress : tokenSCAddress,
-            TokenSCType : TokenSCType,
-            Deployer : deployer
+            TokenSCAddress: tokenSCAddress,
+            TokenSCType: TokenSCType,
+            Deployer: deployer,
+            TokenName: tokenName,
+            TokenSymbol: tokenSymbol,
+            TokenDecimals: tokenDecimals
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(tokenSCAddress, deployer, "TokenSCCreated", body);
