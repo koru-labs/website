@@ -228,6 +228,7 @@ message AssetDetail  {
   uint64 available_quantity = 4;
   uint64 exchageRate = 5;
   string type = 6;
+  string is_minter = 7;
 }
 
 message SaveTransactionResponse {
