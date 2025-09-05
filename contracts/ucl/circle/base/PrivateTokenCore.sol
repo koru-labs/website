@@ -44,7 +44,10 @@ abstract contract PrivateTokenCore is
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
         IL2Event l2Event,
-        InstitutionUserRegistry institutionRegistration
+        InstitutionUserRegistry institutionRegistration,
+        string memory tokenName,
+        string memory tokenSymbol,
+        uint8 tokenDecimals
     ) public virtual {
         require(!_initialized, "FiatToken: contract is already initialized");
         
@@ -52,7 +55,7 @@ abstract contract PrivateTokenCore is
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
         initializePermission(institutionRegistration);
-        TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType);
+        TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
 
     function privateBalanceOf(address owner) external view virtual returns (TokenModel.ElGamal memory) {
