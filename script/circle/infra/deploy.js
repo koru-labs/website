@@ -23,7 +23,7 @@ async function main() {
 
     await deployLibs(deployed);
     await deployL2Event(deployed);
-    await deployL1Handle(deployed);
+    // await deployL1Handle(deployed);
     // await deployL1BlobCommitmentVerify(deployed);
     await deployInstUserRegistry(deployed);
     await deployInstProxy(deployed);
@@ -32,7 +32,7 @@ async function main() {
     // await registerInstitutionAndUser()
 }
 
-main().then();
+// main().then();
 
 //execute after main is completed and k8s configuration is updated and ucl-node are been restarted
-// registerInstitutionAndUser().then();
+registerInstitutionAndUser().then();

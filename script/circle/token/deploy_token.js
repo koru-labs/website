@@ -95,18 +95,10 @@ async function deployTokenForNode4(deployed) {
 }
 
 async function allowBanksInTokenSmartContract(deployed) {
-    const l1CustomNetwork = {
-        name: "BESU",
-        chainId: 1337
-    };
-    const options = {
-        batchMaxCount: 1,
-        staticNetwork: true
-    };
+    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
 
-    const L1Url = hardhatConfig.networks.ucl_L2.url;
-    const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
+    console.log(`Using wallet: ${ownerWallet.address}`);
+
     const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
 
     for (let i = 0; i < config.institutions.length; i++) {
