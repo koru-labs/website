@@ -10,29 +10,24 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     version: "1.0";
     description: "apis for generating zk-proof, tokens, and utility apis";
   };
-  host: "sb-node3-node-http.hamsa-ucl.com:8080"; // Do not include scheme (http/https)
+  host: "qa-node3-http.hamsa-ucl.com:8080"; // Do not include scheme (http/https)
   base_path: "";
   schemes: HTTP;
 };
 
 // Token service interface
 service TokenService {
+
   rpc GenerateMintProof       (GenerateMintRequest)         returns (MintProofResponse) {
     option (google.api.http) = {
       post: "/v1/proof/mint"
       body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "Submit request to generate proof for token mint. This is an asynchronous call. To query the proof,  call /query/proof/mint using the returned request_id in the response"
     };
   };
   rpc GenerateSplitToken      (GenerateSplitRequest)         returns (SplitTokenResponse) {
     option (google.api.http) = {
       post: "/v1/split/token"
       body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "submit request to split user balance for future transaction (e.g. transfer, burn). This is an asynchronous call. To query the token Id, call /query/split/token using the returned request_id in the response "
     };
   };
 
@@ -41,9 +36,6 @@ service TokenService {
       post: "/v1/proof/approve"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "submit request to split user balance for future transaction (e.g. approve). This is an asynchronous call. To query the token Id, call /query/split/token using the returned request_id in the response "
-    };
   };
 
   rpc GenerateDirectMint      (GenerateMintRequest)         returns (GenerateProofResponse) {
@@ -51,26 +43,17 @@ service TokenService {
       post: "/v1/direct/mint"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the mint process in one function call"
-    };
   };
   rpc GenerateDirectTransfer      (GenerateTransferRequest)         returns (GenerateProofResponse) {
     option (google.api.http) = {
       post: "/v1/direct/transfer"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the transfer process in one function call"
-    };
   };
   rpc GenerateDirectBurn      (GenerateBurnRequest)         returns (GenerateProofResponse) {
     option (google.api.http) = {
       post: "/v1/direct/burn"
       body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "execute the burn process in one function call"
     };
   };
 
@@ -80,101 +63,11 @@ service TokenService {
       post: "/v1/query/proof/mint"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated mint proof using requestId"
-    };
   };
   rpc GetAddressBalance       (BalanceRequest)               returns (AddressBalanceResponse) {
     option (google.api.http) = {
       post: "/v1/query/balance"
       body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query account balance from ZK-server db"
-    };
-  };
-  rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse) {
-    option (google.api.http) = {
-      post: "/v1/elgamal/decode"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to decode ElGamal amount"
-    };
-  };
-
-  rpc ConvertToPUSDC     (ConvertToPUSDCRequest)          returns (ConvertToPUSDCResponse) {
-    option (google.api.http) = {
-      post: "/v1/convert/pUSDC"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to covert amount to pUSDC"
-    };
-  };
-
-  rpc ConvertToUSDC     (ConvertToUSDCRequest)          returns (ConvertToUSDCResponse) {
-    option (google.api.http) = {
-      post: "/v1/convert/USDC"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to covert ElGamal amount to USDC"
-    };
-  };
-
-  rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/token"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated tokenId using requestId"
-    };
-  };
-  rpc GetTokenActionStatus     (ProofRequest)                 returns (TokenActionStatusResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/token/status"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the generated tokenId using requestId"
-    };
-  };
-  rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse) {
-    option (google.api.http) = {
-      post: "/v1/elgamal/encode"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "request ZK-server to encode amount in ElGamal format"
-    };
-  };
-  rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/tokens"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
-    };
-  };
-  rpc GetApproveTokenList       (ApproveTokenListRequest)        returns (ApproveTokenListResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/approve/tokens"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
-    };
-  };
-  rpc GetSplitTokenDetail       (SplitTokenDetailRequest)        returns (SplitTokenDetailResponse) {
-    option (google.api.http) = {
-      post: "/v1/query/split/tokens/detail"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "list split tokens not consumed. To cancel tokens not needed, call smart contract function PrivateERCToken.privateCancelToken"
     };
   };
   rpc GetAddressBalanceDetail       (BalanceRequest)               returns (AddressBalanceDetailResponse) {
@@ -183,21 +76,113 @@ service TokenService {
       body: "*"
     };
   };
+  rpc DecodeElgamalAmount     (DecodeAmountRequest)          returns (DecodeAmountResponse) {
+    option (google.api.http) = {
+      post: "/v1/elgamal/decode"
+      body: "*"
+    };
+  };
+
+  rpc ConvertToPUSDC     (ConvertToPUSDCRequest)          returns (ConvertToPUSDCResponse) {
+    option (google.api.http) = {
+      post: "/v1/convert/pUSDC"
+      body: "*"
+    };
+  };
+
+  rpc ConvertToUSDC     (ConvertToUSDCRequest)          returns (ConvertToUSDCResponse) {
+    option (google.api.http) = {
+      post: "/v1/convert/USDC"
+      body: "*"
+    };
+  };
+
+  rpc GetSplitToken           (ProofRequest)                 returns (SplitTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/split/token"
+      body: "*"
+    };
+  };
+  rpc GetTokenActionStatus     (ProofRequest)                 returns (TokenActionStatusResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/token/status"
+      body: "*"
+    };
+  };
+  rpc EncodeElgamalAmount     (EncodeAmountRequest)          returns (EncodeAmountResponse) {
+    option (google.api.http) = {
+      post: "/v1/elgamal/encode"
+      body: "*"
+    };
+  };
+  rpc GetSplitTokenList       (SplitTokenListRequest)        returns (SplitTokenListResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/split/tokens"
+      body: "*"
+    };
+  };
+  rpc GetApproveTokenList       (ApproveTokenListRequest)        returns (ApproveTokenListResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/approve/tokens"
+      body: "*"
+    };
+  };
+  rpc GetSplitTokenDetail       (SplitTokenDetailRequest)        returns (SplitTokenDetailResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/split/tokens/detail"
+      body: "*"
+    };
+  };
+
   rpc GetMintAllowed       (MintAllowedRequest)        returns (MintAllowedResponse) {
     option (google.api.http) = {
       post: "/v1/query/mint/allowed"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query the mint allowed amount using sc_address"
-    };
   };
+
   rpc GetTokenAmount       (TokenAmountRequest)        returns (TokenAmountResponse) {
     option (google.api.http) = {
       post: "/v1/query/token/amount"
       body: "*"
     };
+  };
+
+  rpc SaveTransaction       (SaveTransactionRequest)        returns (SaveTransactionResponse) {
+    option (google.api.http) = {
+      post: "/v1/save/transaction"
+      body: "*"
+    };
   }
+
+  rpc GetTransaction      (GetTransactionRequest)        returns (GetTransactionResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/transaction"
+      body: "*"
+    };
+  }
+
+  rpc GetAssetAddressDetail      (AssetAddressDetailRequest)        returns (AssetAddressDetailResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/asset/address"
+      body: "*"
+    };
+  }
+  rpc ActivateSmartContract      (ActivateSmartContractRequest)        returns (ActivateSmartContractResponse) {
+    option (google.api.http) = {
+      post: "/v1/active/smart-contract"
+      body: "*"
+    };
+  }
+}
+message ActivateSmartContractRequest {
+  repeated string sc_addresses = 1;
+  uint64 status = 2;
+}
+
+message ActivateSmartContractResponse {
+  string code = 1;
+  string message = 2;
 }
 
 // Token action status enum
@@ -214,13 +199,81 @@ enum TokenActionStatusEnum {
   TOKEN_ACTION_STATUS_CANCEL_ERROR = 9;
   TOKEN_ACTION_STATUS_WAIT_L2_EVENT = 10;
 }
-message TokenAmountRequest {
-  string token_id = 1;
+
+message SaveTransactionRequest {
+  string asset_name = 1;
+  string from_address = 2;
+  string to_address = 3;
+  uint64 amount = 4;
+  string type = 5;
+  string hash = 6;
+  int64 timestamp = 7;
+  string metadata = 8;
 }
 
-message TokenAmountResponse {
-  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+message AssetAddressDetailRequest {
+  string asset_address = 1;
+  string sc_address = 2;
 }
+message AssetAddressDetailResponse {
+  repeated AssetDetail data = 1;
+  string code = 2;
+  string message = 3;
+}
+
+message AssetDetail  {
+  string asset_address = 1;
+  string asset_name = 2;
+  uint64 quantity = 3;
+  uint64 available_quantity = 4;
+  uint64 exchageRate = 5;
+  string type = 6;
+  bool is_minter = 7;
+}
+
+message SaveTransactionResponse {
+  string code = 1;
+  string message = 2;
+}
+
+message GetTransactionRequest {
+  uint32 page_num = 1;
+  uint32 page_size = 2;
+  uint32 start_time = 3;
+  uint32 end_time = 4;
+}
+
+message GetTransactionResponse {
+  repeated Transaction data = 1;
+  string code = 2;
+  string message = 3;
+}
+
+message Transaction {
+  string asset_name = 1;
+  string from_address = 2;
+  string to_address = 3;
+  uint64 amount = 4;
+  string type = 5;
+  string hash = 6;
+  int64 timestamp = 7;
+}
+
+message RegisteredInstitutionsRequest {
+  string manager_address = 1;
+}
+
+message RegisteredInstitutionsResponse {
+  repeated Institution institutions = 1;
+}
+
+message Institution {
+  string address = 1;
+  string manager_address = 2;
+  string role = 3;
+  uint32 status = 4;
+}
+
 message ConvertToPUSDCRequest {
   uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
@@ -246,13 +299,6 @@ message ConvertToUSDCResponse {
   repeated string proof = 5;
   repeated string input = 6;
   uint64 status_code = 7;
-}
-
-message AddressBalanceDetailResponse {
-  uint64 total_balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-  uint64 available_balance = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-  uint64 transfer_balance = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
-  uint64 approved_balance = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
 
 message ProofRequest {
@@ -282,16 +328,16 @@ message GenerateSplitRequest {
 }
 
 message GenerateApproveRequest {
-  string sc_address =1 ;
-  uint64 token_type =2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
-  string from_address =3;
-  string to_address =4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
-  string spender_address =5;
+  string sc_address = 1 ;
+  uint64 token_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
+  string from_address = 3;
+  string to_address = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "leave it empty if purpose is to burn token"}];
+  string spender_address = 5;
   uint64 amount = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
   string comment = 7;
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
-      required:["sc_address","from_address", "amount"]
+      required:["sc_address", "from_address", "amount"]
     },
     example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"toAddress\": \"0x4312488937D47A007De24d48aB82940C809EEb2b\", \"amount\":1 }",
   };
@@ -371,8 +417,23 @@ message AddressBalanceResponse {
   uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
 
+message AddressBalanceDetailResponse {
+  uint64 total_balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 available_balance = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 transfer_balance = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 approved_balance = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
+
 message DecodeAmountResponse {
   uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
+
+message TokenAmountRequest {
+  string token_id = 1;
+}
+
+message TokenAmountResponse {
+  uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
 }
 
 message MintProofResponse {
@@ -450,7 +511,6 @@ message ApproveTokenListRequest {
   string owner_address = 1 ;
   string sc_address = 2 ;
   string spender_address = 3 ;
-
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["owner_address", "sc_address"]
@@ -501,9 +561,6 @@ service AccountService {
       post: "/v1/account/register"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "register an account to the system"
-    };
   };
   rpc UpdateAccountStatus   (UpdateAccountStatusRequest)         returns (AsyncActionResponse)
   {
@@ -511,18 +568,12 @@ service AccountService {
       post: "/v1/account/update/status"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "update account status"
-    };
   };
   rpc UpdateAccountRole   (UpdateAccountRoleRequest)         returns (AsyncActionResponse)
   {
     option (google.api.http) = {
       post: "/v1/account/update/role"
       body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "update account role"
     };
   };
 
@@ -532,9 +583,6 @@ service AccountService {
       post: "/v1/account/async"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query async action status"
-    };
   };
   rpc GetAccount   (GetAccountRequest)         returns (GetAccountResponse)
   {
@@ -542,8 +590,11 @@ service AccountService {
       post: "/v1/account/query"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      description: "query account status"
+  };
+  rpc GetRegisteredInstitutions       (RegisteredInstitutionsRequest)        returns (RegisteredInstitutionsResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/registered/institutions"
+      body: "*"
     };
   };
 }

@@ -39,6 +39,9 @@ import "../model/TokenModel.sol";
         address TokenSCAddress;
         TokenModel.TokenSCTypeEnum TokenSCType;
         address Deployer;
+        string TokenName;
+        string TokenSymbol;
+        uint8 TokenDecimals;
     }
 
     struct TokenDetailBody {

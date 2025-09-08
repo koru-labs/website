@@ -9,12 +9,31 @@ async function printNetwork(){
     console.log("Chain ID:", net.chainId);
 }
 
-async function deploySimpleToken(){
-    const SimpleToken = await ethers.getContractFactory("SimpleToken");
+async function deploySimpleToken() {
+    const CurveBabyJubJub = await ethers.getContractFactory("CurveBabyJubJub");
+    const curveBabyJubJub = await CurveBabyJubJub.deploy();
+    await curveBabyJubJub.waitForDeployment();
+    console.log("CurveBabyJubJub is deployed at :", curveBabyJubJub.target);
+
+    const CurveBabyJubJubHelper = await ethers.getContractFactory("CurveBabyJubJubHelper", {
+        libraries: {
+            CurveBabyJubJub:curveBabyJubJub.target
+        }
+    })
+    const curveBabyJubJubHelper = await CurveBabyJubJubHelper.deploy();
+    await curveBabyJubJubHelper.waitForDeployment();
+    console.log("CurveBabyJubJubHelper is deployed at :", curveBabyJubJubHelper.target);
+
+    const SimpleToken = await ethers.getContractFactory("SimpleToken", {
+        libraries: {
+            "CurveBabyJubJubHelper": curveBabyJubJubHelper.target
+        }});
     const simpleToken = await SimpleToken.deploy("simple", "$S");
     await simpleToken.waitForDeployment();
+
     console.log("SimpleToken is deployed at: ", simpleToken.target);
 }
+
 
 async function checkBalance(){
     const [signer] = await ethers.getSigners();
@@ -35,6 +54,6 @@ async function transfer(){
 
 
 // printNetwork().then();
-// deploySimpleToken().then()
-checkBalance().then();
+deploySimpleToken().then()
+// checkBalance().then();
 // transfer().then();
