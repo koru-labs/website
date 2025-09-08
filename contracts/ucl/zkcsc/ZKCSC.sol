@@ -75,9 +75,9 @@ contract ZKCSC is ReentrancyGuard {
             }
             
             require(signer == req.from, "DVP: Signature not from 'from' address for burn");
-            
-            // Execute burn
-            IPrivateERCToken(req.tokenAddress).privateBurn(req.tokenId);
+
+            // Execute burn from (burn on behalf of the token owner)
+            IPrivateERCToken(req.tokenAddress).privateBurnFrom(req.from, req.tokenId);
         }
 
         emit DVPExecuted(bundleHash, msg.sender, totalOps);
@@ -98,7 +98,6 @@ contract ZKCSC is ReentrancyGuard {
 
         address signer;
 
-        // Process transferFrom requests (revoke approval)
         for (uint256 i = 0; i < totalTransferFroms; i++) {
             PrivateTransferFromRequest calldata req = transferFromRequests[i];
             
@@ -117,7 +116,6 @@ contract ZKCSC is ReentrancyGuard {
             emit ApprovalRevoked(bundleHash, req.from, req.tokenAddress, req.tokenId, success);
         }
 
-        // Process burn requests (no action needed)
         for (uint256 i = 0; i < totalBurns; i++) {
             PrivateBurnRequest calldata req = burnRequests[i];
             
@@ -130,8 +128,6 @@ contract ZKCSC is ReentrancyGuard {
             }
             
             require(signer == req.from, "DVP: Signature not from 'from' address for burn");
-            
-            // No action needed for burn cancellation
         }
 
         emit DVPCanceled(bundleHash, msg.sender, totalOps);

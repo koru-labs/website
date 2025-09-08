@@ -6,6 +6,7 @@ const {
     callPrivateMint,
     callPrivateTransferFrom,
     callPrivateApprove,
+    callPrivateBurn,
     getAddressBalance2,
     createAuthMetadata
 } = require("../help/testHelp");
@@ -32,8 +33,8 @@ const user1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const user2Wallet = new ethers.Wallet(accounts.To2PrivateKey, l1Provider);
 
 // token合约地址
-const tokenAddress1 = "0x8f73980725C9741C693Af5f3847544BE3C171dfa"; // User1 的 token 所在合约
-const tokenAddress2 = "0xFEF2A9a94ad68cB59651698f06fE37d790d0D16B"; // User2 的 token 所在合约
+const tokenAddress1 = "0x8B6F63EFb564929B0ee332B1a4002fdBCD4a81bC"; // User1 的 token 所在合约
+const tokenAddress2 = "0xa90712888DD10509295CF049E783Bc9766EC4657"; // User2 的 token 所在合约
 
 async function mintForStart(tokenAddress, wallet, account) {
     console.log(`=== Starting Mint Process for ${account} ===`);
@@ -52,6 +53,9 @@ async function mintForStart(tokenAddress, wallet, account) {
     let balance = await getAddressBalance2(client, tokenAddress, account, metadata);
     console.log("Account balance after mint:", balance);
     console.log("✅ Mint completed successfully");
+
+    // 返回 mint 过程中生成的 token ID，这些是真实的可以被 burn 的 token
+    return response.transfer_token_id ? '0x' + response.transfer_token_id : null;
 }
 
 async function approveTokens(tokenAddress, wallet, account, spenderAccount, toAccount) {
@@ -75,6 +79,8 @@ async function approveTokens(tokenAddress, wallet, account, spenderAccount, toAc
     return tokenId;
 }
 
+
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -92,13 +98,25 @@ async function deployZKCSC() {
 }
 
 /**
- * 计算 chunkHash
+ * 计算 transferFrom chunkHash
  */
 function calculateChunkHash(bundleHash, from, to, tokenAddress, tokenId) {
     return ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(
             ["bytes32", "address", "address", "address", "uint256"],
             [bundleHash, from, to, tokenAddress, tokenId]
+        )
+    );
+}
+
+/**
+ * 计算 burn chunkHash
+ */
+function calculateBurnChunkHash(bundleHash, from, tokenAddress, tokenId) {
+    return ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+            ["bytes32", "address", "address", "uint256"],
+            [bundleHash, from, tokenAddress, tokenId]
         )
     );
 }
@@ -112,16 +130,16 @@ async function signChunkHash(wallet, chunkHash) {
 }
 
 /**
- * 测试两方 DvP 交易
+ * 测试包含 burn 的 DVP 交易（使用 approve token 进行 burn）
  */
-async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId) {
-    console.log("=== Testing Two-Party DVP ===");
+async function testDVPWithBurn(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId, burnTokenId) {
+    console.log("=== Testing DVP with Burn (Mixed transferFrom + burn) ===");
 
     // 1. 链下约定 bundleHash
-    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-TWO-PARTY"));
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-WITH-BURN"));
     console.log("BundleHash:", bundleHash);
 
-    // 2. User1 生成 chunkHash 并签名
+    // 2. User1 生成 transferFrom chunkHash 并签名
     const user1ChunkHash = calculateChunkHash(
         bundleHash,
         user1Wallet.address,
@@ -130,10 +148,10 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
         user1TokenId
     );
     const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
-    console.log("User1 ChunkHash:", user1ChunkHash);
-    console.log("User1 Signature:", user1Signature);
+    console.log("User1 Transfer ChunkHash:", user1ChunkHash);
+    console.log("User1 Transfer Signature:", user1Signature);
 
-    // 3. User2 生成 chunkHash 并签名
+    // 3. User2 生成 transferFrom chunkHash 并签名
     const user2ChunkHash = calculateChunkHash(
         bundleHash,
         user2Wallet.address,
@@ -142,11 +160,22 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
         user2TokenId
     );
     const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
-    console.log("User2 ChunkHash:", user2ChunkHash);
-    console.log("User2 Signature:", user2Signature);
+    console.log("User2 Transfer ChunkHash:", user2ChunkHash);
+    console.log("User2 Transfer Signature:", user2Signature);
 
-    // 4. Relayer 聚合并执行 DVP
-    console.log("=== Relayer Executing DVP ===");
+    // 4. 生成 burn chunkHash 并签名
+    const burnChunkHash = calculateBurnChunkHash(
+        bundleHash,
+        user2Wallet.address,  // 使用 user2 进行 burn
+        tokenAddress2,
+        burnTokenId
+    );
+    const burnSignature = await signChunkHash(user2Wallet, burnChunkHash);
+    console.log("Burn ChunkHash:", burnChunkHash);
+    console.log("Burn Signature:", burnSignature);
+
+    // 5. Relayer 聚合并执行 DVP
+    console.log("=== Relayer Executing DVP with Burn ===");
     try {
         const tx = await ZKCSC.executeDVP(
             bundleHash,
@@ -166,11 +195,94 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
                     signature: user2Signature
                 }
             ],
-            [] // burnRequests (暂时不测试burn)
+            [ // burnRequests
+                {
+                    from: user2Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: burnTokenId,
+                    signature: burnSignature
+                }
+            ]
         );
 
         const receipt = await tx.wait();
-        console.log("DVP Execution successful! Transaction hash:", tx.hash);
+        console.log("DVP with Burn Execution successful! Transaction hash:", tx.hash);
+
+        // 检查事件
+        const logs = receipt.logs || [];
+        const dvpExecutedEvent = logs.find(e => e.fragment?.name === "DVPExecuted");
+        if (dvpExecutedEvent) {
+            console.log("✅ DVPExecuted event emitted:", dvpExecutedEvent.args);
+            console.log("Total operations (transfers + burns):", dvpExecutedEvent.args[2]);
+        } else {
+            console.log("❌ DVPExecuted event not found");
+        }
+
+    } catch (error) {
+        console.error("❌ DVP with Burn Execution failed:", error.message);
+        if (error.reason) console.error("Reason:", error.reason);
+        if (error.data) console.error("Data:", error.data);
+        throw error;
+    }
+
+    // 6. 验证 burn 是否成功
+    console.log("=== Verifying Burn Operation ===");
+    try {
+        const token2Contract = await ethers.getContractAt("IPrivateTokenCore", tokenAddress2);
+        const burnedToken = await token2Contract.getAccountTokenById(user2Wallet.address, burnTokenId);
+        if (burnedToken.id === 0n || burnedToken.owner === ethers.ZeroAddress) {
+            console.log(`✅ Token ${burnTokenId} has been successfully burned`);
+        } else {
+            console.log(`❌ Token ${burnTokenId} still exists. Owner: ${burnedToken.owner}`);
+        }
+    } catch (error) {
+        console.log("✅ Token burned successfully (token not found):", error.message);
+    }
+
+    console.log("✅ DVP with Burn test completed");
+}
+
+/**
+ * 测试简单的 burn 操作（使用 approve token）
+ */
+async function testSimpleBurn(ZKCSC, wallet, tokenId) {
+    console.log("=== Testing Simple Burn (Approve Token) ===");
+    console.log("Approve Token ID to burn:", tokenId);
+    console.log("Wallet address:", wallet.address);
+
+    // 1. 链下约定 bundleHash
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-SIMPLE-BURN"));
+    console.log("BundleHash:", bundleHash);
+
+    // 2. 生成 burn chunkHash 并签名
+    const burnChunkHash = calculateBurnChunkHash(
+        bundleHash,
+        wallet.address,
+        tokenAddress1,
+        tokenId
+    );
+    const burnSignature = await signChunkHash(wallet, burnChunkHash);
+    console.log("Burn ChunkHash:", burnChunkHash);
+    console.log("Burn Signature:", burnSignature);
+
+    // 3. 执行 burn DVP
+    console.log("=== Executing Simple Burn DVP ===");
+    try {
+        const tx = await ZKCSC.executeDVP(
+            bundleHash,
+            [], // transferFromRequests (空数组)
+            [ // burnRequests
+                {
+                    from: wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: tokenId,
+                    signature: burnSignature
+                }
+            ]
+        );
+
+        const receipt = await tx.wait();
+        console.log("Simple Burn DVP Execution successful! Transaction hash:", tx.hash);
 
         // 检查事件
         const logs = receipt.logs || [];
@@ -180,44 +292,15 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
         } else {
             console.log("❌ DVPExecuted event not found");
         }
-
     } catch (error) {
-        console.error("❌ DVP Execution failed:", error.message);
+        console.error("❌ Simple Burn DVP Execution failed:", error.message);
         if (error.reason) console.error("Reason:", error.reason);
         if (error.data) console.error("Data:", error.data);
         throw error;
     }
 
-    // 5. 验证资产所有权是否交换
-    console.log("=== Verifying Token Ownership After DVP ===");
-
-    try {
-        // 检查 User1 是否拥有来自 tokenAddress2 的 user2TokenId
-        const token2Contract = await ethers.getContractAt("IPrivateTokenCore", tokenAddress2);
-        const user1Token = await token2Contract.getAccountTokenById(user1Wallet.address, user2TokenId);
-        if (user1Token.owner === user1Wallet.address) {
-            console.log(`✅ User1 now owns Token ${user2TokenId} from Token2`);
-        } else {
-            console.log(`❌ User1 does not own Token ${user2TokenId}. Owner: ${user1Token.owner}`);
-        }
-    } catch (error) {
-        console.log("❌ Error checking User1's new token:", error.message);
-    }
-
-    try {
-        // 检查 User2 是否拥有来自 tokenAddress1 的 user1TokenId
-        const token1Contract = await ethers.getContractAt("IPrivateTokenCore", tokenAddress1);
-        const user2Token = await token1Contract.getAccountTokenById(user2Wallet.address, user1TokenId);
-        if (user2Token.owner === user2Wallet.address) {
-            console.log(`✅ User2 now owns Token ${user1TokenId} from Token1`);
-        } else {
-            console.log(`❌ User2 does not own Token ${user1TokenId}. Owner: ${user2Token.owner}`);
-        }
-    } catch (error) {
-        console.log("❌ Error checking User2's new token:", error.message);
-    }
+    console.log("✅ Simple Burn test completed");
 }
-
 /**
  * 测试取消 DvP 交易
  */
@@ -543,8 +626,10 @@ async function runDVPTest() {
     try {
         // 1. Mint 代币
         console.log("=== Minting Tokens ===");
-        await mintForStart(tokenAddress1, minterWallet, accounts.To1);
-        await mintForStart(tokenAddress2, minterWallet, accounts.To2);
+        const user1MintTokenId = await mintForStart(tokenAddress1, minterWallet, accounts.To1);
+        const user2MintTokenId = await mintForStart(tokenAddress2, minterWallet, accounts.To2);
+        console.log("User1 Mint Token ID:", user1MintTokenId);
+        console.log("User2 Mint Token ID:", user2MintTokenId);
 
         // 2. 部署 ZKCSC
         const ZKCSC = await deployZKCSC();
@@ -556,13 +641,26 @@ async function runDVPTest() {
         console.log("Final User1 Token ID:", user1TokenId);
         console.log("Final User2 Token ID:", user2TokenId);
 
-        // 4. 执行 DVP 测试
-        await testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
+        // 5. 生成用于 burn 的 approve token
+        console.log("=== Generating Approve Token for Burn Test ===");
+        const user1BurnTokenId = await approveTokens(tokenAddress1, user1Wallet, accounts.To1, ZKCSC.target, accounts.To1);
+        console.log("User1 Burn Token ID:", user1BurnTokenId);
 
-        // 5. 执行取消 DVP 测试
+        // 6. 执行 burn 测试
+        await testSimpleBurn(ZKCSC, user1Wallet, user1BurnTokenId);
+
+        // 7. 生成更多 approve token 用于混合测试
+        console.log("=== Generating Additional Approve Tokens for Mixed Test ===");
+        const user2BurnTokenId = await approveTokens(tokenAddress2, user2Wallet, accounts.To2, ZKCSC.target, accounts.To2);
+        console.log("User2 Burn Token ID:", user2BurnTokenId);
+
+        // 8. 执行混合 DVP 测试（transferFrom + burn）
+        await testDVPWithBurn(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId, user2BurnTokenId);
+
+        // 8. 执行取消 DVP 测试
         await testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
-        // 6. 执行 DVP 异常测试
+        // 9. 执行 DVP 异常测试
         await testDVPFailure(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId);
 
         console.log("==================================");

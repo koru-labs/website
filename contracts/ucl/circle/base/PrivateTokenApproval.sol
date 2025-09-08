@@ -22,6 +22,7 @@ abstract contract PrivateTokenApproval is
     event PrivateApprovalToken(address indexed owner, address indexed spender, uint256 indexed tokenId);
     event PrivateTransferFrom(address indexed spender, address indexed from, address indexed to, uint256 tokenId);
     event PrivateApprovalRevoked(address indexed owner, address indexed spender, uint256 indexed tokenId);
+    event PrivateBurnFrom(address indexed spender, address indexed from, uint256 indexed tokenId);
     
     function privateApprove(
         uint256[] memory consumedTokenIds,
@@ -172,5 +173,41 @@ abstract contract PrivateTokenApproval is
 
     function isAllowanceExists(address owner,address spender, uint256 tokenId) external view returns (bool) {
         return TokenUtilsLib.isAllowanceExists(_accounts, owner, spender, tokenId);
+    }
+
+    function privateBurnFrom(address from, uint256 allowanceTokenId) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
+        require(from != address(0), "PrivateERCToken: from is the zero address");
+        require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
+
+        require(TokenUtilsLib.isAllowanceExists(_accounts, from, msg.sender, allowanceTokenId), "PrivateERCToken: no allowance exists for this spender");
+
+        TokenModel.TokenEntity memory entity = _accounts[from].assets[allowanceTokenId];
+        TokenModel.TokenEntity memory backupEntity = _accounts[from].assets[entity.rollbackTokenId];
+        require(entity.id != 0, "PrivateERCToken: allowance token not found in assets");
+        require(entity.owner == from, "PrivateERCToken: from is not the token owner");
+
+        TokenModel.ElGamal memory supplyDecrease = _accounts[from].assets[allowanceTokenId].amount;
+        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
+
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyDecrease);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = allowanceTokenId;
+        TokenUtilsLib.removeTokensWithBalance(_accounts, from, tokenIds);
+
+        uint256[] memory rollbackTokenIds = new uint256[](1);
+        rollbackTokenIds[0] = entity.rollbackTokenId;
+        TokenUtilsLib.removeTokens(_accounts, from, rollbackTokenIds);
+
+        TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender, allowanceTokenId);
+
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), from, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply, _numberOfTotalSupplyChanges);
+        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), from, allowanceTokenId);
+
+        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(from);
+        TokenModel.GrumpkinPublicKey memory toPk = _institutionRegistration.getUserInstGrumpkinPubKey(entity.to);
+        TokenEventLib.triggerRollupForBurn(_l2Event, address(this), toPk, backupPk, entity, backupEntity);
+
+        emit PrivateBurnFrom(msg.sender, from, allowanceTokenId);
     }
 }
