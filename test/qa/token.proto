@@ -691,4 +691,5 @@ message GetAccountResponse {
   string account_address = 1;
   AccountStatusEnum account_status = 2;
   string account_roles = 3;
+  repeated string sc_address_list = 4;
 }

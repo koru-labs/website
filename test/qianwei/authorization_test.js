@@ -14,13 +14,14 @@ const client = createClient(rpcUrl);
 const request_id = "617ec920c0e59bfa078dca2655f9c1e2e41236589460646d7485601d01a5eb81"
 
 // admin
-const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
+// const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
 // normal
-// const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
+const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
+// const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
+const address = "0x983b4ba7e42e664ddbfe4ed3e0ea07d90efcc13b";//test
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -162,6 +163,6 @@ async function testGetAccountForHttp() {
 // testRegisterAccount().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
-testUpdateAccountRole().then();
-// testGetAccount().then();
+// testUpdateAccountRole().then();
+testGetAccount().then();
 // testGetAccountForHttp().then();

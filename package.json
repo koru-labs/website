@@ -38,6 +38,9 @@
     "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2",
     "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2",
 
+    "circle-deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network dev_ucl_L2",
+    "circle-deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network dev_ucl_L2",
+
     "circle-deploy2": "npx hardhat run script/circle/temp/deploy_info.js --network ucl_L2",
 
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2",
