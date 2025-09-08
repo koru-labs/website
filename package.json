@@ -78,6 +78,7 @@
     "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_L2",
     "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js --network ucl_L2",
     "qianwei-token-test": "npx hardhat run test/qianwei/test_token.js --network ucl_L2_cluster",
+    "qianwei-l1-test": "npx hardhat run test/qianwei/deploy_L1_verify.js --network eth_l1_dev",
     "sun-test": "npx hardhat run test/sun/sun_test.js --network ucl_L2"
   }
 }
