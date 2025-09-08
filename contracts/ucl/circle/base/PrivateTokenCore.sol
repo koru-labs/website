@@ -288,7 +288,9 @@ abstract contract PrivateTokenCore is
 
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
         TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity);
+
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+
         return true;
     }
 
@@ -304,7 +306,6 @@ abstract contract PrivateTokenCore is
     returns (bool)
     {
         trackTimeConsumption(tokenIds[0],"privateTransfers start");
-        // 简单的for循环，每个token都走完整的privateTransfer流程
         for (uint256 i = 0; i < tokenIds.length; i++) {
             uint256 tokenId = tokenIds[i];
             require(tokenId != 0, "PrivateERCToken: tokenId is zero");
