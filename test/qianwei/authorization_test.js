@@ -4,8 +4,9 @@ const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
 
-const rpcUrl = "localhost:50051";
+// const rpcUrl = "localhost:50051";
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051";
 // const httpUrl = "http://localhost:8080";
 // const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
@@ -15,8 +16,11 @@ const request_id = "617ec920c0e59bfa078dca2655f9c1e2e41236589460646d7485601d01a5
 
 // admin
 // const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
+// owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
+const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+
 // normal
-const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
+// const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
