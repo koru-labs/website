@@ -154,6 +154,7 @@ async function setMinterAllowed(deployed) {
 
     for (const minter of minters) {
         await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
+        await privateUSDC.configureMinter(minter.account, 100000000);
         console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`);
     }
     // await sleep(10000)
