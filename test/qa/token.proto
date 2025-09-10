@@ -161,8 +161,13 @@ service TokenService {
       body: "*"
     };
   }
-
-  rpc GetAssetAddressDetail      (AssetAddressDetailRequest)        returns (AssetAddressDetailResponse) {
+  rpc GetAssetAddressList      (AssetAddressListRequest)        returns (AssetAddressListResponse) {
+    option (google.api.http) = {
+      post: "/v1/query/asset/address"
+      body: "*"
+    };
+  }
+  rpc GetSmartContractList      (GetSmartContractRequest)        returns (GetSmartContractResponse) {
     option (google.api.http) = {
       post: "/v1/query/asset/address"
       body: "*"
@@ -174,12 +179,64 @@ service TokenService {
       body: "*"
     };
   }
+  rpc UploadSmartContractIcon      (UploadSmartContractIconRequest)        returns (UploadSmartContractIconResponse) {
+    option (google.api.http) = {
+      post: "/v1/upload/smart-contract/icon"
+      body: "*"
+    };
+  }
+}
+
+message UploadSmartContractIconRequest {
+  string sc_address = 1;
+  string icon = 2;
+}
+message UploadSmartContractIconResponse {
+  string code = 1;
+  string message = 2;
+}
+message GetSmartContractRequest {
+  string sc_address = 1;
+  uint64 status = 2;
+}
+message GetSmartContractResponse {
+  repeated SmartContract data = 1;
+  string code = 2;
+  string message = 3;
+}
+message SmartContract {
+  string sc_address = 1;
+  string asset_name = 2;
+  string exchage_rate = 3;
+  uint64 status = 4;
+  string icon = 5;
 }
 message ActivateSmartContractRequest {
   repeated string sc_addresses = 1;
   uint64 status = 2;
 }
 
+message AssetAddressListRequest {
+  string asset_address = 1;
+  string sc_address = 2;
+}
+message AssetAddressListResponse {
+  repeated AssetDetail data = 1;
+  string code = 2;
+  string message = 3;
+}
+
+message AssetDetail  {
+  string asset_address = 1;
+  string asset_name = 2;
+  uint64 quantity = 3;
+  uint64 available_quantity = 4;
+  uint64 exchage_rate = 5;
+  string type = 6;
+  bool is_minter = 7;
+  string icon = 8;
+  string sc_address = 9;
+}
 message ActivateSmartContractResponse {
   string code = 1;
   string message = 2;
@@ -209,26 +266,6 @@ message SaveTransactionRequest {
   string hash = 6;
   int64 timestamp = 7;
   string metadata = 8;
-}
-
-message AssetAddressDetailRequest {
-  string asset_address = 1;
-  string sc_address = 2;
-}
-message AssetAddressDetailResponse {
-  repeated AssetDetail data = 1;
-  string code = 2;
-  string message = 3;
-}
-
-message AssetDetail  {
-  string asset_address = 1;
-  string asset_name = 2;
-  uint64 quantity = 3;
-  uint64 available_quantity = 4;
-  uint64 exchageRate = 5;
-  string type = 6;
-  bool is_minter = 7;
 }
 
 message SaveTransactionResponse {
