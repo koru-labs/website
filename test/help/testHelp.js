@@ -16,9 +16,10 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.ucl_L2.url;
+// const L1Url = hardhatConfig.networks.ucl_L2.url;
+const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-
+const key = hardhatConfig.networks.dev_ucl_L2.accounts[0];
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const amount = {
@@ -44,17 +45,18 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 async function callPrivateTransfer(wallet, scAddress, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    console.log("contract address is :",contract.target)
     const tx = await contract.privateTransfer(tokenId);
-    console.log("tx")
     let receipt = await tx.wait();
     console.log("Result:", receipt);
     return receipt;
 }
 
+
+
 async function callPrivateTransfers(wallet, scAddress, tokenIds) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
     const tx = await contract.privateTransfers(tokenIds);
-    console.log("tx")
     let receipt = await tx.wait();
     console.log("Result:", receipt);
     return receipt;
@@ -508,8 +510,7 @@ async function registerConfigureMinter(address) {
         batchMaxCount: 1,
         staticNetwork: true
     };
-    const key = hardhatConfig.networks.ucl_L2.accounts[0];
-    const L1Url = hardhatConfig.networks.ucl_L2.url;
+    // const key = hardhatConfig.networks.ucl_L2.accounts[0];
     const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     let ownerWallet = new ethers.Wallet(key, l1Provider);
     const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
@@ -537,7 +538,7 @@ async function allowBanksInTokenSmartContract(minterAddress) {
         staticNetwork: true
     };
 
-    const L1Url = hardhatConfig.networks.ucl_L2.url;
+    // const L1Url = hardhatConfig.networks.ucl_L2.url;
     const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
     console.log(`PrivateERCToken : ${config.contracts.PrivateERCToken}`)
