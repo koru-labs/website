@@ -206,7 +206,7 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
 describe.only("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 500;
+    const TOTAL_SIZE = 1000;
     const BATCH_SIZE = 1000;
 
     const minter1 = ethers.Wallet.createRandom();
@@ -1459,7 +1459,7 @@ describe.only("Performance Test with created 10 minters", function () {
     // });
     //
     it('TPS PrivateTransfers Test ：Sign First and send batched callPrivateTransfers', async () => {
-        const TOKENS_PER_CALL = 100; // 每个minter每次调用包含的最大token数
+        const TOKENS_PER_CALL = 200; // 每个minter每次调用包含的最大token数
         const BATCH_SIZE = 500;     // 批量发送的RPC请求大小
         const startTestTime = Date.now();
 
@@ -1559,7 +1559,7 @@ describe.only("Performance Test with created 10 minters", function () {
             const task = transferTasks[i];
             try {
                 const chainId = (await l1Provider.getNetwork()).chainId;
-                task.txData.gasLimit = task.txData.gasLimit || 50000000;
+                task.txData.gasLimit = task.txData.gasLimit || 100000000;
                 task.txData.gasPrice = task.txData.gasPrice || 0;
                 task.txData.chainId = task.txData.chainId || chainId;
                 task.txData.type = task.txData.type || 0;
