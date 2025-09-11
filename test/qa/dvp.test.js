@@ -6,12 +6,12 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
+const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051"
+// const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
 // const rpcUrl = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
 // const rpcUrl_1 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
-const client1 = createClient(rpcUrl_1)
+// const client1 = createClient(rpcUrl_1)
 
 const {
     createAuthMetadata,
@@ -32,7 +32,7 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.ucl_L2.url;
+const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
@@ -44,11 +44,7 @@ const toAddress1 = accounts.To1;
 const toAddress2 = accounts.To2;
 
 
-const userInNode1 = '0xbA268f776F70caDB087e73020dfE41c7298363Ed';
-const userInNode2 = '0xF8041E1185C7106121952bA9914ff904A4A01c80';
-const userInNode3 = '0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB';
-const userInNode4 = '0x5a3288A7400B2cd5e0568728E8216D9392094892';
-const adminPrivateKey = hardhatConfig.networks.ucl_L2.accounts[1];
+const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 let preBalance,postBalance;
@@ -113,7 +109,35 @@ async function DirectMint(receiver,amount,scAddress) {
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
     // await sleep(4000)
 }
+async function GenerateTransferSplitProof(toAddress,amount,metadata) {
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: toAddress,
+        amount: amount,
+        comment:"transfer"
+    };
+    let response = await client3.generateSplitToken(splitRequest,metadata);
+    console.log("Generate transfer Proof response:", response);
+    await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id,metadata)
+    return response
+}
+async function GenerateBurnSplitProof(amount) {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        amount: amount,
+        comment:"burn"
+    };
+    let response = await client3.generateSplitToken(splitRequest,metadata);
+    console.log("Generate burn Proof response:", response);
+    await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id,metadata)
+    return response
 
+}
 async function approveTokens(tokenAddress, fromWallet, fromAddress, spenderAddress, toAddress,amount) {
     console.log(`=== Starting Approve Process for ${fromAddress} (spender: ${spenderAddress}, to: ${toAddress}) ===`);
     const metadata = await createAuthMetadata(fromWallet.privateKey);
@@ -199,6 +223,14 @@ function calculateChunkHash(bundleHash, from, to, tokenAddress, tokenId) {
         )
     );
 }
+function calculateBurnChunkHash(bundleHash, from, tokenAddress, tokenId) {
+    return ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+            ["bytes32", "address", "address", "uint256"],
+            [bundleHash, from, tokenAddress, tokenId]
+        )
+    );
+}
 /**
  * 对 chunkHash 进行签名
  */
@@ -206,15 +238,8 @@ async function signChunkHash(wallet, chunkHash) {
     const chunkHashBytes = ethers.getBytes(chunkHash);
     return await wallet.signMessage(chunkHashBytes);
 }
-async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId,scAddress1,scAddress2) {
+async function testTwoPartyTransferDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId,scAddress1,scAddress2) {
     console.log("=== Testing Two-Party DVP ===");
-
-    // chunkHash1 = "0x" + crypto.randomBytes(32).toString("hex");
-    // chunkHash2 = "0x" + crypto.randomBytes(32).toString("hex");
-    // bundleHash = "0x" + p.poseidon2([chunkHash1, chunkHash2]).toString(16).padStart(64, "0");
-
-    // 1. 链下约定 bundleHash
-    // const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-TWO-PARTY"));
     // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
     const timestamp = Date.now().toString();
     const bundleString = `${user1Wallet.address}${user2Wallet.address}${timestamp}DVP`;
@@ -251,12 +276,21 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
     try {
         const tx = await ZKCSC.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [user1Wallet.address, user2Wallet.address],
-            [user2Wallet.address, user1Wallet.address],
-            [scAddress1, scAddress2],
-            [user1TokenId, user2TokenId],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         );
 
         const receipt = await tx.wait();
@@ -305,6 +339,81 @@ async function testTwoPartyDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, us
         }
     } catch (error) {
         console.log("❌ Error checking User2's new token:", error.message);
+    }
+}
+async function testTransferBurnDVP(ZKCSC, user1Wallet, user2Wallet, transferReqquest, burnRequest) {
+    console.log("=== Testing Two-Party DVP with TransferFrom and Burn ===");
+    // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+    const timestamp = Date.now().toString();
+    const bundleString = `${user1Wallet.address}${user2Wallet.address}${timestamp}DVP`;
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+    console.log("BundleHash:", bundleHash);
+
+    // 2. transferFrom sign
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        transferReqquest.tokenAddress,
+        transferReqquest.tokenId
+    );
+    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
+    const transferFromRequests = [{
+        from: user1Wallet.address,
+        to: user2Wallet.address,
+        tokenAddress: transferReqquest.tokenAddress,
+        tokenId: transferReqquest.tokenId,
+        signature:user1Signature
+    }];
+    console.log("User1 ChunkHash:", user1ChunkHash);
+    console.log("User1 Signature:", user1Signature);
+
+    // 3. burn  sign
+    const user2ChunkHash = calculateBurnChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        burnRequest.tokenAddress,
+        burnRequest.tokenId
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+    const burnRequests = [{
+        from: user2Wallet.address,
+        // to: user2Wallet.address,
+        tokenAddress: burnRequest.tokenAddress,
+        tokenId: burnRequest.tokenId,
+        signature:user2Signature
+    }];
+    console.log("User2 ChunkHash:", user2ChunkHash);
+    console.log("User2 Signature:", user2Signature);
+
+    // 4. Relayer 聚合并执行 DVP
+    console.log("=== Relayer Executing DVP ===");
+    try {
+        const tx = await ZKCSC.executeDVP(
+            bundleHash,
+            //transferFromRequests
+            transferFromRequests,
+            burnRequests
+        );
+
+        const receipt = await tx.wait();
+        console.log("DVP Execution successful! Transaction hash:", tx.hash);
+
+        // 检查事件
+        const logs = receipt.logs || [];
+        const dvpExecutedEvent = logs.find(e => e.fragment?.name === "DVPExecuted");
+        if (dvpExecutedEvent) {
+            console.log("✅ DVPExecuted event emitted:", dvpExecutedEvent.args);
+        } else {
+            console.log("❌ DVPExecuted event not found");
+        }
+
+    } catch (error) {
+        console.error("❌ DVP Execution failed:", error.message);
+        if (error.reason) console.error("Reason:", error.reason);
+        if (error.data) console.error("Data:", error.data);
+        throw error;
     }
 }
 
@@ -399,11 +508,12 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
     console.log("✅ Cancel DVP test completed");
 }
 
+
 describe("DVP with different token contract in node3", function () {
     this.timeout(1200000)
-    const scAddress1 = '0x75804f4Bcd050b38dC9138e8A95F2ABd7A303b40';
-    const scAddress2 = '0x009361e8032C83b83A4A02D642B247988A45f784';
-    const zkcscAddress = '0x60B9222666D9587936c51decC7e093F7aDe27046';
+    const scAddress1 = '0x28C716C493045AC3dEA80DDb82827DCd71522D7d';
+    const scAddress2 = '0x1d770e1776F537A26B16B7b6fFF19b0E318421FB';
+    const zkcscAddress = '0x4c2Df2fe415A89DBa4D398952776067080dAA89F';
     const MAX_UINT256 = ethers.MaxUint256;
     const MIN_UINT256 = ethers.MinInt256;
 
@@ -448,12 +558,12 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.user).equal(preBalance2.user + amount);
 
     });
-    it('Deploy ZKCSC ',async () => {
+    it.only('Deploy ZKCSC ',async () => {
         // zkcsc = await deployZKCSC();
         // console.log("ZKCSC Deployed at:", zkcsc.target)
         zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
     });
-    it("DVP transfer", async () => {
+    it.only("DVP transfer", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -462,7 +572,7 @@ describe("DVP with different token contract in node3", function () {
         let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
         let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp
-        await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
@@ -477,6 +587,36 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.minter).equal(preBalance2.minter + amount2);
         expect(postBalance2.user).equal(preBalance2.user - amount2);
     });
+    it.only('DVP transfer and burn ',async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let transferTokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        const transferRequest = {
+            tokenAddress: scAddress2,
+            tokenId: transferTokenId,
+        };
+        let burnTokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.Minter,amount1);
+        const burnRequest = {
+            tokenAddress: scAddress1,
+            tokenId: burnTokenId,
+        };
+
+        await testTransferBurnDVP(zkcsc,to1Wallet,minterWallet,transferRequest,burnRequest)
+        postBalance1 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
+        }
+        postBalance2 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress2),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress2)
+        }
+        console.log("PostBalance : ",{postBalance1,postBalance2})
+
+    });
+
     it.skip('Revoke other approvedTokens ',async () => {
         const amount1 = 10
         const amount2 = 20
@@ -512,7 +652,7 @@ describe("DVP with different token contract in node3", function () {
         let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
         let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp
-        await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
