@@ -261,26 +261,19 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
         address to = tokenEntity.to;
 
-        uint256[] memory rollbackTokens = new uint256[](1);
-        rollbackTokens[0] = tokenEntity.rollbackTokenId;
-        TokenUtilsLib.precompiledRemoveTokensWithBalance(_accounts, msg.sender, rollbackTokens);
+        delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = tokenEntity.id;
         consumedTokens[1] = tokenEntity.rollbackTokenId;
 
-        uint256[] memory oldTokens = new uint256[](1);
-        oldTokens[0] = tokenEntity.id;
-        TokenUtilsLib.removeTokens(_accounts, msg.sender, oldTokens);
+        delete _accounts[msg.sender].assets[tokenEntity.id];
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
         tokenEntity.rollbackTokenId = 0;
         tokenEntity.owner = to;
         tokenEntity.status = TokenModel.TokenStatus.active;
-
-        TokenModel.Account storage toAccount = _accounts[tokenEntity.to];
-        toAccount.balance = precompiledAddElGamal(toAccount.balance, tokenEntity.amount);
-        toAccount.assets[tokenEntity.id] = tokenEntity;
+        _accounts[tokenEntity.to].assets[tokenEntity.id] = tokenEntity;
 
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
 
@@ -307,46 +300,35 @@ abstract contract PrivateTokenCore is
     {
         trackTimeConsumption(tokenIds[0],"privateTransfers start");
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            uint256 tokenId = tokenIds[i];
-            require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+            require(tokenIds[i] != 0, "PrivateERCToken: tokenId is zero");
 
-            TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
+            TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenIds[i]];
             TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
-            address to = tokenEntity.to;
 
-            uint256[] memory rollbackTokens = new uint256[](1);
-            rollbackTokens[0] = tokenEntity.rollbackTokenId;
-            TokenUtilsLib.precompiledRemoveTokensWithBalance(_accounts, msg.sender, rollbackTokens);
+            delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
 
             uint256[] memory consumedTokens = new uint256[](2);
             consumedTokens[0] = tokenEntity.id;
             consumedTokens[1] = tokenEntity.rollbackTokenId;
 
-            uint256[] memory oldTokens = new uint256[](1);
-            oldTokens[0] = tokenEntity.id;
-            TokenUtilsLib.removeTokens(_accounts, msg.sender, oldTokens);
+            delete _accounts[msg.sender].assets[tokenEntity.id];
             TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
 
             tokenEntity.rollbackTokenId = 0;
-            tokenEntity.owner = to;
+            tokenEntity.owner = tokenEntity.to;
             tokenEntity.status = TokenModel.TokenStatus.active;
 
-            TokenModel.Account storage toAccount = _accounts[tokenEntity.to];
-            toAccount.balance = precompiledAddElGamal(toAccount.balance, tokenEntity.amount);
-            toAccount.assets[tokenEntity.id] = tokenEntity;
-
-            TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
-
+            _accounts[tokenEntity.to].assets[tokenEntity.id] = tokenEntity;
+            TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), tokenEntity.to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
             TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
 
             TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, to, backupPk, backupEntity);
+            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, tokenEntity.to, backupPk, backupEntity);
 
-            emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
+            emit PrivateTransfer(msg.sender, tokenEntity.to, tokenEntity.amount);
         }
 
         trackTimeConsumption(tokenIds[0],"privateTransfers end");
-
         return true;
     }
 
