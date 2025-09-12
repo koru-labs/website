@@ -207,9 +207,10 @@ message GetSmartContractResponse {
 message SmartContract {
   string sc_address = 1;
   string asset_name = 2;
-  string exchage_rate = 3;
+  string exchange_rate = 3;
   uint64 status = 4;
   string icon = 5;
+  uint64 currency_precision = 6;
 }
 message ActivateSmartContractRequest {
   repeated string sc_addresses = 1;
@@ -231,11 +232,12 @@ message AssetDetail  {
   string asset_name = 2;
   uint64 quantity = 3;
   uint64 available_quantity = 4;
-  uint64 exchage_rate = 5;
+  string exchange_rate = 5;
   string type = 6;
   bool is_minter = 7;
   string icon = 8;
   string sc_address = 9;
+  uint64 currency_precision = 10;
 }
 message ActivateSmartContractResponse {
   string code = 1;

@@ -165,7 +165,8 @@ async function getPublicBalance(account) {
     let amount = await contract.balanceOf(account)
     return Number(amount)
 }
-async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
+async function getAddressBalance2(grpcClient, scAddress, account) {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateBalanceOf(account)
 

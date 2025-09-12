@@ -143,6 +143,30 @@ function createClient(url) {
         return promisifyByMetadata(client.GetMintAllowed.bind(client), request, metadata);
     };
 
+    client.saveTransaction = async function (request, metadata) {
+        return promisifyByMetadata(client.SaveTransaction.bind(client), request, metadata);
+    };
+
+    client.getTransaction = async function (request, metadata) {
+        return promisifyByMetadata(client.GetTransaction.bind(client), request, metadata);
+    };
+
+    client.getAssetAddressList = async function (request, metadata) {
+        return promisifyByMetadata(client.GetAssetAddressList.bind(client), request, metadata);
+    };
+
+    client.getSmartContractList = async function (request, metadata) {
+        return promisifyByMetadata(client.GetSmartContractList.bind(client), request, metadata);
+    };
+
+    client.activateSmartContract = async function (request, metadata) {
+        return promisifyByMetadata(client.ActivateSmartContract.bind(client), request, metadata);
+    };
+
+    client.uploadSmartContractIcon = async function (request, metadata) {
+        return promisifyByMetadata(client.UploadSmartContractIcon.bind(client), request, metadata);
+    };
+
 
     client.getAddressBalanceDetail = async function (request, metadata) {
         // return promisify(accountClient.GetMintAllowed.bind(client), request);
