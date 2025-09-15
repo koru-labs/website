@@ -169,7 +169,7 @@ service TokenService {
   }
   rpc GetSmartContractList      (GetSmartContractRequest)        returns (GetSmartContractResponse) {
     option (google.api.http) = {
-      post: "/v1/query/asset/address"
+      post: "/v1/get/smart-contract"
       body: "*"
     };
   }
