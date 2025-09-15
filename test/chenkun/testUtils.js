@@ -13,8 +13,8 @@ const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
  */
 const CONSTANTS = {
   // RPC URL configuration
-  rpcUrl: "127.0.0.1:50051",
-  // rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+  // rpcUrl: "127.0.0.1:50051",
+  rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
@@ -54,7 +54,7 @@ const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
 const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const spenderWallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 
-const junjieWallet = new ethers.Wallet(accounts.JunjieKey, l1Provider);
+// const junjieWallet = new ethers.Wallet(accounts.JunjieKey, l1Provider);
 
 // Import test helper functions
 const {
@@ -709,13 +709,13 @@ async function runTests() {
     
     // Token operation tests
     // await testReserveTokensAndBurn();
-    await testReserveTokensAndTransfer();
+    // await testReserveTokensAndTransfer();
     // await testReserveTokensAndCancel();
     // await testApproveTokensAndRevoke();
     // await testTransferFromByAuth();
     
     // Direct transaction tests
-    // await testDirectMintByAuth();
+    await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     
