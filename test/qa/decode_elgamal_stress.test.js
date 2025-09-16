@@ -19,6 +19,22 @@ const httpsAgent = new https.Agent({
 const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 
+const clientWithPool = createClient(rpcUrl, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true,
+    // gRPC 连接池相关配置
+    'grpc.max_connection_idle_ms': 30000,
+    'grpc.max_connection_age_ms': 60000,
+    'grpc.keepalive_time_ms': 10000,
+    'grpc.keepalive_timeout_ms': 5000,
+    'grpc.keepalive_permit_without_calls': 1,
+    'grpc.http2.max_pings_without_data': 0,
+    'grpc.client_idle_timeout_ms': 5000
+});
+
 const {
     createAuthMetadata
 } = require("../help/testHelp");
@@ -75,16 +91,8 @@ async function executeSingleDecodeRequest(metadata) {
     const startTime = Date.now();
     try {
         // 使用连接池的客户端
-        const clientWithPool = createClient(rpcUrl, {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-            // 添加 HTTP agent 配置（如果 gRPC 客户端支持）
-        });
-
         const response = await client.decodeElgamalAmount(balance, metadata);
+        // const response = await clientWithPool.decodeElgamalAmount(balance, metadata);
         const endTime = Date.now();
         const responseTime = endTime - startTime;
 
@@ -117,13 +125,10 @@ async function executeSingleDecodeRequest(metadata) {
  * @returns {array} 批次执行结果
  */
 async function executeBatchRequests(batchSize, metadata) {
-    // 使用更高效的并发方式
     const tasks = Array(batchSize).fill().map(() => () => executeSingleDecodeRequest(metadata));
-
-    // 并发执行所有任务
     const startTime = Date.now();
-    // 增加并发限制，避免过多并发导致服务器压力
-    const concurrencyLimit = 100;
+    const concurrencyLimit = batchSize;
+    // const concurrencyLimit = 2000;
     const results = [];
 
     // 分批并发执行
@@ -192,12 +197,13 @@ describe("DecodeElgamalAmount API 压力测试", function () {
     it.only("持续压测", async function () {
         console.log("\n=== 持续压测  ===");
 
-        const rounds = 5;  // 减少轮数以加快测试
-        const batchSize = 200; // 调整批次大小
+        const rounds = 100;
+        const batchSize = 10000;
         const allResults = [];
 
-        // 减少轮次间隔
-        const roundInterval = 10; // 100ms 间隔
+        // 轮次间隔
+        // const roundInterval = 10;
+        const roundInterval = 1;
 
         for (let round = 1; round <= rounds; round++) {
             console.log(`\n--- 第 ${round} 轮 ---`);
@@ -235,7 +241,7 @@ describe("DecodeElgamalAmount API 压力测试", function () {
         console.log("\n=== 并行压测 (5轮并发执行) ===");
 
         const rounds = 5;
-        const batchSize = 200;
+        const batchSize = 100;
 
         // 并发执行多轮测试
         const promises = [];

@@ -6,12 +6,12 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
-// const rpcUrl = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
-// const rpcUrl_1 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
-const client = createClient(rpcUrl)
-const client1 = createClient(rpcUrl_1)
+const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
+const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
+// const rpcUrl_node3 = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
+// const rpcUrl_node4 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
+const client_node3 = createClient(rpcUrl_node3)
+const client_node4 = createClient(rpcUrl_node4)
 
 const {
     createAuthMetadata,
@@ -51,6 +51,9 @@ const userInNode4 = '0x5a3288A7400B2cd5e0568728E8216D9392094892';
 const adminPrivateKey = hardhatConfig.networks.ucl_L2.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
+const node4_minter = '0xbA268f776F70caDB087e73020dfE41c7298363Ed'
+const node4_minter_key = 'f083c679bb978f6e2eb8611de27319b2e3a329d307eb5fd1d532a1cd6b63fff9'
+
 let preBalance,postBalance;
 let preAllowance,postAllowance;
 
@@ -62,7 +65,7 @@ async function getTokenBalanceByAuth(grpcClient, account,scAddress, metadata){
 
 async function getTokenBalanceByAdmin(account,scAddress){
     const metadata = await  createAuthMetadata(adminPrivateKey)
-    let balance = await getAddressBalance2(client, scAddress, account, metadata)
+    let balance = await getAddressBalance2(client_node3, scAddress, account, metadata)
     return Number(balance.balance)
 }
 
@@ -81,17 +84,17 @@ async function getTokenBalanceOnChain(address,scAddress, metadata){
         cr_y: convertBigInt2Hex(amount[3])
     }
     console.log("balance: ", balance)
-    let decodeAmount = await client.decodeElgamalAmount(balance, metadata)
+    let decodeAmount = await client_node3.decodeElgamalAmount(balance, metadata)
     return Number(decodeAmount.balance)
 }
 
 async function getTokenBalanceInNode1(address,scAddress){
     const metadata = await createAuthMetadata(node4AdminPrivateKey)
     console.log(node4AdminPrivateKey)
-    // let balance = await client1.getAccountBalance(config.contracts.PrivateERCToken, address,metadata)
-    let balance = await getAddressBalance2(client1, scAddress, address, metadata)
+    // let balance = await client_node4.getAccountBalance(config.contracts.PrivateERCToken, address,metadata)
+    let balance = await getAddressBalance2(client_node4, scAddress, address, metadata)
     // console.log(`address ${address} account balance ${balance.balance} `)
-    // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
+    // console.log("account balance: ", await getAddressBalance(client_node3, config.contracts.PrivateERCToken, address))
     return Number(balance.balance)
 }
 
@@ -99,7 +102,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function DirectMint(receiver,amount,scAddress) {
+async function DirectMint(client,receiver,amount,scAddress) {
     const minterMeta = await createAuthMetadata(accounts.MinterKey)
     const generateRequest = {
         from_address: accounts.Minter,
@@ -114,7 +117,7 @@ async function DirectMint(receiver,amount,scAddress) {
     // await sleep(4000)
 }
 
-async function approveTokens(tokenAddress, fromWallet, fromAddress, spenderAddress, toAddress,amount) {
+async function approveTokens(client,tokenAddress, fromWallet, fromAddress, spenderAddress, toAddress,amount) {
     console.log(`=== Starting Approve Process for ${fromAddress} (spender: ${spenderAddress}, to: ${toAddress}) ===`);
     const metadata = await createAuthMetadata(fromWallet.privateKey);
     const approveRequest = {
@@ -142,7 +145,7 @@ async function revoke(scAddress, wallet,spenderAddress, tokenId){
     return receipt
 }
 
-async function revokeApprovedTokens(ownerWallet, spenderAddress, scAddress){
+async function revokeApprovedTokens(client,ownerWallet, spenderAddress, scAddress){
     const meta = await createAuthMetadata(ownerWallet.privateKey)
     const tokenList = await getApproveTokenList(client,ownerWallet.address,scAddress,spenderAddress,meta)
     const split_tokens = tokenList.split_tokens
@@ -159,7 +162,7 @@ async function revokeApprovedTokens(ownerWallet, spenderAddress, scAddress){
 }
 async function revokeRecentApprovedToken(ownerWallet, spenderAddress, scAddress){
     const meta = await createAuthMetadata(ownerWallet.privateKey)
-    const tokenList = await getApproveTokenList(client,ownerWallet.address,scAddress,spenderAddress,meta)
+    const tokenList = await getApproveTokenList(client_node3,ownerWallet.address,scAddress,spenderAddress,meta)
     const split_tokens = tokenList.split_tokens
     console.log("tokenList:", tokenList)
     // revoke the latest approved token
@@ -273,15 +276,14 @@ describe("DVP with different token contract in node3", function () {
         // relayerCaller = await ethers.getContractAt("RelayerCaller", relayerCallerAddress);
 
     });
-
     it("relayCaller excuteDVP test", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp with relayerCaller
         console.log("=== Testing DVP ===");
 
@@ -358,8 +360,8 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp with relayerCaller
         console.log("=== Testing DVP ===");
 
@@ -430,7 +432,7 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.minter).equal(preBalance2.minter);
         expect(postBalance2.user).equal(preBalance2.user);
 
-        const minterApprovedTokenList = await getApproveTokenList(client,minterWallet.address,scAddress1,zkcscAddress,minterMeta)
+        const minterApprovedTokenList = await getApproveTokenList(client_node3,minterWallet.address,scAddress1,zkcscAddress,minterMeta)
         let split_tokens = minterApprovedTokenList.split_tokens
         console.log("Minter Approved Token List:", split_tokens);
 
@@ -442,7 +444,7 @@ describe("DVP with different token contract in node3", function () {
         expect(ApprovedtokenIds).to.not.include(tokenId1);
         console.log(`✅ Passed: ${tokenId1} is not in minter approved token list`);
 
-        const to1ApprovedTokenList = await getApproveTokenList(client,to1Wallet.address,scAddress2,zkcscAddress,to1Meta)
+        const to1ApprovedTokenList = await getApproveTokenList(client_node3,to1Wallet.address,scAddress2,zkcscAddress,to1Meta)
         split_tokens = to1ApprovedTokenList.split_tokens
         console.log("To1 Approved Token List:", split_tokens);
 
@@ -454,16 +456,14 @@ describe("DVP with different token contract in node3", function () {
         expect(ApprovedtokenIds).to.not.include(tokenId2);
         console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
     });
-
     // 在 relayer-dvp.test.js 文件末尾添加以下测试用例
-
     it("Should Reverted: executeDVP with missing parameters", async () => {
         const amount1 = 10
         const amount2 = 20
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -567,14 +567,13 @@ describe("DVP with different token contract in node3", function () {
 
         console.log("✅ All missing parameter tests passed");
     });
-
     it("Should Reverted: executeDVP with invalid chunkHash", async () => {
         const amount1 = 10
         const amount2 = 20
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -630,8 +629,8 @@ describe("DVP with different token contract in node3", function () {
         )).to.be.revertedWith("DVP: Invalid chunkHash");
 
         // 2. 使用完全随机的 chunkHash (需要重新 approve tokens，因为之前的可能已被消费)
-        let tokenId3 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId4 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId3 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId4 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         const randomChunkHash = ethers.keccak256(ethers.toUtf8Bytes("randomChunkHash"));
         const randomSignature = await signChunkHash(minterWallet, randomChunkHash);
@@ -648,14 +647,13 @@ describe("DVP with different token contract in node3", function () {
 
         console.log("✅ All invalid chunkHash tests passed");
     });
-
     it("Should Reverted: executeDVP with mismatched addresses", async () => {
         const amount1 = 10
         const amount2 = 20
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -703,8 +701,8 @@ describe("DVP with different token contract in node3", function () {
         )).to.be.revertedWith("DVP: Invalid chunkHash");
 
         // 2. 使用错误的 token 地址 (需要重新 approve tokens，因为之前的可能已被消费)
-        let tokenId3 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId4 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId3 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId4 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         await expect(relayerCaller.callExecuteDVP(
             bundleHash,
@@ -717,8 +715,8 @@ describe("DVP with different token contract in node3", function () {
         )).to.be.revertedWith("DVP: Invalid chunkHash");
 
         // 3. 使用错误的 tokenId (需要重新 approve tokens，因为之前的可能已被消费)
-        let tokenId5 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId6 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId5 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId6 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         await expect(relayerCaller.callExecuteDVP(
             bundleHash,
@@ -732,14 +730,13 @@ describe("DVP with different token contract in node3", function () {
 
         console.log("✅ All mismatched addresses tests passed");
     });
-
     it("Should Reverted: executeDVP with invalid signatures", async () => {
         const amount1 = 10
         const amount2 = 20
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -776,8 +773,8 @@ describe("DVP with different token contract in node3", function () {
         console.log("=== Testing DVP with invalid signatures ===");
 
         // 1. 使用错误的签名 (交换签名) - 需要重新 approve tokens
-        let tokenId3 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId4 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let tokenId3 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId4 = await approveTokens(client_node3,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         const user1ChunkHashNew = calculateChunkHash(
             bundleHash,
@@ -811,3 +808,149 @@ describe("DVP with different token contract in node3", function () {
     });
 });
 
+describe("DPV with different token contract cross node",function (){
+    this.timeout(1200000);
+    const scAddress1 = '0x75804f4Bcd050b38dC9138e8A95F2ABd7A303b40';
+    const scAddress2 = '0x009361e8032C83b83A4A02D642B247988A45f784';
+    const zkcscAddress = '0x60B9222666D9587936c51decC7e093F7aDe27046';
+    const relayerCallerAddress = '0x2e2E31e9fF6343f31730f1463C74E94b697e6c30';
+    const MAX_UINT256 = ethers.MaxUint256;
+    const MIN_UINT256 = ethers.MinInt256;
+
+    const amount = 200;
+
+    let preBalance1,postBalance1;
+    let preBalance2,postBalance2;
+    let zkcsc, relayerCaller;
+    let minterMeta,spenderMeta,to1Meta
+
+    before(async () => {
+        minterMeta = await createAuthMetadata(accounts.MinterKey)
+        spenderMeta = await createAuthMetadata(accounts.Spender1Key)
+        to1Meta = await createAuthMetadata(accounts.To1PrivateKey);
+        zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
+        relayerCaller = await ethers.getContractAt("RelayerCaller", relayerCallerAddress);
+    });
+
+    beforeEach(async () => {
+        preBalance1 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
+        }
+        preBalance2 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress2),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress2)
+        }
+    });
+
+    it("Mint to user", async () => {
+        await DirectMint(client_node3,accounts.Minter,amount,scAddress1);
+        await DirectMint(client_node4,accounts,amount,scAddress2);
+        postBalance1 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
+        }
+        postBalance2 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress2),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress2)
+        }
+        expect(postBalance1.minter).equal(preBalance1.minter + amount);
+        expect(postBalance1.user).equal(preBalance1.user);
+        expect(postBalance2.minter).equal(preBalance2.minter);
+        expect(postBalance2.user).equal(preBalance2.user + amount);
+
+    });
+    it.skip('Deploy ZKCSC ',async () => {
+        // zkcsc = await deployZKCSC();
+        // console.log("ZKCSC Deployed at:", zkcsc.target)
+        zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
+    });
+    it.skip('Deploy relayerCaller ',async () => {
+        let relayerCallerFactory = await ethers.getContractFactory("RelayerCaller");
+        relayerCaller = await relayerCallerFactory.deploy(zkcsc.target);
+        await relayerCaller.waitForDeployment();
+        console.log("RelayerCaller Deployed at:", relayerCaller.target)
+
+        // relayerCaller = await ethers.getContractAt("RelayerCaller", relayerCallerAddress);
+
+    });
+
+    it("relayCaller excuteDVP test", async () => {
+        const amount1 = 10
+        const amount2 = 20
+        console.log("PreBalance : ",{preBalance1,preBalance2})
+
+        //approve for token
+        let tokenId1 = await approveTokens(client_node3,scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let tokenId2 = await approveTokens(client_node4,scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        // excute dvp with relayerCaller
+        console.log("=== Testing DVP ===");
+
+        // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
+        const timestamp = Date.now().toString();
+        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
+
+        console.log("BundleHash:", bundleHash);
+
+        // 2. User1 生成 chunkHash 并签名
+        const user1ChunkHash = calculateChunkHash(
+            bundleHash,
+            minterWallet.address,
+            to1Wallet.address,
+            scAddress1,
+            tokenId1
+        );
+        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        console.log("User1 ChunkHash:", user1ChunkHash);
+        console.log("User1 Signature:", user1Signature);
+
+        // 3. User2 生成 chunkHash 并签名
+        const user2ChunkHash = calculateChunkHash(
+            bundleHash,
+            to1Wallet.address,
+            minterWallet.address,
+            scAddress2,
+            tokenId2
+        );
+        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        console.log("User2 ChunkHash:", user2ChunkHash);
+        console.log("User2 Signature:", user2Signature);
+
+        // 4. Relayer 聚合并执行 DVP
+        console.log("=== Relayer Executing DVP ===");
+        const chunkHashes = [user1ChunkHash, user2ChunkHash];
+        const froms =[minterWallet.address, to1Wallet.address];
+        const tos = [to1Wallet.address, minterWallet.address];
+        const tokenAddresses = [scAddress1, scAddress2];
+        const tokenIds = [tokenId1, tokenId2];
+        const signatures = [user1Signature, user2Signature];
+
+        console.log("=== Dvp Reqeusts ===")
+        console.log({bundleHash, chunkHashes, froms, tos, tokenAddresses, tokenIds, signatures})
+        let tx = await relayerCaller.callExecuteDVP(
+            bundleHash,
+            chunkHashes,
+            froms,
+            tos,
+            tokenAddresses,
+            tokenIds,
+            signatures
+        );
+        await tx.wait();
+
+        postBalance1 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
+        }
+        postBalance2 = {
+            minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress2),
+            user: await getTokenBalanceByAdmin(accounts.To1,scAddress2)
+        }
+        console.log("PostBalance : ",{postBalance1,postBalance2})
+        expect(postBalance1.minter).equal(preBalance1.minter - amount1);
+        expect(postBalance1.user).equal(preBalance1.user + amount1);
+        expect(postBalance2.minter).equal(preBalance2.minter + amount2);
+        expect(postBalance2.user).equal(preBalance2.user - amount2);
+    });
+})
