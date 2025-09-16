@@ -57,10 +57,6 @@ abstract contract PrivateTokenCore is
         initializePermission(institutionRegistration);
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
-
-    function privateBalanceOf(address owner) external view virtual returns (TokenModel.ElGamal memory) {
-        return _accounts[owner].balance;
-    }
     
     function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
@@ -156,7 +152,7 @@ abstract contract PrivateTokenCore is
             to: address(0),
             rollbackTokenId: 0
         });
-        TokenUtilsLib.addTokenWithBalance(_accounts, to, entity);
+        TokenUtilsLib.addToken(_accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
         TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof);
@@ -178,7 +174,7 @@ abstract contract PrivateTokenCore is
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, tokenIds);
+        TokenUtilsLib.removeTokens(_accounts, msg.sender, tokenIds);
 
         uint256[] memory rollbackTokenIds = new uint256[](1);
         rollbackTokenIds[0] = entity.rollbackTokenId;

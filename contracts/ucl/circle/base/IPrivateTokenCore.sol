@@ -12,7 +12,6 @@ interface IPrivateTokenCore {
         InstitutionUserRegistry institutionRegistration
     ) external;
 
-    function privateBalanceOf(address owner) external view returns (TokenModel.ElGamal memory);
     function privateTotalSupply() external view returns (TokenModel.ElGamal memory);
     function publicTotalSupply() external view returns (uint256, bool);
     function getAccountTokenById(address account, uint256 tokenId) external view returns (TokenModel.TokenEntity memory);

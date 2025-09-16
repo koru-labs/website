@@ -83,7 +83,7 @@ abstract contract PrivateTokenConverter is
         );
 
         // Add token and update balance
-        TokenUtilsLib.addTokenWithBalance(_accounts, msg.sender, entity);
+        TokenUtilsLib.addToken(_accounts, msg.sender, entity);
 
         // Use received token event
         TokenEventLib.triggerTokenReceivedEvent(
@@ -160,7 +160,7 @@ abstract contract PrivateTokenConverter is
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         // Remove token and update balance
-        TokenUtilsLib.removeTokensWithBalance(_accounts, msg.sender, tokenIds);
+        TokenUtilsLib.removeTokens(_accounts, msg.sender, tokenIds);
 
         // Remove rollback token
         uint256[] memory rollbackTokenIds = new uint256[](1);

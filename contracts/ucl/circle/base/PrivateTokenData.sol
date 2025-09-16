@@ -59,14 +59,6 @@ abstract contract PrivateTokenData is Ownable {
         _l2Event = l2Event;
     }
     
-    function getAccountBalance(address account) external view returns (TokenModel.ElGamal memory) {
-        return _accounts[account].balance;
-    }
-    
-    function setAccountBalance(address account, TokenModel.ElGamal memory balance) external onlyAuthorized {
-        _accounts[account].balance = balance;
-    }
-    
     function getAccountToken(address account, uint256 tokenId) external view returns (TokenModel.TokenEntity memory) {
         return _accounts[account].assets[tokenId];
     }

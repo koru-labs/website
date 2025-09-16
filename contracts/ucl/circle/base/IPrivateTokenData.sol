@@ -16,9 +16,7 @@ interface IPrivateTokenData {
     function setInstitutionRegistration(InstitutionUserRegistry institutionRegistration) external;
     function getL2Event() external view returns (IL2Event);
     function setL2Event(IL2Event l2Event) external;
-    
-    function getAccountBalance(address account) external view returns (TokenModel.ElGamal memory);
-    function setAccountBalance(address account, TokenModel.ElGamal memory balance) external;
+
     function getAccountToken(address account, uint256 tokenId) external view returns (TokenModel.TokenEntity memory);
     function setAccountToken(address account, uint256 tokenId, TokenModel.TokenEntity memory token) external;
     function deleteAccountToken(address account, uint256 tokenId) external;

@@ -92,7 +92,7 @@ abstract contract PrivateTokenApproval is
 
         uint256[] memory rollbackTokens = new uint256[](1);
         rollbackTokens[0] = allowanceToken.rollbackTokenId;
-        TokenUtilsLib.removeTokensWithBalance(_accounts, from, rollbackTokens);
+        TokenUtilsLib.removeTokens(_accounts, from, rollbackTokens);
 
         uint256[] memory consumedTokens = new uint256[](2);
         consumedTokens[0] = allowanceToken.id;
@@ -108,7 +108,7 @@ abstract contract PrivateTokenApproval is
         allowanceToken.owner = to;
         allowanceToken.status = TokenModel.TokenStatus.active;
 
-        TokenUtilsLib.addTokenWithBalance(_accounts, allowanceToken.to, allowanceToken);
+        TokenUtilsLib.addToken(_accounts, allowanceToken.to, allowanceToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
 
         TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender, tokenId);
@@ -193,7 +193,7 @@ abstract contract PrivateTokenApproval is
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = allowanceTokenId;
-        TokenUtilsLib.removeTokensWithBalance(_accounts, from, tokenIds);
+        TokenUtilsLib.removeTokens(_accounts, from, tokenIds);
 
         uint256[] memory rollbackTokenIds = new uint256[](1);
         rollbackTokenIds[0] = entity.rollbackTokenId;

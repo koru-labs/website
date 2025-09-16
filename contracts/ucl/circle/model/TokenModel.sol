@@ -44,7 +44,6 @@ library TokenModel {
     }
 
     struct Account {
-        ElGamal balance;
         mapping(uint256 => TokenEntity) assets;
         mapping(address => mapping(uint256 => bool)) allowances;
     }

@@ -43,19 +43,7 @@ library TokenUtilsLib {
         }
     }
 
-    function addToBalance(
-        TokenModel.ElGamal memory currentBalance,
-        TokenModel.ElGamal memory tokenAmount
-    ) external view returns (TokenModel.ElGamal memory newBalance) {
-        newBalance = CurveBabyJubJubHelper.addElGamal(currentBalance, tokenAmount);
-    }
 
-    function subFromBalance(
-        TokenModel.ElGamal memory currentBalance,
-        TokenModel.ElGamal memory tokenAmount
-    ) external view returns (TokenModel.ElGamal memory newBalance) {
-        newBalance = CurveBabyJubJubHelper.subElGamal(currentBalance, tokenAmount);
-    }
 
     function calculateTotalSubtraction(
         TokenModel.ElGamal[] memory tokenAmounts
@@ -66,23 +54,7 @@ library TokenUtilsLib {
         }
     }
 
-    function calculateAddTokenBalance(
-        TokenModel.ElGamal memory currentBalance,
-        TokenModel.ElGamal memory tokenAmount
-    ) external view returns (TokenModel.ElGamal memory newBalance) {
-        newBalance = CurveBabyJubJubHelper.addElGamal(currentBalance, tokenAmount);
-    }
 
-    function calculateRemoveTokensBalance(
-        TokenModel.ElGamal memory currentBalance,
-        TokenModel.ElGamal[] memory tokenAmounts
-    ) external view returns (TokenModel.ElGamal memory newBalance) {
-        TokenModel.ElGamal memory totalSubtraction = TokenModel.ElGamal(0, 0, 0, 0);
-        for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            totalSubtraction = CurveBabyJubJubHelper.addElGamal(totalSubtraction, tokenAmounts[i]);
-        }
-        newBalance = CurveBabyJubJubHelper.subElGamal(currentBalance, totalSubtraction);
-    }
 
     function extractTokenAmounts(
         TokenModel.TokenEntity[] memory tokens
@@ -105,46 +77,12 @@ library TokenUtilsLib {
         }
     }
 
-    function addTokenWithBalance(
-        mapping(address => TokenModel.Account) storage accounts,
-        address to,
-        TokenModel.TokenEntity memory entity
-    ) external {
-        TokenModel.Account storage toAccount = accounts[to];
-        toAccount.balance = CurveBabyJubJubHelper.addElGamal(toAccount.balance, entity.amount);
-        toAccount.assets[entity.id] = entity;
-    }
-
     function addToken(
         mapping(address => TokenModel.Account) storage accounts,
         address to,
         TokenModel.TokenEntity memory token
     ) external {
         accounts[to].assets[token.id] = token;
-    }
-
-    function removeTokensWithBalance(
-        mapping(address => TokenModel.Account) storage accounts,
-        address to,
-        uint256[] memory tokenIds
-    ) external {
-        TokenModel.Account storage toAccount = accounts[to];
-        // Collect token amounts for batch calculation
-        TokenModel.ElGamal[] memory tokenAmounts = new TokenModel.ElGamal[](tokenIds.length);
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            tokenAmounts[i] = toAccount.assets[tokenIds[i]].amount;
-        }
-        // Calculate total subtraction
-        TokenModel.ElGamal memory totalSubtraction = TokenModel.ElGamal(0, 0, 0, 0);
-        for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            totalSubtraction = CurveBabyJubJubHelper.addElGamal(totalSubtraction, tokenAmounts[i]);
-        }
-        toAccount.balance = CurveBabyJubJubHelper.subElGamal(toAccount.balance, totalSubtraction);
-
-        // Delete tokens
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            delete toAccount.assets[tokenIds[i]];
-        }
     }
 
     function removeTokens(
@@ -243,39 +181,5 @@ library TokenUtilsLib {
             cr_x: rightX,
             cr_y: rightY
         });
-    }
-
-    function precompiledAddTokenWithBalance(
-        mapping(address => TokenModel.Account) storage accounts,
-        address to,
-        TokenModel.TokenEntity memory entity
-    ) external {
-        TokenModel.Account storage toAccount = accounts[to];
-        toAccount.balance = precompiledAddElGamal(toAccount.balance, entity.amount);
-        toAccount.assets[entity.id] = entity;
-    }
-
-    function precompiledRemoveTokensWithBalance(
-        mapping(address => TokenModel.Account) storage accounts,
-        address to,
-        uint256[] memory tokenIds
-    ) external {
-        TokenModel.Account storage toAccount = accounts[to];
-        // Collect token amounts for batch calculation
-        TokenModel.ElGamal[] memory tokenAmounts = new TokenModel.ElGamal[](tokenIds.length);
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            tokenAmounts[i] = toAccount.assets[tokenIds[i]].amount;
-        }
-        // Calculate total subtraction
-        TokenModel.ElGamal memory totalSubtraction = TokenModel.ElGamal(0, 0, 0, 0);
-        for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            totalSubtraction = precompiledAddElGamal(totalSubtraction, tokenAmounts[i]);
-        }
-        toAccount.balance = precompiledSubElGamal(toAccount.balance, totalSubtraction);
-
-        // Delete tokens
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            delete toAccount.assets[tokenIds[i]];
-        }
     }
 }
