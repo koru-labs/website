@@ -35,8 +35,8 @@
   },
 
   "scripts": {
-    "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2",
-    "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2",
+    "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2_cluster",
+    "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_cluster",
 
     "circle-deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network dev_ucl_L2",
     "circle-deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network dev_ucl_L2",
