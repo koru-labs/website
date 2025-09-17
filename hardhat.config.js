@@ -29,16 +29,6 @@ module.exports = {
     },
     allowUnlimitedContractSize: true,
     networks: {
-
-        serverBesu: {
-            url: 'http://18.144.171.202:8545',
-            accounts: [
-                "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",//0xfe3b557e8fb62b89f4916b721be55ceb828dbd73
-                "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",//0x627306090abaB3A6e1400e9345bC60c78a8BEf57
-                "35c285cae6a13a0e13ef7db25776e60b02745922da3b39513b94114c2c5d9add",//0xf17f52151EbEF6C7334FAD080c5704D77216b732
-            ]
-        },
-
         dev_ucl_L2: {
             // url: "http://a4a4c70c3b3544bf1a3c0e48af365e83-1088910243.us-west-1.elb.amazonaws.com:8545", //k8s,ucl-node2,v2
             url: "http://dev-ucl-l2.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
