@@ -14,8 +14,8 @@ const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
 const CONSTANTS = {
   // RPC URL configuration
   // rpcUrl: "127.0.0.1:50051",
-  // rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
-  rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+  rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+  // rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
@@ -177,7 +177,7 @@ async function testDirectMintByAuth() {
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.timeEnd('testDirectMint');
     
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
     return response;
   } catch (error) {
     console.error(`Direct minting test failed: ${error.message}`);
@@ -697,7 +697,7 @@ async function runTests() {
     // await testGetMintAllowed();
     // await testReserveTokensAndGetToken();
 
-    await testGetBalance();
+    // await testGetBalance();
 
     console.log("All tests completed!");
   } catch (error) {

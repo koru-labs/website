@@ -357,5 +357,5 @@ async function batchTransferEth() {
 // main().catch((error) => {
 //     console.log(error)
 // })
-// testNonce().then();
-testFindToken().then();
+testNonce().then();
+// testFindToken().then();

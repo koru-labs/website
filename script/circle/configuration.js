@@ -5,8 +5,8 @@ module.exports = {
             "HAMSAL2EVENT": "0x4D4E0e5895953E58B1549fDc020F582c30149040",
             "L1_HANDLE": "0xb4B46bdAA835F8E4b4d8e208B6559cD267851051",
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
-            "INSTITUTION_REGISTRATION": "0xDec689B22fb5786d4F42C83b29B2A20Ec381e6Cf",
-            "PROXY_ADDRESS": "0x42Ed2cAc958750Cb43af0040b7023b209dBFA065"
+            "INSTITUTION_REGISTRATION": "0x427139058c602F303B4363853B98c1089a9fe7a9",
+            "PROXY_ADDRESS": "0x344985071501C781445eD6d10bDefe11D326Ce18"
         },
     institutions: [
         // {
@@ -45,9 +45,9 @@ module.exports = {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
-            nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
+            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
                 y: "9519187890267549073736999464396081731503319602421352094119155053337094535674",
@@ -70,9 +70,9 @@ module.exports = {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
-            rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
-            nodeUrl: "https://dev-node4-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://dev-node4-http.hamsa-ucl.com:8080",
+            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
                 y: "3128266901887868401076427103054188770721597970324357252676559377941490258192",
