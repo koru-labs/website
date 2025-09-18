@@ -30,7 +30,7 @@ const options = {
     staticNetwork: true
 };
 
-const L1Url = hardhatConfig.networks.ucl_L2.url;
+const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 // create wallet
