@@ -2,7 +2,7 @@ const {ethers, network}=require("hardhat");
 const {networks} = require("../../hardhat.config");
 const {ether} = require("@openzeppelin/test-helpers");
 
-const simpleTokenAddress = "0xb9A219631Aed55eBC3D998f17C3840B7eC39C0cc";
+const simpleTokenAddress = "0x2544Cd589aAbff0ba9724690a4105231d6a8e39D";
 
 async function printNetwork(){
     const net = await ethers.provider.getNetwork();
@@ -37,23 +37,27 @@ async function deploySimpleToken() {
 
 async function checkBalance(){
     const [signer] = await ethers.getSigners();
-    const SimpleToken = await ethers.getContractFactory("SimpleToken");
-    const simpleToken = await SimpleToken.attach(simpleTokenAddress);
+    const simpleToken = await ethers.getContractAt("SimpleToken", simpleTokenAddress);
     let balance = await simpleToken.balanceOf(signer.address);
     console.log("balance:", balance);
 }
 
 async function transfer(){
     const [signer] = await ethers.getSigners();
-    const SimpleToken = await ethers.getContractFactory("SimpleToken");
-    const simpleToken = await SimpleToken.attach(simpleTokenAddress);
+    const simpleToken = await ethers.getContractAt("SimpleToken", simpleTokenAddress);
     let tx = await simpleToken.transfer("0xfAdb253d9AD9b2d6D37471fA80F398f76D8347B8", 888);
     await tx.wait();
 }
 
+async function getLastBlock() {
+    const block = await ethers.provider.getBlock("latest");
+    console.log("latest block:", block.number, "hash:", block.hash, "timestamp:", block.timestamp,);
+}
 
 
 // printNetwork().then();
-deploySimpleToken().then()
-// checkBalance().then();
+// deploySimpleToken().then()
+checkBalance().then();
 // transfer().then();
+
+// getLastBlock().then();
