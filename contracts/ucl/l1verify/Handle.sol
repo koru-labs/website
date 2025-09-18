@@ -11,19 +11,14 @@ contract Handle is PrivateTokenData{
     // 常量定义
     uint256 constant MERGE_COUNT = Classification.MERGE_COUNT;
     uint256 constant STEPS = Classification.STEPS;
-    uint256 constant CONVERT_ZERO_X = 11517643671679671626907878304956248754469067668720425530634666199183563961829;
-    uint256 constant CONVERT_ZERO_Y = 15033760257813752716653332257111988440209700063181007723553372283340776078308;
+    uint256 constant CONVERT_ZERO_ID = 1505316567199851152165060447902183125321829991706456652247881137933729532273;
+    uint256 constant MERGE_ZERO_ID = 15037089479531276094807511187368919652296362232455374635334171080622055606564;
 
     // 分类结果结构体
     struct ClassificationResult {
         bool isConvert;              // 是否为convert交易
         bool isPrivateToAmount;    // 是否为private token转amount的交易
         bool isAmountToPrivate;    // 是否为amount转private token的交易
-    }
-
-    struct Token {
-        uint256 x;
-        uint256 y;
     }
 
     // mint
@@ -37,7 +32,7 @@ contract Handle is PrivateTokenData{
     }
 
     // 验证
-    function handle(uint256[8] calldata proof, uint256[103] calldata inputs) public returns (bool) {
+    function handle(uint256[8] calldata proof, uint256[47] calldata inputs) public returns (bool) {
         Verifier.verifyProof(proof, inputs);
 
         // 定长数组改为动态数组
@@ -48,54 +43,76 @@ contract Handle is PrivateTokenData{
             input[i] = inputs[i];
         }
 
-        Classification.ArrayPosition[] memory positions = Classification.classify(input);
-        Classification.ArrayPosition memory mergeTokenCLArrayPosition = positions[0];
-        Classification.ArrayPosition memory changeTokenCLArrayPosition = positions[2];
-        Classification.ArrayPosition memory transTokenCLArrayPosition = positions[4];
-        Classification.ArrayPosition memory rollbackTokenCLArrayPosition = positions[6];
-        Classification.ArrayPosition memory SpenderPkArrayPosition = positions[8];
-        Classification.ArrayPosition memory ReceiverPkArrayPosition = positions[9];
-        Classification.ArrayPosition memory BackupPkArrayPosition = positions[10];
-        Classification.ArrayPosition memory convertPkArrayPosition = positions[11];
-        Classification.ArrayPosition memory convertTokenReceivedCLArrayPosition = positions[14];
-        Classification.ArrayPosition memory convertTokenReceivedCRArrayPosition = positions[15];
-        Classification.ArrayPosition memory convertTokenSpendCLArrayPosition = positions[16];
+        //     数据示例
 
+
+////        // MergeTokenID (0)
+////        // ChangeTokenID (1)
+////        // TransTokenIDArray (2)
+////
+////        // RollbackTokenIDArray (3)
+////
+////        // SpenderPkArray (4)
+////
+////        // ReceiverPkArray (5)
+////
+////        // BackupPkArray (6)
+////
+////        // ConvertPkArray (7)
+////
+////        // AmountSpendArray (8)
+////
+////        // AmountReceivedArray (9)
+////
+////        // ConvertTokenReceivedIDArray (10)
+////
+////        // ConvertTokenSpendIDArray (11)
+////
+////        // HashChainStepArray (12)
+        Classification.ArrayPosition[] memory positions = Classification.classify(input);
+        Classification.ArrayPosition memory MergeTokenIDPosition = positions[0];
+        Classification.ArrayPosition memory ChangeTokenIDPosition = positions[1];
+        Classification.ArrayPosition memory TransTokenIDArrayPosition = positions[2];
+        Classification.ArrayPosition memory RollbackTokenIDArrayPosition = positions[3];
+        Classification.ArrayPosition memory SpenderPkArrayPosition = positions[4];
+        Classification.ArrayPosition memory ReceiverPkArrayPosition = positions[5];
+        Classification.ArrayPosition memory BackupPkArrayPosition = positions[6];
+        Classification.ArrayPosition memory ConvertPkArrayPosition = positions[7];
+        Classification.ArrayPosition memory AmountSpendArrayPosition = positions[8];
+        Classification.ArrayPosition memory AmountReceivedArrayPosition = positions[9];
+        Classification.ArrayPosition memory ConvertTokenReceivedIDArrayPosition = positions[10];
+        Classification.ArrayPosition memory ConvertTokenSpendIDArrayPosition = positions[11];
+        Classification.ArrayPosition memory HashChainStepArrayPosition = positions[12];
         for (uint256 i = 0; i < Classification.STEPS; i++) {
-            // 检查是否为{0,1}组合
-            uint256 mergeTokenCLXIndex = mergeTokenCLArrayPosition.start + 0 + i*MERGE_COUNT*2;
-            uint256 mergeTokenCLYIndex = mergeTokenCLXIndex + 1;
-            if (input[mergeTokenCLXIndex] == 0 && input[mergeTokenCLYIndex] == 1) {
+            // 检查是否为0
+            if (input[MergeTokenIDPosition.start + MERGE_COUNT * i] == CONVERT_ZERO_ID) {
                 //如果是，说明是一个convert交易，不用解析上半部分的"5拆3逻辑"（进入第2步）
-                uint256 convertTokenReceivedCRXIndex = convertTokenReceivedCRArrayPosition.start + i * 2;
-                uint256 convertTokenReceivedCRYIndex = convertTokenReceivedCRArrayPosition.start + 1 + i * 2;
-                if(input[convertTokenReceivedCRXIndex] == CONVERT_ZERO_X && input[convertTokenReceivedCRYIndex] == CONVERT_ZERO_Y) {
+                uint256 convertTokenReceivedIDIndex = ConvertTokenReceivedIDArrayPosition.start + i;
+                if(input[convertTokenReceivedIDIndex] == CONVERT_ZERO_ID) {
                     //如果是，说明是private token转成amount的交易，应该处理
-                    Classification.ArrayPosition memory convertTokenSpendCRArrayPosition = positions[17];
-                    uint256 convertTokenSpendCRXIndex = convertTokenSpendCRArrayPosition.start + i * 2;
-                    uint256 convertTokenSpendCRYIndex = convertTokenSpendCRArrayPosition.start + 1 + i * 2;
-                    require(input[convertTokenSpendCRXIndex] == CONVERT_ZERO_X && input[convertTokenSpendCRYIndex] == CONVERT_ZERO_Y, "all tokens are empty");
+                    uint256 convertTokenSpendIDIndex = ConvertTokenSpendIDArrayPosition.start + i;
+                    require(input[convertTokenSpendIDIndex] == CONVERT_ZERO_ID, "all tokens are empty");
 
                     // 修复数组切片语法错误
-                    uint256[] memory convertTokenSpendCLArray = sliceArray(input, convertTokenSpendCLArrayPosition.start+i*2, convertTokenSpendCLArrayPosition.start+i*2+2);
-                    uint256[] memory convertPkArray = sliceArray(input, convertPkArrayPosition.start+i*2, convertPkArrayPosition.start+i*2+2);
-                    processPrivateToAmount(convertTokenSpendCLArray[0],convertPkArray[0]);
+                    uint256[] memory convertTokenSpendIDArray = sliceArray(input, ConvertTokenSpendIDArrayPosition.start+i, ConvertTokenSpendIDArrayPosition.start+i+1);
+                    uint256[] memory convertPkArray = sliceArray(input, ConvertPkArrayPosition.start+i*2, ConvertPkArrayPosition.start+i*2+2);
+                    processPrivateToAmount(convertTokenSpendIDArray[0],transferPublicKeyToAddress(convertPkArray));
                 }else{
-                    //如果不是，说明是amount 转成private token的交易，应该处理
-                    uint256[] memory convertTokenReceivedCLArray = sliceArray(input, convertTokenReceivedCLArrayPosition.start+i*2, convertTokenReceivedCLArrayPosition.start+i*2+2);
-                    uint256[] memory convertPkArray = sliceArray(input, convertPkArrayPosition.start+i*2, convertPkArrayPosition.start+i*2+2);
-                    processAmountToPrivate(convertTokenReceivedCLArray[0],convertPkArray[0]);
+                    //如果不是，说明是public转成private token的交易，应该处理
+                    uint256[] memory ConvertTokenReceivedIDArray = sliceArray(input, ConvertTokenReceivedIDArrayPosition.start+i, ConvertTokenReceivedIDArrayPosition.start+i+1);
+                    uint256[] memory ConvertPkArray = sliceArray(input, ConvertPkArrayPosition.start+i*2, ConvertPkArrayPosition.start+i*2+2);
+                    processAmountToPrivate(ConvertTokenReceivedIDArray[0],transferPublicKeyToAddress(ConvertPkArray));
                 }
             }else{
                 //如果不是，则解析"5拆3"的token，忽略converts（continue）
-                uint256[] memory mergeTokenCLArray = sliceArray(input, mergeTokenCLXIndex, mergeTokenCLXIndex+10);
-                uint256[] memory changeTokenCLArray = sliceArray(input, changeTokenCLArrayPosition.start+i*2, changeTokenCLArrayPosition.start+i*2+2);
-                uint256[] memory transferTokenCLArray = sliceArray(input, transTokenCLArrayPosition.start+i*2, transTokenCLArrayPosition.start+i*2+2);
-                uint256[] memory rollbackTokenCLArray = sliceArray(input, rollbackTokenCLArrayPosition.start+i*2, rollbackTokenCLArrayPosition.start+i*2+2);
+                uint256[] memory MergeTokenIDArray = sliceArray(input, MergeTokenIDPosition.start  + MERGE_COUNT * i, MergeTokenIDPosition.start  + MERGE_COUNT * i + 1);
+                uint256[] memory changeTokenIDArray = sliceArray(input, ChangeTokenIDPosition.start+i, ChangeTokenIDPosition.start+i+1);
+                uint256[] memory transferTokenIDArray = sliceArray(input, TransTokenIDArrayPosition.start+i, TransTokenIDArrayPosition.start+i+1);
+                uint256[] memory rollbackTokenIDArray = sliceArray(input, RollbackTokenIDArrayPosition.start+i, RollbackTokenIDArrayPosition.start+i+1);
                 uint256[] memory spenderPkArray = sliceArray(input, SpenderPkArrayPosition.start+i*2, SpenderPkArrayPosition.start+i*2+2);
                 uint256[] memory receiverPkArray = sliceArray(input, ReceiverPkArrayPosition.start+i*2, ReceiverPkArrayPosition.start+i*2+2);
                 uint256[] memory backupPkArray = sliceArray(input, BackupPkArrayPosition.start+i*2, BackupPkArrayPosition.start+i*2+2);
-                processTokenSplit(mergeTokenCLArray,changeTokenCLArray[0],transferTokenCLArray[0],rollbackTokenCLArray[0],spenderPkArray[0],receiverPkArray[0],backupPkArray[0]);
+                processTokenSplit(MergeTokenIDArray,changeTokenIDArray[0],transferTokenIDArray[0],rollbackTokenIDArray[0],transferPublicKeyToAddress(spenderPkArray),transferPublicKeyToAddress(receiverPkArray),transferPublicKeyToAddress(backupPkArray));
             }
         }
         return true;
@@ -112,25 +129,9 @@ contract Handle is PrivateTokenData{
     }
 
     // processTokenSplit
-    function processTokenSplit(uint256[] memory mergeTokenCLArray,uint256 changeTokenCLX,uint256 transferTokenCLX,uint256 rollbackTokenCLX,uint256 spenderPkX,uint256 receiverPkX,uint256 backupPkX) public  {
-        uint256[] memory mergeTokenCLXs = new uint256[](mergeTokenCLArray.length / 2);
+    function processTokenSplit(uint256[] memory mergeTokenIDArray,uint256 changeTokenCLX,uint256 transferTokenCLX,uint256 rollbackTokenCLX,uint256 spenderPkX,uint256 receiverPkX,uint256 backupPkX) public  {
 
-        uint256 count = 0;
-        for (uint256 i = 0; i < mergeTokenCLArray.length; i += 2) {
-            if (mergeTokenCLArray[i] != 0) {
-                // token x
-                mergeTokenCLXs[count] = mergeTokenCLArray[i];
-                count++;
-            }
-        }
-
-        // 调整数组大小以匹配实际元素数量
-        uint256[] memory actualMergeTokenCLXs = new uint256[](count);
-        for (uint256 i = 0; i < count; i++) {
-            actualMergeTokenCLXs[i] = mergeTokenCLXs[i];
-        }
-
-        TokenUtilsLib.removeTokens(_accounts, spenderPkX, actualMergeTokenCLXs);
+        TokenUtilsLib.removeTokens(_accounts, spenderPkX, mergeTokenIDArray);
 
         _rollBackTokens[transferTokenCLX] = rollbackTokenCLX;
 
@@ -157,5 +158,12 @@ contract Handle is PrivateTokenData{
     function processAmountToPrivate(uint256 convertTokenReceivedCLX, uint256 convertPkX) public  {
         // Add token and update balance
         TokenUtilsLib.addToken(_accounts, convertPkX, convertTokenReceivedCLX);
+    }
+
+
+    function transferPublicKeyToAddress(uint256[] memory publicKey) public view returns (uint256) {
+        uint256 x = publicKey[0];
+        uint256 y = publicKey[1];
+        return (y % 2 == 0) ? x : x + (1 << 254);
     }
 }

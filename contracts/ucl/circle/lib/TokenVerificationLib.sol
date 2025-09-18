@@ -17,8 +17,12 @@ library TokenVerificationLib {
         uint256[22] memory publicInputs = params.publicInputs;
 
         // verify initialMinterAllowed 0-3
-        TokenModel.ElGamal memory initialMinterAllowed = params.initialMinterAllowed;
+        TokenModel.ElGamalToken memory initialMinterAllowed = params.initialMinterAllowed;
         require(initialMinterAllowed.cl_x == publicInputs[0] && initialMinterAllowed.cl_y == publicInputs[1] && initialMinterAllowed.cr_x == publicInputs[2] && initialMinterAllowed.cr_y == publicInputs[3], "initialMinterAllowance not match");
+
+        // verify newMinterAllowed 4-7
+        TokenModel.ElGamalToken memory newAllowed = params.newMinterAllowed;
+        require(newAllowed.cl_x == publicInputs[4] && newAllowed.cl_y == publicInputs[5] && newAllowed.cr_x == publicInputs[6] && newAllowed.cr_y == publicInputs[7], "newMinterAllowance not match");
 
         InstitutionUserRegistry institutionRegistration = params.institutionRegistration;
         // verify minter pk 20-21
@@ -34,7 +38,7 @@ library TokenVerificationLib {
         require(currentMintAmount.cl_x == publicInputs[8] && currentMintAmount.cl_y == publicInputs[9] && currentMintAmount.cr_x == publicInputs[10] && currentMintAmount.cr_y == publicInputs[11], "currentMintAmount not match");
 
         // verify supplyIncrease 12-15
-        TokenModel.ElGamal memory supplyIncrease = params.supplyIncrease;
+        TokenModel.ElGamalToken memory supplyIncrease = params.supplyIncrease;
         require(supplyIncrease.cl_x == publicInputs[12] && supplyIncrease.cl_y == publicInputs[13] && supplyIncrease.cr_x == publicInputs[14] && supplyIncrease.cr_y == publicInputs[15], "supplyIncrease not match");
 
         return;

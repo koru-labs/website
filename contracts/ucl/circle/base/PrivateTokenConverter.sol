@@ -25,14 +25,14 @@ abstract contract PrivateTokenConverter is
     /**
      * @dev Convert public token to private token
      * @param amount The amount of public token to convert
-     * @param elAmount The ElGamal encrypted private token amount
+     * @param entity The TokenEntity representing the private token to convert to
      * @param publicInputs The public inputs for the proof
      * @param proof The zero knowledge proof
      * @return True if the operation was successful
      */
     function convert2pUSDC(
         uint256 amount,
-        TokenModel.ElGamal calldata elAmount,
+        TokenModel.TokenEntity calldata entity,
         uint256[8] calldata publicInputs,
         uint256[8] calldata proof
     )
@@ -44,39 +44,28 @@ abstract contract PrivateTokenConverter is
     {
         require(amount > 0, "PrivateTokenConverter: convert amount not greater than 0");
 
-        uint256 elGamalHash = TokenUtilsLib.hashElgamal(elAmount);
-        require(!_usedElGamalHashes[elGamalHash], "PrivateTokenConverter: ElGamal hash already used");
+        require(!_usedElGamalHashes[entity.id], "PrivateTokenConverter: ElGamal hash already used");
 
         TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
             institutionRegistration: _institutionRegistration,
             owner: msg.sender,
             amount: amount,
-            encryptedAmount: elAmount,
+            encryptedAmount: entity.amount,
             proof: proof,
             publicInputs: publicInputs
         });
 
         TokenVerificationLib.verifyConvert2pUSDC(params);
 
-        // Create TokenEntity
-        TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: elGamalHash,
-            owner: msg.sender,
-            status: TokenModel.TokenStatus.active,
-            amount: elAmount,
-            to: address(0),
-            rollbackTokenId: 0
-        });
-
         // Increase private total supply
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, elAmount);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, entity.amount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event,
             address(this),
             msg.sender,
             oldTotalSupply,
-            elAmount,
+            entity.amount,
             TokenModel.ElGamal(0,0,0,0),
             _privateTotalSupply,
             _numberOfTotalSupplyChanges
@@ -96,10 +85,17 @@ abstract contract PrivateTokenConverter is
             entity.amount
         );
 
+        TokenEventLib.triggerRollupForConversionMint(
+            _l2Event,
+            address(this),
+            entity,
+            proof,
+            publicInputs
+        );
         // Call hook for public token balance update
         _updatePublicTokenBalance(msg.sender, amount, true);
 
-        _usedElGamalHashes[elGamalHash] = true;
+        _usedElGamalHashes[entity.id] = true;
 
         return true;
     }
@@ -176,6 +172,14 @@ abstract contract PrivateTokenConverter is
             address(this),
             msg.sender,
             tokenId
+        );
+
+        TokenEventLib.triggerRollupForConversionBurn(
+            _l2Event,
+            address(this),
+            entity,
+            proof,
+            publicInputs
         );
 
         return true;
