@@ -32,7 +32,7 @@ contract Handle is PrivateTokenData{
     }
 
     // 验证
-    function handle(uint256[8] calldata proof, uint256[47] calldata inputs) public returns (bool) {
+    function handle(uint256[8] calldata proof, uint256[51] calldata inputs) public returns (bool) {
         Verifier.verifyProof(proof, inputs);
 
         // 定长数组改为动态数组

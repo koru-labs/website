@@ -62,16 +62,16 @@ import "../model/TokenModel.sol";
     struct RollupConversionMintEvent {
         TokenModel.TokenEntity token;
         uint256[8]  proof;
-        uint256[8]  publicInputs;
+        uint256[9]  publicInputs;
     }
 
     struct RollupConversionBurnEvent {
         TokenModel.TokenEntity token;
         uint256[8]  proof;
-        uint256[7]  publicInputs;
+        uint256[8]  publicInputs;
     }
 
-    struct RollupApproveEvent {
+    struct RollupApprovalEvent {
         TokenModel.TokenEntity[] consumedTokens;
         TokenModel.TokenEntity[] newTokens;
         uint256[20] publicInputs;

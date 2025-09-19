@@ -54,6 +54,11 @@ abstract contract PrivateTokenApproval is
         });
         TokenVerificationLib.verifyTokenSplit(params);
 
+        TokenModel.TokenEntity[] memory consumedTokens = new TokenModel.TokenEntity[](consumedTokenIds.length);
+        for (uint256 i = 0; i < consumedTokenIds.length; i++) {
+            consumedTokens[i] = _accounts[msg.sender].assets[consumedTokenIds[i]];
+        }
+
         TokenUtilsLib.removeTokens(_accounts, msg.sender, consumedTokenIds);
 
         changeToken.status = TokenModel.TokenStatus.active;
@@ -71,10 +76,7 @@ abstract contract PrivateTokenApproval is
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, allowanceToken.id);
 
-        TokenModel.TokenEntity[] memory consumedTokens = new TokenModel.TokenEntity[](consumedTokenIds.length);
-        for (uint256 i = 0; i < consumedTokenIds.length; i++) {
-            consumedTokens[i] = _accounts[msg.sender].assets[consumedTokenIds[i]];
-        }
+
         TokenEventLib.triggerRollupForApproval(_l2Event, address(this),  consumedTokens, newTokens, publicInputs, proof);
 
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
@@ -122,7 +124,7 @@ abstract contract PrivateTokenApproval is
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokens[0]);
 
         TokenModel.GrumpkinPublicKey memory ownerPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), msg.sender, to, ownerPk, allowanceToken.rollbackTokenId);
+        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), msg.sender, to, ownerPk, consumedTokens[0]);
 
         emit PrivateTransferFrom(msg.sender, from, to, tokenId);
         return true;

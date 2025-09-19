@@ -101,7 +101,7 @@ library TokenModel {
         uint256 amount;
         ElGamal encryptedAmount;
         uint256[8] proof;
-        uint256[8] publicInputs;
+        uint256[9] publicInputs;
     }
 
     struct VerifyTokenConvert2USDCParams {
@@ -110,7 +110,7 @@ library TokenModel {
         uint256 amount;
         ElGamal encryptedAmount;
         uint256[8] proof;
-        uint256[7] publicInputs;
+        uint256[8] publicInputs;
     }
 
     struct GrumpkinPublicKey {

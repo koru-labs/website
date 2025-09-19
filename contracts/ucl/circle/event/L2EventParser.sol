@@ -40,4 +40,6 @@ contract L2EventParser {
     function parseRollupMintAllowedSet(RollupMintAllowedSetEvent memory e) public view {}
     function parseRollupConversionMint(RollupConversionMintEvent memory e) public view {}
     function parseRollupConversionBurn(RollupConversionBurnEvent memory e) public view {}
+    function parseRollupApproval(RollupApprovalEvent memory e) public view {}
+
 }

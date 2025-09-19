@@ -33,7 +33,7 @@ abstract contract PrivateTokenConverter is
     function convert2pUSDC(
         uint256 amount,
         TokenModel.TokenEntity calldata entity,
-        uint256[8] calldata publicInputs,
+        uint256[9] calldata publicInputs,
         uint256[8] calldata proof
     )
     external
@@ -111,7 +111,7 @@ abstract contract PrivateTokenConverter is
     function convert2USDC(
         uint256 tokenId,
         uint256 amount,
-        uint256[7] calldata publicInputs,
+        uint256[8] calldata publicInputs,
         uint256[8] calldata proof
     )
     external
