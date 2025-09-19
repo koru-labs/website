@@ -323,7 +323,45 @@ async function testTransfer() {
 
         await sleep(10000)
 
-        console.log("Transferring split token...");
+        console.log("Transferring split token with privateTransfer...");
+        let receipt = await callPrivateTransfer(
+            minterWallet,
+            config.contracts.PrivateERCToken,
+            '0x' + response.transfer_token_id
+        );
+
+        await sleep(CONSTANTS.waitTimes.short);
+        console.log("Private transfer successful!");
+
+        return receipt;
+    } catch (error) {
+        console.error(`Reserve tokens and transfer test failed: ${error.message}`);
+        throw error;
+    }
+}
+
+async function testTransfers() {
+    try {
+        console.log("Starting reserve tokens and transfer test...");
+        const metadata = await createAuthMetadata(accounts.MinterKey);
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: accounts.To1,
+            amount: CONSTANTS.defaultAmount,
+            comment:"123"
+        };
+
+        console.log("Splitting token...");
+        let response = await client.generateSplitToken(splitRequest, metadata);
+        console.log("Token split response:", response);
+
+        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+        await sleep(10000)
+
+        console.log("Transferring split token with privateTransfers...");
         let receipt = await callPrivateTransfers(
             minterWallet,
             config.contracts.PrivateERCToken,
@@ -331,10 +369,11 @@ async function testTransfer() {
         );
 
         await sleep(CONSTANTS.waitTimes.short);
+        console.log("PrivateTransfers test successful!");
 
         return receipt;
     } catch (error) {
-        console.error(`Reserve tokens and transfer test failed: ${error.message}`);
+        console.error(`Reserve tokens and transfers test failed: ${error.message}`);
         throw error;
     }
 }
@@ -363,8 +402,14 @@ async function runMainTestProcess() {
         
         await sleep(5000);
 
+        // Test transfer functionality
         await testTransfer();
         
+        await sleep(5000);
+        
+        // Test transfers functionality
+        await testTransfers();
+
         console.log("========================================");
         console.log("🎉 Test Suite Completed Successfully!");
         
