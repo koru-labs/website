@@ -79,7 +79,7 @@ library Classification {
         positions[6] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
-        // ConvertPkArray (7)
+        // ConvertSpenderPkArray (7)
         positions[7] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
@@ -102,6 +102,10 @@ library Classification {
         // HashChainStepArray (12)
         positions[12] = ArrayPosition(offset, offset + 1 + STEPS);
         offset += 1 + STEPS;
+
+        // ConvertReceiverPkArray (13)
+        positions[13] = ArrayPosition(offset, offset + 2 * STEPS);
+        offset += 2 * STEPS;
 
         return positions;
     }

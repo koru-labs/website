@@ -49,16 +49,14 @@ contract Handle is PrivateTokenData{
 ////        // MergeTokenID (0)
 ////        // ChangeTokenID (1)
 ////        // TransTokenIDArray (2)
-////
 ////        // RollbackTokenIDArray (3)
-////
 ////        // SpenderPkArray (4)
 ////
 ////        // ReceiverPkArray (5)
 ////
 ////        // BackupPkArray (6)
 ////
-////        // ConvertPkArray (7)
+////        // ConvertSpenderPkArray (7)
 ////
 ////        // AmountSpendArray (8)
 ////
@@ -69,6 +67,8 @@ contract Handle is PrivateTokenData{
 ////        // ConvertTokenSpendIDArray (11)
 ////
 ////        // HashChainStepArray (12)
+         // ConvertReceiverPkArray (13)
+
         Classification.ArrayPosition[] memory positions = Classification.classify(input);
         Classification.ArrayPosition memory MergeTokenIDPosition = positions[0];
         Classification.ArrayPosition memory ChangeTokenIDPosition = positions[1];
@@ -77,12 +77,14 @@ contract Handle is PrivateTokenData{
         Classification.ArrayPosition memory SpenderPkArrayPosition = positions[4];
         Classification.ArrayPosition memory ReceiverPkArrayPosition = positions[5];
         Classification.ArrayPosition memory BackupPkArrayPosition = positions[6];
-        Classification.ArrayPosition memory ConvertPkArrayPosition = positions[7];
+        Classification.ArrayPosition memory ConvertSpenderPkArrayPosition = positions[7];
         Classification.ArrayPosition memory AmountSpendArrayPosition = positions[8];
         Classification.ArrayPosition memory AmountReceivedArrayPosition = positions[9];
         Classification.ArrayPosition memory ConvertTokenReceivedIDArrayPosition = positions[10];
         Classification.ArrayPosition memory ConvertTokenSpendIDArrayPosition = positions[11];
         Classification.ArrayPosition memory HashChainStepArrayPosition = positions[12];
+        Classification.ArrayPosition memory ConvertReceiverPkArrayPosition = positions[13];
+
         for (uint256 i = 0; i < Classification.STEPS; i++) {
             // 检查是否为0
             if (input[MergeTokenIDPosition.start + MERGE_COUNT * i] == CONVERT_ZERO_ID) {
@@ -95,13 +97,13 @@ contract Handle is PrivateTokenData{
 
                     // 修复数组切片语法错误
                     uint256[] memory convertTokenSpendIDArray = sliceArray(input, ConvertTokenSpendIDArrayPosition.start+i, ConvertTokenSpendIDArrayPosition.start+i+1);
-                    uint256[] memory convertPkArray = sliceArray(input, ConvertPkArrayPosition.start+i*2, ConvertPkArrayPosition.start+i*2+2);
-                    processPrivateToAmount(convertTokenSpendIDArray[0],transferPublicKeyToAddress(convertPkArray));
+                    uint256[] memory ConvertSpenderPkArray = sliceArray(input, ConvertSpenderPkArrayPosition.start+i*2, ConvertSpenderPkArrayPosition.start+i*2+2);
+                    processPrivateToAmount(convertTokenSpendIDArray[0],transferPublicKeyToAddress(ConvertSpenderPkArray));
                 }else{
                     //如果不是，说明是public转成private token的交易，应该处理
                     uint256[] memory ConvertTokenReceivedIDArray = sliceArray(input, ConvertTokenReceivedIDArrayPosition.start+i, ConvertTokenReceivedIDArrayPosition.start+i+1);
-                    uint256[] memory ConvertPkArray = sliceArray(input, ConvertPkArrayPosition.start+i*2, ConvertPkArrayPosition.start+i*2+2);
-                    processAmountToPrivate(ConvertTokenReceivedIDArray[0],transferPublicKeyToAddress(ConvertPkArray));
+                    uint256[] memory ConvertReceiverPkArray = sliceArray(input, ConvertReceiverPkArrayPosition.start+i*2, ConvertReceiverPkArrayPosition.start+i*2+2);
+                    processAmountToPrivate(ConvertTokenReceivedIDArray[0],transferPublicKeyToAddress(ConvertReceiverPkArray));
                 }
             }else{
                 //如果不是，则解析"5拆3"的token，忽略converts（continue）
