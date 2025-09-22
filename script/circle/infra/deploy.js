@@ -28,8 +28,6 @@ async function main() {
     await deployInstUserRegistry(deployed);
     await deployInstProxy(deployed);
     await saveDeploymentInfo(deployed,hre, ethers, fs, path);
-    // await sleep(10000)
-    // await registerInstitutionAndUser()
 }
 
 // main().then();
