@@ -6,7 +6,7 @@ library Classification {
     uint256 public constant MERGE_COUNT = 5;
     uint256 public constant STEPS = 2;
 
-    uint256 public constant EXPECTED_LENGTH = (18 + MERGE_COUNT) * STEPS + 1;
+    uint256 public constant EXPECTED_LENGTH = (20 + MERGE_COUNT) * STEPS + 1;
 
     struct ArrayPosition {
         uint256 start;
