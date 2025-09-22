@@ -25,9 +25,9 @@ const options = {
     staticNetwork: true
 };
 
-const L1Url = hardhatConfig.networks.eth_dev.url;
+const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-const L1Wallet = new ethers.Wallet(hardhatConfig.networks.eth_dev.accounts[0], l1Provider);
+const L1Wallet = new ethers.Wallet(hardhatConfig.networks.dev_ucl_L2.accounts[0], l1Provider);
 
 async function deployLibs(deployed) {
     console.log("=== TokenSc Libs deployment starts ===");
