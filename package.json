@@ -77,8 +77,8 @@
     "format:check:sol": "prettier --check \"**/*.sol\"",
     "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network dev_ucl_L2",
     "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js --network ucl_L2_cluster",
-    "qianwei-token-test": "npx hardhat run test/qianwei/test_token.js --network ucl_L2_cluster",
-    "qianwei-l1-test": "npx hardhat run test/qianwei/deploy_L1_verify.js --network eth_l1_dev",
+    "qianwei-token-test": "npx hardhat run test/qianwei/test_token.js --network local_L2",
+    "qianwei-L1-test": "npx hardhat run test/qianwei/deploy_L1_verify.js --network eth_L1_dev",
     "sun-test": "npx hardhat run test/sun/sun_test.js --network ucl_L2_cluster"
   }
 }

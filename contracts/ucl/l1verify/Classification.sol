@@ -6,7 +6,7 @@ library Classification {
     uint256 public constant MERGE_COUNT = 5;
     uint256 public constant STEPS = 2;
 
-    uint256 public constant EXPECTED_LENGTH = (31 + 4*MERGE_COUNT) * STEPS + 1;
+    uint256 public constant EXPECTED_LENGTH = (18 + MERGE_COUNT) * STEPS + 1;
 
     struct ArrayPosition {
         uint256 start;
@@ -14,47 +14,34 @@ library Classification {
     }
 
 //     数据示例
-//    //2 * mergeCount * steps
-//    MergeTokenCLArray    [Steps][MergeCount]twistededwards.Point `gnark:",public"`
-//    //2 * mergeCount * steps
-//    MergeTokenCRArray    [Steps][MergeCount]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    ChangeTokenCLArray   [Steps]twistededwards.Point             `gnark:",public"`
-//    //2 * steps
-//    ChangeTokenCRArray   [Steps]twistededwards.Point             `gnark:",public"`
-//    //2 * steps
-//    TransTokenCLArray    [Steps]twistededwards.Point             `gnark:",public"`
-//    //2 * steps
-//    TransTokenCRArray    [Steps]twistededwards.Point             `gnark:",public"`
-//    //2 * steps
-//    RollbackTokenCLArray [Steps]twistededwards.Point             `gnark:",public"`
-//    //2 * steps
-//    RollbackTokenCRArray [Steps]twistededwards.Point             `gnark:",public"`
-//    //temporarily Spender and Backup pk must be equal
-//    //2 * steps
-//    SpenderPkArray  [Steps]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    ReceiverPkArray [Steps]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    BackupPkArray   [Steps]twistededwards.Point `gnark:",public"`
+//    type RollupBetaInputs struct {
+//        G twistededwards.Point `gnark:",public"`
+//        H twistededwards.Point `gnark:",public"`
+//        //split and mint allowance
+//        //merge sum equals to SpentToken
+//        //padding with zerotoken to make sure merge token count is 5
+//        MergeTokenIDArray    [Steps][MergeCount]frontend.Variable    `gnark:",public"`
+//        ChangeTokenIDArray   [Steps]frontend.Variable                `gnark:",public"`
+//        TransTokenIDArray    [Steps]frontend.Variable                `gnark:",public"`
+//        RollbackTokenIDArray [Steps]frontend.Variable                `gnark:",public"`
+//        //temporarily Spender and Backup pk must be equal
+//        SpenderPkArray  [Steps]twistededwards.Point `gnark:",public"`
+//        ReceiverPkArray [Steps]twistededwards.Point `gnark:",public"`
+//        BackupPkArray   [Steps]twistededwards.Point `gnark:",public"`
 //
 //
-//    //convert
-//    //padding with zero amount, zero token to make sure merge token count is 5
-//    //2 * steps
-//    ConvertPkArray              [Steps]twistededwards.Point `gnark:",public"`
-//    //1 * steps
-//    AmountSpendArray            [Steps]frontend.Variable    `gnark:",public"`
-//    //1 * steps
-//    AmountReceivedArray         [Steps]frontend.Variable    `gnark:",public"`
-//    //2 * steps
-//    ConvertTokenReceivedCLArray [Steps]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    ConvertTokenReceivedCRArray [Steps]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    ConvertTokenSpendCLArray    [Steps]twistededwards.Point `gnark:",public"`
-//    //2 * steps
-//    ConvertTokenSpendCRArray    [Steps]twistededwards.Point `gnark:",public"`
+//        //padding with zero amount, zero token to make sure merge token count is 5
+//        ConvertPkArray              [Steps]twistededwards.Point `gnark:",public"`
+//        AmountSpendArray            [Steps]frontend.Variable    `gnark:",public"`
+//        AmountReceivedArray         [Steps]frontend.Variable    `gnark:",public"`
+//        ConvertTokenReceivedIDArray [Steps]frontend.Variable    `gnark:",public"`
+//        ConvertTokenSpendIDArray    [Steps]frontend.Variable    `gnark:",public"`
+//
+//
+//        // hashchain
+//        HashChainStepArray [Steps + 1]frontend.Variable `gnark:",public"`
+//    }
+
 
     // 分类
     function classify(uint256[] memory input) public pure returns (ArrayPosition[] memory positions) {
@@ -62,78 +49,59 @@ library Classification {
         positions = new ArrayPosition[](18);
 
         // 计算每个数组的偏移量
-        uint256 offset = 0;
+        uint256 offset = 4;
 
-        // MergeTokenCLArray (0)
-        positions[0] = ArrayPosition(offset, offset + 2 * MERGE_COUNT * STEPS);
-        offset += 2 * MERGE_COUNT * STEPS;
+        // MergeTokenID (0)
+        positions[0] = ArrayPosition(offset, offset + MERGE_COUNT * STEPS);
+        offset += MERGE_COUNT * STEPS;
 
-        // MergeTokenCRArray (1)
-        positions[1] = ArrayPosition(offset, offset + 2 * MERGE_COUNT * STEPS);
-        offset += 2 * MERGE_COUNT * STEPS;
+        // ChangeTokenID (1)
+        positions[1] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // ChangeTokenCLArray (2)
-        positions[2] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // TransTokenIDArray (2)
+        positions[2] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // ChangeTokenCRArray (3)
-        positions[3] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // RollbackTokenIDArray (3)
+        positions[3] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // TransTokenCLArray (4)
+        // SpenderPkArray (4)
         positions[4] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
-        // TransTokenCRArray (5)
+        // ReceiverPkArray (5)
         positions[5] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
-        // RollbackTokenCLArray (6)
+        // BackupPkArray (6)
         positions[6] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
-        // RollbackTokenCRArray (7)
+        // ConvertPkArray (7)
         positions[7] = ArrayPosition(offset, offset + 2 * STEPS);
         offset += 2 * STEPS;
 
-        // SpenderPkArray (8)
-        positions[8] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // AmountSpendArray (8)
+        positions[8] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // ReceiverPkArray (9)
-        positions[9] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // AmountReceivedArray (9)
+        positions[9] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // BackupPkArray (10)
-        positions[10] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // ConvertTokenReceivedIDArray (10)
+        positions[10] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // ConvertPkArray (11)
-        positions[11] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
+        // ConvertTokenSpendIDArray (11)
+        positions[11] = ArrayPosition(offset, offset + STEPS);
+        offset += STEPS;
 
-        // AmountSpendArray (12)
-        positions[12] = ArrayPosition(offset, offset + 1 * STEPS);
-        offset += 1 * STEPS;
-
-        // AmountReceivedArray (13)
-        positions[13] = ArrayPosition(offset, offset + 1 * STEPS);
-        offset += 1 * STEPS;
-
-        // ConvertTokenReceivedCLArray (14)
-        positions[14] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
-
-        // ConvertTokenReceivedCRArray (15)
-        positions[15] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
-
-        // ConvertTokenSpendCLArray (16)
-        positions[16] = ArrayPosition(offset, offset + 2 * STEPS);
-        offset += 2 * STEPS;
-
-        // ConvertTokenSpendCRArray (17)
-        positions[17] = ArrayPosition(offset, offset + 2 * STEPS);
+        // HashChainStepArray (12)
+        positions[12] = ArrayPosition(offset, offset + 1 + STEPS);
+        offset += 1 + STEPS;
 
         return positions;
     }

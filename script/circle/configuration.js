@@ -2,11 +2,11 @@ module.exports = {
     "ADDRESSES":
         {
             "TOKEN_EVENT_LIB": "",
-            "HAMSAL2EVENT": "",
+            "HAMSAL2EVENT": "0x61f3D27725BEcF3C3724f37493b6365a301ea12E",
             "L1_HANDLE": "0xb4B46bdAA835F8E4b4d8e208B6559cD267851051",
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
-            "INSTITUTION_REGISTRATION": "",
-            "PROXY_ADDRESS": ""
+            "INSTITUTION_REGISTRATION": "0x25BEd1322DaD8568FCAA8da91Db181B07d324A32",
+            "PROXY_ADDRESS": "0xCC14c187A6D5eAD69bf61D7dB063489e9fb1a80e"
         },
     institutions: [
         // {
@@ -45,9 +45,9 @@ module.exports = {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
-            nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
+            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
                 y: "9519187890267549073736999464396081731503319602421352094119155053337094535674",
@@ -70,9 +70,9 @@ module.exports = {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
-            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
-            nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
+            rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://dev-node4-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://dev-node4-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
                 y: "3128266901887868401076427103054188770721597970324357252676559377941490258192",

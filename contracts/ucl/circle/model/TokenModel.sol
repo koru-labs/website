@@ -25,6 +25,14 @@ library TokenModel {
         uint256 cr_y;
     }
 
+    struct ElGamalToken {
+        uint256 id;
+        uint256 cl_x;
+        uint256 cl_y;
+        uint256 cr_x;
+        uint256 cr_y;
+    }
+
     struct Allowance {
         uint256 cl_x;
         uint256 cl_y;
@@ -37,10 +45,11 @@ library TokenModel {
     struct TokenEntity {
         uint256 id;
         address owner;
-        TokenStatus status;
+        TokenStatus status; 
         ElGamal amount;
         address to;
         uint256 rollbackTokenId;
+        uint8 tokenType;
     }
 
     struct Account {
@@ -52,9 +61,10 @@ library TokenModel {
         InstitutionUserRegistry institutionRegistration;
         address minter;
         address to;
-        ElGamal initialMinterAllowed;
+        ElGamalToken initialMinterAllowed;
+        ElGamalToken newMinterAllowed;
         ElGamal currentMintAmount;
-        ElGamal supplyIncrease;
+        ElGamalToken supplyIncrease;
 
         uint256[8] proof;
         uint256[22] publicInputs;
@@ -90,7 +100,7 @@ library TokenModel {
         uint256 amount;
         ElGamal encryptedAmount;
         uint256[8] proof;
-        uint256[8] publicInputs;
+        uint256[9] publicInputs;
     }
 
     struct VerifyTokenConvert2USDCParams {
@@ -99,7 +109,7 @@ library TokenModel {
         uint256 amount;
         ElGamal encryptedAmount;
         uint256[8] proof;
-        uint256[7] publicInputs;
+        uint256[8] publicInputs;
     }
 
     struct GrumpkinPublicKey {

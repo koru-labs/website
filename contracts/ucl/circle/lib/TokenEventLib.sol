@@ -43,7 +43,6 @@ library TokenEventLib {
         if (_numberOfTotalSupplyChanges %5 !=0) {
             return;
         }
-
         TokenSupplyUpdatedEvent memory eventData = TokenSupplyUpdatedEvent({
             oldSupply: oldSupply,
             increaseAmount: increaseAmount,
@@ -59,8 +58,8 @@ library TokenEventLib {
         address eventSource,
         address msgSender,
         address institution,
-        TokenModel.ElGamal memory oldAmount,
-        TokenModel.ElGamal memory newAmount
+        TokenModel.ElGamalToken memory oldAmount,
+        TokenModel.ElGamalToken memory newAmount
     ) public {
         TokenMintAllowedUpdatedEvent memory eventData = TokenMintAllowedUpdatedEvent({
             institution: institution,
@@ -75,12 +74,12 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address to,
-        TokenModel.ElGamal memory amount,
+        uint256 tokenId,
         address minter
     ) public {
         TokenMintedEvent memory eventData = TokenMintedEvent({
             to : to,
-            amount : amount,
+            tokenId : tokenId,
             minter : minter
         });
         bytes memory eventBody = abi.encode(eventData);
@@ -299,7 +298,7 @@ library TokenEventLib {
     }
 
     function triggerMinterAllowedSetEvent(IL2Event _l2Event, address eventSource, address eventAccount,
-        address setter, TokenModel.ElGamal memory limit) internal {
+        address setter, TokenModel.ElGamalToken memory limit) internal {
 
         MinterAllowedSetEvent memory e = MinterAllowedSetEvent({
             setter: setter,
@@ -324,12 +323,12 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, eventAccount, "TokenActionCompleted", body);
     }
 
-    function triggerRollupForMintAllowedSet( IL2Event _l2Event, address eventSource,address owner, address minter, TokenModel.GrumpkinPublicKey memory minterPk, TokenModel.ElGamal memory tokenAmount) public {
+    function triggerRollupForMintAllowedSet( IL2Event _l2Event, address eventSource,address owner, address minter, TokenModel.GrumpkinPublicKey memory minterPk, TokenModel.ElGamalToken memory tokenAmount) public {
         RollupMintAllowedSetEvent memory e = RollupMintAllowedSetEvent({
             ownerAddress: owner,
             minterAddress: minter,
             minterPk: minterPk,
-            tokenAmount: tokenAmount
+            token: tokenAmount
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupMintAllowedSet", body);
@@ -337,65 +336,114 @@ library TokenEventLib {
 
 
     function triggerRollupForMint( IL2Event _l2Event, address eventSource,
-        TokenModel.TokenEntity memory entity, uint256[22] calldata publicInputs, uint256[8] calldata proof) public {
+        TokenModel.TokenEntity memory entity, uint256[22] calldata publicInputs, uint256[8] calldata proof, uint256 initialAllowId, uint256 newAllowId, uint256 backupId) public {
 
         RollupMintEvent memory e = RollupMintEvent({
             token: entity,
             publicInputs: publicInputs,
-            proof: proof
+            proof: proof,
+            initialAllowId: initialAllowId,
+            newAllowId:newAllowId,
+            backupId: backupId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupMint", body);
     }
 
-    function triggerRollupForBurn( IL2Event _l2Event, address eventSource, TokenModel.GrumpkinPublicKey memory toPk, TokenModel.GrumpkinPublicKey memory backupPk,
-        TokenModel.TokenEntity memory entity, TokenModel.TokenEntity memory backupEntity) public {
-        RollupBurnEvent memory e = RollupBurnEvent({
-            fromAddress: backupEntity.owner,
-            toAddress: entity.to,
-            toPk: toPk,
-            backupPk: backupPk,
-            toAmount: entity.amount,
-            backupAmount: backupEntity.amount
-        });
+    function triggerRollupForBurn(IL2Event _l2Event, address eventSource, RollupBurnEvent memory e) public {
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupBurn", body);
     }
 
-    function triggerRollupForSplit( IL2Event _l2Event, address eventSource,  RollupSplitEvent memory e) public {
+    function triggerRollupForSplit(IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity[] memory consumedTokens,
+        TokenModel.TokenEntity[] calldata newTokens,  uint256[20] calldata publicInputs ,uint256[8] calldata proof) public {
+        RollupSplitEvent memory e = RollupSplitEvent({
+            consumedTokens: consumedTokens,
+            newTokens: newTokens,
+            publicInputs: publicInputs,
+            proof: proof
+        });
+
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupSplit", body);
     }
 
-    function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, address from, address to, TokenModel.GrumpkinPublicKey memory pk, TokenModel.TokenEntity memory token) public {
+    function triggerRollupForTransfer( IL2Event _l2Event, address eventSource, address from, address to, TokenModel.GrumpkinPublicKey memory pk, uint256 tokenId) public {
         RollupTransferEvent memory e = RollupTransferEvent({
             fromAddress: from,
             toAddress: to,
             pk: pk,
-            tokenAmount: token.amount
+            tokenId: tokenId
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupTransfer", body);
     }
 
-    function triggerRollupForCancel( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    function triggerRollupForCancel( IL2Event _l2Event, address eventSource, address from, address to, TokenModel.GrumpkinPublicKey memory pk, uint256 tokenId) public {
+        RollupTransferEvent memory e = RollupTransferEvent({
+            fromAddress: from,
+            toAddress: to,
+            pk: pk,
+            tokenId: tokenId
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupCancel", body);
     }
 
     function triggerRollupForConversionMint( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token,  uint256[8] calldata proof,
-            uint256[8] calldata publicInputs) public {
+            uint256[9] calldata publicInputs) public {
+        RollupConversionMintEvent memory e = RollupConversionMintEvent({
+            token: token,
+            proof: proof,
+            publicInputs:publicInputs
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupConvertMint", body);
     }
 
     function triggerRollupForConversionBurn( IL2Event _l2Event, address eventSource, TokenModel.TokenEntity memory token,  uint256[8] calldata proof,
-        uint256[7] calldata publicInputs) public {
+        uint256[8] calldata publicInputs) public {
+        RollupConversionBurnEvent memory e = RollupConversionBurnEvent({
+            token: token,
+            proof: proof,
+            publicInputs:publicInputs
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupConvertBurn", body);
     }
 
-    function triggerRollupForApproval( IL2Event _l2Event, address eventSource, uint256[] memory consumedTokenIds, TokenModel.TokenEntity memory changeToken, TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    function triggerRollupForApproval(IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity[] memory consumedTokens,
+        TokenModel.TokenEntity[] calldata newTokens,  uint256[20] calldata publicInputs ,uint256[8] calldata proof) public {
+        RollupApprovalEvent memory e = RollupApprovalEvent({
+            consumedTokens: consumedTokens,
+            newTokens: newTokens,
+            publicInputs: publicInputs,
+            proof: proof
+        });
+
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupApproval", body);
     }
 
-    function triggerRollupForTransferFrom( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
+    function triggerRollupForTransferFrom( IL2Event _l2Event, address eventSource, address from, address to, TokenModel.GrumpkinPublicKey memory pk, uint256 tokenId) public {
+        RollupTransferEvent memory e = RollupTransferEvent({
+            fromAddress: from,
+            toAddress: to,
+            pk: pk,
+            tokenId: tokenId
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupTransferFrom", body);
     }
 
-    function triggerRollupForRevokeApproval( IL2Event _l2Event, address eventSource,  TokenModel.TokenEntity memory transferToken, TokenModel.TokenEntity memory rollbackToken) public {
-
+    function triggerRollupForRevokeApproval( IL2Event _l2Event, address eventSource, address from, address to, TokenModel.GrumpkinPublicKey memory pk, uint256 tokenId) public {
+        RollupTransferEvent memory e = RollupTransferEvent({
+            fromAddress: from,
+            toAddress: to,
+            pk: pk,
+            tokenId: tokenId
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendRollupEvent(eventSource, "RollupRevokeApproval", body);
     }
 } 

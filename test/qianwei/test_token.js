@@ -8,7 +8,7 @@ const userTest = "0x977954402132612Cc1d144E57e16eaf0E4cbcfcB";
 
 
 
-async function testNonce() {
+async function testDeployToken() {
     const [userA] = await ethers.getSigners()
 
     const userAEthBalance = await getEthBalance(userA.address);
@@ -357,5 +357,5 @@ async function batchTransferEth() {
 // main().catch((error) => {
 //     console.log(error)
 // })
-testNonce().then();
+testDeployToken().then();
 // testFindToken().then();

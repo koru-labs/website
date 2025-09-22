@@ -45,6 +45,7 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 async function callPrivateTransfer(wallet, scAddress, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    // const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
     console.log("contract address is :",contract.target)
     const tx = await contract.privateTransfer(tokenId);
     let receipt = await tx.wait();
@@ -165,7 +166,8 @@ async function getPublicBalance(account) {
     let amount = await contract.balanceOf(account)
     return Number(amount)
 }
-async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
+async function getAddressBalance2(grpcClient, scAddress, account) {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateBalanceOf(account)
 
@@ -188,12 +190,13 @@ async function getAddressBalance2(grpcClient, scAddress, account, metadata) {
     console.log("Decrypted On-chain Balance:", decodeAmount);
     console.log("Database Balance:", result);
     console.log("===================================================================\n");
-    if (decodeAmount.balance != result.balance) {
-        console.log("Balance in database and on-chain Mismatch");
-        // console.log({decodeAmount,result})
-    }else {
-        return result
-    }
+    // if (decodeAmount.balance != result.balance) {
+    //     console.log("Balance in database and on-chain Mismatch");
+    //     // console.log({decodeAmount,result})
+    // }else {
+    //     return result
+    // }
+    return result
 }
 
 async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {

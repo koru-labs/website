@@ -73,7 +73,7 @@ abstract contract PrivateTokenCore is
         return _accounts[account].assets[tokenId];
     }
 
-    function configurePrivacyMinter(address minter, TokenModel.ElGamal calldata privateAllowedAmount)
+    function configurePrivacyMinter(address minter, TokenModel.ElGamalToken calldata privateAllowedAmount)
         external whenNotPaused onlyMasterMinter virtual returns (bool)
     {
         minters[minter] = true;
@@ -85,7 +85,8 @@ abstract contract PrivateTokenCore is
     }
     
     function removePrivacyMinter(address minter) external onlyMasterMinter virtual returns (bool) {
-        _privateMinterAllowed[minter] = TokenModel.ElGamal({
+        _privateMinterAllowed[minter] = TokenModel.ElGamalToken({
+            id: 0,
             cl_x: 0,
             cl_y: 0,
             cr_x: 0,
@@ -101,8 +102,9 @@ abstract contract PrivateTokenCore is
     }
     function privateMint(
         address to,
-        TokenModel.ElGamal memory amount,
-        TokenModel.ElGamal memory supplyIncrease,
+        TokenModel.TokenEntity memory entity,
+        TokenModel.ElGamalToken memory newAllowed,
+        TokenModel.ElGamalToken memory supplyIncrease,
         uint256[8] calldata proof,
         uint256[22] calldata publicInputs
     )
@@ -123,41 +125,29 @@ abstract contract PrivateTokenCore is
             minter: msg.sender,
             to: to,
             initialMinterAllowed: _privateMinterAllowed[msg.sender],
-            currentMintAmount: amount,
+            newMinterAllowed: newAllowed,
+            currentMintAmount: entity.amount,
             supplyIncrease: supplyIncrease,
             proof: proof,
             publicInputs: publicInputs
         });
         TokenVerificationLib.verifyTokenMint(params);
-
-        TokenModel.ElGamal memory newAllowed = TokenModel.ElGamal({
-            cl_x: publicInputs[4],
-            cl_y: publicInputs[5],
-            cr_x: publicInputs[6],
-            cr_y: publicInputs[7]
-        });
-
+        TokenModel.ElGamalToken memory initialMinterAllowed = _privateMinterAllowed[msg.sender];
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, _privateMinterAllowed[msg.sender], newAllowed);
         _privateMinterAllowed[msg.sender] = newAllowed;
 
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyIncrease);
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyIncrease, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
 
-        TokenModel.TokenEntity memory entity = TokenModel.TokenEntity({
-            id: TokenUtilsLib.hashElgamal(amount),
-            owner: to,
-            status: TokenModel.TokenStatus.active,
-            amount: amount,
-            to: address(0),
-            rollbackTokenId: 0
-        });
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y));
+
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y), TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
+
         TokenUtilsLib.addToken(_accounts, to, entity);
-        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, amount, msg.sender);
+        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, entity.id, msg.sender);
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
-        TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof);
+        TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof, initialMinterAllowed.id, newAllowed.id, supplyIncrease.id);
 
-        emit PrivateMint(to, amount);
+        emit PrivateMint(to, entity.amount);
         return true;
     }
 
@@ -185,7 +175,15 @@ abstract contract PrivateTokenCore is
 
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
         TokenModel.GrumpkinPublicKey memory toPk = _institutionRegistration.getUserInstGrumpkinPubKey(entity.to);
-        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  toPk, backupPk, entity, backupEntity);
+        RollupBurnEvent memory e = RollupBurnEvent({
+            fromAddress: backupEntity.owner,
+            toAddress: entity.to,
+            toPk: toPk,
+            backupPk: backupPk,
+            toTokenId: tokenId,
+            backupTokenId: backupEntity.id
+        });
+        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  e);
         emit PrivateBurn(msg.sender, supplyDecrease);
     }
 
@@ -232,13 +230,7 @@ abstract contract PrivateTokenCore is
         transferToken.rollbackTokenId = rollBackToken.id;
         TokenUtilsLib.addToken(_accounts, from, transferToken);
         TokenUtilsLib.addToken(_accounts, from, rollBackToken);
-        RollupSplitEvent memory e = RollupSplitEvent({
-            token: transferToken,
-            consumedTokens: consumedTokens,
-            publicInputs: publicInputs,
-            proof: proof
-        });
-        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  e);
+        TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  consumedTokens, newTokens, publicInputs, proof);
     }
 
     function privateTransfer(
@@ -276,7 +268,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
 
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity);
+        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity.id);
 
         emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
 
@@ -319,7 +311,7 @@ abstract contract PrivateTokenCore is
             TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
 
             TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, tokenEntity.to, backupPk, backupEntity);
+            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, tokenEntity.to, backupPk, backupEntity.id);
 
             emit PrivateTransfer(msg.sender, tokenEntity.to, tokenEntity.amount);
         }
@@ -338,6 +330,8 @@ abstract contract PrivateTokenCore is
         require(transferToken.status == TokenModel.TokenStatus.inactive, "PrivateERCToken: token is not in inactive status");
         require(transferToken.rollbackTokenId != 0, "PrivateERCToken: rollback token does not exist");
 
+        TokenModel.GrumpkinPublicKey memory toPk = _institutionRegistration.getUserInstGrumpkinPubKey(transferToken.to);
+
         TokenModel.TokenEntity storage rollbackToken = _accounts[msg.sender].assets[transferToken.rollbackTokenId];
         require(rollbackToken.id != 0, "PrivateERCToken: invalid rollback token");
         require(rollbackToken.owner == msg.sender, "PrivateERCToken: caller is not the rollback token owner");
@@ -347,7 +341,8 @@ abstract contract PrivateTokenCore is
         transferTokens[0] = tokenId;
         TokenUtilsLib.removeTokens(_accounts, transferToken.owner, transferTokens);
         TokenEventLib.triggerTokenCanceledEvent(_l2Event, address(this), transferToken.owner, tokenId);
-        TokenEventLib.triggerRollupForCancel(_l2Event, address(this), transferToken, rollbackToken);
+
+        TokenEventLib.triggerRollupForCancel(_l2Event, address(this), transferToken.owner,transferToken.to, toPk,tokenId);
         return true;
     }
 

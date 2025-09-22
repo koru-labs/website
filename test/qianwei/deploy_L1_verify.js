@@ -12,33 +12,30 @@ const options = {
     staticNetwork: true
 };
 
-const L1Url = hardhatConfig.networks.eth_dev.url;
-const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-const ownerWallet = new ethers.Wallet(hardhatConfig.networks.eth_dev.accounts[0], l1Provider);
+// const L1Url = hardhatConfig.networks.eth_L1_dev.url;
+// const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+// const ownerWallet = new ethers.Wallet(hardhatConfig.networks.eth_L1_dev.accounts[0], ethers.provider);
 
 async function deployHandle() {
-    console.log("🚀 开始部署 Handle 合约");
-    
-    // 首先部署依赖库
-    console.log("📦 部署依赖库...");
+    const [ownerWallet] = await ethers.getSigners();
+
     
     const Classification = await ethers.getContractFactory("contracts/ucl/l1verify/Classification.sol:Classification",ownerWallet);
     const classification = await Classification.deploy();
     await classification.waitForDeployment();
-    console.log("✅ Classification 库部署完成，地址:", await classification.getAddress());
+    console.log("Classification is deploy at :", await classification.getAddress())
     
     const TokenUtilsLib = await ethers.getContractFactory("contracts/ucl/l1verify/lib/TokenUtilsLib.sol:TokenUtilsLib",ownerWallet);
     const tokenUtilsLib = await TokenUtilsLib.deploy();
     await tokenUtilsLib.waitForDeployment();
-    console.log("✅ TokenUtilsLib 库部署完成，地址:", await tokenUtilsLib.getAddress());
-    
+    console.log("TokenUtilsLib is deploy at :", await tokenUtilsLib.getAddress())
+
     const Verifier = await ethers.getContractFactory("contracts/ucl/l1verify/lib/verify/Verifier.sol:Verifier",ownerWallet);
     const verifier = await Verifier.deploy();
     await verifier.waitForDeployment();
-    console.log("✅ Verifier 库部署完成，地址:", await verifier.getAddress());
-    
-    // 部署 Handle 合约并链接库
-    console.log("🔗 部署 Handle 合约并链接库...");
+    console.log("Verifier is deploy at :", await verifier.getAddress())
+
+    // deploy Handle
     const Handle = await ethers.getContractFactory("Handle", {
         libraries: {
             "contracts/ucl/l1verify/Classification.sol:Classification": await classification.getAddress(),
@@ -50,19 +47,17 @@ async function deployHandle() {
     const handle = await Handle.deploy();
     await handle.waitForDeployment();
     
-    console.log("✅ Handle 合约部署完成");
-    console.log("📋 合约地址:", await handle.getAddress());
+    console.log("handle contract deploy done");
+    console.log("Handle is deploy at :", await handle.getAddress())
 
 
-    // 输出部署信息
-    console.log("\n📋 部署信息摘要:");
     console.log("=====================================");
-    console.log("网络:", network.name);
-    console.log("部署者地址:", ownerWallet.address);
-    console.log("Classification 库地址:", await classification.getAddress());
-    console.log("TokenUtilsLib 库地址:", await tokenUtilsLib.getAddress());
-    console.log("Verifier 库地址:", await verifier.getAddress());
-    console.log("Handle 合约地址:", await handle.getAddress());
+    console.log("network:", network.name);
+    console.log("Deployer address:", ownerWallet.address);
+    console.log("Classification address:", await classification.getAddress());
+    console.log("TokenUtilsLib address:", await tokenUtilsLib.getAddress());
+    console.log("Verifier address:", await verifier.getAddress());
+    console.log("Handle address:", await handle.getAddress());
     console.log("=====================================");
     
     return handle;
@@ -70,13 +65,21 @@ async function deployHandle() {
 
 
 async function deployBlobCommitmentVerify() {
+    const [ownerWallet] = await ethers.getSigners();
     const BlobCommitmentVerify = await ethers.getContractFactory("BlobCommitmentVerify",ownerWallet);
     const blobCommitmentVerify = await BlobCommitmentVerify.deploy();
     await blobCommitmentVerify.waitForDeployment();
     console.log("L1BlobCommitmentVerify is deploy at :", blobCommitmentVerify.target);
 }
 
+async function deployL1Contract() {
+    await deployHandle();
+    await deployBlobCommitmentVerify();
+}
+
 
 
 // deployHandle().then();
-deployBlobCommitmentVerify().then();
+// deployBlobCommitmentVerify().then();
+
+deployL1Contract().then();

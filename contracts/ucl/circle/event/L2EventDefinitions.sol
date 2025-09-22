@@ -108,8 +108,8 @@ import "../model/TokenModel.sol";
 
     struct TokenMintAllowedUpdatedEvent {
         address institution;          
-        TokenModel.ElGamal oldAmount; 
-        TokenModel.ElGamal newAmount;
+        TokenModel.ElGamalToken oldAmount;
+        TokenModel.ElGamalToken newAmount;
     }
 
     struct TokenSupplyUpdatedEvent {
@@ -120,8 +120,8 @@ import "../model/TokenModel.sol";
     }
 
     struct TokenMintedEvent {
-        address to;                    
-        TokenModel.ElGamal amount;
+        address to;
+        uint256 tokenId;
         address minter;
     }
 
@@ -182,5 +182,5 @@ import "../model/TokenModel.sol";
     struct MinterAllowedSetEvent  {
         address setter;
         address account;
-        TokenModel.ElGamal limit;
+        TokenModel.ElGamalToken limit;
     }
