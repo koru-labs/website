@@ -29,11 +29,12 @@ library TokenOperationsLib {
             status: TokenModel.TokenStatus.active,
             amount: amount,
             to: address(0),
-           rollbackTokenId: 0
+            rollbackTokenId: 0,
+            tokenType: 1
         });
 
         tokensMap[tokenId] = entity;
         
         return;
     }
-} 
+}

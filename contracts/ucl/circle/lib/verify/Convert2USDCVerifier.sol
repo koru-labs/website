@@ -53,44 +53,46 @@ library Convert2USDCVerifier {
     uint256 constant EXP_SQRT_FP = 0xC19139CB84C680A6E14116DA060561765E05AA45A1C72A34F082305B61F3F52; // (P + 1) / 4;
 
     // Groth16 alpha point in G1
-    uint256 constant ALPHA_X = 4073080403930019417089691066598104872881477989013530492299368519815191677328;
-    uint256 constant ALPHA_Y = 120415251231766522475603845429084153910413813850470696893111402496071730805;
+    uint256 constant ALPHA_X = 17853193267699488881597414829022721331999258352644634601366848516653624135528;
+    uint256 constant ALPHA_Y = 13761165673765961774584058349070357600107071374602774781273661188166455983219;
 
     // Groth16 beta point in G2 in powers of i
-    uint256 constant BETA_NEG_X_0 = 10132379024334311937102134084082018939611903444696323658055622689379802571177;
-    uint256 constant BETA_NEG_X_1 = 7954671686263205402039807964568155124973136581340592469535191742207151429185;
-    uint256 constant BETA_NEG_Y_0 = 1424678266247011869843226927262210398210126225871788759363082105651205941706;
-    uint256 constant BETA_NEG_Y_1 = 5464599001595561955914742380472976140803526915136120921236131957751574061174;
+    uint256 constant BETA_NEG_X_0 = 8468607036158508715337403278622049334523510988285370927611449730468998416527;
+    uint256 constant BETA_NEG_X_1 = 17654767036633803442119698287906206323083535508648852444825286647562668117241;
+    uint256 constant BETA_NEG_Y_0 = 12601042646879598281414111937652734428259517610415149365034505682906162874336;
+    uint256 constant BETA_NEG_Y_1 = 10365398926960754956420820199562996977349453710429523358415257091325356664396;
 
     // Groth16 gamma point in G2 in powers of i
-    uint256 constant GAMMA_NEG_X_0 = 13335851599683803930471098964147254740007310967773868652607417899144756445549;
-    uint256 constant GAMMA_NEG_X_1 = 12521204376551808928444760243933353306984102343737873286936384168030345004238;
-    uint256 constant GAMMA_NEG_Y_0 = 15569955436760138287292762879444205527287189457596723585013409739632594659620;
-    uint256 constant GAMMA_NEG_Y_1 = 20710372527898353954779480863461276950682610361480121366140962538457715393670;
+    uint256 constant GAMMA_NEG_X_0 = 8495175170904303125674585956245238474385183131251654220547779612191565341175;
+    uint256 constant GAMMA_NEG_X_1 = 507737886303756832705797293447022323487141511987194517247041679616703082464;
+    uint256 constant GAMMA_NEG_Y_0 = 13817911312821800528467546194288210876614621811656664328394270876130468012176;
+    uint256 constant GAMMA_NEG_Y_1 = 17726217188974490402099268814713570582611763026387349508324638381438918618077;
 
     // Groth16 delta point in G2 in powers of i
-    uint256 constant DELTA_NEG_X_0 = 12939613620518184160371469247383558981784175542420648773647620806761982499366;
-    uint256 constant DELTA_NEG_X_1 = 9418580647886801234265580802058476906364938321025632474860075147284181900683;
-    uint256 constant DELTA_NEG_Y_0 = 17172541824103513033443120122574178944964782451268715083438884851382496028025;
-    uint256 constant DELTA_NEG_Y_1 = 25281886869950391271734615931167356274100617510824026044943232690962205524;
+    uint256 constant DELTA_NEG_X_0 = 299137883038719998449662217816600683443827135984185021266931558111016605963;
+    uint256 constant DELTA_NEG_X_1 = 19452835956633374416784657547572565089942417931808272892652661970698758161282;
+    uint256 constant DELTA_NEG_Y_0 = 7186217767654070152032611049796175315630260133560948968953166533429703686137;
+    uint256 constant DELTA_NEG_Y_1 = 7696078793538262541868342834720318864865849155722579581671356506230916856712;
 
     // Constant and public input points
-    uint256 constant CONSTANT_X = 13926443984900262568967731783159072685865938936620608482003447346115501527878;
-    uint256 constant CONSTANT_Y = 17839338033236559118637731742035885787721884989805632522103150677466019820481;
-    uint256 constant PUB_0_X = 12887122662448685126774071840764647436668883128871092199267196348813733284688;
-    uint256 constant PUB_0_Y = 13984393244302458950577646074738983228885885173837509849015345784042612563569;
-    uint256 constant PUB_1_X = 7615802078721498891214776064827332026039963059163392726835569038064765361999;
-    uint256 constant PUB_1_Y = 11982410894083354317698012668170074635989978158164463754539020681031200593885;
-    uint256 constant PUB_2_X = 7970611293168002055738747793510691442726408050803125519545335173809557042574;
-    uint256 constant PUB_2_Y = 9455165404459254409160101583890645848594174363355088605736001659813974400573;
-    uint256 constant PUB_3_X = 18142327826954305856077477606526218428268810618521205486973856705003019740462;
-    uint256 constant PUB_3_Y = 18304234632257449548162013471770046132632260789388594329208600869731108816766;
-    uint256 constant PUB_4_X = 20616145865464372264774699027991493086783161826424917824359766103811880851140;
-    uint256 constant PUB_4_Y = 16356471706874204117723820897214340130001721193023320407400837631175832580773;
+    uint256 constant CONSTANT_X = 3884035263838320425870053384034232249384295052554583549463331788128455756777;
+    uint256 constant CONSTANT_Y = 16729262601785800946717101044887041921579972396917702486182273188689636579927;
+    uint256 constant PUB_0_X = 13929238664034536381986903507115090712215136489572336975223061911075711799475;
+    uint256 constant PUB_0_Y = 7271395892810669736126256670720635316512227134208212972596367823739328023537;
+    uint256 constant PUB_1_X = 20824945505133360079525198713513546214376404239343190984982042595899121147116;
+    uint256 constant PUB_1_Y = 417166153693790557700353256366759162087884608014199661253405827370523842398;
+    uint256 constant PUB_2_X = 14606658069425631219212709395279439516241261710735734343805436840383750978330;
+    uint256 constant PUB_2_Y = 7936047184835618632252181400703734598193566320563775300246927919165001016710;
+    uint256 constant PUB_3_X = 12381571628727264195391124877554610349904348387581581129305140518340373015654;
+    uint256 constant PUB_3_Y = 16159780831182742726588987755791289260055967788485420588305521122155172285259;
+    uint256 constant PUB_4_X = 9387802550956630274570038639245349145667400415628769283231085288017806360603;
+    uint256 constant PUB_4_Y = 2839280905775311919354426940368378286195247108215938167873398140009450946953;
     uint256 constant PUB_5_X = 0;
     uint256 constant PUB_5_Y = 0;
     uint256 constant PUB_6_X = 0;
     uint256 constant PUB_6_Y = 0;
+    uint256 constant PUB_7_X = 12749893664468481370306412946892111573247594942901067639245432442379263257970;
+    uint256 constant PUB_7_Y = 6794065582150919612730153435677834601527671541791134978777114972888219059761;
 
     /// Negation in Fp.
     /// @notice Returns a number x such that a + x = 0 in Fp.
@@ -195,7 +197,7 @@ library Convert2USDCVerifier {
         // Check result to make sure we found a root.
         // Note: this also fails if a0 or a1 is not reduced.
         if (a0 != addmod(mulmod(x0, x0, P), negate(mulmod(x1, x1, P)), P)
-        ||  a1 != mulmod(2, mulmod(x0, x1, P), P)) {
+            ||  a1 != mulmod(2, mulmod(x0, x1, P), P)) {
             revert ProofInvalid();
         }
     }
@@ -367,7 +369,7 @@ library Convert2USDCVerifier {
     /// @param input The public inputs. These are elements of the scalar field Fr.
     /// @return x The X coordinate of the resulting G1 point.
     /// @return y The Y coordinate of the resulting G1 point.
-    function publicInputMSM(uint256[7] calldata input)
+    function publicInputMSM(uint256[8] calldata input)
     internal view returns (uint256 x, uint256 y) {
         // Note: The ECMUL precompile does not reject unreduced values, so we check this.
         // Note: Unrolling this loop does not cost much extra in code-size, the bulk of the
@@ -433,6 +435,13 @@ library Convert2USDCVerifier {
             success := and(success, lt(s, R))
             success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
             success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
+            mstore(g, PUB_7_X)
+            mstore(add(g, 0x20), PUB_7_Y)
+            s :=  calldataload(add(input, 224))
+            mstore(add(g, 0x40), s)
+            success := and(success, lt(s, R))
+            success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
+            success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
 
             x := mload(f)
             y := mload(add(f, 0x20))
@@ -469,7 +478,7 @@ library Convert2USDCVerifier {
     /// Elements must be reduced.
     function verifyCompressedProof(
         uint256[4] calldata compressedProof,
-        uint256[7] calldata input
+        uint256[8] calldata input
     ) public view {
         uint256[24] memory pairings;
 
@@ -536,7 +545,7 @@ library Convert2USDCVerifier {
     /// Elements must be reduced.
     function verifyProof(
         uint256[8] calldata proof,
-        uint256[7] calldata input
+        uint256[8] calldata input
     ) public view {
         (uint256 x, uint256 y) = publicInputMSM(input);
 
@@ -546,14 +555,14 @@ library Convert2USDCVerifier {
         assembly ("memory-safe") {
             let f := mload(0x40) // Free memory pointer.
 
-            // Copy points (A, B, C) to memory. They are already in correct encoding.
-            // This is pairing e(A, B) and G1 of e(C, -δ).
+        // Copy points (A, B, C) to memory. They are already in correct encoding.
+        // This is pairing e(A, B) and G1 of e(C, -δ).
             calldatacopy(f, proof, 0x100)
 
-            // Complete e(C, -δ) and write e(α, -β), e(L_pub, -γ) to memory.
-            // OPT: This could be better done using a single codecopy, but
-            //      Solidity (unlike standalone Yul) doesn't provide a way to
-            //      to do this.
+        // Complete e(C, -δ) and write e(α, -β), e(L_pub, -γ) to memory.
+        // OPT: This could be better done using a single codecopy, but
+        //      Solidity (unlike standalone Yul) doesn't provide a way to
+        //      to do this.
             mstore(add(f, 0x100), DELTA_NEG_X_1)
             mstore(add(f, 0x120), DELTA_NEG_X_0)
             mstore(add(f, 0x140), DELTA_NEG_Y_1)
@@ -571,9 +580,9 @@ library Convert2USDCVerifier {
             mstore(add(f, 0x2c0), GAMMA_NEG_Y_1)
             mstore(add(f, 0x2e0), GAMMA_NEG_Y_0)
 
-            // Check pairing equation.
+        // Check pairing equation.
             success := staticcall(gas(), PRECOMPILE_VERIFY, f, 0x300, f, 0x20)
-            // Also check returned value (both are either 1 or 0).
+        // Also check returned value (both are either 1 or 0).
             success := and(success, mload(f))
         }
         if (!success) {

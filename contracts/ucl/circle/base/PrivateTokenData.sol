@@ -13,7 +13,7 @@ abstract contract PrivateTokenData is Ownable {
     IL2Event internal _l2Event;
     
     mapping(address => TokenModel.Account) internal _accounts;
-    mapping(address => TokenModel.ElGamal) internal _privateMinterAllowed;
+    mapping(address => TokenModel.ElGamalToken) internal _privateMinterAllowed;
     
     TokenModel.ElGamal internal _privateTotalSupply;
     uint256 internal _numberOfTotalSupplyChanges;
@@ -79,11 +79,11 @@ abstract contract PrivateTokenData is Ownable {
         delete _accounts[account].assets[tokenId];
     }
     
-    function getPrivateMinterAllowed(address minter) external view returns (TokenModel.ElGamal memory) {
+    function getPrivateMinterAllowed(address minter) external view returns (TokenModel.ElGamalToken memory) {
         return _privateMinterAllowed[minter];
     }
     
-    function setPrivateMinterAllowed(address minter, TokenModel.ElGamal memory allowed) external onlyAuthorized {
+    function setPrivateMinterAllowed(address minter, TokenModel.ElGamalToken memory allowed) external onlyAuthorized {
         _privateMinterAllowed[minter] = allowed;
     }
     
