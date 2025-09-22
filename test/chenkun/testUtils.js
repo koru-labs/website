@@ -178,7 +178,7 @@ async function testDirectMintByAuth() {
 
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.timeEnd('testDirectMint');
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
     return response;
   } catch (error) {
     console.error(`Direct minting test failed: ${error.message}`);

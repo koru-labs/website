@@ -15,11 +15,12 @@
   "contracts": {
     "HamsaL2Event": "0x803a5E06dE333B2Ad7C7F3C4bE71CDC9d7c341a8",
     "InstitutionUserRegistry": "0x125624F0916d71451DaF172046641EB1671B465C",
-    "InstUserProxy": "0x61f3D27725BEcF3C3724f37493b6365a301ea12E"
+    "InstUserProxy": "0x61f3D27725BEcF3C3724f37493b6365a301ea12E",
+    "PrivateERCToken": "0x3536Ca51D15f6fc0a76c1f42693F7949b5165F0D"
   },
   "accounts": {},
   "metadata": {
-    "timestamp": "2025-09-22T06:38:21.065Z",
+    "timestamp": "2025-09-22T06:49:14.602Z",
     "network": "dev_ucl_L2",
     "chainId": "1337"
   }
