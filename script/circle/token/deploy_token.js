@@ -3,7 +3,9 @@ const {ethers} = hre;
 const hardhatConfig = require('../../../hardhat.config');
 const accounts = require("../../../deployments/account.json");
 const config = require("../configuration");
-
+const {createClient} = require("../../../test/qa/token_grpc");
+const grpc = require("@grpc/grpc-js");
+const rpcUrl =  "dev-node3-rpc.hamsa-ucl.com:50051";
 async function deployToken(deployed) {
     let hamsal2event = deployed.contracts.HamsaL2Event;
     let institutionRegistration = deployed.contracts.InstUserProxy;
@@ -130,12 +132,6 @@ function extractMinterUsers() {
 
 async function setMinterAllowed(deployed) {
     // 100000000
-    const minterAllowedAmount = {
-        "cl_x": 1964037076661478832091343095893178906711955991017793273625890630250133225131n,
-        "cl_y": 15905501110278917982136565763010546337694082364420938370758314633459389867828n,
-        "cr_x": 6032315780222124442197125438972811787823257335241885174315052214529236213245n,
-        "cr_y": 4661193269845438292333666932675091279526371009153842373600639673542587256610n,
-    }
 
     console.log("Configuring minter allowed amount...");
 
@@ -152,23 +148,44 @@ async function setMinterAllowed(deployed) {
     });
     const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
 
+    const client = createClient(rpcUrl);
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
     for (const minter of minters) {
+        let response = await client.encodeElgamalAmount(100000000, metadata);
+        const tokenId = ethers.toBigInt(response.token_id);
+        const clx = ethers.toBigInt(response.amount.cl_x);
+        const cly = ethers.toBigInt(response.amount.cl_y);
+        const crx = ethers.toBigInt(response.amount.cr_x);
+        const cry = ethers.toBigInt(response.amount.cr_y);
+        const minterAllowedAmount = {
+            "id": tokenId,
+            "cl_x": clx,
+            "cl_y": cly,
+            "cr_x": crx,
+            "cr_y": cry,
+        }
         await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
         await privateUSDC.configureMinter(minter.account, 100000000);
         console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`);
     }
-    // await sleep(10000)
-    // for (const minter of minters){
-    //     const allowedAmount = await privateUSDC.getPrivateMinterAllowed(minter.account);
-    //     console.log(`Minter allowed amount for ${minter.name} (${minter.account}):`, allowedAmount);
-    // }
 }
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function createAuthMetadata(privateKey, messagePrefix = "login") {
+    const wallet = new ethers.Wallet(privateKey);
+    const timestamp = Math.floor(Date.now() / 1000);
+    const message = `${messagePrefix}_${timestamp}`;
+    const signature = await wallet.signMessage(message);
 
+    const metadata = new grpc.Metadata();
+    metadata.set('address', wallet.address.toLowerCase());
+    metadata.set('signature', signature);
+    metadata.set('message', message);
+
+    return metadata;
+}
 module.exports = {
     deployToken,
     allowBanksInTokenSmartContract,

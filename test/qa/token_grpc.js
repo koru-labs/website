@@ -109,11 +109,11 @@ function createClient(url) {
         return promisifyByMetadata(client.DecodeElgamalAmount.bind(client), request,metadata);
     };
 
-    client.encodeElgamalAmount = async function (balance) {
+    client.encodeElgamalAmount = async function (balance,metadata) {
         const request = {
             amount: balance,
         };
-        return promisify(client.EncodeElgamalAmount.bind(client), request);
+        return promisifyByMetadata(client.EncodeElgamalAmount.bind(client), request,metadata);
     };
 
     client.getAddressAllowance = async function (ownerAddress, spenderAddress, scAddress, metadata) {

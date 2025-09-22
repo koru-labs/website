@@ -319,11 +319,11 @@ message ConvertToPUSDCRequest {
 
 message ConvertToPUSDCResponse {
   uint64 amount = 1;
-  ElGamal elgamal = 2;
-  repeated string proof = 3;
-  repeated string input = 4;
-  uint64 status_code = 5;
-
+  string token_id = 2;
+  ElGamal elgamal = 3;
+  repeated string proof = 4;
+  repeated string input = 5;
+  uint64 status_code = 6;
 }
 
 message ConvertToUSDCRequest {
@@ -531,7 +531,8 @@ message EncodeAmountRequest {
 }
 
 message EncodeAmountResponse {
-  ElGamal amount = 1;
+  string token_id = 1;
+  ElGamal amount = 2;
 }
 
 message SplitTokenListRequest {
