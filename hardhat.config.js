@@ -15,7 +15,7 @@ module.exports = {
                 },
             },
             viaIR: true,
-            evmVersion: "cancun" // Add this line to enable EIP-4844 support
+            // evmVersion: "cancun" // Add this line to enable EIP-4844 support
         },
     },
     mocha: {
