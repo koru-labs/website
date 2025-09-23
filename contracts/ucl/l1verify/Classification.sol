@@ -13,42 +13,10 @@ library Classification {
         uint256 end;
     }
 
-//     数据示例
-//    type RollupBetaInputs struct {
-//        G twistededwards.Point `gnark:",public"`
-//        H twistededwards.Point `gnark:",public"`
-//        //split and mint allowance
-//        //merge sum equals to SpentToken
-//        //padding with zerotoken to make sure merge token count is 5
-//        MergeTokenIDArray    [Steps][MergeCount]frontend.Variable    `gnark:",public"`
-//        ChangeTokenIDArray   [Steps]frontend.Variable                `gnark:",public"`
-//        TransTokenIDArray    [Steps]frontend.Variable                `gnark:",public"`
-//        RollbackTokenIDArray [Steps]frontend.Variable                `gnark:",public"`
-//        //temporarily Spender and Backup pk must be equal
-//        SpenderPkArray  [Steps]twistededwards.Point `gnark:",public"`
-//        ReceiverPkArray [Steps]twistededwards.Point `gnark:",public"`
-//        BackupPkArray   [Steps]twistededwards.Point `gnark:",public"`
-//
-//
-//        //padding with zero amount, zero token to make sure merge token count is 5
-//        ConvertPkArray              [Steps]twistededwards.Point `gnark:",public"`
-//        AmountSpendArray            [Steps]frontend.Variable    `gnark:",public"`
-//        AmountReceivedArray         [Steps]frontend.Variable    `gnark:",public"`
-//        ConvertTokenReceivedIDArray [Steps]frontend.Variable    `gnark:",public"`
-//        ConvertTokenSpendIDArray    [Steps]frontend.Variable    `gnark:",public"`
-//
-//
-//        // hashchain
-//        HashChainStepArray [Steps + 1]frontend.Variable `gnark:",public"`
-//    }
-
-
-    // 分类
     function classify(uint256[] memory input) public pure returns (ArrayPosition[] memory positions) {
         require(input.length == EXPECTED_LENGTH, "Invalid input length");
         positions = new ArrayPosition[](18);
 
-        // 计算每个数组的偏移量
         uint256 offset = 4;
 
         // MergeTokenID (0)

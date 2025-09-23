@@ -83,6 +83,7 @@ abstract contract PrivateTokenCore is
     {
         _publicTotalSupply = publicTotalSupply;
     }
+    
     function privateMint(
         address to,
         TokenModel.TokenEntity memory entity,
@@ -275,7 +276,6 @@ abstract contract PrivateTokenCore is
     virtual
     returns (bool)
     {
-        trackTimeConsumption(tokenIds[0],"privateTransfers start");
         for (uint256 i = 0; i < tokenIds.length; i++) {
             require(tokenIds[i] != 0, "PrivateERCToken: tokenId is zero");
             require(_accounts[msg.sender].assets[tokenIds[i]].id != 0, "invalid token");
@@ -307,7 +307,6 @@ abstract contract PrivateTokenCore is
             emit PrivateTransfer(msg.sender, tokenEntity.to, tokenEntity.amount);
         }
 
-        trackTimeConsumption(tokenIds[0],"privateTransfers end");
         return true;
     }
 
@@ -335,33 +334,5 @@ abstract contract PrivateTokenCore is
 
         TokenEventLib.triggerRollupForCancel(_l2Event, address(this), transferToken.owner,transferToken.to, toPk,tokenId);
         return true;
-    }
-
-    function trackTimeConsumption(uint256 traceId,string memory stepName) internal  returns (bool){
-        bytes memory data = abi.encode(traceId, stepName);
-
-        (bool success, ) = 0x0000000000000000000000000000000000002060.call(data);
-        return success;
-    }
-
-    function precompiledAddElGamal(
-        TokenModel.ElGamal memory token1,
-        TokenModel.ElGamal memory token2
-    ) internal returns (TokenModel.ElGamal memory result) {
-        bytes memory input = abi.encode(
-            token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
-            token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
-        );
-        (bool success, bytes memory data) = address(0x2040).call(input);
-        require(success, "Precompiled addition failed");
-
-        (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
-
-        result = TokenModel.ElGamal({
-            cl_x: leftX,
-            cl_y: leftY,
-            cr_x: rightX,
-            cr_y: rightY
-        });
     }
 }

@@ -8,17 +8,15 @@ import "./PrivateTokenData.sol";
 import "./lib/TokenUtilsLib.sol";
 
 contract Handle is PrivateTokenData{
-    // 常量定义
     uint256 constant MERGE_COUNT = Classification.MERGE_COUNT;
     uint256 constant STEPS = Classification.STEPS;
     uint256 constant CONVERT_ZERO_ID = 1505316567199851152165060447902183125321829991706456652247881137933729532273;
     uint256 constant MERGE_ZERO_ID = 15037089479531276094807511187368919652296362232455374635334171080622055606564;
 
-    // 分类结果结构体
     struct ClassificationResult {
-        bool isConvert;              // 是否为convert交易
-        bool isPrivateToAmount;    // 是否为private token转amount的交易
-        bool isAmountToPrivate;    // 是否为amount转private token的交易
+        bool isConvert;
+        bool isPrivateToAmount;
+        bool isAmountToPrivate;
     }
 
     // mint
@@ -31,43 +29,14 @@ contract Handle is PrivateTokenData{
         TokenUtilsLib.removeToken(_accounts,spenderPkX, tokenId);
     }
 
-    // 验证
     function handle(uint256[8] calldata proof, uint256[51] calldata inputs) public returns (bool) {
         Verifier.verifyProof(proof, inputs);
 
-        // 定长数组改为动态数组
         uint256[] memory input = new uint256[](inputs.length);
 
-        // 将calldata数组复制到memory数组
         for (uint256 i = 0; i < inputs.length; i++) {
             input[i] = inputs[i];
         }
-
-        //     数据示例
-
-
-////        // MergeTokenID (0)
-////        // ChangeTokenID (1)
-////        // TransTokenIDArray (2)
-////        // RollbackTokenIDArray (3)
-////        // SpenderPkArray (4)
-////
-////        // ReceiverPkArray (5)
-////
-////        // BackupPkArray (6)
-////
-////        // ConvertSpenderPkArray (7)
-////
-////        // AmountSpendArray (8)
-////
-////        // AmountReceivedArray (9)
-////
-////        // ConvertTokenReceivedIDArray (10)
-////
-////        // ConvertTokenSpendIDArray (11)
-////
-////        // HashChainStepArray (12)
-         // ConvertReceiverPkArray (13)
 
         Classification.ArrayPosition[] memory positions = Classification.classify(input);
         Classification.ArrayPosition memory MergeTokenIDPosition = positions[0];
@@ -88,25 +57,24 @@ contract Handle is PrivateTokenData{
         for (uint256 i = 0; i < Classification.STEPS; i++) {
             // 检查是否为0
             if (input[MergeTokenIDPosition.start + MERGE_COUNT * i] == CONVERT_ZERO_ID) {
-                //如果是，说明是一个convert交易，不用解析上半部分的"5拆3逻辑"（进入第2步）
+           //If yes, it means it is a convert transaction, and there is no need to analyze the "5 split 3 logic" in the upper part (enter step 2)
                 uint256 convertTokenReceivedIDIndex = ConvertTokenReceivedIDArrayPosition.start + i;
                 if(input[convertTokenReceivedIDIndex] == CONVERT_ZERO_ID) {
-                    //如果是，说明是private token转成amount的交易，应该处理
+                   // If yes, it indicates that it is a transaction that private token to amount and should be processed.
                     uint256 convertTokenSpendIDIndex = ConvertTokenSpendIDArrayPosition.start + i;
                     require(input[convertTokenSpendIDIndex] == CONVERT_ZERO_ID, "all tokens are empty");
 
-                    // 修复数组切片语法错误
                     uint256[] memory convertTokenSpendIDArray = sliceArray(input, ConvertTokenSpendIDArrayPosition.start+i, ConvertTokenSpendIDArrayPosition.start+i+1);
                     uint256[] memory ConvertSpenderPkArray = sliceArray(input, ConvertSpenderPkArrayPosition.start+i*2, ConvertSpenderPkArrayPosition.start+i*2+2);
                     processPrivateToAmount(convertTokenSpendIDArray[0],transferPublicKeyToAddress(ConvertSpenderPkArray));
                 }else{
-                    //如果不是，说明是public转成private token的交易，应该处理
+                   // If not, it means that the transaction is converted from public to private token and should be processed.
                     uint256[] memory ConvertTokenReceivedIDArray = sliceArray(input, ConvertTokenReceivedIDArrayPosition.start+i, ConvertTokenReceivedIDArrayPosition.start+i+1);
                     uint256[] memory ConvertReceiverPkArray = sliceArray(input, ConvertReceiverPkArrayPosition.start+i*2, ConvertReceiverPkArrayPosition.start+i*2+2);
                     processAmountToPrivate(ConvertTokenReceivedIDArray[0],transferPublicKeyToAddress(ConvertReceiverPkArray));
                 }
             }else{
-                //如果不是，则解析"5拆3"的token，忽略converts（continue）
+               //If not, parse the token of "5 split 3" and ignore the converts(continue)
                 uint256[] memory MergeTokenIDArray = sliceArray(input, MergeTokenIDPosition.start  + MERGE_COUNT * i, MergeTokenIDPosition.start  + MERGE_COUNT * i + 1);
                 uint256[] memory changeTokenIDArray = sliceArray(input, ChangeTokenIDPosition.start+i, ChangeTokenIDPosition.start+i+1);
                 uint256[] memory transferTokenIDArray = sliceArray(input, TransTokenIDArrayPosition.start+i, TransTokenIDArrayPosition.start+i+1);
@@ -120,7 +88,6 @@ contract Handle is PrivateTokenData{
         return true;
     }
 
-    // 实现数组切片功能
     function sliceArray(uint256[] memory array, uint256 start, uint256 end) private  returns (uint256[] memory) {
         uint256 length = end - start;
         uint256[] memory result = new uint256[](length);
