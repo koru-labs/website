@@ -12,23 +12,6 @@ import { Mintable } from "../../../usdc/v1/Mintable.sol";
 import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface ISimpleToken {
-    function callPrecompiledAdd(
-        uint256 p1LeftX, uint256 p1LeftY, uint256 p1RightX, uint256 p1RightY,
-        uint256 p2LeftX, uint256 p2LeftY, uint256 p2RightX, uint256 p2RightY
-    ) external;
-
-    function callPrecompiledSub(
-        uint256 p1LeftX, uint256 p1LeftY, uint256 p1RightX, uint256 p1RightY,
-        uint256 p2LeftX, uint256 p2LeftY, uint256 p2RightX, uint256 p2RightY
-    ) external;
-
-    function leftX() external view returns (uint256);
-    function leftY() external view returns (uint256);
-    function rightX() external view returns (uint256);
-    function rightY() external view returns (uint256);
-}
-
 abstract contract PrivateTokenCore is
     PrivateTokenData,
     Pausable,
