@@ -5,8 +5,8 @@ module.exports = {
             "HAMSAL2EVENT": "0x803a5E06dE333B2Ad7C7F3C4bE71CDC9d7c341a8",
             "L1_HANDLE": "0xb4B46bdAA835F8E4b4d8e208B6559cD267851051",
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
-            "INSTITUTION_REGISTRATION": "0x34fD516922585FEFEfd31d83e8d33565E2325fE5",
-            "PROXY_ADDRESS": "0x3009FffAAad3FCCe1121Ed2BFD124163d72e0E4D"
+            "INSTITUTION_REGISTRATION": "0x4118Ea231617AADB2fDC5B130D645932c0c3f441",
+            "PROXY_ADDRESS": "0x08fF503014d9D2d7f513fd9A5483A50D84F02684"
         },
     institutions: [
         // {
@@ -45,7 +45,7 @@ module.exports = {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            // rpcUrl: "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051",
+            // rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
             rpcUrl: "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051",
             nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
