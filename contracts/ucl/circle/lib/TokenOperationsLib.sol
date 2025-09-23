@@ -30,7 +30,7 @@ library TokenOperationsLib {
             amount: amount,
             to: address(0),
             rollbackTokenId: 0,
-            tokenType: 1
+            tokenType: TokenModel.TokenType.changed
         });
 
         tokensMap[tokenId] = entity;
