@@ -152,12 +152,13 @@ abstract contract PrivateTokenCore is
     }
 
     function privateBurn(uint256 tokenId) external onlyAllowedBank nonReentrant virtual {
-        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(tokenId != 0, "tokenId is zero");
+        require(_accounts[msg.sender].assets[tokenId].id != 0, "token not exists");
         TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[entity.rollbackTokenId];
         require(entity.id != 0, "invalid token");
 
-        require(entity.tokenType != 22, "PrivateERCToken: token type is not burn");
+        require(entity.tokenType != 22, "token type is not burn");
 
         TokenModel.ElGamal memory supplyDecrease = _accounts[msg.sender].assets[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
@@ -247,6 +248,7 @@ abstract contract PrivateTokenCore is
     returns (bool)
     {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+        require(_accounts[msg.sender].assets[tokenId].id != 0, "invalid token");
         TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
         address to = tokenEntity.to;
@@ -293,6 +295,7 @@ abstract contract PrivateTokenCore is
         trackTimeConsumption(tokenIds[0],"privateTransfers start");
         for (uint256 i = 0; i < tokenIds.length; i++) {
             require(tokenIds[i] != 0, "PrivateERCToken: tokenId is zero");
+            require(_accounts[msg.sender].assets[tokenIds[i]].id != 0, "invalid token");
 
             TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenIds[i]];
             TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
