@@ -37,9 +37,9 @@ async function deployToken(deployed) {
     console.log("Initializing PrivateUSDC...");
     const initTx = await privateUSDC.initialize(
         "Private USDC",
-        "PUSDC",
+        "USDC",
         "USD",
-        6,
+        4,
         accounts.MasterMinter,
         accounts.Pauser,
         accounts.BlackLister,
