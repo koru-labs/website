@@ -8,12 +8,6 @@ const  {
 } = require("./deploy_infra")
 const {deployInstProxy, deployInstUserRegistry} = require("./deploy_inst_user_registry")
 
-
-const registerInstitutionAndUser = require("./register_inst_user")
-
-const {loadExistingDeployments, saveDeploymentInfo} = require("../deploy_help");
-const {sleep} = require("../../../test/help/testHelp");
-
 async function main() {
     let deployed = {
         libraries: {},
@@ -30,7 +24,7 @@ async function main() {
     await saveDeploymentInfo(deployed,hre, ethers, fs, path);
 }
 
-// main().then();
+main().then();
 
 //execute after main is completed and k8s configuration is updated and ucl-node are been restarted
-registerInstitutionAndUser().then();
+// registerInstitutionAndUser().then();

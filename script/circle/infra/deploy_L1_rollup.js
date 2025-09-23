@@ -1,20 +1,5 @@
-const { ethers, run, network } = require("hardhat");
-const hardhatConfig = require('../../hardhat.config');
-const accounts = require('./../../deployments/account.json');
+const {ethers} = require("hardhat");
 
-const l1CustomNetwork = {
-    name: "ETH",
-    chainId: 3151908
-};
-
-const options = {
-    batchMaxCount: 1,
-    staticNetwork: true
-};
-
-// const L1Url = hardhatConfig.networks.eth_L1_dev.url;
-// const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-// const ownerWallet = new ethers.Wallet(hardhatConfig.networks.eth_L1_dev.accounts[0], ethers.provider);
 
 async function deployHandle() {
     const [ownerWallet] = await ethers.getSigners();

@@ -15,7 +15,7 @@ module.exports = {
                 },
             },
             viaIR: true,
-            // evmVersion: "cancun" // 添加这一行以启用EIP-4844支持
+            evmVersion: "cancun" // Add this line to enable EIP-4844 support
         },
     },
     mocha: {
@@ -72,18 +72,6 @@ module.exports = {
                 "f083c679bb978f6e2eb8611de27319b2e3a329d307eb5fd1d532a1cd6b63fff9", //bA268f776F70caDB087e73020dfE41c7298363Ed    // node 4 user
                 "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca", //4568E35F2c4590Bde059be615015AaB6cc873004
                 "5ce8c4aea462de54d0a8ecbfe5cc8c8ac18926979c66a66e5a463ba8506401c0", //fE5acd71116FB8a03510FF171222F01164609c97，admin,do not use business processes
-            ],
-        },
-        ucl_node3: {
-            url: "qa-node3-rpc.hamsa-ucl.com:50051", //node3 url
-            accounts: [
-                "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", //
-            ],
-        },
-        ucl_node4: {
-            url: "qa-node4-rpc.hamsa-ucl.com:50051", //node4 url
-            accounts: [
-                "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", //
             ],
         },
         eth_L1_qa: {
