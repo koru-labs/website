@@ -140,10 +140,6 @@ async function mintForStart() {
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet);
     console.log("Minting transaction receipt:", receipt);
 
-    await sleep(CONSTANTS.waitTimes.medium);
-    console.log("Checking balance after minting...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    
     return receipt;
   } catch (error) {
     console.error(`Minting test failed: ${error.message}`);
@@ -216,7 +212,7 @@ async function testDirectBurnByAuth() {
     console.log("Direct burn completed, time:", new Date(endTime).toISOString());
     console.log(`Total time: ${(endTime - startTime) / 1000} seconds`);
     
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
     return response;
   } catch (error) {
     console.error(`Direct burn test failed: ${error.message}`);
@@ -296,16 +292,16 @@ async function testTransferFromByAuth() {
       config.contracts.PrivateERCToken,
       accounts.Minter,
       accounts.To1,
-        tokenId3,
+        ethers.toBigInt(response.transfer_token_id),
     );
     console.log("Authorized transfer receipt:", receipt);
     
     await sleep(CONSTANTS.waitTimes.long);
     
     console.log("Checking balances after authorized transfer...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Spender1, metadata2);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata3);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Spender1, metadata2);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata3);
     
     return receipt;
   } catch (error) {
@@ -347,7 +343,7 @@ async function testReserveTokensAndBurn() {
     );
     
     await sleep(CONSTANTS.waitTimes.medium);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
     
     return receipt;
   } catch (error) {
@@ -418,13 +414,13 @@ async function testReserveTokensAndTransfer() {
       config.contracts.PrivateERCToken,
         tokenId1
     );
-    
+
     await sleep(CONSTANTS.waitTimes.short);
 
     console.log("Checking balances after transfer...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1);
-    return receipt;
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
+    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1);
+    // return receipt;
   } catch (error) {
     console.error(`Reserve tokens and transfer test failed: ${error.message}`);
     throw error;
@@ -573,14 +569,22 @@ async function testConvert2pUSDC() {
       cr_x: ethers.toBigInt(proofResult.elgamal.cr_x),
       cr_y: ethers.toBigInt(proofResult.elgamal.cr_y)
     };
+    const token = {
+      id: ethers.toBigInt(proofResult.token_id),
+      owner: accounts.Minter,
+      status: 2,
+      amount: elAmount,
+      to: accounts.Minter,
+      rollbackTokenId: 0n,
+      tokenType: 4,
+    }
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
 
     console.log("Executing conversion to private USDC...");
-    const tx = await contract.convert2pUSDC(CONSTANTS.defaultAmount, elAmount, input, proof);
+    const tx = await contract.convert2pUSDC(CONSTANTS.defaultAmount, token, input, proof);
     let receipt = await tx.wait();
     console.log("Conversion transaction receipt:", receipt);
-    
     return receipt;
   } catch (error) {
     console.error(`Conversion to private USDC test failed: ${error.message}`);
@@ -601,7 +605,8 @@ async function testConvert2USDC() {
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.Minter,
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      comment:"123"
     };
     
     console.log("Splitting token...");
@@ -624,7 +629,7 @@ async function testConvert2USDC() {
     const input = proofResult.input.map(i => ethers.toBigInt(i));
     
     console.log("Executing conversion to public USDC...");
-    const tx = await contract.convert2USDC('0x' + tokenId, proofResult.amount, input, proof);
+    const tx = await contract.convert2USDC(ethers.toBigInt(tokenId) , proofResult.amount, input, proof);
     let receipt = await tx.wait();
     console.log("Conversion transaction receipt:", receipt);
     
@@ -690,8 +695,9 @@ async function testGetBalance() {
 async function testSetMintAllowed() {
   try {
     const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, adminWallet);
-    let tx = await contract.updateAllowedBank(accounts.Owner, true);
-    await tx.wait();
+    // let tx = await contract.updateAllowedBank(accounts.Owner, true);
+    // await tx.wait();
+    let tx = await contract.getAccountTokenById(accounts.Minter,17904666504371553379015644188718150815607032362468671403327646253243945533638n );
     console.log("Conversion transaction receipt:", tx);
   } catch (error) {
     console.error(`Conversion to public USDC test failed: ${error.message}`);
@@ -705,7 +711,7 @@ async function testSetMintAllowed() {
 async function runTests() {
   try {
     // Basic tests
-    // await mintForStart();
+    await mintForStart();
     
     // Token operation tests
     // await testReserveTokensAndBurn();
@@ -715,7 +721,7 @@ async function runTests() {
     // await testTransferFromByAuth();
     
     // Direct transaction tests
-    await testDirectMintByAuth();
+    // await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
     

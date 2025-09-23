@@ -22,13 +22,30 @@ const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 const key = hardhatConfig.networks.dev_ucl_L2.accounts[0];
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
-    const amount = {
-        cl_x: ethers.toBigInt(proofResult.amount.cl_x),
-        cl_y: ethers.toBigInt(proofResult.amount.cl_y),
-        cr_x: ethers.toBigInt(proofResult.amount.cr_x),
-        cr_y: ethers.toBigInt(proofResult.amount.cr_y)
+    const newToken = {
+        id : ethers.toBigInt(proofResult.token.token_id),
+        owner: proofResult.to_address,
+        status: 2,
+        amount: {
+            cl_x: ethers.toBigInt(proofResult.token.cl_x),
+            cl_y: ethers.toBigInt(proofResult.token.cl_y),
+            cr_x: ethers.toBigInt(proofResult.token.cr_x),
+            cr_y: ethers.toBigInt(proofResult.token.cr_y),
+        },
+        to: proofResult.to_address,
+        rollbackTokenId: ethers.toBigInt(0),
+        tokenType: 2,
+    }
+
+    const mintAllowed = {
+        id : ethers.toBigInt(proofResult.mint_allowed.token_id),
+        cl_x: ethers.toBigInt(proofResult.mint_allowed.cl_x),
+        cl_y: ethers.toBigInt(proofResult.mint_allowed.cl_y),
+        cr_x: ethers.toBigInt(proofResult.mint_allowed.cr_x),
+        cr_y: ethers.toBigInt(proofResult.mint_allowed.cr_y)
     };
     const supplyAmount = {
+        id : ethers.toBigInt(proofResult.supply_amount.token_id),
         cl_x: ethers.toBigInt(proofResult.supply_amount.cl_x),
         cl_y: ethers.toBigInt(proofResult.supply_amount.cl_y),
         cr_x: ethers.toBigInt(proofResult.supply_amount.cr_x),
@@ -36,8 +53,8 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
     };
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
-
-    const tx = await contract.privateMint(proofResult.to_address,amount,supplyAmount,proof,input);
+    console.log(newToken,mintAllowed,supplyAmount)
+    const tx = await contract.privateMint(proofResult.to_address,newToken,mintAllowed,supplyAmount,proof,input);
     let receipt = await tx.wait();
     return receipt;
 }
