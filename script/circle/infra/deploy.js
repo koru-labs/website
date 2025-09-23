@@ -7,6 +7,7 @@ const  {
     deployL2Event, deployL1Handle,deployL1BlobCommitmentVerify
 } = require("./deploy_infra")
 const {deployInstProxy, deployInstUserRegistry} = require("./deploy_inst_user_registry")
+const {saveDeploymentInfo} = require("../deploy_help");
 
 async function main() {
     let deployed = {
