@@ -10,12 +10,20 @@ library TokenModel {
         ERC1155
     }
 
-
     enum TokenStatus {
         deleted,
         inactive,
         active,
         locked
+    }
+
+    enum TokenType {
+        initial,
+        changed,
+        transferred,
+        rollback,
+        converted,
+        burned
     }
 
     struct ElGamal {
@@ -49,7 +57,7 @@ library TokenModel {
         ElGamal amount;
         address to;
         uint256 rollbackTokenId;
-        uint8 tokenType;
+        TokenType tokenType;
     }
 
     struct Account {

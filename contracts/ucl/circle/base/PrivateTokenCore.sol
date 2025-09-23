@@ -141,7 +141,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[entity.rollbackTokenId];
         require(entity.id != 0, "invalid token");
 
-        require(entity.tokenType != 22, "token type is not burn");
+        require(entity.tokenType == TokenModel.TokenType.burned, "PrivateERCToken: token type is not burn");
 
         TokenModel.ElGamal memory supplyDecrease = _accounts[msg.sender].assets[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
@@ -235,7 +235,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
         TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
         address to = tokenEntity.to;
-        require(tokenEntity.tokenType != 21, "PrivateERCToken: token type is not transfer");
+        require(tokenEntity.tokenType == TokenModel.TokenType.transferred, "PrivateERCToken: token type is not transfer");
 
         delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
 
@@ -282,7 +282,7 @@ abstract contract PrivateTokenCore is
 
             TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenIds[i]];
             TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
-            require(tokenEntity.tokenType != 21, "PrivateERCToken: token type is not transfer");
+            require(tokenEntity.tokenType == TokenModel.TokenType.transferred, "PrivateERCToken: token type is not transfer");
 
             delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
 
