@@ -481,12 +481,23 @@ message MintProofResponse {
   uint64 token_type = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
   string from_address = 4;
   string to_address = 5;
-  ElGamal supply_amount = 6;
-  ElGamal amount = 7;
-  repeated string  proof = 8;
-  repeated string  input = 9;
-  TokenActionStatusEnum status = 10;
+  ElGamalToken token = 6;
+  ElGamalToken supply_amount = 7;
+  ElGamalToken mint_allowed = 8;
+  repeated string  proof = 9;
+  repeated string  input = 10;
+  TokenActionStatusEnum status = 11;
 }
+
+message ElGamalToken {
+  string cl_x = 1;
+  string cl_y = 2;
+  string cr_x = 3;
+  string cr_y = 4;
+  string token_id = 5;
+  uint64 token_type = 6;
+}
+
 
 message MintAllowedRequest {
   string sc_address = 1;
