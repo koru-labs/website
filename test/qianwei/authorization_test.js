@@ -6,7 +6,7 @@ const axios = require('axios');
 
 // const rpcUrl = "localhost:50051";
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
-const rpcUrl = "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051";
+const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051:50051";
 // const httpUrl = "http://localhost:8080";
 // const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
