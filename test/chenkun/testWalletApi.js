@@ -13,7 +13,7 @@ const grpc = require("@grpc/grpc-js");
 const CONSTANTS = {
   // RPC URL configuration
   rpcUrl: "127.0.0.1:50051",
-  // rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051:50051",
+  // rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration

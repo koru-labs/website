@@ -6,7 +6,7 @@ const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
 //dev
-// const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051:50051"
+// const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
 // const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
 // const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
 // const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
