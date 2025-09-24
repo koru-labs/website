@@ -57,7 +57,7 @@ async function getLastBlock() {
 
 // printNetwork().then();
 // deploySimpleToken().then()
-checkBalance().then();
+// checkBalance().then();
 // transfer().then();
 
-// getLastBlock().then();
+getLastBlock().then();
