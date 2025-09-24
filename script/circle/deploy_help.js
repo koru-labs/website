@@ -1,4 +1,7 @@
-
+const path = require("path");
+const fs = require("fs");
+const hre = require("hardhat");
+const {ethers} = hre;
 async function loadExistingDeployments() {
     const deploymentsDir = path.join(__dirname, "../../deployments");
     const filepath = path.join(deploymentsDir, "image9.json");
@@ -26,6 +29,18 @@ async function loadExistingDeployments() {
     return null;
 }
 
+async function loadExistingDeploymentsForL1() {
+    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const filepath = path.join(deploymentsDir, "image9.json");
+
+    if (fs.existsSync(filepath)) {
+        const data = fs.readFileSync(filepath, 'utf8');
+        const existingDeployments = JSON.parse(data);
+        return existingDeployments;
+    }
+    return null;
+}
+
 async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
     console.log("\n=== Save deployment information ===");
     deployed.metadata = {
@@ -47,5 +62,6 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 
 module.exports = {
     loadExistingDeployments,
+    loadExistingDeploymentsForL1,
     saveDeploymentInfo
 }
