@@ -73,7 +73,7 @@ async function deployL1Contract() {
     await deployL1Handle(deployed);
     //need hardhat config ,Enable the parameter: evmVersion: "cancun",
     // and change the contract BlobCommitmentVerify.sol.bak to BlobCommitmentVerify.sol
-    await deployL1BlobCommitmentVerify(deployed);
+    // await deployL1BlobCommitmentVerify(deployed);
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
 }
 
