@@ -2,19 +2,19 @@ module.exports = {
     "ADDRESSES":
         {
             "TOKEN_EVENT_LIB": "",
-            "HAMSAL2EVENT": "0xBD906a754468202E6322C068406aB48fAdF02227",
+            "HAMSAL2EVENT": "0xcD831d7b6e749C30d8be6Edef8C9d14D9EDAbbf2",
             "L1_VERIFY_ADDRESS": "0x5B8B2cf32A63e3974e61A7c4D06BA2F4F5eb383F",
             "L1_BLOB_COMMITMENT_VERIFY": "",
-            "INSTITUTION_REGISTRATION": "0xD046787bB645173609e5A5b352c27CFDE6ac3afc",
-            "PROXY_ADDRESS": "0x358820A757aA47D2076132fc0aF0c18330E5f37F"
+            "INSTITUTION_REGISTRATION": "0xf26ff8557F66Bc16F8b2eaEbAFc55Fe3aa25DC0F",
+            "PROXY_ADDRESS": "0xF04E0b30D01676E78db1F56252a1f5083557a032"
         },
     institutions: [
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            rpcUrl: "a37b7f614e60143549c1faa8c533022f-443108305.us-west-1.elb.amazonaws.com:50051",
-            // rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+            // rpcUrl: "a37b7f614e60143549c1faa8c533022f-443108305.us-west-1.elb.amazonaws.com:50051",
+            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
             publicKey: {
@@ -39,8 +39,8 @@ module.exports = {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
-            // rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
-            rpcUrl: "ac6b8fedea52b4c6ab2676e5d2f779d3-1137370489.us-west-1.elb.amazonaws.com:50051",
+            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
+            // rpcUrl: "ac6b8fedea52b4c6ab2676e5d2f779d3-1137370489.us-west-1.elb.amazonaws.com:50051",
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
             publicKey: {
