@@ -588,6 +588,7 @@ message Token {
   string spender_address = 7;
   string comment = 8;
   TokenActionStatusEnum status = 9;
+  string sc_address = 10;
 }
 
 message SplitTokenDetailRequest {

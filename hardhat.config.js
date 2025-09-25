@@ -90,7 +90,8 @@ module.exports = {
             ],
         },
         ucl_L2_cluster: {
-            url: "http://L2-node2.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
+            url: "http://L2-node44.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
+            url2: "http://3.145.110.33:8545",    //this is bank-node for demo purpose
             accounts: [
                 "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
                 "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732 //// node3 manager address (circle manager, master minter, blackList)

@@ -17,7 +17,7 @@ const {
     createAuthMetadata,
     getAddressBalance2,
     callPrivateRevoke,
-    getApproveTokenList
+    getApproveTokenList, callPrivateMint, getAddressBalance
 } = require("../help/testHelp")
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
@@ -56,71 +56,49 @@ async function getTokenBalanceByAuth(grpcClient, account,scAddress, metadata){
     return Number(balance.balance)
 }
 
-async function getTokenBalanceByAdmin(account,scAddress){
-    const metadata = await  createAuthMetadata(adminPrivateKey)
-    let balance = await getAddressBalance2(client, scAddress, account, metadata)
-    return Number(balance.balance)
+async function getTokenBalanceByAdmin(address,scAddress){
+    const adminMeta = await createAuthMetadata(adminPrivateKey)
+    const result = await getAddressBalance(client,scAddress,address, adminMeta);
+    return result
 }
 
 function convertBigInt2Hex(number) {
     return ethers.toBigInt(number).toString(10)
 }
 
-async function getTokenBalanceOnChain(address,scAddress, metadata){
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
-    let amount = await contract.privateBalanceOf(address)
-    console.log("amount: ", amount)
-    let balance=  {
-        cl_x: convertBigInt2Hex(amount[0]),
-        cl_y: convertBigInt2Hex(amount[1]),
-        cr_x: convertBigInt2Hex(amount[2]),
-        cr_y: convertBigInt2Hex(amount[3])
-    }
-    console.log("balance: ", balance)
-    let decodeAmount = await client.decodeElgamalAmount(balance, metadata)
-    return Number(decodeAmount.balance)
-}
-
-async function getTokenBalanceInNode1(address,scAddress){
-    const metadata = await createAuthMetadata(node4AdminPrivateKey)
-    console.log(node4AdminPrivateKey)
-    // let balance = await client1.getAccountBalance(config.contracts.PrivateERCToken, address,metadata)
-    let balance = await getAddressBalance2(client1, scAddress, address, metadata)
-    // console.log(`address ${address} account balance ${balance.balance} `)
-    // console.log("account balance: ", await getAddressBalance(client, config.contracts.PrivateERCToken, address))
-    return Number(balance.balance)
-}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-async function DirectMint(receiver,amount,scAddress) {
-    const minterMeta = await createAuthMetadata(accounts.MinterKey)
+async function mint(address,amount,scAddress) {
+    const minterMeta = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
-        from_address: accounts.Minter,
         sc_address: scAddress,
         token_type: '0',
-        to_address: receiver,
+        from_address: accounts.Minter,
+        to_address: address,
         amount: amount
     };
-    const response = await client.generateDirectMint(generateRequest,minterMeta);
-    console.log("Generate Mint Proof response:", response);
-    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
-    // await sleep(4000)
+    const response = await client.generateMintProof(generateRequest,minterMeta);
+    console.log("generateMintProof:", response)
+    const receipt = await callPrivateMint(scAddress, response, minterWallet)
+    console.log("callPrivateMint:", receipt)
+    let tx = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,minterMeta)
+    console.log("callPrivateMint:", tx)
+    return  receipt
 }
-async function GenerateTransferSplitProof(toAddress,amount,metadata) {
+async function GenerateTransferSplitProof(toAddress,amount,scAddress,metadata) {
     const splitRequest = {
-        sc_address: config.contracts.PrivateERCToken,
+        sc_address: scAddress,
         token_type: '0',
         from_address: accounts.Minter,
         to_address: toAddress,
         amount: amount,
         comment:"transfer"
     };
-    let response = await client3.generateSplitToken(splitRequest,metadata);
+    let response = await client.generateSplitToken(splitRequest,metadata);
     console.log("Generate transfer Proof response:", response);
-    await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id,metadata)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
     return response
 }
 async function GenerateBurnSplitProof(amount) {
@@ -132,9 +110,9 @@ async function GenerateBurnSplitProof(amount) {
         amount: amount,
         comment:"burn"
     };
-    let response = await client3.generateSplitToken(splitRequest,metadata);
+    let response = await client.generateSplitToken(splitRequest,metadata);
     console.log("Generate burn Proof response:", response);
-    await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id,metadata)
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id,metadata)
     return response
 
 }
@@ -154,7 +132,7 @@ async function approveTokens(tokenAddress, fromWallet, fromAddress, spenderAddre
     let response = await client.generateApproveProof(approveRequest, metadata);
     console.log("Generate Approve Proof response:", response);
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
-    const tokenId = '0x' + response.transfer_token_id;
+    const tokenId = ethers.toBigInt(response.transfer_token_id)
     // console.log("Approve token ID:", tokenId);
     console.log("✅ Approve completed successfully");
     return tokenId;
@@ -511,9 +489,9 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
 
 describe("DVP with different token contract in node3", function () {
     this.timeout(1200000)
-    const scAddress1 = '0x28C716C493045AC3dEA80DDb82827DCd71522D7d';
-    const scAddress2 = '0x1d770e1776F537A26B16B7b6fFF19b0E318421FB';
-    const zkcscAddress = '0x4c2Df2fe415A89DBa4D398952776067080dAA89F';
+    const scAddress1 = '0x1b1fbe1bAa5A27e757f3ABe22259505f3E38067f';
+    const scAddress2 = '0xCC330cD59B92CFeB80d567C4Cd497Bf30DcD69eC';
+    const zkcscAddress = '0xE66733B2D76653EA63ecd2F475742D052B145539';
     const MAX_UINT256 = ethers.MaxUint256;
     const MIN_UINT256 = ethers.MinInt256;
 
@@ -523,6 +501,9 @@ describe("DVP with different token contract in node3", function () {
     let preBalance2,postBalance2;
     let zkcsc;
     let minterMeta,spenderMeta,to1Meta
+
+    const user1Wallet = minterWallet
+    const user2Wallet = to1Wallet;
 
     before(async () => {
         minterMeta = await createAuthMetadata(accounts.MinterKey)
@@ -542,8 +523,8 @@ describe("DVP with different token contract in node3", function () {
     });
 
     it("Mint to user", async () => {
-        await DirectMint(accounts.Minter,amount,scAddress1);
-        await DirectMint(accounts.To1,amount,scAddress2);
+        await mint(accounts.Minter,amount,scAddress1);
+        await mint(accounts.To1,amount,scAddress2);
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
@@ -558,21 +539,21 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.user).equal(preBalance2.user + amount);
 
     });
-    it.only('Deploy ZKCSC ',async () => {
+    it('Deploy ZKCSC ',async () => {
         // zkcsc = await deployZKCSC();
         // console.log("ZKCSC Deployed at:", zkcsc.target)
         zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
     });
-    it.only("DVP transfer", async () => {
+    it("DVP transfer", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp
-        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
@@ -587,7 +568,7 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.minter).equal(preBalance2.minter + amount2);
         expect(postBalance2.user).equal(preBalance2.user - amount2);
     });
-    it.only('DVP transfer and burn ',async () => {
+    it('DVP transfer and burn ',async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -630,7 +611,7 @@ describe("DVP with different token contract in node3", function () {
         await revokeApprovedTokens(to1Wallet,zkcscAddress,scAddress2);
 
     });
-    it('Revoke the recent approvedToken ',async () => {
+    it.only('Revoke the recent approvedToken ',async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -649,10 +630,10 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp
-        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testTwoPartyTransferDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
@@ -739,14 +720,12 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp with mismatched tokens
 
-        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
-
         const timestamp = Date.now().toString();
-        const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
+        const bundleString = `${user1Wallet.address}${user2Wallet.address}${timestamp}DVP`;
         const bundleHash = ethers.keccak256(ethers.toUtf8Bytes(bundleString));
 
         console.log("BundleHash:", bundleHash);
@@ -754,39 +733,45 @@ describe("DVP with different token contract in node3", function () {
         // 2. User1 生成 chunkHash 并签名
         const user1ChunkHash = calculateChunkHash(
             bundleHash,
-            minterWallet.address,
-            to1Wallet.address,
+            user1Wallet.address,
+            user2Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
-        const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
+        const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
         console.log("User1 Signature:", user1Signature);
 
         // 3. User2 生成 chunkHash 并签名
         const user2ChunkHash = calculateChunkHash(
             bundleHash,
-            to1Wallet.address,
-            minterWallet.address,
+            user2Wallet.address,
+            user1Wallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
-        const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
+        const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
         console.log("User2 Signature:", user2Signature);
 
-        // 4. Relayer 聚合并执行 DVP
-        console.log("=== Relayer Executing DVP ===");
         await expect(zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId2, tokenId1],
-            [user1Signature, user2Signature]
-        )).revertedWith("DVP: Invalid chunkHash")
-
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user2TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user1TokenId,
+                signature:user2Signature
+            }],
+            []
+        )).revertedWith("DVP: Signature not from 'from' address for transferFrom")
         postBalance1 = {
             minter: await getTokenBalanceByAdmin(accounts.Minter,scAddress1),
             user: await getTokenBalanceByAdmin(accounts.To1,scAddress1)
@@ -807,11 +792,9 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp with mismatched tokens
-
-        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
 
         const timestamp = Date.now().toString();
         const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
@@ -825,7 +808,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -837,7 +820,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -847,12 +830,21 @@ describe("DVP with different token contract in node3", function () {
         console.log("=== Relayer Executing DVP ===");
         let tx = await zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         );
         let receipt = await tx.wait();
         console.log("Receipt:", receipt)
@@ -860,12 +852,21 @@ describe("DVP with different token contract in node3", function () {
 
         await expect(zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         )).revertedWith("DVP: Bundle already executed")
 
         postBalance1 = {
@@ -888,11 +889,9 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
-        // excute dvp with mismatched tokens
-
-        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
 
         let timestamp = Date.now().toString();
         let bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
@@ -906,7 +905,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         let user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -918,7 +917,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         let user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -928,12 +927,21 @@ describe("DVP with different token contract in node3", function () {
         console.log("=== Relayer Executing DVP ===");
         let tx = await zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         );
 
         let receipt = await tx.wait();
@@ -952,7 +960,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -964,7 +972,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -972,12 +980,21 @@ describe("DVP with different token contract in node3", function () {
 
         await expect(zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         )).revertedWith("PrivateERCToken: invalid allowance token")
 
         postBalance1 = {
@@ -1000,11 +1017,11 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         // excute dvp with mismatched tokens
 
-        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        // await testTwoPartyDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
 
         const timestamp = Date.now().toString();
         const bundleString = `${minterWallet.address}${to1Wallet.address}${timestamp}DVP`;
@@ -1018,7 +1035,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -1030,7 +1047,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -1042,12 +1059,21 @@ describe("DVP with different token contract in node3", function () {
 
         await expect(zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash, user2ChunkHash],
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         )).revertedWith("PrivateERCToken: invalid allowance token")
 
         postBalance1 = {
@@ -1070,10 +1096,10 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
-        await testCancelDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testCancelDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
         await sleep(4000)
         const minterApprovedTokenList = await getApproveTokenList(client,minterWallet.address,scAddress1,zkcscAddress,minterMeta)
         let split_tokens = minterApprovedTokenList.split_tokens
@@ -1083,9 +1109,9 @@ describe("DVP with different token contract in node3", function () {
         let tokenIds = split_tokens.map(token => '0x' + token.token_id);
         console.log("Token IDs:", tokenIds);
 
-        // 验证tokenId1不在已批准的token列表中
-        expect(tokenIds).to.not.include(tokenId1);
-        console.log(`✅ Passed: ${tokenId1} is not in minter approved token list`);
+        // 验证user1TokenId不在已批准的token列表中
+        expect(tokenIds).to.not.include(user1TokenId);
+        console.log(`✅ Passed: ${user1TokenId} is not in minter approved token list`);
 
         const to1ApprovedTokenList = await getApproveTokenList(client,to1Wallet.address,scAddress2,zkcscAddress,to1Meta)
         split_tokens = to1ApprovedTokenList.split_tokens
@@ -1095,9 +1121,9 @@ describe("DVP with different token contract in node3", function () {
         tokenIds = split_tokens.map(token => '0x' + token.token_id);
         console.log("Token IDs:", tokenIds);
 
-        // 验证tokenId1不在已批准的token列表中
-        expect(tokenIds).to.not.include(tokenId2);
-        console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
+        // 验证user1TokenId不在已批准的token列表中
+        expect(tokenIds).to.not.include(user2TokenId);
+        console.log(`✅ Passed: ${user1TokenId} is not in to1 approved token list`);
     });
     it("Cancel DVP to release approved token after revoke", async () => {
         const amount1 = 10
@@ -1105,10 +1131,10 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
         await revokeRecentApprovedToken(minterWallet,zkcscAddress, scAddress1);
-        await testCancelDVP(zkcsc,minterWallet,to1Wallet,tokenId1,tokenId2,scAddress1,scAddress2)
+        await testCancelDVP(zkcsc,minterWallet,to1Wallet,user1TokenId,user2TokenId,scAddress1,scAddress2)
 
         await sleep(4000)
 
@@ -1120,9 +1146,9 @@ describe("DVP with different token contract in node3", function () {
         let tokenIds = split_tokens.map(token => '0x' + token.token_id);
         console.log("Token IDs:", tokenIds);
 
-        // 验证tokenId1不在已批准的token列表中
-        expect(tokenIds).to.not.include(tokenId1);
-        console.log(`✅ Passed: ${tokenId1} is not in minter approved token list`);
+        // 验证user1TokenId不在已批准的token列表中
+        expect(tokenIds).to.not.include(user1TokenId);
+        console.log(`✅ Passed: ${user1TokenId} is not in minter approved token list`);
 
         const to1ApprovedTokenList = await getApproveTokenList(client,to1Wallet.address,scAddress2,zkcscAddress,to1Meta)
         split_tokens = to1ApprovedTokenList.split_tokens
@@ -1132,19 +1158,19 @@ describe("DVP with different token contract in node3", function () {
         tokenIds = split_tokens.map(token => '0x' + token.token_id);
         console.log("Token IDs:", tokenIds);
 
-        // 验证tokenId1不在已批准的token列表中
-        expect(tokenIds).to.not.include(tokenId2);
-        console.log(`✅ Passed: ${tokenId1} is not in to1 approved token list`);
+        // 验证user1TokenId不在已批准的token列表中
+        expect(tokenIds).to.not.include(user2TokenId);
+        console.log(`✅ Passed: ${user1TokenId} is not in to1 approved token list`);
 
     });
-    it("Should Reverted: executeDVP with missing parameters", async () => {
+    it.skip("Should Reverted: executeDVP with missing parameters", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -1159,7 +1185,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -1171,7 +1197,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -1183,12 +1209,21 @@ describe("DVP with different token contract in node3", function () {
         // 1. chunkHashes 数量少于其他参数
         await expect(zkcsc.executeDVP(
             bundleHash,
-            [user1ChunkHash], // 只有一个 chunkHash
-            [minterWallet.address, to1Wallet.address],
-            [to1Wallet.address, minterWallet.address],
-            [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
-            [user1Signature, user2Signature]
+            //transferFromRequests
+            [{
+                from: user1Wallet.address,
+                to: user2Wallet.address,
+                tokenAddress: scAddress1,
+                tokenId: user1TokenId,
+                signature:user1Signature
+            },{
+                from: user2Wallet.address,
+                to: user1Wallet.address,
+                tokenAddress: scAddress2,
+                tokenId: user2TokenId,
+                signature:user2Signature
+            }],
+            []
         )).revertedWith("DVP: Array length mismatch");
 
         // 2. fromAddresses 数量少于其他参数
@@ -1198,7 +1233,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address], // 只有一个 fromAddress
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Array length mismatch");
 
@@ -1209,7 +1244,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address], // 只有一个 toAddress
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Array length mismatch");
 
@@ -1220,7 +1255,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1], // 只有一个 tokenAddress
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Array length mismatch");
 
@@ -1231,7 +1266,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1], // 只有一个 tokenId
+            [user1TokenId], // 只有一个 tokenId
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Array length mismatch");
 
@@ -1242,7 +1277,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature] // 只有一个 signature
         )).revertedWith("DVP: Array length mismatch");
 
@@ -1254,8 +1289,8 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -1270,7 +1305,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -1282,7 +1317,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -1297,7 +1332,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId2 // 错误的 tokenId
+            user2TokenId // 错误的 tokenId
         );
 
         await expect(zkcsc.executeDVP(
@@ -1306,7 +1341,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature] // 签名与 chunkHash 不匹配
         )).revertedWith("DVP: Invalid chunkHash");
 
@@ -1320,7 +1355,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [randomSignature, user2Signature]
         )).revertedWith("DVP: Invalid chunkHash");
 
@@ -1332,8 +1367,8 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -1348,7 +1383,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -1360,7 +1395,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -1376,7 +1411,7 @@ describe("DVP with different token contract in node3", function () {
             [to1Wallet.address, minterWallet.address], // 交换了地址
             [minterWallet.address, to1Wallet.address], // 交换了地址
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Invalid chunkHash");
 
@@ -1387,7 +1422,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress2, scAddress1], // 交换了 token 地址
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Invalid chunkHash");
 
@@ -1398,7 +1433,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId2, tokenId1], // 交换了 tokenId
+            [user2TokenId, user1TokenId], // 交换了 tokenId
             [user1Signature, user2Signature]
         )).revertedWith("DVP: Invalid chunkHash");
 
@@ -1410,8 +1445,8 @@ describe("DVP with different token contract in node3", function () {
         console.log("PreBalance : ",{preBalance1,preBalance2})
 
         //approve for token
-        let tokenId1 = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
-        let tokenId2 = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
+        let user1TokenId = await approveTokens(scAddress1, minterWallet, accounts.Minter, zkcsc.target, accounts.To1,amount1);
+        let user2TokenId = await approveTokens(scAddress2, to1Wallet, accounts.To1, zkcsc.target, accounts.Minter,amount2);
 
         // 1. 使用两个地址 + "DVP" + 毫秒时间戳生成 bundleHash
         const timestamp = Date.now().toString();
@@ -1426,7 +1461,7 @@ describe("DVP with different token contract in node3", function () {
             minterWallet.address,
             to1Wallet.address,
             scAddress1,
-            tokenId1
+            user1TokenId
         );
         const user1Signature = await signChunkHash(minterWallet, user1ChunkHash);
         console.log("User1 ChunkHash:", user1ChunkHash);
@@ -1438,7 +1473,7 @@ describe("DVP with different token contract in node3", function () {
             to1Wallet.address,
             minterWallet.address,
             scAddress2,
-            tokenId2
+            user2TokenId
         );
         const user2Signature = await signChunkHash(to1Wallet, user2ChunkHash);
         console.log("User2 ChunkHash:", user2ChunkHash);
@@ -1454,7 +1489,7 @@ describe("DVP with different token contract in node3", function () {
             [minterWallet.address, to1Wallet.address],
             [to1Wallet.address, minterWallet.address],
             [scAddress1, scAddress2],
-            [tokenId1, tokenId2],
+            [user1TokenId, user2TokenId],
             [user2Signature, user1Signature] // 交换了签名
         )).revertedWith("DVP: Signature not from 'from' address");
         console.log("✅ All invalid signatures tests passed");
