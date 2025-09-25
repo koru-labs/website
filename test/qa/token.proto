@@ -465,6 +465,8 @@ message AddressBalanceDetailResponse {
 
 message DecodeAmountResponse {
   uint64 balance = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  string code = 2;
+  string message = 3;
 }
 
 message TokenAmountRequest {
