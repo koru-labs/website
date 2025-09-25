@@ -40,10 +40,10 @@
     "deploy-infra-user": "npx hardhat run script/circle/infra/deploy_inst_user.js --network ucl_L2_qa",
     "deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_qa",
 
-    "circle-deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2_dev",
-    "circle-deploy-L1-dev": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_dev",
-    "circle-deploy-infra-user-dev": "npx hardhat run script/circle/infra/deploy_inst_user.js --network ucl_L2_dev",
-    "circle-deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_dev",
+    "deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2_dev",
+    "deploy-L1-dev": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_dev",
+    "deploy-infra-user-dev": "npx hardhat run script/circle/infra/deploy_inst_user.js --network ucl_L2_dev",
+    "deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_dev",
 
 
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2_qa",

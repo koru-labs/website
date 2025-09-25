@@ -3,10 +3,16 @@ const {ethers} = require('ethers');
 const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
-
+const { getEnvironmentConfig } = require('../../script/circle/deploy_help.js');
+const config = getEnvironmentConfig();
 // const rpcUrl = "localhost:50051";
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
-const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051";
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
 // const httpUrl = "http://localhost:8080";
 // const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 

@@ -11,10 +11,7 @@ const {
     deployConvert2pUSDCVerifier,
     deployConvert2USDCVerifier
 } = require("./deploy_verifier");
-const hardhatConfig = require("../../../hardhat.config");
-
-
-const Fixed_Addresses = require("../configuration").ADDRESSES;
+const { getEnvironmentConfig } = require('../deploy_help.js');
 
 async function deployLibs(deployed) {
     console.log("=== TokenSc Libs deployment starts ===");
@@ -54,8 +51,9 @@ async function deployLibs(deployed) {
 
 async function deployL2Event(deployed) {
     console.log("HamsaL2Event deployment starts");
+    const Fixed_Addresses = getEnvironmentConfig();
 
-    if (Fixed_Addresses.HAMSAL2EVENT == "") {
+    if (!Fixed_Addresses.HAMSAL2EVENT) {
         const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
         const hamsaL2Event = await HamsaL2EventFactory.deploy();
         await hamsaL2Event.waitForDeployment();

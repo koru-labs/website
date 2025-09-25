@@ -2,15 +2,13 @@ const {ethers} = require("hardhat");
 
 const {createAuthMetadata} = require("../../../test/help/testHelp.js")
 const {createClient} = require('../../../test/qa/token_grpc');
-const institutions = require("../configuration").institutions
-
+const { getEnvironmentConfig } = require('../deploy_help.js');
+const Fixed_Addresses = getEnvironmentConfig();
 
 module.exports = async function registerInstitutionAndUser() {
-    const deployed = require('../../../deployments/image9.json');
 
-
-    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy);
-
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS);
+    let institutions = Fixed_Addresses.institutions;
     for (let i = 0; i < institutions.length; i++) {
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         try {
@@ -53,7 +51,7 @@ module.exports = async function registerInstitutionAndUser() {
 
             //JS call contract to register user
             // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
-            // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy, wallet);
+            // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry",     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS, wallet);
             // try {
             //     let regTx = await institutionUserRegistry.registerUser(address);
             //     await regTx.wait();

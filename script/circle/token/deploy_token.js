@@ -2,20 +2,24 @@ const hre = require("hardhat");
 const {ethers} = hre;
 const hardhatConfig = require('../../../hardhat.config');
 const accounts = require("../../../deployments/account.json");
-const config = require("../configuration");
+const { getEnvironmentConfig } = require('../deploy_help.js');
+const config = getEnvironmentConfig();
+
 const {createClient} = require("../../../test/qa/token_grpc");
 const grpc = require("@grpc/grpc-js");
-const rpcUrl =  "dev-node3-rpc.hamsa-ucl.com:50051";
+
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+
 async function deployToken(deployed) {
-    let hamsal2event = deployed.contracts.HamsaL2Event;
-    let institutionRegistration = deployed.contracts.InstUserProxy;
+    let hamsal2event = config.ADDRESSES.HAMSAL2EVENT;
+    let institutionRegistration = config.ADDRESSES.INSTITUTION_REGISTRATION;
 
 
-    // find node3 institution
-    const node3Institution = config.institutions.find(institution => institution.name === "Node3");
-    if (!node3Institution) {
-        throw new Error("Node3 institution not found in config");
-    }
+
     const wallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
     console.log(`Deploying PrivateUSDC for Node3 institution ${node3Institution.name},institutionAddress:${node3Institution.address}...`);
 
@@ -131,8 +135,6 @@ function extractMinterUsers() {
 
 
 async function setMinterAllowed(deployed) {
-    // 100000000
-
     console.log("Configuring minter allowed amount...");
 
     // add minter users
@@ -148,7 +150,7 @@ async function setMinterAllowed(deployed) {
     });
     const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
 
-    const client = createClient(rpcUrl);
+    const client = createClient(node3Institution.rpcUrl);
     const metadata = await createAuthMetadata(accounts.OwnerKey);
     for (const minter of minters) {
         let response = await client.encodeElgamalAmount(100000000, metadata);
