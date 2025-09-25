@@ -63,3 +63,12 @@ async function makeBankAdminMinter() {
 async function registerUser(nodeUrl, auth, userAddress, role) {
     //we must use rest api to register user
 }
+
+
+async function getLastBlock() {
+    const block = await ethers.provider.getBlock("latest");
+    console.log("latest block:", block.number, "hash:", block.hash, "timestamp:", block.timestamp,);
+}
+
+
+getLastBlock().then();
