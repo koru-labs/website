@@ -4,17 +4,13 @@ const hardhatConfig = require('../../hardhat.config');
 const { createClient } = require('../qa/token_grpc');
 const {
     callPrivateMint,
-    callPrivateTransferFrom,
-    callPrivateApprove,
-    callPrivateBurn,
-    getAddressBalance2,
     createAuthMetadata
 } = require("../help/testHelp");
 
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 
-const l1CustomNetwork = {
+const l2CustomNetwork = {
     name: "BESU",
     chainId: 1337
 };
@@ -24,8 +20,8 @@ const options = {
     staticNetwork: true
 };
 
-const L1Url = hardhatConfig.networks.ucl_L2.url;
-const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+const L2Url = hardhatConfig.networks.dev_ucl_L2.url;
+const l1Provider = new ethers.JsonRpcProvider(L2Url, l2CustomNetwork, options);
 
 // 钱包
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -33,8 +29,8 @@ const user1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const user2Wallet = new ethers.Wallet(accounts.To2PrivateKey, l1Provider);
 
 // token合约地址
-const tokenAddress1 = "0x8B6F63EFb564929B0ee332B1a4002fdBCD4a81bC"; // User1 的 token 所在合约
-const tokenAddress2 = "0xa90712888DD10509295CF049E783Bc9766EC4657"; // User2 的 token 所在合约
+const tokenAddress1 = "0xaE1C1DA4d3d4e0fFAEd0d1F0aA0DA331Ed69CF74"; // User1 的 token 所在合约
+const tokenAddress2 = "0x8e0A65F070dB6478Cd9CCCD34E8c428ea9022B40"; // User2 的 token 所在合约
 
 async function mintForStart(tokenAddress, wallet, account) {
     console.log(`=== Starting Mint Process for ${account} ===`);
@@ -42,16 +38,16 @@ async function mintForStart(tokenAddress, wallet, account) {
     const generateRequest = {
         sc_address: tokenAddress,
         token_type: '0',
+        from_address: accounts.Minter,
         to_address: account,
-        amount: 100
+        amount: 100,
+        comment: 'mint'
     };
     let response = await client.generateMintProof(generateRequest, metadata);
     console.log("Generate Mint Proof response:", response);
     let receipt = await callPrivateMint(tokenAddress, response, wallet);
     console.log("Mint receipt:", receipt);
     await sleep(2000);
-    let balance = await getAddressBalance2(client, tokenAddress, account, metadata);
-    console.log("Account balance after mint:", balance);
     console.log("✅ Mint completed successfully");
 
     // 返回 mint 过程中生成的 token ID，这些是真实的可以被 burn 的 token
@@ -72,9 +68,12 @@ async function approveTokens(tokenAddress, wallet, account, spenderAccount, toAc
     };
     let response = await client.generateApproveProof(approveRequest, metadata);
     console.log("Generate Approve Proof response:", response);
-    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
-    const tokenId = '0x' + response.transfer_token_id;
-    console.log("Approve token ID:", tokenId);
+    let finalResponse = await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+    console.log("Final Approve Response:", finalResponse);
+
+    // 直接使用10进制的token ID，不添加0x前缀
+    const tokenId = response.transfer_token_id;
+    console.log("Approve token ID (decimal):", tokenId);
     console.log("✅ Approve completed successfully");
     return tokenId;
 }
@@ -83,6 +82,18 @@ async function approveTokens(tokenAddress, wallet, account, spenderAccount, toAc
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * 将tokenId转换为BigInt的辅助函数
+ */
+function convertTokenIdToBigInt(tokenId) {
+    // 如果是字符串，直接转换为BigInt（10进制）
+    if (typeof tokenId === 'string') {
+        return BigInt(tokenId);
+    }
+    // 如果已经是BigInt或数字，直接转换
+    return BigInt(tokenId);
 }
 
 /**
@@ -101,10 +112,12 @@ async function deployZKCSC() {
  * 计算 transferFrom chunkHash
  */
 function calculateChunkHash(bundleHash, from, to, tokenAddress, tokenId) {
+    const tokenIdBigInt = convertTokenIdToBigInt(tokenId);
+
     return ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(
             ["bytes32", "address", "address", "address", "uint256"],
-            [bundleHash, from, to, tokenAddress, tokenId]
+            [bundleHash, from, to, tokenAddress, tokenIdBigInt]
         )
     );
 }
@@ -113,10 +126,12 @@ function calculateChunkHash(bundleHash, from, to, tokenAddress, tokenId) {
  * 计算 burn chunkHash
  */
 function calculateBurnChunkHash(bundleHash, from, tokenAddress, tokenId) {
+    const tokenIdBigInt = convertTokenIdToBigInt(tokenId);
+
     return ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(
             ["bytes32", "address", "address", "uint256"],
-            [bundleHash, from, tokenAddress, tokenId]
+            [bundleHash, from, tokenAddress, tokenIdBigInt]
         )
     );
 }
@@ -130,125 +145,15 @@ async function signChunkHash(wallet, chunkHash) {
 }
 
 /**
- * 测试包含 burn 的 DVP 交易（使用 approve token 进行 burn）
- */
-async function testDVPWithBurn(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId, burnTokenId) {
-    console.log("=== Testing DVP with Burn (Mixed transferFrom + burn) ===");
-
-    // 1. 链下约定 bundleHash
-    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-WITH-BURN"));
-    console.log("BundleHash:", bundleHash);
-
-    // 2. User1 生成 transferFrom chunkHash 并签名
-    const user1ChunkHash = calculateChunkHash(
-        bundleHash,
-        user1Wallet.address,
-        user2Wallet.address,
-        tokenAddress1,
-        user1TokenId
-    );
-    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
-    console.log("User1 Transfer ChunkHash:", user1ChunkHash);
-    console.log("User1 Transfer Signature:", user1Signature);
-
-    // 3. User2 生成 transferFrom chunkHash 并签名
-    const user2ChunkHash = calculateChunkHash(
-        bundleHash,
-        user2Wallet.address,
-        user1Wallet.address,
-        tokenAddress2,
-        user2TokenId
-    );
-    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
-    console.log("User2 Transfer ChunkHash:", user2ChunkHash);
-    console.log("User2 Transfer Signature:", user2Signature);
-
-    // 4. 生成 burn chunkHash 并签名
-    const burnChunkHash = calculateBurnChunkHash(
-        bundleHash,
-        user2Wallet.address,  // 使用 user2 进行 burn
-        tokenAddress2,
-        burnTokenId
-    );
-    const burnSignature = await signChunkHash(user2Wallet, burnChunkHash);
-    console.log("Burn ChunkHash:", burnChunkHash);
-    console.log("Burn Signature:", burnSignature);
-
-    // 5. Relayer 聚合并执行 DVP
-    console.log("=== Relayer Executing DVP with Burn ===");
-    try {
-        const tx = await ZKCSC.executeDVP(
-            bundleHash,
-            [ // transferFromRequests
-                {
-                    from: user1Wallet.address,
-                    to: user2Wallet.address,
-                    tokenAddress: tokenAddress1,
-                    tokenId: user1TokenId,
-                    signature: user1Signature
-                },
-                {
-                    from: user2Wallet.address,
-                    to: user1Wallet.address,
-                    tokenAddress: tokenAddress2,
-                    tokenId: user2TokenId,
-                    signature: user2Signature
-                }
-            ],
-            [ // burnRequests
-                {
-                    from: user2Wallet.address,
-                    tokenAddress: tokenAddress2,
-                    tokenId: burnTokenId,
-                    signature: burnSignature
-                }
-            ]
-        );
-
-        const receipt = await tx.wait();
-        console.log("DVP with Burn Execution successful! Transaction hash:", tx.hash);
-
-        // 检查事件
-        const logs = receipt.logs || [];
-        const dvpExecutedEvent = logs.find(e => e.fragment?.name === "DVPExecuted");
-        if (dvpExecutedEvent) {
-            console.log("✅ DVPExecuted event emitted:", dvpExecutedEvent.args);
-            console.log("Total operations (transfers + burns):", dvpExecutedEvent.args[2]);
-        } else {
-            console.log("❌ DVPExecuted event not found");
-        }
-
-    } catch (error) {
-        console.error("❌ DVP with Burn Execution failed:", error.message);
-        if (error.reason) console.error("Reason:", error.reason);
-        if (error.data) console.error("Data:", error.data);
-        throw error;
-    }
-
-    // 6. 验证 burn 是否成功
-    console.log("=== Verifying Burn Operation ===");
-    try {
-        const token2Contract = await ethers.getContractAt("IPrivateTokenCore", tokenAddress2);
-        const burnedToken = await token2Contract.getAccountTokenById(user2Wallet.address, burnTokenId);
-        if (burnedToken.id === 0n || burnedToken.owner === ethers.ZeroAddress) {
-            console.log(`✅ Token ${burnTokenId} has been successfully burned`);
-        } else {
-            console.log(`❌ Token ${burnTokenId} still exists. Owner: ${burnedToken.owner}`);
-        }
-    } catch (error) {
-        console.log("✅ Token burned successfully (token not found):", error.message);
-    }
-
-    console.log("✅ DVP with Burn test completed");
-}
-
-/**
  * 测试简单的 burn 操作（使用 approve token）
  */
 async function testSimpleBurn(ZKCSC, wallet, tokenId) {
     console.log("=== Testing Simple Burn (Approve Token) ===");
     console.log("Approve Token ID to burn:", tokenId);
     console.log("Wallet address:", wallet.address);
+
+    // 转换tokenId为BigInt
+    const tokenIdBigInt = convertTokenIdToBigInt(tokenId);
 
     // 1. 链下约定 bundleHash
     const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-SIMPLE-BURN"));
@@ -259,7 +164,7 @@ async function testSimpleBurn(ZKCSC, wallet, tokenId) {
         bundleHash,
         wallet.address,
         tokenAddress1,
-        tokenId
+        tokenId  // calculateBurnChunkHash内部会处理转换
     );
     const burnSignature = await signChunkHash(wallet, burnChunkHash);
     console.log("Burn ChunkHash:", burnChunkHash);
@@ -275,7 +180,7 @@ async function testSimpleBurn(ZKCSC, wallet, tokenId) {
                 {
                     from: wallet.address,
                     tokenAddress: tokenAddress1,
-                    tokenId: tokenId,
+                    tokenId: tokenIdBigInt,  // 使用转换后的tokenId
                     signature: burnSignature
                 }
             ]
@@ -301,6 +206,116 @@ async function testSimpleBurn(ZKCSC, wallet, tokenId) {
 
     console.log("✅ Simple Burn test completed");
 }
+
+/**
+ * 测试包含 burn 的 DVP 交易（使用 approve token 进行 burn）
+ */
+async function testDVPWithBurn(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user2TokenId, burnTokenId) {
+    console.log("=== Testing DVP with Burn (Mixed transferFrom + burn) ===");
+
+    // 转换所有tokenId为BigInt
+    const user1TokenIdBigInt = convertTokenIdToBigInt(user1TokenId);
+    const user2TokenIdBigInt = convertTokenIdToBigInt(user2TokenId);
+    const burnTokenIdBigInt = convertTokenIdToBigInt(burnTokenId);
+
+    // 1. 链下约定 bundleHash
+    const bundleHash = ethers.keccak256(ethers.toUtf8Bytes("DVP-BUNDLE-WITH-BURN"));
+    console.log("BundleHash:", bundleHash);
+
+    // 2. User1 生成 transferFrom chunkHash 并签名
+    const user1ChunkHash = calculateChunkHash(
+        bundleHash,
+        user1Wallet.address,
+        user2Wallet.address,
+        tokenAddress1,
+        user1TokenId  // calculateChunkHash内部会处理转换
+    );
+    const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
+    console.log("User1 Transfer ChunkHash:", user1ChunkHash);
+    console.log("User1 Transfer Signature:", user1Signature);
+
+    // 3. User2 生成 transferFrom chunkHash 并签名
+    const user2ChunkHash = calculateChunkHash(
+        bundleHash,
+        user2Wallet.address,
+        user1Wallet.address,
+        tokenAddress2,
+        user2TokenId  // calculateChunkHash内部会处理转换
+    );
+    const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
+    console.log("User2 Transfer ChunkHash:", user2ChunkHash);
+    console.log("User2 Transfer Signature:", user2Signature);
+
+    // 4. 生成 burn chunkHash 并签名
+    const burnChunkHash = calculateBurnChunkHash(
+        bundleHash,
+        user2Wallet.address,  // 使用 user2 进行 burn
+        tokenAddress2,
+        burnTokenId  // calculateBurnChunkHash内部会处理转换
+    );
+    const burnSignature = await signChunkHash(user2Wallet, burnChunkHash);
+    console.log("Burn ChunkHash:", burnChunkHash);
+    console.log("Burn Signature:", burnSignature);
+
+    // 5. Relayer 聚合并执行 DVP
+    console.log("=== Relayer Executing DVP with Burn ===");
+
+        const tx = await ZKCSC.executeDVP(
+            bundleHash,
+            [ // transferFromRequests
+                {
+                    from: user1Wallet.address,
+                    to: user2Wallet.address,
+                    tokenAddress: tokenAddress1,
+                    tokenId: user1TokenIdBigInt,  // 使用转换后的tokenId
+                    signature: user1Signature
+                },
+                {
+                    from: user2Wallet.address,
+                    to: user1Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: user2TokenIdBigInt,  // 使用转换后的tokenId
+                    signature: user2Signature
+                }
+            ],
+            [ // burnRequests
+                {
+                    from: user2Wallet.address,
+                    tokenAddress: tokenAddress2,
+                    tokenId: burnTokenIdBigInt,  // 使用转换后的tokenId
+                    signature: burnSignature
+                }
+            ]
+        );
+
+        const receipt = await tx.wait();
+        console.log("DVP with Burn Execution successful! Transaction hash:", tx.hash);
+
+        // 检查事件
+        const logs = receipt.logs || [];
+        const dvpExecutedEvent = logs.find(e => e.fragment?.name === "DVPExecuted");
+        if (dvpExecutedEvent) {
+            console.log("✅ DVPExecuted event emitted:", dvpExecutedEvent.args);
+            console.log("Total operations (transfers + burns):", dvpExecutedEvent.args[2]);
+        } else {
+            console.log("❌ DVPExecuted event not found");
+        }
+
+    // 6. 验证 burn 是否成功
+    console.log("=== Verifying Burn Operation ===");
+
+        const token2Contract = await ethers.getContractAt("IPrivateTokenCore", tokenAddress2);
+        const burnedToken = await token2Contract.getAccountTokenById(user2Wallet.address, burnTokenIdBigInt);  // 使用转换后的tokenId
+        if (burnedToken.id === 0n || burnedToken.owner === ethers.ZeroAddress) {
+            console.log(`✅ Token ${burnTokenIdBigInt} has been successfully burned`);
+        } else {
+            console.log(`❌ Token ${burnTokenIdBigInt} still exists. Owner: ${burnedToken.owner}`);
+        }
+
+
+    console.log("✅ DVP with Burn test completed");
+}
+
 /**
  * 测试取消 DvP 交易
  */
@@ -317,7 +332,7 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
         user1Wallet.address,
         user2Wallet.address,
         tokenAddress1,
-        user1TokenId
+        user1TokenId  // 不再需要转换
     );
     const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
     console.log("User1 ChunkHash:", user1ChunkHash);
@@ -329,7 +344,7 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
         user2Wallet.address,
         user1Wallet.address,
         tokenAddress2,
-        user2TokenId
+        user2TokenId  // 不再需要转换
     );
     const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
     console.log("User2 ChunkHash:", user2ChunkHash);
@@ -345,14 +360,14 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
                     from: user1Wallet.address,
                     to: user2Wallet.address,
                     tokenAddress: tokenAddress1,
-                    tokenId: user1TokenId,
+                    tokenId: user1TokenId,  // 不再需要转换
                     signature: user1Signature
                 },
                 {
                     from: user2Wallet.address,
                     to: user1Wallet.address,
                     tokenAddress: tokenAddress2,
-                    tokenId: user2TokenId,
+                    tokenId: user2TokenId,  // 不再需要转换
                     signature: user2Signature
                 }
             ],
@@ -436,7 +451,7 @@ async function testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenI
         user1Wallet.address,
         user2Wallet.address,
         tokenAddress1,
-        user1TokenId
+        user1TokenId  // 不再需要转换
     );
     // 使用错误的签名（用user2的私钥签名user1的chunkHash）
     const invalidSignature = await signChunkHash(user2Wallet, user1ChunkHash);
@@ -448,7 +463,7 @@ async function testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenI
         user2Wallet.address,
         user1Wallet.address,
         tokenAddress2,
-        user2TokenId
+        user2TokenId  // 不再需要转换
     );
     const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
 
@@ -460,14 +475,14 @@ async function testInvalidSignature(ZKCSC, user1Wallet, user2Wallet, user1TokenI
                     from: user1Wallet.address,
                     to: user2Wallet.address,
                     tokenAddress: tokenAddress1,
-                    tokenId: user1TokenId,
+                    tokenId: user1TokenId,  // 不再需要转换
                     signature: invalidSignature
                 },
                 {
                     from: user2Wallet.address,
                     to: user1Wallet.address,
                     tokenAddress: tokenAddress2,
-                    tokenId: user2TokenId,
+                    tokenId: user2TokenId,  // 不再需要转换
                     signature: user2Signature
                 }
             ],
@@ -496,7 +511,7 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
         user1Wallet.address,
         user2Wallet.address,
         tokenAddress1,
-        user1TokenId
+        user1TokenId  // 不再需要转换
     );
     const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
 
@@ -506,7 +521,7 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
         user2Wallet.address,
         user1Wallet.address,
         tokenAddress2,
-        user2TokenId
+        user2TokenId  // 不再需要转换
     );
     const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
 
@@ -519,14 +534,14 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
                     from: user1Wallet.address,
                     to: user2Wallet.address,
                     tokenAddress: tokenAddress1,
-                    tokenId: user1TokenId,
+                    tokenId: user1TokenId,  // 不再需要转换
                     signature: user1Signature
                 },
                 {
                     from: user2Wallet.address,
                     to: user1Wallet.address,
                     tokenAddress: tokenAddress2,
-                    tokenId: user2TokenId,
+                    tokenId: user2TokenId,  // 不再需要转换
                     signature: user2Signature
                 }
             ],
@@ -548,14 +563,14 @@ async function testReexecuteBundle(ZKCSC, user1Wallet, user2Wallet, user1TokenId
                     from: user1Wallet.address,
                     to: user2Wallet.address,
                     tokenAddress: tokenAddress1,
-                    tokenId: user1TokenId,
+                    tokenId: user1TokenId,  // 不再需要转换
                     signature: user1Signature
                 },
                 {
                     from: user2Wallet.address,
                     to: user1Wallet.address,
                     tokenAddress: tokenAddress2,
-                    tokenId: user2TokenId,
+                    tokenId: user2TokenId,  // 不再需要转换
                     signature: user2Signature
                 }
             ],
@@ -584,7 +599,7 @@ async function testArrayLengthMismatch(ZKCSC, user1Wallet, user2Wallet, user1Tok
         user1Wallet.address,
         user2Wallet.address,
         tokenAddress1,
-        user1TokenId
+        user1TokenId  // 不再需要转换
     );
     const user1Signature = await signChunkHash(user1Wallet, user1ChunkHash);
 
@@ -594,7 +609,7 @@ async function testArrayLengthMismatch(ZKCSC, user1Wallet, user2Wallet, user1Tok
         user2Wallet.address,
         user1Wallet.address,
         tokenAddress2,
-        user2TokenId
+        user2TokenId  // 不再需要转换
     );
     const user2Signature = await signChunkHash(user2Wallet, user2ChunkHash);
 
