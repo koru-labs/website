@@ -589,6 +589,8 @@ message Token {
   string comment = 8;
   TokenActionStatusEnum status = 9;
   string sc_address = 10;
+  uint64 currency_precision = 11;
+  int64 created_at = 12;
 }
 
 message SplitTokenDetailRequest {
