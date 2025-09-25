@@ -7,8 +7,8 @@ const {createClient} = require('../qa/token_grpc')
 
 //qa
 const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
-const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_qa.accounts[1];
 //dev
 
 const l1CustomNetwork = {

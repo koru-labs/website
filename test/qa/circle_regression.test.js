@@ -9,13 +9,13 @@ const {createClient} = require('../qa/token_grpc')
 // const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
 const rpcUrl_node3 = "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051"
 const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
-const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 //qa
 // const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
 // const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
-// const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-// const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+// const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
+// const adminPrivateKey = hardhatConfig.networks.ucl_L2_qa.accounts[1];
 const scAddress = config.contracts.PrivateERCToken;
 const client3 = createClient(rpcUrl_node3)
 const client4 = createClient(rpcUrl_node4)

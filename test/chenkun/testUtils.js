@@ -43,7 +43,7 @@ const CONSTANTS = {
 // Initialize client and provider
 const client = createClient(CONSTANTS.rpcUrl);
 const l1Provider = new ethers.JsonRpcProvider(
-  hardhatConfig.networks.dev_ucl_L2.url,
+  hardhatConfig.networks.ucl_L2_dev.url,
   CONSTANTS.network, 
   CONSTANTS.providerOptions
 );

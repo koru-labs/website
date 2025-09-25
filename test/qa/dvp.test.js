@@ -32,7 +32,7 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
+const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
@@ -44,7 +44,7 @@ const toAddress1 = accounts.To1;
 const toAddress2 = accounts.To2;
 
 
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 let preBalance,postBalance;

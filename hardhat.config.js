@@ -29,7 +29,7 @@ module.exports = {
     },
     allowUnlimitedContractSize: true,
     networks: {
-        dev_ucl_L2: {
+        ucl_L2_dev: {
             // url: "http://a4a4c70c3b3544bf1a3c0e48af365e83-1088910243.us-west-1.elb.amazonaws.com:8545", //k8s,ucl-node2,v2
             url: "http://dev-ucl-l2.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
             accounts: [
@@ -89,7 +89,7 @@ module.exports = {
                 "04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59",  // kurtosis account
             ],
         },
-        ucl_L2_cluster: {
+        ucl_L2_qa: {
             url: "http://L2-node44.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
             url2: "http://3.145.110.33:8545",    //this is bank-node for demo purpose
             accounts: [
