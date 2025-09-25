@@ -65,14 +65,14 @@
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2_cluster",
 
-    "qa-circle": "npx hardhat test test/qa/circle.test.js --network ucl_L2_cluster",
-    "qa-circle-tps": "npx hardhat test test/qa/performance.test.js --network ucl_L2_cluster",
-    "qa-circle-dvp": "npx hardhat test test/qa/dvp.test.js --network ucl_L2_cluster",
-    "qa-circle-dvp2node": "npx hardhat test test/qa/dvp2node.test.js --network ucl_L2_cluster",
-    "qa-circle-relayerdvp": "npx hardhat test test/qa/relayer-dvp.test.js --network ucl_L2_cluster",
-    "qa-circle-jenkins": "npx hardhat test test/qa/jenkins.test.js --network ucl_L2_cluster",
-    "qa-circle-grpc": "npx hardhat test test/qa/grpc.test.js --network ucl_L2_cluster",
-    "qa-circle-cluster": "npx hardhat test test/qa/cluster.test.js --network ucl_L2_cluster",
+    "qa-regression": "npx hardhat test test/qa/circle_regression.test.js --network ucl_L2_cluster",
+    "qa-tps": "npx hardhat test test/qa/performance.test.js --network ucl_L2_cluster",
+    "qa-dvp": "npx hardhat test test/qa/dvp.test.js --network ucl_L2_cluster",
+    "qa-dvp2node": "npx hardhat test test/qa/dvp2node.test.js --network ucl_L2_cluster",
+    "qa-relayerdvp": "npx hardhat test test/qa/relayer-dvp.test.js --network ucl_L2_cluster",
+    "qa-jenkins": "npx hardhat test test/qa/jenkins.test.js --network ucl_L2_cluster",
+    "qa-grpc": "npx hardhat test test/qa/grpc.test.js --network ucl_L2_cluster",
+    "qa-cluster": "npx hardhat test test/qa/cluster.test.js --network ucl_L2_cluster",
 
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",

@@ -5,12 +5,20 @@ const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
+//dev
+// const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
+// const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
+// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
+// const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
 
-const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051"
-// const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
-// const rpcUrl = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
-// const rpcUrl_1 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
-const client = createClient(rpcUrl)
+//qa
+const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
+const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
+const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
+
+const client = createClient(rpcUrl_node3)
 // const client1 = createClient(rpcUrl_1)
 
 const {
@@ -32,7 +40,6 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
@@ -43,9 +50,6 @@ const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
 const toAddress1 = accounts.To1;
 const toAddress2 = accounts.To2;
 
-
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
-const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 let preBalance,postBalance;
 let preAllowance,postAllowance;
@@ -489,9 +493,9 @@ async function testCancelDVP(ZKCSC, user1Wallet, user2Wallet, user1TokenId, user
 
 describe("DVP with different token contract in node3", function () {
     this.timeout(1200000)
-    const scAddress1 = '0x1b1fbe1bAa5A27e757f3ABe22259505f3E38067f';
-    const scAddress2 = '0xCC330cD59B92CFeB80d567C4Cd497Bf30DcD69eC';
-    const zkcscAddress = '0xE66733B2D76653EA63ecd2F475742D052B145539';
+    const scAddress1 = '0x59A42535f42048040c3F5a1152C94aF40C7169Db';
+    const scAddress2 = '0xA201bAb1b36F56D6dE5894EEB94C513Cc087bc33';
+    const zkcscAddress = '0x3383756d73353c2aBeE06fb2B5Bc66a4c8b04910';
     const MAX_UINT256 = ethers.MaxUint256;
     const MIN_UINT256 = ethers.MinInt256;
 
@@ -522,7 +526,7 @@ describe("DVP with different token contract in node3", function () {
         }
     });
 
-    it("Mint to user", async () => {
+    it.only("Mint to user", async () => {
         await mint(accounts.Minter,amount,scAddress1);
         await mint(accounts.To1,amount,scAddress2);
         postBalance1 = {
@@ -539,12 +543,12 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.user).equal(preBalance2.user + amount);
 
     });
-    it('Deploy ZKCSC ',async () => {
+    it.only('Deploy ZKCSC ',async () => {
         // zkcsc = await deployZKCSC();
         // console.log("ZKCSC Deployed at:", zkcsc.target)
         zkcsc = await ethers.getContractAt("ZKCSC", zkcscAddress);
     });
-    it("DVP transfer", async () => {
+    it.only("DVP transfer", async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -568,7 +572,7 @@ describe("DVP with different token contract in node3", function () {
         expect(postBalance2.minter).equal(preBalance2.minter + amount2);
         expect(postBalance2.user).equal(preBalance2.user - amount2);
     });
-    it('DVP transfer and burn ',async () => {
+    it.only('DVP transfer and burn ',async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
@@ -611,7 +615,7 @@ describe("DVP with different token contract in node3", function () {
         await revokeApprovedTokens(to1Wallet,zkcscAddress,scAddress2);
 
     });
-    it.only('Revoke the recent approvedToken ',async () => {
+    it('Revoke the recent approvedToken ',async () => {
         const amount1 = 10
         const amount2 = 20
         console.log("PreBalance : ",{preBalance1,preBalance2})
