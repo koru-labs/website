@@ -475,6 +475,9 @@ message TokenAmountRequest {
 
 message TokenAmountResponse {
   uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  uint64 currency_precision = 2;
+  string code = 3;
+  string message = 4;
 }
 
 message MintProofResponse {
