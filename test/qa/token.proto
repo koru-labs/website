@@ -606,9 +606,10 @@ message SplitTokenDetailResponse {
   uint64 balance = 1;
   uint64 transferAmount = 2;
   uint64 remainingAmount = 3;
+  uint64 currency_precision = 4;
+  string code = 5;
+  string message = 6;
 }
-
-
 
 
 
