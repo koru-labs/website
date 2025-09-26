@@ -14,8 +14,8 @@ const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
 const CONSTANTS = {
   // RPC URL configuration
   // rpcUrl: "127.0.0.1:50051",
-  // rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
-  rpcUrl: "a37b7f614e60143549c1faa8c533022f-443108305.us-west-1.elb.amazonaws.com:50051",
+  rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+  // rpcUrl: "a37b7f614e60143549c1faa8c533022f-443108305.us-west-1.elb.amazonaws.com:50051",
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
