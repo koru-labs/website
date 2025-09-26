@@ -2,21 +2,20 @@ module.exports = {
     "ADDRESSES":
         {
             "TOKEN_EVENT_LIB": "",
-            "HAMSAL2EVENT": "0xE4093f610654cA2cA149cD3961963cF4d313f7ad",
-            "L1_VERIFY_ADDRESS": "0x5B8B2cf32A63e3974e61A7c4D06BA2F4F5eb383F",
-            "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
-            "INSTITUTION_REGISTRATION": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520",
-            "PROXY_ADDRESS": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520"
+            "HAMSAL2EVENT": "0x803a5E06dE333B2Ad7C7F3C4bE71CDC9d7c341a8",
+            "L1_VERIFY_ADDRESS": "0xb4B46bdAA835F8E4b4d8e208B6559cD267851051",
+            "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
+            "INSTITUTION_REGISTRATION": "0x4118Ea231617AADB2fDC5B130D645932c0c3f441",
+            "PROXY_ADDRESS": "0x08fF503014d9D2d7f513fd9A5483A50D84F02684"
         },
     institutions: [
         {
             address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             name: "Node3",
-            // rpcUrl: "a37b7f614e60143549c1faa8c533022f-443108305.us-west-1.elb.amazonaws.com:50051",
-            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
-            nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
+            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
                 y: "9519187890267549073736999464396081731503319602421352094119155053337094535674",
@@ -39,10 +38,9 @@ module.exports = {
             address: "0x93d2Ce0461C2612F847e074434d9951c32e44327",
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             name: "Node4",
-            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
-            // rpcUrl: "ac6b8fedea52b4c6ab2676e5d2f779d3-1137370489.us-west-1.elb.amazonaws.com:50051",
-            nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
-            httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
+            rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
+            nodeUrl: "https://dev-node4-proxy.hamsa-ucl.com:8443",
+            httpUrl: "http://dev-node4-http.hamsa-ucl.com:8080",
             publicKey: {
                 x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
                 y: "3128266901887868401076427103054188770721597970324357252676559377941490258192",

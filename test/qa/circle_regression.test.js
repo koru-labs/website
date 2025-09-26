@@ -7,15 +7,16 @@ const {createClient} = require('../qa/token_grpc')
 
 //dev
 // const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_node3 = "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051"
-const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
-const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+// const rpcUrl_node3 = "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051"
+// const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
+// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
+// const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
 //qa
-// const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
-// const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
-// const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-// const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
+const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
+const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+
 const scAddress = config.contracts.PrivateERCToken;
 const client3 = createClient(rpcUrl_node3)
 const client4 = createClient(rpcUrl_node4)
@@ -324,7 +325,7 @@ async function getPublicBalance(account) {
     return Number(amount)
 }
 
-describe("Function Cases",function (){
+describe. only("Function Cases",function (){
 
     let adminMeta,minterMeta,spenderMeta,to1Meta,node4AdminMeta
 
@@ -2604,7 +2605,7 @@ describe('Security cases', function () {
         });
     })
 
-    describe.only('Convert USDC and pUSDC security',function () {
+    describe('Convert USDC and pUSDC security',function () {
         this.timeout(1200000)
         let prePublicBalance,postPublicBalance;
         let prePrivateBalance,postPrivateBalance;
