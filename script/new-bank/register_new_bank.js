@@ -5,13 +5,13 @@ const grpc = require("@grpc/grpc-js");
 
 
 const registrar_address = "0x18a0a58728A3Ebd82492Ab03aEdc634B097d30A1";
-const token_address ="0x59A42535f42048040c3F5a1152C94aF40C7169Db";
+const token_address ="0xe801229a4F28DA75fC4752505F3A00fca61B6f6f";
 
 const instInfo={
     address: "0xF8041E1185C7106121952bA9914ff904A4A01c80",    //manager address
     name: "demo_bank",          // bank name
     rpcUrl: "ucl-nodeBank-rpc.hamsa-ucl.com:50051",
-    nodeUrl: "https://ucl-nodeBank.hamsa-ucl.com:8443",
+    nodeUrl: "https://ucl-nodeBank-proxy.hamsa-ucl.com:8443",
     httpUrl: "http://ucl-nodeBank-http.hamsa-ucl.com:8080",
 
     publicKey: {
@@ -56,6 +56,16 @@ async function registerNewBank() {
     console.log("registered instInfo on-chain:", resultInfo);
 }
 
+async function updateBank() {
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
+
+    let regTx = await institutionUserRegistry.updateInstitution(
+        instInfo.address, instInfo.name,  instInfo.nodeUrl, instInfo.httpUrl);
+    await regTx.wait();
+
+    let resultInfo = await institutionUserRegistry.getInstitution(instInfo.address);
+    console.log("registered instInfo on-chain:", resultInfo);
+}
 
 async function registerBankUsers(){
     let auth=await  createAuth()
@@ -104,31 +114,41 @@ async function enableBankInTokenSmartContract() {
 
 //set minter allowed
 async function makeBankAdminMinter() {
+    let [masterMinter] = await ethers.getSigners();
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", token_address, masterMinter);
+
+
     let auth = await createAuth()
     let amount = 100000000
     let headers= { "Content-Type": "application/json", ... auth }
 
-    const response = await axios.post(instInfo.httpUrl+"/v1/elgamal/encode", {
+    let response = await axios.post(instInfo.httpUrl+"/v1/elgamal/encode", {
         amount: amount
     }, {
         headers: headers,
     });
-    console.log("response", response)
+    response = response.data
 
-    // const tokenId = ethers.toBigInt(response.token_id);
-    // const clx = ethers.toBigInt(response.amount.cl_x);
-    // const cly = ethers.toBigInt(response.amount.cl_y);
-    // const crx = ethers.toBigInt(response.amount.cr_x);
-    // const cry = ethers.toBigInt(response.amount.cr_y);
-    // const minterAllowedAmount = {
-    //     "id": tokenId,
-    //     "cl_x": clx,
-    //     "cl_y": cly,
-    //     "cr_x": crx,
-    //     "cr_y": cry,
-    // }
-    // await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
-    // await privateUSDC.configureMinter(minter.account, 100000000);
+
+    const tokenId = ethers.toBigInt(response.tokenId);
+    const clx = ethers.toBigInt(response.amount.clX);
+    const cly = ethers.toBigInt(response.amount.clY);
+    const crx = ethers.toBigInt(response.amount.crX);
+    const cry = ethers.toBigInt(response.amount.crY);
+    const minterAllowedAmount = {
+        "id": tokenId,
+        "cl_x": clx,
+        "cl_y": cly,
+        "cr_x": crx,
+        "cr_y": cry,
+    }
+    let tx = await privateUSDC.configurePrivacyMinter(instInfo.address, minterAllowedAmount);
+    let r = await tx.wait();
+    console.log("receipt: ", r)
+
+    tx = await privateUSDC.configureMinter(instInfo.address, amount);
+    r = await tx.wait();
+    console.log("receipt: ", r)
 }
 
 async function checkSeededBankInfo() {
@@ -144,7 +164,7 @@ async function getLastBlock() {
 }
 
 async function verifyCode(){
-    let code = await ethers.provider.getCode(token_address);
+    let code = await ethers.provider.getCode(registrar_address);
     console.log("code:", code);
 }
 
@@ -161,13 +181,24 @@ async function getOwner() {
     console.log("owner:", owner);
 }
 
-getLastBlock().then();
+async  function checkUserInst() {
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
+    let admin = await institutionUserRegistry.getUserManager("0xF8041E1185C7106121952bA9914ff904A4A01c80");
+    let inst = await institutionUserRegistry.getInstitution(admin);
+    console.log("user inst:", inst);
+}
+
+
+// getLastBlock().then();
 // verifyCode().then();
 // checkSeededBankInfo().then();
 // verifyEthAddress().then();
 
 // registerNewBank().then()
-// registerBankUsers().then();
+// updateBank().then();
+registerBankUsers().then();
 // getOwner().then();
 // enableBankInTokenSmartContract().then()
 // makeBankAdminMinter().then()
+
+// checkUserInst().then();
