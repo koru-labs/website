@@ -1,13 +1,19 @@
 const { expect } = require("chai");
 const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
-const config = require('./../../deployments/image9.json');
+const { getEnvironmentConfig } = require('../../script/circle/deploy_help.js');
+const config = getEnvironmentConfig();
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 const pLimit = require("p-limit");
 
 
-const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051"
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
 // const rpcUrl = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
 // const rpcUrl_1 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
 const client = createClient(rpcUrl)
@@ -19,6 +25,7 @@ const {
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
 const axios = require("axios");
+const {getImage9EnvironmentData} = require("../../script/circle/deploy_help");
 
 const l1CustomNetwork = {
     name: "BESU",
@@ -68,7 +75,8 @@ function sleep(ms) {
 
 async function getTokenBalanceByAdmin(account){
     const metadata = await  createAuthMetadata(adminPrivateKey)
-    let balance = await getAddressBalance2(client, config.contracts.PrivateERCToken, account, metadata)
+    const deployed = getImage9EnvironmentData();
+    let balance = await getAddressBalance2(client, deployed.contracts.PrivateERCToken, account, metadata)
     return Number(balance.balance)
 }
 

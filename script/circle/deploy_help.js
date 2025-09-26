@@ -149,7 +149,6 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
             }
         }
         
-        // 如果有直接的 libraries 和 contracts 数据，也使用它们
         if (deployed.libraries) {
             Object.assign(deploymentData.libraries, deployed.libraries);
         }
@@ -182,7 +181,6 @@ function getImage9EnvironmentData() {
     } else if (networkName.includes('prod') || networkName.includes('production') || networkName.includes('mainnet')) {
         environment = 'prod';
     } else {
-        // 默认使用 dev 配置
         console.log(`Warning: Unknown environment for network "${networkName}", defaulting to dev configuration`);
         environment = 'dev';
     }
