@@ -53,15 +53,15 @@ async function deployL2Event(deployed) {
     console.log("HamsaL2Event deployment starts");
     const Fixed_Addresses = getEnvironmentConfig();
 
-    if (!Fixed_Addresses.HAMSAL2EVENT) {
+    if (!Fixed_Addresses.ADDRESSES.HAMSAL2EVENT) {
         const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
         const hamsaL2Event = await HamsaL2EventFactory.deploy();
         await hamsaL2Event.waitForDeployment();
         console.log("HamsaL2Event is deploy at :", hamsaL2Event.target);
         deployed.contracts.HamsaL2Event = hamsaL2Event.target;
     } else {
-        deployed.contracts.HamsaL2Event = Fixed_Addresses.HAMSAL2EVENT
-        console.log("Use already deployed HamsaL2Event:", Fixed_Addresses.HAMSAL2EVENT);
+        deployed.contracts.HamsaL2Event = Fixed_Addresses.ADDRESSES.HAMSAL2EVENT
+        console.log("Use already deployed HamsaL2Event:", Fixed_Addresses.ADDRESSES.HAMSAL2EVENT);
     }
     console.log("HamsaL2Event deployment finished");
 }

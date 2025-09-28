@@ -2,19 +2,29 @@ const assert = require('node:assert');
 
 const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
-const config = require('./../../deployments/image9.json');
+// const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc');
 const grpc = require("@grpc/grpc-js");
 const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
-
+const { getEnvironmentConfig } = require('../../script/circle/deploy_help.js');
+const config = getEnvironmentConfig();
+const {getImage9EnvironmentData} = require("../../script/circle/deploy_help");
+// const rpcUrl = "localhost:50051";
+// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+  throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
 /**
  * Configuration Constants
  */
 const CONSTANTS = {
   // RPC URL configuration
   // rpcUrl: "127.0.0.1:50051",
-  rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+  rpcUrl: rpcUrl,
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
   
   // Network configuration
@@ -42,12 +52,12 @@ const CONSTANTS = {
 
 // Initialize client and provider
 const client = createClient(CONSTANTS.rpcUrl);
-const l1Provider = new ethers.JsonRpcProvider(
-  hardhatConfig.networks.ucl_L2_dev.url,
-  CONSTANTS.network, 
-  CONSTANTS.providerOptions
-);
-
+// const l1Provider = new ethers.JsonRpcProvider(
+//   hardhatConfig.networks.ucl_L2_dev.url,
+//   CONSTANTS.network,
+//   CONSTANTS.providerOptions
+// );
+const l1Provider = ethers.provider
 // Initialize wallets
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -123,9 +133,10 @@ async function checkBalance(account) {
  */
 async function mintForStart() {
   try {
+    const deployed = getImage9EnvironmentData();
     const metadata = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address:accounts.Minter,
       to_address: accounts.Minter,
@@ -525,7 +536,7 @@ async function testReserveTokensAndCancel() {
  * Test institution information
  * @returns {Promise<void>}
  */
-const deployed = require("../../deployments/image9.json");
+
 async function testInstituteInformation() {
   const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
     libraries: {
