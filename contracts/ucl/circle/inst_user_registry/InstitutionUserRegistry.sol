@@ -126,6 +126,10 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         return institutions[managerAddress];
     }
 
+    function getUserInstitution(address userAddress) public view returns (Institution memory) {
+        return institutions[getUserManager(userAddress)];
+    }
+
     function isInstitutionManager(address managerAddress) public view returns (bool) {
         return institutions[managerAddress].managerAddress != address(0);
     }
