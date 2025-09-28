@@ -37,12 +37,12 @@
   "scripts": {
     "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2_cluster",
     "circle-deploy-L1": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_qa",
-    "circle-deploy-infra-user": "npx hardhat run script/circle/infra/deploy_inst_user.js --network ucl_L2_cluster",
+    "circle-deploy-infra-user": "npx hardhat run script/circle/infra/register_inst_user.js --network ucl_L2_cluster",
     "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_cluster",
 
     "circle-deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network dev_ucl_L2",
     "circle-deploy-L1-dev": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_dev",
-    "circle-deploy-infra-user-dev": "npx hardhat run script/circle/infra/deploy_inst_user.js --network dev_ucl_L2",
+    "circle-deploy-infra-user-dev": "npx hardhat run script/circle/infra/register_inst_user.js --network dev_ucl_L2",
     "circle-deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network dev_ucl_L2",
 
 
@@ -61,7 +61,7 @@
     "wlin-eth2-prod": "npx hardhat run test/wlin/eth2_prod_test.js --network eth2_prod",
     "wlin-eth2-QA": "npx hardhat run test/wlin/eth2_prod_test.js --network eth2_qa",
     "wlin-local": "npx hardhat run test/wlin/simpleToken_test.js --network local_L2",
-
+    "demo-bank-deploy": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_cluster_bank",
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2_cluster",
 

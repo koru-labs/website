@@ -1,11 +1,13 @@
+
 const {ethers} = require("hardhat");
 
 const {createAuthMetadata} = require("../../../test/help/testHelp.js")
 const {createClient} = require('../../../test/qa/token_grpc');
+const deployed = require("../../../deployments/image9.json");
 const institutions = require("../configuration").institutions
 
 
-module.exports = async function registerInstitutionAndUser() {
+async function registerInstitutionAndUser() {
     const deployed = require('../../../deployments/image9.json');
 
 
@@ -82,3 +84,6 @@ async function registerUser(client, privateKey, userAddress, role) {
         console.error("registerAccount failed:", error);
     }
 }
+
+//execute after main is completed and k8s configuration is updated and ucl-node are been restarted
+registerInstitutionAndUser().then();
