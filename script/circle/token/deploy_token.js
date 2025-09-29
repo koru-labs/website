@@ -5,10 +5,13 @@ const accounts = require("../../../deployments/account.json");
 const config = require("../configuration");
 const {createClient} = require("../../../test/qa/token_grpc");
 const grpc = require("@grpc/grpc-js");
-//dev
-// const rpcUrl =  "dev-node3-rpc.hamsa-ucl.com:50051";
-//qa
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
 async function deployToken(deployed) {
     let hamsal2event = deployed.contracts.HamsaL2Event;
     let institutionRegistration = deployed.contracts.InstUserProxy;
@@ -152,6 +155,7 @@ async function setMinterAllowed(deployed) {
     const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
 
     const client = createClient(rpcUrl);
+    console.log(`rpcUrl:${rpcUrl}`);
     const metadata = await createAuthMetadata(accounts.OwnerKey);
     for (const minter of minters) {
         let response = await client.encodeElgamalAmount(100000000, metadata);
