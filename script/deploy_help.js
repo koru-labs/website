@@ -3,7 +3,7 @@ const fs = require("fs");
 const hre = require("hardhat");
 const {ethers} = hre;
 async function loadExistingDeployments() {
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     const filepath = path.join(deploymentsDir, "image9.json");
 
     if (fs.existsSync(filepath)) {
@@ -30,7 +30,7 @@ async function loadExistingDeployments() {
 }
 
 async function loadExistingDeploymentsForL1() {
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     const filepath = path.join(deploymentsDir, "image9.json");
 
     if (fs.existsSync(filepath)) {
@@ -49,7 +49,7 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
         chainId: (await ethers.provider.getNetwork()).chainId.toString()
     };
 
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     if (!fs.existsSync(deploymentsDir)) {
         fs.mkdirSync(deploymentsDir, {recursive: true});
     }
