@@ -77,16 +77,9 @@ library TokenEventLib {
         TokenModel.TokenEntity memory entity,
         address minter
     ) public {
-        TokenModel.ElGamalToken memory tokenMinted = TokenModel.ElGamalToken({
-            id: entity.id,
-            cl_x: entity.amount.cl_x,
-            cl_y: entity.amount.cl_y,
-            cr_x: entity.amount.cr_x,
-            cr_y: entity.amount.cr_y
-        });
         TokenMintedEvent memory eventData = TokenMintedEvent({
             to : to,
-            token : tokenMinted,
+            token : entity,
             minter : minter
         });
         bytes memory eventBody = abi.encode(eventData);
