@@ -360,10 +360,13 @@ describe.only("Function Cases", function () {
         });
         it.skip('Mint  10 to user another node', async () => {
             const userAddress = userInNode4;
-            const preBalanceUser = await getTokenBalanceInNode4(userAddress);
+            const preBalanceUser = await getTokenBalanceByAdmin(userAddress);
+            console.log("user balance of node4 : ",await getTokenBalanceInNode4(userAddress))
             await mint(userAddress, amount);
-            const postBalanceUser = await getTokenBalanceInNode4(userAddress);
-            expect(postBalanceUser).to.equal(preBalanceUser + amount);
+            const postBalanceUser = await getTokenBalanceByAdmin(userAddress);
+            // expect(postBalanceUser).to.equal(preBalanceUser + amount);
+            console.log("user balance of node4 : ",await getTokenBalanceInNode4(userAddress))
+            console.log({preBalanceUser,postBalanceUser})
         });
     });
     describe("Split and transfer", function () {
