@@ -123,7 +123,7 @@ import "../model/TokenModel.sol";
 
     struct TokenMintedEvent {
         address to;
-        uint256 tokenId;
+        TokenModel.ElGamalToken token;
         address minter;
     }
 
