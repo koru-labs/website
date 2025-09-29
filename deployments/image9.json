@@ -13,10 +13,10 @@
     "TokenUtilsLib": "0x90b51c03fb232200f22E453F13eE9fAd685412d9"
   },
   "contracts": {
-    "HamsaL2Event": "0x994018D2D2C6d8E5560281A284D7c6D4E46560e5",
-    "InstitutionUserRegistry": "0x1A5EcD310b053F219e27f5dD65cE7b90839651f2",
-    "InstUserProxy": "0x2FE26805c3eea99a822b4798a3117fCdad014Adc",
-    "PrivateERCToken": "0x411f48360445F46372a33f92D3B7a6E4D5d27FBf"
+    "HamsaL2Event": "0x36634eC8beAdd10c78C7a6f82e1158C6cD2eCfE6",
+    "InstitutionUserRegistry": "0xC0007679164882E2D35f057Af97d4D528Db66425",
+    "InstUserProxy": "0x24af2B0534c92672aE28d1cAa56A883c9DE8ECdF",
+    "PrivateERCToken": "0x6B1762f3F21617a82756E10ED25F43d20960eD38"
   },
   "accounts": {},
   "metadata": {
