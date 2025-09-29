@@ -2,15 +2,15 @@ module.exports = {
     // Contract addresses configuration
     "ADDRESSES": {
         // Hamsa L2 event contract address on QA network
-        "HAMSAL2EVENT": "0xE4093f610654cA2cA149cD3961963cF4d313f7ad",
+        "HAMSAL2EVENT": "",
         // L1 verification contract address
         "L1_VERIFY_ADDRESS": "0x5B8B2cf32A63e3974e61A7c4D06BA2F4F5eb383F",
         // L1 blob commitment verification contract address
         "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
         // Institution registration contract address
-        "INSTITUTION_REGISTRATION": "0xe0155201799262E4bCCbD9F7B200B0015a8362EB",
+        "INSTITUTION_REGISTRATION": "",
         // Proxy contract address for institution user operations
-        "PROXY_ADDRESS": "0x2Bf217237181aD3BAb17FCaB2d0bB69432698C1f"
+        "PROXY_ADDRESS": ""
     },
     // Institution configurations
     institutions: [

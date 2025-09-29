@@ -21,7 +21,7 @@
   "accounts": {},
   "metadata": {
     "timestamp": "2025-09-28T06:08:39.282Z",
-    "network": "ucl_L2_cluster",
+    "network": "ucl_L2_qa",
     "chainId": "1337"
   }
 }
