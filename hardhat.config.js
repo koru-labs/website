@@ -29,8 +29,7 @@ module.exports = {
     },
     allowUnlimitedContractSize: true,
     networks: {
-        ucl_L2_dev: {
-            // url: "http://a4a4c70c3b3544bf1a3c0e48af365e83-1088910243.us-west-1.elb.amazonaws.com:8545", //k8s,ucl-node2,v2
+        dev_ucl_L2: {
             url: "http://dev-ucl-l2.hamsa-ucl.com:8545", //k8s,ucl-node2,v2
             accounts: [
                 "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
@@ -78,7 +77,7 @@ module.exports = {
             url: 'http://eth-dev2.hamsa-ucl.com:33063',
             // url: 'http://54.193.75.6:33008',
             accounts: [
-                "bcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31",  // kurtosis account
+                // "bcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31",  // kurtosis account
                 "04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59",  // kurtosis account
             ],
         },
@@ -89,8 +88,8 @@ module.exports = {
                 "04b9f63ecf84210c5366c66d68fa1f5da1fa4f634fad6dfc86178e4d79ff9e59",  // kurtosis account
             ],
         },
-        ucl_L2_qa: {
-            url: "http://L2-node44.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
+        ucl_L2_cluster: {
+            url: "http://L2-node11.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
             accounts: [
                 "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
                 "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732 //// node3 manager address (circle manager, master minter, blackList)
