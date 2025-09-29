@@ -6,13 +6,6 @@ const configuration = require("../../script/circle/configuration");
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-//dev
-// const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
-// const rpcUrl_node3 = "a24407aff21b84685a321e0c4a992d88-217479769.us-west-1.elb.amazonaws.com:50051"
-// const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
-// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-// const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
-//qa
 // find node3 institution
 const node3Institution = configuration.institutions.find(institution => institution.name === "Node3");
 if (!node3Institution) {
@@ -23,18 +16,13 @@ const node4Institution = configuration.institutions.find(institution => institut
 if (!node3Institution) {
     throw new Error("Node4 institution not found in config");
 }
-// const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
 const rpcUrl_node3 = node3Institution.rpcUrl;
-// const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
 const rpcUrl_node4 = node4Institution.rpcUrl;
-// const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-// const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
 const adminPrivateKey = node3Institution.ethPrivateKey;
 
 const scAddress = config.contracts.PrivateERCToken;
 const client3 = createClient(rpcUrl_node3)
 const client4 = createClient(rpcUrl_node4)
-// const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 const node4AdminPrivateKey = node4Institution.ethPrivateKey;
 
 const {
@@ -68,16 +56,6 @@ const {
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
 
-// const l1CustomNetwork = {
-//     name: "BESU",
-//     chainId: 1337
-// };
-// const options = {
-//     batchMaxCount: 1,
-//     staticNetwork: true
-// };
-
-// const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 const l1Provider = ethers.provider;
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -88,8 +66,7 @@ const toAddress1 = accounts.To1;
 
 
 const toAddress2 = accounts.To2;
-// const userInNode4 = '0xbA268f776F70caDB087e73020dfE41c7298363Ed';
-const userInNode4 = '0x93d2ce0461c2612f847e074434d9951c32e44327';
+const userInNode4 = node4Institution.users[0].address
 
 const amount = 10;
 let preBalance, postBalance;
