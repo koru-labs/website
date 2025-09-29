@@ -20,6 +20,7 @@ async function registerInstitutionAndUser() {
                 institutions[i].address,
                 institutions[i].name,
                 institutions[i].publicKey,
+                institutions[i].rpcUrl,
                 institutions[i].nodeUrl,
                 institutions[i].httpUrl
             );
