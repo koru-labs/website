@@ -94,6 +94,7 @@ library TokenEventLib {
         address institutionAddress,
         string memory name,
         TokenModel.GrumpkinPublicKey memory publicKey,
+        string memory rpcUrl,
         string memory nodeUrl,
         string memory httpUrl
     ) public {
@@ -101,6 +102,7 @@ library TokenEventLib {
             institutionAddress: institutionAddress,
             name: name,
             publicKey: publicKey,
+            rpcUrl: rpcUrl,
             nodeUrl: nodeUrl,
             httpUrl: httpUrl
         });
@@ -114,12 +116,14 @@ library TokenEventLib {
         address owner,
         address institutionAddress,
         string memory name,
+        string memory rpcUrl,
         string memory nodeUrl,
         string memory httpUrl
     ) public {
         InstitutionUpdatedEvent memory e = InstitutionUpdatedEvent({
         institutionAddress: institutionAddress,
         name: name,
+        rpcUrl: rpcUrl,
         nodeUrl: nodeUrl,
         httpUrl: httpUrl
         });

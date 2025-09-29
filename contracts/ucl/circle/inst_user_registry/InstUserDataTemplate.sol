@@ -21,6 +21,7 @@ abstract contract InstUserDataTemplate {
          string name;
          address managerAddress;
          TokenModel.GrumpkinPublicKey publicKey;
+         string rpcUrl;
          string nodeUrl;
          string httpUrl;
      }

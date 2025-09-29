@@ -23,11 +23,12 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         _;
     }
 
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey,
+    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory rpcUrl,
         string memory nodeUrl, string memory httpUrl) external onlyOwner {
 
         require(institutionAddress != address(0), "Invalid address");
         require(! isEmptyString(name), "institution name can't be empty");
+        require(! isEmptyString(rpcUrl), "institution rpcUrl can't be empty");
         require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
         require(! isEmptyString(httpUrl), "institution httpUrl can't be empty");
 
@@ -39,6 +40,7 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         name : name,
         managerAddress : institutionAddress,
         publicKey : publicKey,
+        rpcUrl : rpcUrl,
         nodeUrl : nodeUrl,
         httpUrl : httpUrl
         });
@@ -53,12 +55,13 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             institutionAddress,
             name,
             publicKey,
+            rpcUrl,
             nodeUrl,
             httpUrl
         );
     }
 
-    function updateInstitution(address institutionAddress, string memory name, string memory nodeUrl, string memory httpUrl) external onlyOwner {
+    function updateInstitution(address institutionAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
 
         Institution storage institution = institutions[institutionAddress];
@@ -67,6 +70,10 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
         if (! isEmptyString(name)) {
             institution.name = name;
+        }
+
+        if (! isEmptyString(rpcUrl)) {
+            institution.rpcUrl = rpcUrl;
         }
 
         if (! isEmptyString(nodeUrl)) {
@@ -83,6 +90,7 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             owner,
             institutionAddress,
             institution.name,
+            institution.rpcUrl,
             institution.nodeUrl,
             institution.httpUrl
         );
