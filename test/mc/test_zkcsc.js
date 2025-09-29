@@ -20,7 +20,7 @@ const options = {
     staticNetwork: true
 };
 
-const L2Url = hardhatConfig.networks.dev_ucl_L2.url;
+const L2Url = hardhatConfig.networks.ucl_L2_dev.url;
 const l1Provider = new ethers.JsonRpcProvider(L2Url, l2CustomNetwork, options);
 
 // 钱包

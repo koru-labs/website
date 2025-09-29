@@ -8,14 +8,14 @@ const {createClient} = require('../qa/token_grpc')
 //dev
 // const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
 // const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
-// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-// const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+// const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
+// const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 
 //qa
 const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
 const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
-const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-const adminPrivateKey = hardhatConfig.networks.ucl_L2_cluster.accounts[1];
+const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_qa.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 const client = createClient(rpcUrl_node3)

@@ -16,11 +16,11 @@ const options = {
     staticNetwork: true
 };
 //qa
-const L1Url = hardhatConfig.networks.ucl_L2_cluster.url;
-const key = hardhatConfig.networks.ucl_L2_cluster.accounts[0];
+const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
+const key = hardhatConfig.networks.ucl_L2_qa.accounts[0];
 //dev
-// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-// const key = hardhatConfig.networks.dev_ucl_L2.accounts[0];
+// const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
+// const key = hardhatConfig.networks.ucl_L2_dev.accounts[0];
 
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 async function callPrivateMint(scAddress, proofResult, minterWallet) {

@@ -30,8 +30,8 @@ const options = {
 };
 
 
-// const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
-const providerUrl = hardhatConfig.networks.dev_ucl_L2.url;
+// const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
+const providerUrl = hardhatConfig.networks.ucl_L2_dev.url;
 const l1Provider = new ethers.JsonRpcProvider(providerUrl, l1CustomNetwork, options);
 
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
@@ -47,7 +47,7 @@ const userInNode1 = '0xbA268f776F70caDB087e73020dfE41c7298363Ed';
 const userInNode2 = '0xF8041E1185C7106121952bA9914ff904A4A01c80';
 const userInNode3 = '0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB';
 const userInNode4 = '0x5a3288A7400B2cd5e0568728E8216D9392094892';
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
 
 const amount = 10;
@@ -1587,7 +1587,7 @@ describe.only("Performance Test with created 10 minters", function () {
 
         const startSubmitTime = Date.now();
         const allResults = [];
-        const providerUrl = hardhatConfig.networks.dev_ucl_L2.url;
+        const providerUrl = hardhatConfig.networks.ucl_L2_dev.url;
 
         for (let i = 0; i < signedTransactions.length; i += BATCH_SIZE) {
             const batchSignedTxs = signedTransactions.slice(i, i + BATCH_SIZE);

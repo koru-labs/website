@@ -10,7 +10,7 @@ const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
 // const rpcUrl_node3 = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
 // const rpcUrl_node4 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
 const client3 = createClient(rpcUrl_node3)
-const adminPrivateKey = hardhatConfig.networks.dev_ucl_L2.accounts[1];
+const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 const {
     callPrivateMint,
     createAuthMetadata,
@@ -31,7 +31,7 @@ const options = {
 };
 
 
-const L1Url = hardhatConfig.networks.dev_ucl_L2.url;
+const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
 const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
 
 const amount = 10;
