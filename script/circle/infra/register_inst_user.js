@@ -1,4 +1,3 @@
-
 const {ethers} = require("hardhat");
 
 const {createAuthMetadata} = require("../../../test/help/testHelp.js")
@@ -22,13 +21,12 @@ async function registerInstitutionAndUser() {
                 institutions[i].publicKey,
                 institutions[i].rpcUrl,
                 institutions[i].nodeUrl,
-                institutions[i].httpUrl,
-                institutions[i].rpcUrl
+                institutions[i].httpUrl
             );
             await regTx.wait();
             console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
         } catch (error) {
-            if (! error.message.includes("institution already registered")){
+            if (!error.message.includes("institution already registered")) {
                 console.log(error)
             }
         }
@@ -77,7 +75,7 @@ async function registerUser(client, privateKey, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_roles: role ,//minter,admin,normal
+        account_roles: role,//minter,admin,normal
     };
     try {
         const response = await client.registerAccount(request, metadata);
