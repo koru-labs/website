@@ -1,13 +1,13 @@
 const {ethers} = require("hardhat");
 
-const {createAuthMetadata} = require("../../../test/help/testHelp.js")
-const {createClient} = require('../../../test/qa/token_grpc');
-const deployed = require("../../../deployments/image9.json");
+const {createAuthMetadata} = require("../../test/help/testHelp.js")
+const {createClient} = require('../../test/qa/token_grpc');
+const deployed = require("../../deployments/image9.json");
 const institutions = require("../configuration").institutions
 
 
 async function registerInstitutionAndUser() {
-    const deployed = require('../../../deployments/image9.json');
+    const deployed = require('../../deployments/image9.json');
 
 
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", deployed.contracts.InstUserProxy);

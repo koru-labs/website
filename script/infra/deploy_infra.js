@@ -11,7 +11,7 @@ const {
     deployConvert2pUSDCVerifier,
     deployConvert2USDCVerifier
 } = require("./deploy_verifier");
-const hardhatConfig = require("../../../hardhat.config");
+const hardhatConfig = require("../../hardhat.config");
 
 
 const Fixed_Addresses = require("../configuration").ADDRESSES;

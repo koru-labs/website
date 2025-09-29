@@ -35,15 +35,15 @@
   },
 
   "scripts": {
-    "circle-deploy-infra": "npx hardhat run script/circle/infra/deploy.js --network ucl_L2_qa",
-    "circle-deploy-L1": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_qa",
-    "circle-deploy-infra-user": "npx hardhat run script/circle/infra/register_inst_user.js --network ucl_L2_qa",
-    "circle-deploy-token": "npx hardhat run script/circle/token/deploy.js --network ucl_L2_qa",
+    "deploy-infra-qa": "npx hardhat run script/infra/deploy.js --network ucl_L2_qa",
+    "deploy-L1-qa": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_qa",
+    "deploy-infra-user-qa": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_qa",
+    "deploy-token-qa": "npx hardhat run script/token/deploy.js --network ucl_L2_qa",
 
-    "circle-deploy-infra-dev": "npx hardhat run script/circle/infra/deploy.js --network dev_ucl_L2",
-    "circle-deploy-L1-dev": "npx hardhat run script/circle/infra/deploy_L1_rollup.js --network eth_L1_dev",
-    "circle-deploy-infra-user-dev": "npx hardhat run script/circle/infra/register_inst_user.js --network dev_ucl_L2",
-    "circle-deploy-token-dev": "npx hardhat run script/circle/token/deploy.js --network dev_ucl_L2",
+    "deploy-infra-dev": "npx hardhat run script/infra/deploy.js --network dev_ucl_L2",
+    "deploy-L1-dev": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_dev",
+    "deploy-infra-user-dev": "npx hardhat run script/infra/register_inst_user.js --network dev_ucl_L2",
+    "deploy-token-dev": "npx hardhat run script/token/deploy.js --network dev_ucl_L2",
 
 
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2_qa",

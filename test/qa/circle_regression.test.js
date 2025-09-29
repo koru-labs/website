@@ -2,7 +2,7 @@ const {expect} = require("chai");
 const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
 const config = require('./../../deployments/image9.json');
-const configuration = require("../../script/circle/configuration");
+const configuration = require("../../script/configuration");
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 

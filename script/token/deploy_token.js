@@ -1,9 +1,9 @@
 const hre = require("hardhat");
 const {ethers} = hre;
-const hardhatConfig = require('../../../hardhat.config');
-const accounts = require("../../../deployments/account.json");
+const hardhatConfig = require('../../hardhat.config');
+const accounts = require("../../deployments/account.json");
 const config = require("../configuration");
-const {createClient} = require("../../../test/qa/token_grpc");
+const {createClient} = require("../../test/qa/token_grpc");
 const grpc = require("@grpc/grpc-js");
 
 // find node3 institution

@@ -3,7 +3,7 @@ const {ethers} = require('ethers');
 const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
-const config = require("../../script/circle/configuration");
+const config = require("../../script/configuration");
 
 // find node3 institution
 const node3Institution = config.institutions.find(institution => institution.name === "Node3");

@@ -11,7 +11,7 @@ const { deployToken,
 const {loadExistingDeployments, saveDeploymentInfo} = require("../deploy_help");
 
 async function main() {
-    const deployed = require('../../../deployments/image9.json');
+    const deployed = require('../../deployments/image9.json');
 
     await deployToken(deployed);
     // await deployTokenForNode4(deployed);
