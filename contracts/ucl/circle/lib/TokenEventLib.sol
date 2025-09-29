@@ -74,12 +74,12 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address to,
-        uint256 tokenId,
+        TokenModel.TokenEntity memory entity,
         address minter
     ) public {
         TokenMintedEvent memory eventData = TokenMintedEvent({
             to : to,
-            tokenId : tokenId,
+            token : entity,
             minter : minter
         });
         bytes memory eventBody = abi.encode(eventData);
