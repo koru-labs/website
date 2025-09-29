@@ -21,7 +21,8 @@ async function registerInstitutionAndUser() {
                 institutions[i].name,
                 institutions[i].publicKey,
                 institutions[i].nodeUrl,
-                institutions[i].httpUrl
+                institutions[i].httpUrl,
+                institutions[i].rpcUrl
             );
             await regTx.wait();
             console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
