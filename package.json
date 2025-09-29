@@ -65,7 +65,7 @@
 
     "mc-test": "npx hardhat run test/mc/mc_test.js --network ucl_L2_qa",
 
-    "qa-regression": "npx hardhat test test/qa/circle_regression.test.js --network ucl_L2_qa",
+    "qa-regression": "npx hardhat test test/qa/regression.test.js --network ucl_L2_qa",
     "qa-tps": "npx hardhat test test/qa/performance.test.js --network ucl_L2_qa",
     "qa-dvp": "npx hardhat test test/qa/dvp.test.js --network ucl_L2_qa",
     "qa-dvp2node": "npx hardhat test test/qa/dvp2node.test.js --network ucl_L2_qa",
