@@ -189,7 +189,7 @@ async  function checkUserInst() {
 }
 
 
-// getLastBlock().then();
+getLastBlock().then();
 // verifyCode().then();
 // checkSeededBankInfo().then();
 // verifyEthAddress().then();
@@ -199,6 +199,6 @@ async  function checkUserInst() {
 // registerBankUsers().then();
 // getOwner().then();
 // enableBankInTokenSmartContract().then()
-makeBankAdminMinter().then()
+// makeBankAdminMinter().then()
 
 // checkUserInst().then();
