@@ -358,15 +358,18 @@ describe.only("Function Cases", function () {
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             expect(postBalance).to.equal(preBalance + amount);
         });
-        it.skip('Mint  10 to user another node', async () => {
+        it('Mint  10 to user another node', async () => {
             const userAddress = userInNode4;
-            const preBalanceUser = await getTokenBalanceByAdmin(userAddress);
-            console.log("user balance of node4 : ",await getTokenBalanceInNode4(userAddress))
+            const preBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+            const preBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
             await mint(userAddress, amount);
-            const postBalanceUser = await getTokenBalanceByAdmin(userAddress);
-            // expect(postBalanceUser).to.equal(preBalanceUser + amount);
-            console.log("user balance of node4 : ",await getTokenBalanceInNode4(userAddress))
-            console.log({preBalanceUser,postBalanceUser})
+            await sleep(3000);
+            const postBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+            const postBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
+            console.log({preBalanceUserInNode4,postBalanceUserInNode4})
+            console.log({preBalanceUserInNode3,postBalanceUserInNode3})
+            expect(postBalanceUserInNode4).to.equal(preBalanceUserInNode4 + amount);
+            expect(postBalanceUserInNode3).to.equal(preBalanceUserInNode3);
         });
     });
     describe("Split and transfer", function () {
@@ -397,13 +400,18 @@ describe.only("Function Cases", function () {
         });
 
         it('transfer to user cross Bank with 10', async () => {
-            const recevier = userInNode4;
-            preBalanceTo = await getTokenBalanceInNode4(recevier);
-            await SplitAndTransfer(recevier, amount, minterMeta);
-            postBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            postBalanceTo = await getTokenBalanceInNode4(recevier);
-            expect(postBalance).to.equal(preBalance - amount);
-            expect(postBalanceTo).to.equal(preBalanceTo + amount);
+            const userAddress = userInNode4;
+            const preBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+            const preBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
+            await SplitAndTransfer(userAddress, amount, minterMeta);
+            await sleep(3000);
+            const postBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+            const postBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
+            console.log({preBalanceUserInNode4,postBalanceUserInNode4})
+            console.log({preBalanceUserInNode3,postBalanceUserInNode3})
+            expect(postBalanceUserInNode4).to.equal(preBalanceUserInNode4 + amount);
+            expect(postBalanceUserInNode3).to.equal(preBalanceUserInNode3);
+
         });
         it('transfer all amount', async () => {
             await cancelAllSplitTokens(minterWallet);
@@ -439,9 +447,18 @@ describe.only("Function Cases", function () {
             const amount = 5;
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             if (preBalance >= amount) {
-                await ApproveAndTransferFrom(to1Wallet, spender1Wallet, accounts.To1, userInNode4, amount, to1Meta)
-                postBalance = await getTokenBalanceByAdmin(accounts.To1);
-                expect(postBalance).to.equal(preBalance - amount);
+                const userAddress = userInNode4;
+                const preBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+                const preBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
+                await ApproveAndTransferFrom(to1Wallet, spender1Wallet, accounts.To1, userAddress, amount, to1Meta)
+                await sleep(3000);
+                const postBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
+                const postBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
+                console.log({preBalanceUserInNode4,postBalanceUserInNode4})
+                console.log({preBalanceUserInNode3,postBalanceUserInNode3})
+                expect(postBalanceUserInNode4).to.equal(preBalanceUserInNode4 + amount);
+                expect(postBalanceUserInNode3).to.equal(preBalanceUserInNode3);
+
             } else {
                 console.log("balance is not enough")
             }
@@ -449,12 +466,9 @@ describe.only("Function Cases", function () {
     })
     describe("Split and privateTransfers", function () {
         this.timeout(1200000);
-        let preBalanceTo, postBalanceTo;
-        beforeEach(async function () {
-            preBalance = await getTokenBalanceByAdmin(accounts.Minter);
-        });
         it('privateTransfers', async () => {
             await mint(accounts.Minter, 1000)
+            const preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             const splitRequest1 = {
                 sc_address: config.contracts.PrivateERCToken,
                 token_type: '0',
@@ -481,7 +495,9 @@ describe.only("Function Cases", function () {
             await client3.waitForActionCompletion(client3.getTokenActionStatus, response2.request_id, minterMeta)
             //privateTransfers
             await callPrivateTransfers(minterWallet, config.contracts.PrivateERCToken, [tokenId1, tokenId2])
-            await getTokenBalanceByAdmin(accounts.Minter)
+            await sleep(3000)
+            const postBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            expect(preBalance-postBalance).to.equal( amount * 2);
         });
     })
     describe("Approve And TransferFrom", function () {
@@ -499,7 +515,7 @@ describe.only("Function Cases", function () {
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance + 1);
         });
-        it.skip('Approve transfer: minter to user cross bank ', async () => {
+        it('Approve transfer: minter to user cross bank ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             await ApproveAndTransferFrom(minterWallet, spender1Wallet, accounts.Minter, userInNode4, 1, minterMeta)
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
@@ -531,7 +547,7 @@ describe.only("Function Cases", function () {
             expect(postBalance).to.equal(preBalance - 3);
         });
 
-        it.skip('Approve transfer: to1 to user cross bank ', async () => {
+        it('Approve transfer: to1 to user cross bank ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.To1);
             await ApproveAndTransferFrom(to1Wallet, spender1Wallet, accounts.To1, userInNode4, 1, to1Meta)
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
@@ -863,8 +879,6 @@ describe.only("Function Cases", function () {
             console.log({postPublicBalance, postPrivateBalance})
             expect(postPublicBalance).to.equal(prePublicBalance - amount);
             expect(postPrivateBalance).to.equal(prePrivateBalance + amount);
-
-
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
             expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
