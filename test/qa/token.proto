@@ -268,6 +268,8 @@ message SaveTransactionRequest {
   string hash = 6;
   int64 timestamp = 7;
   string metadata = 8;
+  int64 currency_precision = 9;
+  string exchange_rate = 10;
 }
 
 message SaveTransactionResponse {
@@ -295,7 +297,9 @@ message Transaction {
   uint64 amount = 4;
   string type = 5;
   string hash = 6;
-  int64 timestamp = 7;
+  int64 currency_precision = 7;
+  string exchange_rate = 8;
+  int64 timestamp = 9;
 }
 
 message RegisteredInstitutionsRequest {
