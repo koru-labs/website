@@ -81,6 +81,7 @@ async function mintForStart() {
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
+        from_address:accounts.Minter,
         to_address: accounts.Minter,
         amount: 100
     };
@@ -90,6 +91,13 @@ async function mintForStart() {
 
     let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet)
     console.log("Mint receipt:", receipt);
+
+    await sleep(2000)
+
+    console.log("Checking privateTotalSupply after mint...");
+    const contract = await ethers.getContractAt("PrivateERCToken", config.contracts.PrivateERCToken, minterWallet);
+    const privateTotalSupply = await contract.privateTotalSupply();
+    console.log("Private total supply after mint:", privateTotalSupply);
 
     await sleep(2000)
     console.log("✅ Mint completed successfully");
@@ -423,7 +431,7 @@ async function runMainTestProcess() {
 
 
 if (require.main === module) {
-    runMainTestProcess().then(() => {
+    mintForStart().then(() => {
         console.log("All tests completed!");
         process.exit(0);
     }).catch((error) => {
