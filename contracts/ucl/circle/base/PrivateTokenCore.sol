@@ -181,7 +181,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) nonReentrant virtual {
 
         address institutionAddress = _institutionRegistration.getUserManager(from);
         require(institutionAddress != address(0), "institution is not registered for user");

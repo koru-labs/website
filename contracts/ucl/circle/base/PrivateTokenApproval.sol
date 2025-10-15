@@ -32,7 +32,7 @@ abstract contract PrivateTokenApproval is
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(spender)
-     notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
+     notBlacklisted(to) nonReentrant virtual {
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
         address institutionAddress = _institutionRegistration.getUserManager(msg.sender);
