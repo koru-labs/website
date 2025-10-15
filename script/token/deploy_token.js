@@ -35,11 +35,16 @@ async function deployToken(deployed) {
         signer: wallet
     });
 
-    const privateUSDC = await PrivateUSDCFactory.deploy();
-    await privateUSDC.waitForDeployment();
-    console.log("PrivateUSDC is deployed at:", privateUSDC.target);
-    deployed.contracts.PrivateERCToken = privateUSDC.target;
+    const implementation = await PrivateUSDCFactory.deploy();
+    await implementation.waitForDeployment();
+    console.log("PrivateUSDC implementation deployed at:", implementation.target);
 
+    const ProxyFactory = await ethers.getContractFactory("PrivateUSDCProxy", wallet);
+    const proxy = await ProxyFactory.deploy(implementation.target);
+    await proxy.waitForDeployment();
+    console.log("PrivateUSDC proxy deployed at:", proxy.target);
+
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", proxy.target, wallet);
     console.log("Initializing PrivateUSDC...");
     const initTx = await privateUSDC.initialize(
         "Private USDC",
@@ -55,6 +60,9 @@ async function deployToken(deployed) {
     );
     await initTx.wait();
     console.log("PrivateUSDC initialized successfully");
+
+    deployed.contracts.PrivateERCToken = proxy.target;
+    deployed.contracts.PrivateERCTokenImplementation = implementation.target;
 }
 
 async function deployTokenForNode4(deployed) {
@@ -80,11 +88,16 @@ async function deployTokenForNode4(deployed) {
         signer: wallet
     });
 
-    const privateUSDC = await PrivateUSDCFactory.deploy();
-    await privateUSDC.waitForDeployment();
-    console.log("PrivateUSDC is deployed at:", privateUSDC.target);
-    deployed.contracts.PrivateERCTokenNode4 = privateUSDC.target;
+    const implementation = await PrivateUSDCFactory.deploy();
+    await implementation.waitForDeployment();
+    console.log("PrivateUSDC implementation deployed at:", implementation.target);
 
+    const ProxyFactory = await ethers.getContractFactory("PrivateUSDCProxy", wallet);
+    const proxy = await ProxyFactory.deploy(implementation.target);
+    await proxy.waitForDeployment();
+    console.log("PrivateUSDC proxy deployed at:", proxy.target);
+
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", proxy.target, wallet);
     console.log("Initializing PrivateUSDC...");
     const initTx = await privateUSDC.initialize(
         "Private USDC",
@@ -100,6 +113,9 @@ async function deployTokenForNode4(deployed) {
     );
     await initTx.wait();
     console.log("PrivateUSDC initialized successfully");
+
+    deployed.contracts.PrivateERCTokenNode4 = proxy.target;
+    deployed.contracts.PrivateERCTokenNode4Implementation = implementation.target;
 }
 
 async function allowBanksInTokenSmartContract(deployed) {
@@ -197,6 +213,6 @@ module.exports = {
     deployToken,
     allowBanksInTokenSmartContract,
     setMinterAllowed,
-    deployTokenForNode4
+    deployTokenForNode4,
+    sleep
 };
-
