@@ -745,25 +745,25 @@ describe.only("Function Cases", function () {
             await mint(accounts.To1, amount);
         })
         it('check_contract_totalSupply', async () => {
-            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
+            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta,minterWallet));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
         });
         it('totalSupply_add_after_mint ', async () => {
-            totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
+            totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta,minterWallet);
             await mint(accounts.Minter, amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
-            expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
-            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
+            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta,minterWallet));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
+            expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         });
         it('totalSupply_sub_after_burn ', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
             await SplitAndBurn(amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
             console.log({totalSupplyPost, totalSupplyPre})
-            expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
+            expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
         });
         it('totalSupply_keep_same_after_transfer', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
@@ -772,11 +772,10 @@ describe.only("Function Cases", function () {
             if (minterBalance >= 100) {
                 await SplitAndTransfer(toAddress1, amount, minterMeta);
                 totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
-                console.log("totalSupplyPost: ", totalSupplyPost)
+                console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
+                console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
                 expect(totalSupplyPost).to.equal(totalSupplyPre);
             }
-            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
-            console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
         });
         it('totalSupply_keep_same_after_cancel_burn', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
@@ -786,10 +785,10 @@ describe.only("Function Cases", function () {
                 const burnSplit = await GenerateBurnSplitProof(amount)
                 await cancelAllSplitTokens(minterWallet)
                 totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
+                console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
+                console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
                 expect(totalSupplyPost).to.equal(totalSupplyPre);
             }
-            console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
-            console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
         });
         it('totalSupply_decrease_after_convert2USDC ', async () => {
             await mint(accounts.Minter, 10);
@@ -829,10 +828,9 @@ describe.only("Function Cases", function () {
             expect(postPublicBalance).to.equal(prePublicBalance + amount);
 
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
-            console.log({totalSupplyPost, totalSupplyPre})
-            expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
+            expect(totalSupplyPost).to.equal(totalSupplyPre - amount);
         });
         it('totalSupply_increase_after_convert2pUSDC ', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
@@ -880,9 +878,9 @@ describe.only("Function Cases", function () {
             expect(postPublicBalance).to.equal(prePublicBalance - amount);
             expect(postPrivateBalance).to.equal(prePrivateBalance + amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta);
-            expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, config.contracts.PrivateERCToken, adminMeta));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(config.contracts.PrivateERCToken));
+            expect(totalSupplyPost).to.equal(totalSupplyPre + amount);
         });
 
     });
