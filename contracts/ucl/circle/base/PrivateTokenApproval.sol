@@ -35,6 +35,9 @@ abstract contract PrivateTokenApproval is
      notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
         require(spender != address(0), "PrivateERCToken: approve to the zero address");
         require(newTokens.length == 3, "PrivateERCToken: invalid newTokens length");
+        address institutionAddress = _institutionRegistration.getUserManager(msg.sender);
+        require(institutionAddress != address(0), "institution is not registered for caller");
+        require(_institutionRegistration.isInstitutionCaller(institutionAddress, msg.sender), "caller is not allowed for this institution");
 
         TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(_accounts, msg.sender, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];

@@ -183,7 +183,9 @@ abstract contract PrivateTokenCore is
         uint256[20] calldata publicInputs
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
 
-        require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
+        address institutionAddress = _institutionRegistration.getUserManager(from);
+        require(institutionAddress != address(0), "institution is not registered for user");
+        require(_institutionRegistration.isInstitutionCaller(institutionAddress, msg.sender), "caller is not allowed for this institution");
 
         TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(_accounts, from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];

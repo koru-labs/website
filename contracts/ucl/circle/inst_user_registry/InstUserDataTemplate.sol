@@ -27,4 +27,6 @@ abstract contract InstUserDataTemplate {
      }
      mapping(address => Institution) public institutions;
      mapping(address => address) public userToManager;
+     mapping(address => mapping(address => bool)) internal institutionToCallers;
+     mapping(address => address[]) internal institutionCallerList;
 }

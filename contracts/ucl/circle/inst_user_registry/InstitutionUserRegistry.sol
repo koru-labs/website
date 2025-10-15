@@ -47,6 +47,9 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
         institutions[institutionAddress]  = institution;
         userToManager[institutionAddress] = institutionAddress;
+        address[] memory defaultCallers = new address[](1);
+        defaultCallers[0] = institutionAddress;
+        _replaceInstitutionCallers(institutionAddress, defaultCallers);
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
@@ -96,6 +99,15 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         );
     }
 
+    function replaceInstitutionCallers(address institutionAddress, address[] calldata newCallers) external onlyOwner {
+        require(institutionAddress != address(0), "Invalid address");
+
+        Institution storage institution = institutions[institutionAddress];
+        require(institution.managerAddress != address(0), "Institution is still not registered yet");
+
+        _replaceInstitutionCallers(institutionAddress, newCallers);
+    }
+
     function registerUser(address userAddress) external onlyInstitutionManager {
         require(userAddress != address(0), "Invalid user address");
         require(userToManager[userAddress] == address(0) || userToManager[userAddress] == msg.sender, "User already registered");
@@ -142,6 +154,19 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         return institutions[managerAddress].managerAddress != address(0);
     }
 
+    function isInstitutionCaller(address institutionAddress, address caller) public view returns (bool) {
+        return institutionToCallers[institutionAddress][caller];
+    }
+
+    function getInstitutionCallers(address institutionAddress) external view returns (address[] memory) {
+        address[] storage callers = institutionCallerList[institutionAddress];
+        address[] memory result = new address[](callers.length);
+        for (uint256 i = 0; i < callers.length; i++) {
+            result[i] = callers[i];
+        }
+        return result;
+    }
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Invalid new owner address");
         owner = newOwner;
@@ -158,5 +183,37 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
     function getEventAddress() public view returns (address) {
         return address(l2Event);
+    }
+
+    function _replaceInstitutionCallers(address institutionAddress, address[] memory newCallers) internal {
+        address[] storage existingCallers = institutionCallerList[institutionAddress];
+        for (uint256 i = 0; i < existingCallers.length; i++) {
+            address existingCaller = existingCallers[i];
+            if (institutionToCallers[institutionAddress][existingCaller]) {
+                delete institutionToCallers[institutionAddress][existingCaller];
+            }
+        }
+
+        delete institutionCallerList[institutionAddress];
+
+        bool managerIncluded = false;
+
+        for (uint256 i = 0; i < newCallers.length; i++) {
+            address caller = newCallers[i];
+            require(caller != address(0), "caller is empty");
+            require(!institutionToCallers[institutionAddress][caller], "caller duplicated");
+
+            institutionToCallers[institutionAddress][caller] = true;
+            institutionCallerList[institutionAddress].push(caller);
+
+            if (caller == institutionAddress) {
+                managerIncluded = true;
+            }
+        }
+
+        if (!managerIncluded) {
+            institutionToCallers[institutionAddress][institutionAddress] = true;
+            institutionCallerList[institutionAddress].push(institutionAddress);
+        }
     }
 }
