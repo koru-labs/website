@@ -2,9 +2,9 @@ module.exports = {
     // Contract addresses configuration
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-        "HAMSAL2EVENT_IMPLEMENTATION": "",
+        "HAMSAL2EVENT_IMPLEMENTATION": "0x5cd0B2E2084b27Ca7C661038fed641Dd869dA955",
         // Hamsa L2 event proxy address on target network
-        "HAMSAL2EVENT_PROXY": "",
+        "HAMSAL2EVENT_PROXY": "0x51225e23E3D5b50f71Dddf6DA1Bf20D8A643A75c",
         // Optional alternate implementation for A/B rollout
         "HAMSAL2EVENT_IMPLEMENTATION_B": "",
         // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +14,9 @@ module.exports = {
         // L1 blob commitment verification contract address
         "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
         // Institution registration contract address
-        "INSTITUTION_REGISTRATION": "0x0B6fD31F5D644E8aD9Fd4629f2D25Bf810fBDcEf",
+        "INSTITUTION_REGISTRATION": "0x0Dd48dcBe411C027ed8765A47426523C99341242",
         // Proxy contract address for institution user operations
-        "PROXY_ADDRESS": "0xF3B8Ee2b8273A62f697CA730d8aBAb120E6C70cc"
+        "PROXY_ADDRESS": "0x29271061626b552608e500664630568A2b5919E4"
     },
     // Institution configurations
     institutions: [
@@ -28,11 +28,11 @@ module.exports = {
             // Institution name identifier
             name: "Node3",
             // gRPC endpoint for Node3 RPC services
-            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
+            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
-            nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
+            nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node3 services
-            httpUrl: "http://qa-node3-http.hamsa-ucl.com:8080",
+            httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
             // curve public key coordinates for Node3 institution on L2 network
             publicKey: {
                 x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
@@ -62,11 +62,11 @@ module.exports = {
             // Institution name identifier
             name: "Node4",
             // gRPC endpoint for Node4 RPC services
-            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
+            rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
-            nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
+            nodeUrl: "https://dev-node4-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node4 services
-            httpUrl: "http://qa-node4-http.hamsa-ucl.com:8080",
+            httpUrl: "http://dev-node4-http.hamsa-ucl.com:8080",
             // curve public key coordinates for Node4 institution on L2 network
             publicKey: {
                 x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
