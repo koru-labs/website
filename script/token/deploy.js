@@ -12,7 +12,7 @@ const {loadExistingDeployments, saveDeploymentInfo, getImage9EnvironmentData} = 
 
 async function main() {
     const deployed = getImage9EnvironmentData();
-    
+
     await deployToken(deployed);
     // await deployTokenForNode4(deployed);
     await allowBanksInTokenSmartContract(deployed);

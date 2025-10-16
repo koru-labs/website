@@ -16,13 +16,14 @@ module.exports = async function registerInstitutionAndUser() {
                 institutions[i].address,
                 institutions[i].name,
                 institutions[i].publicKey,
+                institutions[i].rpcUrl,
                 institutions[i].nodeUrl,
                 institutions[i].httpUrl
             );
             await regTx.wait();
             console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
         } catch (error) {
-            if (! error.message.includes("institution already registered")){
+            if (!error.message.includes("institution already registered")) {
                 console.log(error)
             }
         }
@@ -71,7 +72,7 @@ async function registerUser(client, privateKey, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
-        account_roles: role ,//minter,admin,normal
+        account_roles: role,//minter,admin,normal
     };
     try {
         const response = await client.registerAccount(request, metadata);
@@ -80,3 +81,6 @@ async function registerUser(client, privateKey, userAddress, role) {
         console.error("registerAccount failed:", error);
     }
 }
+
+//execute after main is completed and k8s configuration is updated and ucl-node are been restarted
+registerInstitutionAndUser().then();

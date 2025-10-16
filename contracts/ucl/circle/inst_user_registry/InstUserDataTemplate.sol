@@ -21,9 +21,14 @@ abstract contract InstUserDataTemplate {
          string name;
          address managerAddress;
          TokenModel.GrumpkinPublicKey publicKey;
+         string rpcUrl;
          string nodeUrl;
          string httpUrl;
      }
      mapping(address => Institution) public institutions;
      mapping(address => address) public userToManager;
-}
+     mapping(address => mapping(address => bool)) internal institutionToCallers;
+     mapping(address => address[]) internal institutionCallerList;
+     address[] internal institutionAddresses;
+     mapping(address => bool) internal institutionAddressTracked;
+ }

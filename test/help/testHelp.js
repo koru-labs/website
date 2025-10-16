@@ -6,23 +6,22 @@ const accounts = require("../../deployments/account.json");
 const grpc = require('@grpc/grpc-js');
 const deployed = require("../../deployments/image9.json");
 const {createClient} = require("../qa/token_grpc");
+const configuration = require("../../script/configuration");
 
-const l1CustomNetwork = {
-    name: "BESU",
-    chainId: 1337
-};
-const options = {
-    batchMaxCount: 1,
-    staticNetwork: true
-};
-//qa
-// const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
-// const key = hardhatConfig.networks.ucl_L2_qa.accounts[0];
-//dev
-const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
-const key = hardhatConfig.networks.ucl_L2_dev.accounts[0];
+const l1Provider = ethers.provider;
 
-const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+const node3Institution = configuration.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+// find node4 institution
+const node4Institution = configuration.institutions.find(institution => institution.name === "Node4");
+if (!node3Institution) {
+    throw new Error("Node4 institution not found in config");
+}
+
+const key = node3Institution.privateKey
+
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const newToken = {
@@ -329,12 +328,18 @@ async function registerUser(privateKey,client,userAddress,role) {
 
     try {
         const response = await client.registerAccount(request, metadata);
-        console.log("registerAccount response:", response);
+        // console.log("registerAccount response:", response);
+        // const actionRequest = {
+        //     account_address: userAddress,
+        // };
+        // const actionResponse = await client.getAccount(actionRequest, metadata);
+        // console.log("user status:", actionResponse);
+        await sleep(3000)
         if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
             const actionRequest = {
                 request_id: response.request_id,
             };
-            await sleep(3000);
+            // await sleep(3000);
             const actionResponse = await client.getAsyncAction(actionRequest, metadata);
             console.log("action response:", actionResponse);
             return actionResponse

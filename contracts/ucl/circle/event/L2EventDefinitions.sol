@@ -14,6 +14,7 @@ import "../model/TokenModel.sol";
         address institutionAddress;
         string name;
         TokenModel.GrumpkinPublicKey publicKey;
+        string rpcUrl;
         string nodeUrl;
         string httpUrl;
     }
@@ -21,6 +22,7 @@ import "../model/TokenModel.sol";
     struct InstitutionUpdatedEvent {
         address institutionAddress;
         string name;
+        string rpcUrl;
         string nodeUrl;
         string httpUrl;
     }
@@ -121,7 +123,7 @@ import "../model/TokenModel.sol";
 
     struct TokenMintedEvent {
         address to;
-        uint256 tokenId;
+        TokenModel.TokenEntity token;
         address minter;
     }
 

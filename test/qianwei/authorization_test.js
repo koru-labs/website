@@ -21,9 +21,10 @@ const client = createClient(rpcUrl);
 const request_id = "617ec920c0e59bfa078dca2655f9c1e2e41236589460646d7485601d01a5eb81"
 
 // admin
-// const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
+const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"; //N0DE3
+// const privateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171"; //NODE4
 // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
-const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+// const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
 
 // normal
 // const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
@@ -76,18 +77,21 @@ async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: address,
-        account_roles: "minter",//minter,admin,normal
+        account_roles: "normal",//minter,admin,normal
     };
 
     try {
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
-        const actionRequest = {
-            request_id: response.request_id,
-        };
-        await delay(10000);
-        const actionResponse = await client.getAsyncAction(actionRequest, metadata);
-        console.log("action response:", actionResponse);
+        if (response.request_id) {
+            const actionRequest = {
+                request_id: response.request_id,
+            };
+            await delay(10000);
+            const actionResponse = await client.getAsyncAction(actionRequest, metadata);
+            console.log("action response:", actionResponse);
+        }
+
     } catch (error) {
         console.error("gRPC call failed:", error);
     }
@@ -174,5 +178,5 @@ async function testGetAccountForHttp() {
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountRole().then();
-testGetAccount().then();
+// testGetAccount().then();
 // testGetAccountForHttp().then();

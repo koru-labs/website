@@ -127,7 +127,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y), TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
 
         TokenUtilsLib.addToken(_accounts, to, entity);
-        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, entity.id, msg.sender);
+        TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, entity, msg.sender);
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
         TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof, initialMinterAllowed.id, newAllowed.id, supplyIncrease.id);
 
@@ -181,9 +181,11 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) nonReentrant virtual {
 
-        require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
+        address institutionAddress = _institutionRegistration.getUserManager(from);
+        require(institutionAddress != address(0), "institution is not registered for user");
+        require(_institutionRegistration.isInstitutionCaller(institutionAddress, msg.sender), "caller is not allowed for this institution");
 
         TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(_accounts, from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];
