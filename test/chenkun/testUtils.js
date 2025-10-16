@@ -5,19 +5,26 @@ const hardhatConfig = require('../../hardhat.config');
 // const config = require('./../../deployments/image9.json');
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc');
+
 const grpc = require("@grpc/grpc-js");
 const {testConvert2pUSDCWithProvidedData} = require("../sun/private_usdc_test");
-const { getEnvironmentConfig } = require('../../script/circle/deploy_help.js');
-const config = getEnvironmentConfig();
-const {getImage9EnvironmentData} = require("../../script/circle/deploy_help");
+const { getEnvironmentConfig } = require('../../script/deploy_help.js')
+const configuration = getEnvironmentConfig();;
+const {getImage9EnvironmentData} = require("../../script/deploy_help");
 // const rpcUrl = "localhost:50051";
 // const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // find node3 institution
-const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+const node3Institution = configuration.institutions.find(institution => institution.name === "Node3");
 if (!node3Institution) {
   throw new Error("Node3 institution not found in config");
 }
 const rpcUrl = node3Institution.rpcUrl;
+const deployed = getImage9EnvironmentData();
+
+// Initialize client and provider
+const client = createClient(rpcUrl);
+const l1Provider = ethers.provider;
+
 /**
  * Configuration Constants
  */
@@ -26,22 +33,22 @@ const CONSTANTS = {
   // rpcUrl: "127.0.0.1:50051",
   rpcUrl: rpcUrl,
   // rpcUrl: "a9c20a6c009e44a11b75092155632a0e-1098386893.us-west-1.elb.amazonaws.com:50051",
-  
+
   // Network configuration
   network: {
     name: "BESU",
     chainId: 1337
   },
-  
+
   // Provider options
   providerOptions: {
     batchMaxCount: 1,
     staticNetwork: true
   },
-  
+
   // Test amount
   defaultAmount: 1,
-  
+
   // Wait times (milliseconds)
   waitTimes: {
     short: 1000,
@@ -50,14 +57,6 @@ const CONSTANTS = {
   }
 };
 
-// Initialize client and provider
-const client = createClient(CONSTANTS.rpcUrl);
-// const l1Provider = new ethers.JsonRpcProvider(
-//   hardhatConfig.networks.ucl_L2_dev.url,
-//   CONSTANTS.network,
-//   CONSTANTS.providerOptions
-// );
-const l1Provider = ethers.provider
 // Initialize wallets
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
 const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
@@ -133,7 +132,6 @@ async function checkBalance(account) {
  */
 async function mintForStart() {
   try {
-    const deployed = getImage9EnvironmentData();
     const metadata = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
       sc_address: deployed.contracts.PrivateERCToken,
@@ -142,13 +140,13 @@ async function mintForStart() {
       to_address: accounts.Minter,
       amount: 100
     };
-    
+
     console.log("Starting to generate mint proof...");
     let response = await client.generateMintProof(generateRequest, metadata);
     console.log("Mint proof generation response:", response);
 
     console.log("Executing on-chain minting operation...");
-    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet);
+    let receipt = await callPrivateMint(deployed.contracts.PrivateERCToken, response, minterWallet);
     console.log("Minting transaction receipt:", receipt);
 
     return receipt;
@@ -172,7 +170,7 @@ async function testDirectMintByAuth() {
     console.time('testDirectMint');
 
     const generateRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address:accounts.Minter,
       to_address: accounts.Minter,
@@ -185,7 +183,7 @@ async function testDirectMintByAuth() {
 
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.timeEnd('testDirectMint');
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter);
     return response;
   } catch (error) {
     console.error(`Direct minting test failed: ${error.message}`);
@@ -201,12 +199,12 @@ async function testDirectBurnByAuth() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     console.time('testDirectBurn');
-    
+
     const startTime = Date.now();
     console.log("Starting direct burn, time:", new Date(startTime).toISOString());
-    
+
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       amount: CONSTANTS.defaultAmount,
@@ -215,15 +213,15 @@ async function testDirectBurnByAuth() {
 
     let response = await client.generateDirectBurn(splitRequest, metadata);
     console.log("Direct burn response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.timeEnd('testDirectBurn');
-    
+
     const endTime = Date.now();
     console.log("Direct burn completed, time:", new Date(endTime).toISOString());
     console.log(`Total time: ${(endTime - startTime) / 1000} seconds`);
-    
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
+
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
     return response;
   } catch (error) {
     console.error(`Direct burn test failed: ${error.message}`);
@@ -242,7 +240,7 @@ async function testDirectTransferByAuth() {
 
     console.time('testDirectTransfer');
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.Spender1,
@@ -253,14 +251,14 @@ async function testDirectTransferByAuth() {
     console.log("Starting direct transfer...");
     let response = await client.generateDirectTransfer(splitRequest, metadata);
     console.log("Direct transfer response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.timeEnd('testDirectTransfer');
-    
+
     console.log("Checking balances after transfer...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Spender1);
-    
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter);
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Spender1);
+
     return response;
   } catch (error) {
     console.error(`Direct transfer test failed: ${error.message}`);
@@ -281,9 +279,9 @@ async function testTransferFromByAuth() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     const metadata2 = await createAuthMetadata(accounts.Spender1Key);
     const metadata3 = await createAuthMetadata(accounts.To1PrivateKey);
-    
+
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       spender_address: accounts.Spender1,
@@ -295,25 +293,25 @@ async function testTransferFromByAuth() {
     console.log("Generating approval proof...");
     let response = await client.generateApproveProof(splitRequest, metadata);
     console.log("Approval proof response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     console.log("Executing authorized transfer...");
     let receipt = await callPrivateTransferFrom(
-      spenderWallet,
-      config.contracts.PrivateERCToken,
-      accounts.Minter,
-      accounts.To1,
+        spenderWallet,
+        deployed.contracts.PrivateERCToken,
+        accounts.Minter,
+        accounts.To1,
         ethers.toBigInt(response.transfer_token_id),
     );
     console.log("Authorized transfer receipt:", receipt);
-    
+
     await sleep(CONSTANTS.waitTimes.long);
-    
+
     console.log("Checking balances after authorized transfer...");
     // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
     // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Spender1, metadata2);
     // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata3);
-    
+
     return receipt;
   } catch (error) {
     console.error(`Authorized transfer test failed: ${error.message}`);
@@ -328,9 +326,9 @@ async function testTransferFromByAuth() {
 async function testReserveTokensAndBurn() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    
+
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       amount: CONSTANTS.defaultAmount,
@@ -340,7 +338,7 @@ async function testReserveTokensAndBurn() {
     console.log("Splitting token...");
     let response = await client.generateSplitToken(splitRequest, metadata);
     console.log("Token split response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     var tokenId1 = ethers.toBigInt(response.transfer_token_id)
     let tokenId2 = ethers.getBigInt(response.transfer_token_id);
@@ -348,14 +346,14 @@ async function testReserveTokensAndBurn() {
     console.log("Token ID:", tokenId1, tokenId2, tokenId3);
     console.log("Burning split token...");
     let receipt = await callPrivateBurn(
-      config.contracts.PrivateERCToken,
-      minterWallet,
+        deployed.contracts.PrivateERCToken,
+        minterWallet,
         tokenId1
     );
-    
+
     await sleep(CONSTANTS.waitTimes.medium);
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
+
     return receipt;
   } catch (error) {
     console.error(`Reserve tokens and burn test failed: ${error.message}`);
@@ -368,7 +366,7 @@ async function testReserveTokensAndGetToken() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
 
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.To1,
@@ -385,7 +383,7 @@ async function testReserveTokensAndGetToken() {
 
     // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
 
-    let tokens = await client.getSplitTokenList(accounts.Minter, config.contracts.PrivateERCToken,metadata);
+    let tokens = await client.getSplitTokenList(accounts.Minter, deployed.contracts.PrivateERCToken,metadata);
     console.log("Get split token list response:", tokens);
 
     return tokens;
@@ -405,7 +403,7 @@ async function testReserveTokensAndTransfer() {
     const metadata2 = await createAuthMetadata(accounts.To1PrivateKey);
 
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.Spender1,
@@ -421,16 +419,16 @@ async function testReserveTokensAndTransfer() {
     var tokenId1 = ethers.toBigInt(response.transfer_token_id)
     console.log("Transferring split token...");
     let receipt = await callPrivateTransfer(
-      minterWallet,
-      config.contracts.PrivateERCToken,
+        minterWallet,
+        deployed.contracts.PrivateERCToken,
         tokenId1
     );
 
     await sleep(CONSTANTS.waitTimes.short);
 
     console.log("Checking balances after transfer...");
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter);
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1);
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter);
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.To1);
     // return receipt;
   } catch (error) {
     console.error(`Reserve tokens and transfer test failed: ${error.message}`);
@@ -446,13 +444,13 @@ async function testApproveTokensAndRevoke() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     const metadata3 = await createAuthMetadata(accounts.To1PrivateKey);
-    
+
     console.log("Checking initial balances...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata3);
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.To1, metadata3);
 
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       spender_address: accounts.Spender1,
@@ -463,25 +461,25 @@ async function testApproveTokensAndRevoke() {
     console.log("Generating approval proof...");
     let response = await client.generateApproveProof(splitRequest, metadata3);
     console.log("Approval proof response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     await sleep(CONSTANTS.waitTimes.medium);
-    
+
     console.log("Revoking approval...");
     let receipt = await callPrivateRevoke(
-      config.contracts.PrivateERCToken,
-      minterWallet,
-      accounts.Spender1,
-      '0x' + response.transfer_token_id
+        deployed.contracts.PrivateERCToken,
+        minterWallet,
+        accounts.Spender1,
+        '0x' + response.transfer_token_id
     );
     console.log("Revocation receipt:", receipt);
 
     await sleep(CONSTANTS.waitTimes.medium);
-    
+
     console.log("Checking balances after revocation...");
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.To1, metadata3);
-    
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
+    await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.To1, metadata3);
+
     return receipt;
   } catch (error) {
     console.error(`Approve tokens and revoke test failed: ${error.message}`);
@@ -496,9 +494,9 @@ async function testApproveTokensAndRevoke() {
 async function testReserveTokensAndCancel() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    
+
     // const splitRequest = {
-    //   sc_address: config.contracts.PrivateERCToken,
+    //   sc_address: deployed.contracts.PrivateERCToken,
     //   token_type: '0',
     //   from_address: accounts.Minter,
     //   to_address: accounts.To1,
@@ -513,14 +511,14 @@ async function testReserveTokensAndCancel() {
     //
     // console.log("Cancelling split token...");
     let receipt = await callPrivateCancel(
-      config.contracts.PrivateERCToken,
+        deployed.contracts.PrivateERCToken,
         junjieWallet,
-      '0x432cb1ebe020704dfb16438266a4be9ca4940737e77f17529e14b87db669c253'
+        '0x432cb1ebe020704dfb16438266a4be9ca4940737e77f17529e14b87db669c253'
     );
 
     await sleep(CONSTANTS.waitTimes.medium);
-    // await getAddressBalance2(client, config.contracts.PrivateERCToken, accounts.Minter, metadata);
-    
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
+
     return receipt;
   } catch (error) {
     console.error(`Reserve tokens and cancel test failed: ${error.message}`);
@@ -536,14 +534,13 @@ async function testReserveTokensAndCancel() {
  * Test institution information
  * @returns {Promise<void>}
  */
-
 async function testInstituteInformation() {
   const InstRegistry = await ethers.getContractFactory("InstitutionUserRegistry", {
     libraries: {
       "TokenEventLib": deployed.libraries.TokenEventLib,
     }
   });
-  const instRegistry = await InstRegistry.attach(config.contracts.InstUserProxy);
+  const instRegistry = await InstRegistry.attach(deployed.contracts.InstUserProxy);
   // let tx = await instRegistry.registerUser(accounts.Minter);
   // await tx.wait();
   let inst = await instRegistry.getUserManager(accounts.Minter);
@@ -568,12 +565,12 @@ async function testConvert2pUSDC() {
     const convertToPUSDCResponse = {
       amount: CONSTANTS.defaultAmount
     };
-    
+
     console.log("Generating proof for conversion to private USDC...");
     let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
     console.log("Conversion proof response:", proofResult);
-    
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, minterWallet);
+
+    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, minterWallet);
     const elAmount = {
       cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
       cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
@@ -610,40 +607,40 @@ async function testConvert2pUSDC() {
 async function testConvert2USDC() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    
+
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.Minter,
       amount: CONSTANTS.defaultAmount,
       comment:"123"
     };
-    
+
     console.log("Splitting token...");
     let response = await client.generateSplitToken(splitRequest, metadata);
     console.log("Token split response:", response);
-    
+
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     let tokenId = response.transfer_token_id;
-    
+
     const convertToPUSDCResponse = {
       token_id: tokenId
     };
-    
+
     console.log("Generating proof for conversion to public USDC...");
     let proofResult = await client.convertToUSDC(convertToPUSDCResponse, metadata);
     console.log("Conversion proof response:", proofResult);
 
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, minterWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, minterWallet);
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
-    
+
     console.log("Executing conversion to public USDC...");
     const tx = await contract.convert2USDC(ethers.toBigInt(tokenId) , proofResult.amount, input, proof);
     let receipt = await tx.wait();
     console.log("Conversion transaction receipt:", receipt);
-    
+
     return receipt;
   } catch (error) {
     console.error(`Conversion to public USDC test failed: ${error.message}`);
@@ -656,7 +653,7 @@ async function testGetMintAllowed() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
 
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       address: accounts.Minter
     };
 
@@ -674,14 +671,14 @@ async function testGetBalance() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
 
     const splitRequest = {
-      sc_address: config.contracts.PrivateERCToken,
+      sc_address: deployed.contracts.PrivateERCToken,
       owner_address: accounts.Minter
     };
 
     console.log("get mint allowed token...");
     let response = await client.getAddressBalanceDetail(splitRequest, metadata);
     console.log("get mint allowed token response:", response);
-    let response1 = await client.getAccountBalance(config.contracts.PrivateERCToken,accounts.Minter, metadata);
+    let response1 = await client.getAccountBalance(deployed.contracts.PrivateERCToken,accounts.Minter, metadata);
     console.log("get mint allowed token response:", response1);
     return response;
   } catch (error) {
@@ -705,7 +702,7 @@ async function testGetBalance() {
 
 async function testSetMintAllowed() {
   try {
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, adminWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, adminWallet);
     // let tx = await contract.updateAllowedBank(accounts.Owner, true);
     // await tx.wait();
     let tx = await contract.getAccountTokenById(accounts.Minter,17904666504371553379015644188718150815607032362468671403327646253243945533638n );
@@ -723,19 +720,19 @@ async function runTests() {
   try {
     // Basic tests
     await mintForStart();
-    
+
     // Token operation tests
     // await testReserveTokensAndBurn();
     // await testReserveTokensAndTransfer();
     // await testReserveTokensAndCancel();
     // await testApproveTokensAndRevoke();
     // await testTransferFromByAuth();
-    
+
     // Direct transaction tests
     // await testDirectMintByAuth();
     // await testDirectBurnByAuth();
     // await testDirectTransferByAuth();
-    
+
     // Other tests
     // await testInstituteInformation();
     // await testConvert2pUSDC();
