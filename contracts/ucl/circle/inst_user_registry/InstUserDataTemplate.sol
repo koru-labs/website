@@ -31,4 +31,5 @@ abstract contract InstUserDataTemplate {
      mapping(address => address[]) internal institutionCallerList;
      address[] internal institutionAddresses;
      mapping(address => bool) internal institutionAddressTracked;
+     mapping(address => address) internal tokenToManagerAddress;
  }

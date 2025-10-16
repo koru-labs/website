@@ -68,6 +68,18 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         );
     }
 
+    function registerInstitutionToken(address institutionManager) external {
+        require(institutionManager != address(0), "Invalid institution manager");
+
+        Institution storage institution = institutions[institutionManager];
+        require(institution.managerAddress != address(0), "Institution not registered");
+
+        address currentInstitution = tokenToManagerAddress[msg.sender];
+        require(currentInstitution == address(0) || currentInstitution == institutionManager, "Token already linked");
+
+        tokenToManagerAddress[msg.sender] = institutionManager;
+    }
+
     function updateInstitution(address institutionAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
         require(institutionAddress != address(0), "Invalid address");
 
@@ -148,6 +160,14 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
     function getInstitution(address managerAddress) public view returns (Institution memory) {
         return institutions[managerAddress];
+    }
+
+    function getTokenInstitutionManager(address tokenAddress) public view returns (address) {
+        return tokenToManagerAddress[tokenAddress];
+    }
+
+    function getTokenInstitution(address tokenAddress) public view returns (Institution memory) {
+        return institutions[tokenToManagerAddress[tokenAddress]];
     }
 
     function getUserInstitution(address userAddress) public view returns (Institution memory) {
