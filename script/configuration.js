@@ -1,8 +1,14 @@
 module.exports = {
     // Contract addresses configuration
     "ADDRESSES": {
-        // Hamsa L2 event contract address on QA network
-        "HAMSAL2EVENT": "0x1834237e16647f970A9D546a143002Bc76BB707C",
+        // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
+        "HAMSAL2EVENT_IMPLEMENTATION": "",
+        // Hamsa L2 event proxy address on target network
+        "HAMSAL2EVENT_PROXY": "",
+        // Optional alternate implementation for A/B rollout
+        "HAMSAL2EVENT_IMPLEMENTATION_B": "",
+        // Percentage of traffic delegated to implementation B (0 - 100)
+        "HAMSAL2EVENT_PERCENTAGE_TO_B": 0,
         // L1 verification contract address
         "L1_VERIFY_ADDRESS": "0x5B8B2cf32A63e3974e61A7c4D06BA2F4F5eb383F",
         // L1 blob commitment verification contract address

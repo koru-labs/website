@@ -3,10 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./IL2Event.sol";
+import "./HamsaL2EventDataTemplate.sol";
 
-contract HamsaL2Event is IL2Event {
-    uint256 eventCont;
-    uint256 rollupEventCont;
+contract HamsaL2Event is HamsaL2EventDataTemplate, IL2Event {
     event EventReceived(string eventId, address eventSource, address eventAccount, string topic, bytes  eventBody);
     event RollupEventReceived(string eventId, address eventSource, string topic, bytes  eventBody);
     

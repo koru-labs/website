@@ -55,16 +55,63 @@ async function deployLibs(deployed) {
 async function deployL2Event(deployed) {
     console.log("HamsaL2Event deployment starts");
 
-    if (Fixed_Addresses.HAMSAL2EVENT == "") {
-        const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
-        const hamsaL2Event = await HamsaL2EventFactory.deploy();
-        await hamsaL2Event.waitForDeployment();
-        console.log("HamsaL2Event is deploy at :", hamsaL2Event.target);
-        deployed.contracts.HamsaL2Event = hamsaL2Event.target;
+    const implementationAddress = await (async () => {
+        if (Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION === "") {
+            console.log("Deploying new HamsaL2Event implementation...");
+            const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
+            const hamsaL2Event = await HamsaL2EventFactory.deploy();
+            await hamsaL2Event.waitForDeployment();
+            console.log("HamsaL2Event implementation deployed at:", hamsaL2Event.target);
+            return hamsaL2Event.target;
+        }
+        console.log("Reusing HamsaL2Event implementation:", Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION);
+        return Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION;
+    })();
+
+    deployed.contracts.HamsaL2EventImplementation = implementationAddress;
+
+    if (Fixed_Addresses.HAMSAL2EVENT_PROXY === "") {
+        console.log("Deploying new HamsaL2Event proxy...");
+        const HamsaL2EventProxyFactory = await ethers.getContractFactory("HamsaL2EventProxy");
+        const proxy = await HamsaL2EventProxyFactory.deploy(implementationAddress);
+        await proxy.waitForDeployment();
+        console.log("HamsaL2Event proxy deployed at:", proxy.target);
+        deployed.contracts.HamsaL2Event = proxy.target;
     } else {
-        deployed.contracts.HamsaL2Event = Fixed_Addresses.HAMSAL2EVENT
-        console.log("Use already deployed HamsaL2Event:", Fixed_Addresses.HAMSAL2EVENT);
+        console.log("Reusing existing HamsaL2Event proxy at:", Fixed_Addresses.HAMSAL2EVENT_PROXY);
+        const proxy = await ethers.getContractAt("HamsaL2EventProxy", Fixed_Addresses.HAMSAL2EVENT_PROXY);
+        const txA = await proxy.setImplementationA(implementationAddress);
+        await txA.wait();
+        deployed.contracts.HamsaL2Event = Fixed_Addresses.HAMSAL2EVENT_PROXY;
+        console.log("Updated HamsaL2Event proxy implementationA");
     }
+
+    const proxyAddress = deployed.contracts.HamsaL2Event;
+    const proxyInstance = await ethers.getContractAt("HamsaL2EventProxy", proxyAddress);
+
+    const implementationBAddress = Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION_B || "";
+    const percentageToBRaw = Fixed_Addresses.HAMSAL2EVENT_PERCENTAGE_TO_B;
+    const percentageToB = percentageToBRaw === undefined || percentageToBRaw === null
+        ? 0
+        : Number(percentageToBRaw);
+
+    if (percentageToB < 0 || percentageToB > 100 || Number.isNaN(percentageToB)) {
+        throw new Error("HAMSAL2EVENT_PERCENTAGE_TO_B must be between 0 and 100");
+    }
+
+    if (implementationBAddress !== "") {
+        console.log(`Configuring implementationB ${implementationBAddress} with percentage ${percentageToB}%`);
+        const txB = await proxyInstance.setImplementationB(implementationBAddress, percentageToB);
+        await txB.wait();
+        deployed.contracts.HamsaL2EventImplementationB = implementationBAddress;
+        deployed.contracts.HamsaL2EventPercentageToB = percentageToB;
+    } else if (percentageToB > 0) {
+        throw new Error("HAMSAL2EVENT_IMPLEMENTATION_B must be provided when percentageToB > 0");
+    } else {
+        deployed.contracts.HamsaL2EventImplementationB = "";
+        deployed.contracts.HamsaL2EventPercentageToB = 0;
+    }
+
     console.log("HamsaL2Event deployment finished");
 }
 
