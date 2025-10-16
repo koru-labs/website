@@ -47,6 +47,10 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
         institutions[institutionAddress]  = institution;
         userToManager[institutionAddress] = institutionAddress;
+        if (!institutionAddressTracked[institutionAddress]) {
+            institutionAddresses.push(institutionAddress);
+            institutionAddressTracked[institutionAddress] = true;
+        }
         address[] memory defaultCallers = new address[](1);
         defaultCallers[0] = institutionAddress;
         _replaceInstitutionCallers(institutionAddress, defaultCallers);
@@ -183,6 +187,33 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
 
     function getEventAddress() public view returns (address) {
         return address(l2Event);
+    }
+
+    function backfillInstitutionAddresses(address[] calldata managers) external onlyOwner {
+        for (uint256 i = 0; i < managers.length; i++) {
+            address managerAddress = managers[i];
+            require(managerAddress != address(0), "Invalid manager address");
+
+            Institution storage institution = institutions[managerAddress];
+            require(institution.managerAddress != address(0), "Institution not registered");
+
+            if (!institutionAddressTracked[managerAddress]) {
+                institutionAddresses.push(managerAddress);
+                institutionAddressTracked[managerAddress] = true;
+            }
+        }
+    }
+
+    function getAllInstitutions() external view returns (Institution[] memory) {
+        uint256 totalInstitutions = institutionAddresses.length;
+        Institution[] memory result = new Institution[](totalInstitutions);
+
+        for (uint256 i = 0; i < totalInstitutions; i++) {
+            address managerAddress = institutionAddresses[i];
+            result[i] = institutions[managerAddress];
+        }
+
+        return result;
     }
 
     function _replaceInstitutionCallers(address institutionAddress, address[] memory newCallers) internal {
