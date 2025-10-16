@@ -12,14 +12,8 @@ abstract contract Permissioned is Ownable {
     }
 
     function updatePermissionRegistry(InstitutionUserRegistry newInstRegistry) external onlyOwner {
-        _updatePermissionRegistryInternal(newInstRegistry);
-    }
-
-    function _updatePermissionRegistryInternal(InstitutionUserRegistry newInstRegistry) internal {
         require(address(newInstRegistry) != address(0), "Invalid registry address");
         require(address(newInstRegistry) != address(_instRegistry), "Same registry");
-
-        InstitutionUserRegistry oldRegistry = _instRegistry;
         _instRegistry = newInstRegistry;
     }
 

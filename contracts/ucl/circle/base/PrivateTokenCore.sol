@@ -41,27 +41,6 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
 
-    function updateInstitutionRegistration(InstitutionUserRegistry newInstitutionRegistration)
-        external
-        onlyOwner
-    {
-        require(address(newInstitutionRegistration) != address(0), "Invalid institution registration address");
-        require(address(newInstitutionRegistration) != address(_institutionRegistration), "Same institution registration");
-
-        InstitutionUserRegistry oldRegistration = _institutionRegistration;
-        _institutionRegistration = newInstitutionRegistration;
-
-        _updatePermissionRegistryInternal(newInstitutionRegistration);
-
-        emit InstitutionRegistrationUpdated(address(oldRegistration), address(newInstitutionRegistration));
-    }
-
-    function getActiveInstitutionRegistration() external view returns (InstitutionUserRegistry) {
-        return _institutionRegistration;
-    }
-
-    event InstitutionRegistrationUpdated(address indexed oldRegistration, address indexed newRegistration);
-    
     function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
     }
