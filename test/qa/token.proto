@@ -661,6 +661,13 @@ service AccountService {
       body: "*"
     };
   };
+  rpc GetAccountList   (GetAccountListRequest)         returns (GetAccountListResponse)
+  {
+    option (google.api.http) = {
+      post: "/v1/account/query/list"
+      body: "*"
+    };
+  };
 }
 
 // Account action status enum
@@ -756,4 +763,27 @@ message GetAccountResponse {
   AccountStatusEnum account_status = 2;
   string account_roles = 3;
   repeated string sc_address_list = 4;
+}
+
+message GetAccountListRequest {
+  string manager_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to query"}];
+
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema:{
+      required:["manager_address"]
+    },
+    example: "{\"manager_address\": \"0xf17f52151EbEF6C7334FAD080c5704D77216b732\"}"
+  };
+}
+
+message GetAccountListResponse {
+  string manager_address = 1;
+  repeated Account accounts = 2;
+}
+
+message Account {
+  string account_address = 1;
+  AccountStatusEnum account_status = 2;
+  string account_roles = 3;
 }

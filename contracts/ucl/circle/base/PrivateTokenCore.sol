@@ -33,14 +33,14 @@ abstract contract PrivateTokenCore is
         uint8 tokenDecimals
     ) public virtual {
         require(!_initialized, "FiatToken: contract is already initialized");
-        
+
         _initialized = true;
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
         initializePermission(institutionRegistration);
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
-    
+
     function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
     }
@@ -181,9 +181,11 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) onlyAllowedBank nonReentrant virtual {
+    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) nonReentrant virtual {
 
-        require(_institutionRegistration.isInstitutionManager(msg.sender), "only institution manager is allowed to execute reservation");
+        address institutionAddress = _institutionRegistration.getUserManager(from);
+        require(institutionAddress != address(0), "institution is not registered for user");
+        require(_institutionRegistration.isInstitutionCaller(institutionAddress, msg.sender), "caller is not allowed for this institution");
 
         TokenModel.ElGamal memory onChainConsumedAmount = TokenUtilsLib.sumTokenAmountsFromAccount(_accounts, from, consumedTokenIds);
         TokenModel.TokenEntity memory changeToken = newTokens[0];

@@ -22,6 +22,12 @@ abstract contract PrivateTokenData is Ownable {
     mapping(address => bool) internal _authorizedContracts;
     mapping(uint256 => bool) internal _usedElGamalHashes;
 
+    // Proxy configuration (kept in data contract to share layout with proxy)
+    address internal _proxyAdmin;
+    address internal _implementationA;
+    address internal _implementationB;
+    uint8 internal _percentageToB;
+
     modifier onlyAuthorized() {
         require(_authorizedContracts[msg.sender] || msg.sender == this.owner(), "PrivateTokenData: unauthorized access");
         _;
