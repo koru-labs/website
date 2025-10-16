@@ -33,14 +33,14 @@ abstract contract PrivateTokenCore is
         uint8 tokenDecimals
     ) public virtual {
         require(!_initialized, "FiatToken: contract is already initialized");
-        
+
         _initialized = true;
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
         initializePermission(institutionRegistration);
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), msg.sender, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
-    
+
     function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
     }
