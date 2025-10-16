@@ -1,11 +1,11 @@
 const {ethers} = require("hardhat");
 
-const {createAuthMetadata} = require("../../../test/help/testHelp.js")
-const {createClient} = require('../../../test/qa/token_grpc');
+const {createAuthMetadata} = require("../../test/help/testHelp.js")
+const {createClient} = require('../../test/qa/token_grpc');
 const { getEnvironmentConfig } = require('../deploy_help.js');
 const Fixed_Addresses = getEnvironmentConfig();
 
-module.exports = async function registerInstitutionAndUser() {
+async function registerInstitutionAndUser() {
 
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS);
     let institutions = Fixed_Addresses.institutions;

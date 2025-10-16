@@ -40,9 +40,9 @@
     "deploy-infra-user-qa": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_qa",
     "deploy-token-qa": "npx hardhat run script/token/deploy.js --network ucl_L2_qa",
 
-    "deploy-infra-dev": "npx hardhat run script/infra/deploy.js --network dev_ucl_L2",
+    "deploy-infra-dev": "npx hardhat run script/infra/deploy.js --network ucl_L2_dev",
     "deploy-L1-dev": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_dev",
-    "deploy-infra-user-dev": "npx hardhat run script/infra/register_inst_user.js --network dev_ucl_L2",
+    "deploy-infra-user-dev": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_dev",
     "deploy-token-dev": "npx hardhat run script/token/deploy.js --network ucl_L2_dev",
 
 

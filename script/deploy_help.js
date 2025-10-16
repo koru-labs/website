@@ -45,7 +45,7 @@ function getEnvironmentConfig() {
 }
 
 async function loadExistingDeployments() {
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     const filename = "image9.json";
     const filepath = path.join(deploymentsDir, filename);
 
@@ -76,7 +76,7 @@ async function loadExistingDeployments() {
 }
 
 async function loadExistingDeploymentsForL1() {
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     const filename = "image9.json";
     const filepath = path.join(deploymentsDir, filename);
 
@@ -112,7 +112,7 @@ async function saveDeploymentInfo(deployed, hre, ethers, fs, path) {
 
     console.log(`Saving deployment information for environment: ${environment} (${networkName})`);
 
-    const deploymentsDir = path.join(__dirname, "../../deployments");
+    const deploymentsDir = path.join(__dirname, "../deployments");
     if (!fs.existsSync(deploymentsDir)) {
         fs.mkdirSync(deploymentsDir, {recursive: true});
     }
@@ -185,7 +185,7 @@ function getImage9EnvironmentData() {
         environment = 'dev';
     }
 
-    const image9Path = path.join(__dirname, "../../deployments/image9.json");
+    const image9Path = path.join(__dirname, "../deployments/image9.json");
 
     try {
         if (!fs.existsSync(image9Path)) {
