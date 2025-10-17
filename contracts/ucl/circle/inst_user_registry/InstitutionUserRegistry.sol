@@ -71,6 +71,9 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
     function registerInstitutionToken(address institutionManager) external {
         require(institutionManager != address(0), "Invalid institution manager");
 
+        Institution storage institution = institutions[institutionManager];
+        require(institution.managerAddress != address(0), "Institution not registered");
+
         address currentInstitution = tokenToManagerAddress[msg.sender];
         require(currentInstitution == address(0) || currentInstitution == institutionManager, "Token already linked");
 
