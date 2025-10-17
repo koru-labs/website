@@ -49,7 +49,7 @@ async function deployToken(deployed) {
         "USDC",
         "USD",
         4,
-        accounts.MasterMinter,
+        accounts.Owner,
         accounts.Pauser,
         accounts.BlackLister,
         accounts.Owner,
