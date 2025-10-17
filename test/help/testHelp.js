@@ -1,12 +1,15 @@
 const {ethers} = require("hardhat")
 const { expect } = require("chai");
-const config = require('./../../deployments/image9.json');
 const hardhatConfig = require("../../hardhat.config");
-const accounts = require("../../deployments/account.json");
 const grpc = require('@grpc/grpc-js');
 const deployed = require("../../deployments/image9.json");
-const {createClient} = require("../qa/token_grpc");
-const configuration = require("../../script/configuration");
+const config = require('./../../deployments/image9.json');
+const accounts = require('./../../deployments/account.json');
+const {createClient} = require('../qa/token_grpc')
+const {getEnvironmentConfig} = require("../../script/deploy_help");
+
+const configuration = getEnvironmentConfig();
+
 
 const l1Provider = ethers.provider;
 
@@ -199,15 +202,28 @@ async function getAddressBalance2(grpcClient, scAddress, account) {
     return result
 }
 
-async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
+async function getTotalSupplyNode3(grpcClient, scAddress,metadata,wallet) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
     let amount = await contract.privateTotalSupply()
-    let balance=  {
-        cl_x: convertBigInt2Hex(amount[0]),
-        cl_y: convertBigInt2Hex(amount[1]),
-        cr_x: convertBigInt2Hex(amount[2]),
-        cr_y: convertBigInt2Hex(amount[3])
-    }
+    console.log("Total Supply:", amount)
+    // let balance=  {
+    //     cl_x: convertBigInt2Hex(amount[0]),
+    //     cl_y: convertBigInt2Hex(amount[1]),
+    //     cr_x: convertBigInt2Hex(amount[2]),
+    //     cr_y: convertBigInt2Hex(amount[3])
+    // }
+    //  amount = [
+    //     4454341540565941680420336000337082971104667342900809180771646425082108053854n,
+    //     646733961612468307970552120021574606487878303051279260636940126306882543090n,
+    //     3315709687871048041818972036061985732604328766579592931346435598881325352763n,
+    //     13178588232214544695572971480419066046621516549265728004469502354242495923189n
+    // ]
+    let balance = {
+            cl_x: convertBigInt2Hex(amount[0]),
+            cl_y: convertBigInt2Hex(amount[1]),
+            cr_x: convertBigInt2Hex(amount[2]),
+            cr_y: convertBigInt2Hex(amount[3])
+        }
     let result = await grpcClient.decodeElgamalAmount(balance,metadata)
     return Number(result.balance)
 }
@@ -215,7 +231,7 @@ async function getTotalSupplyNode3(grpcClient, scAddress,metadata) {
 async function getPublicTotalSupply(scAddress) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.publicTotalSupply()
-    console.log("Public Total Supply: ", amount[0])
+    // console.log("Public Total Supply: ", amount[0])
     return amount[0]
 }
 
