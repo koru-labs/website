@@ -2,12 +2,11 @@ const {ethers} = require("hardhat")
 const { expect } = require("chai");
 const hardhatConfig = require("../../hardhat.config");
 const grpc = require('@grpc/grpc-js');
-const deployed = require("../../deployments/image9.json");
-const config = require('./../../deployments/image9.json');
+const {getEnvironmentConfig, getImage9EnvironmentData} = require("../../script/deploy_help");
+// const config = require('./../../deployments/image9.json');
+const config = getImage9EnvironmentData();
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
-const {getEnvironmentConfig} = require("../../script/deploy_help");
-
 const configuration = getEnvironmentConfig();
 
 
