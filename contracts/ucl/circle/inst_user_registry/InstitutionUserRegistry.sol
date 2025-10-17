@@ -80,10 +80,10 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         tokenToManagerAddress[msg.sender] = institutionManager;
     }
 
-    function updateInstitution(address institutionAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
-        require(institutionAddress != address(0), "Invalid address");
+    function updateInstitution(address managerAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
+        require(managerAddress != address(0), "Invalid address");
 
-        Institution storage institution = institutions[institutionAddress];
+        Institution storage institution = institutions[managerAddress];
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
@@ -103,11 +103,13 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             institution.httpUrl = httpUrl;
         }
 
+        institution.managerAddress = managerAddress;
+
         TokenEventLib.triggerInstitutionUpdatedEvent(
             l2Event,
             address(this),
             owner,
-            institutionAddress,
+            managerAddress,
             institution.name,
             institution.rpcUrl,
             institution.nodeUrl,
