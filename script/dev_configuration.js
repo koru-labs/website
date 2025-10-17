@@ -1,5 +1,4 @@
 module.exports = {
-    // Contract addresses configuration
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
         "HAMSAL2EVENT_IMPLEMENTATION": "0x5cd0B2E2084b27Ca7C661038fed641Dd869dA955",
@@ -43,7 +42,6 @@ module.exports = {
             // User accounts associated with Node3 institution on L2 network
             users: [
                 {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role:"minter"},// Node3 minter user account address
-                {address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732", role:"admin"},// Node3 admin user account address
                 {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},// Node3 normal user account address
                 {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},// Node3 normal user account address
                 {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},// Node3 normal user account address

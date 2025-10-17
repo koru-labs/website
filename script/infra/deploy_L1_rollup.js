@@ -1,15 +1,15 @@
 const {ethers} = require("hardhat");
-const {saveDeploymentInfo, loadExistingDeploymentsForL1} = require("../deploy_help");
+const {saveDeploymentInfo, loadExistingDeploymentsForL1, getImage9EnvironmentData} = require("../deploy_help");
 const hre = require("hardhat");
 const fs = require("fs");
 const path = require("path");
-const {ADDRESSES: Fixed_Addresses} = require("../configuration");
-
+const {getEnvironmentConfig} = require('../deploy_help.js');
+const Fixed_Addresses = getEnvironmentConfig();
 
 async function deployL1Handle(deployed) {
     console.log("L1VerifyAddress deployment starts");
     const [L1Wallet] = await ethers.getSigners();
-    if (Fixed_Addresses.L1_VERIFY_ADDRESS == "") {
+    if (!Fixed_Addresses.ADDRESSES.L1_VERIFY_ADDRESS) {
         const Classification = await ethers.getContractFactory("contracts/ucl/l1verify/Classification.sol:Classification", L1Wallet);
         const classification = await Classification.deploy();
         await classification.waitForDeployment();
@@ -47,7 +47,7 @@ async function deployL1Handle(deployed) {
 async function deployL1BlobCommitmentVerify(deployed) {
     console.log("L1BlobCommitmentVerify deployment starts");
     const [L1Wallet] = await ethers.getSigners();
-    if (Fixed_Addresses.L1_BLOB_COMMITMENT_VERIFY == "") {
+    if (!Fixed_Addresses.ADDRESSES.L1_BLOB_COMMITMENT_VERIFY) {
         const BlobCommitmentVerify = await ethers.getContractFactory("BlobCommitmentVerify", L1Wallet);
         const blobCommitmentVerify = await BlobCommitmentVerify.deploy();
         await blobCommitmentVerify.waitForDeployment();
@@ -62,14 +62,7 @@ async function deployL1BlobCommitmentVerify(deployed) {
 
 
 async function deployL1Contract() {
-    let deployed = await loadExistingDeploymentsForL1();
-    if (!deployed) {
-        deployed = {
-            libraries: {},
-            contracts: {},
-            accounts: {},
-        };
-    }
+    const deployed = getImage9EnvironmentData();
     await deployL1Handle(deployed);
     //need hardhat config ,Enable the parameter: evmVersion: "cancun",
     // and change the contract BlobCommitmentVerify.sol.bak to BlobCommitmentVerify.sol
