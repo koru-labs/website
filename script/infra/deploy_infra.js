@@ -13,8 +13,8 @@ const {
 } = require("./deploy_verifier");
 const hardhatConfig = require("../../hardhat.config");
 
-
-const Fixed_Addresses = require("../configuration").ADDRESSES;
+const {getEnvironmentConfig} = require("../deploy_help");
+const Fixed_Addresses = getEnvironmentConfig();
 
 async function deployLibs(deployed) {
     console.log("=== TokenSc Libs deployment starts ===");
