@@ -122,6 +122,13 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
         _replaceInstitutionCallers(institutionAddress, newCallers);
+        TokenEventLib.triggerReplaceInstCallersEvent(
+            l2Event,
+            address(this),
+            owner,
+            institutionAddress,
+            newCallers
+        );
     }
 
     function registerUser(address userAddress) external onlyInstitutionManager {
