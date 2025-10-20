@@ -1,9 +1,9 @@
 module.exports = {
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-        "HAMSAL2EVENT_IMPLEMENTATION": "0xaBCE63ba6B30faBe070423B9ce59b0429cd8c8bA",
+        "HAMSAL2EVENT_IMPLEMENTATION": "0x0A6A3D3f78394Aa128Cd5be705b5722D15DE3b76",
         // Hamsa L2 event proxy address on target network
-        "HAMSAL2EVENT_PROXY": "0x65066888FFBBDFFE19FF37a9953e5C91e3a5B2F4",
+        "HAMSAL2EVENT_PROXY": "0x6fE2e4218918C2D39ca2a68DC5A80bB48f3070AF",
         // Optional alternate implementation for A/B rollout
         "HAMSAL2EVENT_IMPLEMENTATION_B": "",
         // Percentage of traffic delegated to implementation B (0 - 100)
