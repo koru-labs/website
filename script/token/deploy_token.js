@@ -18,7 +18,7 @@ const rpcUrl =node3Institution.rpcUrl;
 
 async function deployToken(deployed) {
     let hamsal2event = config.ADDRESSES.HAMSAL2EVENT_PROXY;
-    let institutionRegistration = config.ADDRESSES.INSTITUTION_REGISTRATION;
+    let institutionRegistration = config.ADDRESSES.PROXY_ADDRESS;
 
     const wallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
     console.log(`Deploying PrivateUSDC for Node3 institution ${node3Institution.name},institutionAddress:${node3Institution.address}...`);
@@ -49,7 +49,7 @@ async function deployToken(deployed) {
         "USDC",
         "USD",
         4,
-        accounts.MasterMinter,
+        accounts.Owner,
         accounts.Pauser,
         accounts.BlackLister,
         accounts.Owner,
