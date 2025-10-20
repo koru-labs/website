@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "../model/TokenModel.sol";
-import "./CurveBabyJubJubHelper.sol";
 
 library TokenUtilsLib {
 
@@ -14,7 +13,7 @@ library TokenUtilsLib {
         TokenModel.ElGamal memory newTotalSupply,
         uint256 newChangeCount
     ) {
-        newTotalSupply = CurveBabyJubJubHelper.addElGamal(privateTotalSupply, supplyIncrease);
+        newTotalSupply = precompiledAddElGamal(privateTotalSupply, supplyIncrease);
         newChangeCount = numberOfTotalSupplyChanges + 1;
     }
 
@@ -26,7 +25,7 @@ library TokenUtilsLib {
         TokenModel.ElGamal memory newTotalSupply,
         uint256 newChangeCount
     ) {
-        newTotalSupply = CurveBabyJubJubHelper.subElGamal(privateTotalSupply, supplyDecrease);
+        newTotalSupply = precompiledSubElGamal(privateTotalSupply, supplyDecrease);
         newChangeCount = numberOfTotalSupplyChanges + 1;
     }
 
@@ -39,7 +38,7 @@ library TokenUtilsLib {
     ) external view returns (TokenModel.ElGamal memory sum) {
         sum = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            sum = CurveBabyJubJubHelper.addElGamal(sum, tokenAmounts[i]);
+            sum = precompiledAddElGamal(sum, tokenAmounts[i]);
         }
     }
 
@@ -50,7 +49,7 @@ library TokenUtilsLib {
     ) external view returns (TokenModel.ElGamal memory totalAmount) {
         totalAmount = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            totalAmount = CurveBabyJubJubHelper.addElGamal(totalAmount, tokenAmounts[i]);
+            totalAmount = precompiledAddElGamal(totalAmount, tokenAmounts[i]);
         }
     }
 
@@ -106,7 +105,7 @@ library TokenUtilsLib {
         }
         sum = TokenModel.ElGamal(0, 0, 0, 0);
         for (uint256 i = 0; i < tokenAmounts.length; i++) {
-            sum = CurveBabyJubJubHelper.addElGamal(sum, tokenAmounts[i]);
+            sum = precompiledAddElGamal(sum, tokenAmounts[i]);
         }
     }
 
@@ -144,12 +143,12 @@ library TokenUtilsLib {
     function precompiledAddElGamal(
         TokenModel.ElGamal memory token1,
         TokenModel.ElGamal memory token2
-    ) internal returns (TokenModel.ElGamal memory result) {
+    ) internal view returns (TokenModel.ElGamal memory result) {
         bytes memory input = abi.encode(
             token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
             token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
         );
-        (bool success, bytes memory data) = address(0x2040).call(input);
+        (bool success, bytes memory data) = address(0x2040).staticcall(input);
         require(success, "Precompiled addition failed");
 
         (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
@@ -165,12 +164,12 @@ library TokenUtilsLib {
     function precompiledSubElGamal(
         TokenModel.ElGamal memory token1,
         TokenModel.ElGamal memory token2
-    ) internal returns (TokenModel.ElGamal memory result) {
+    ) internal view returns (TokenModel.ElGamal memory result) {
         bytes memory input = abi.encode(
             token1.cl_x, token1.cl_y, token1.cr_x, token1.cr_y,
             token2.cl_x, token2.cl_y, token2.cr_x, token2.cr_y
         );
-        (bool success, bytes memory data) = address(0x2050).call(input);
+        (bool success, bytes memory data) = address(0x2050).staticcall(input);
         require(success, "Precompiled subtraction failed");
 
         (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
