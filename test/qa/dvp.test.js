@@ -1,24 +1,22 @@
 const { expect } = require("chai");
 const {ethers} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
-const config = require('./../../deployments/image9.json');
+const { getEnvironmentConfig } = require('../../script/circle/deploy_help.js');
+const config = getEnvironmentConfig();
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
-//dev
-// const rpcUrl_node3 = "dev-node3-rpc.hamsa-ucl.com:50051"
-// const rpcUrl_node4 = "dev-node4-rpc.hamsa-ucl.com:50051"
-// const L1Url = hardhatConfig.networks.ucl_L2_dev.url;
-// const adminPrivateKey = hardhatConfig.networks.ucl_L2_dev.accounts[1];
 
-//qa
-const rpcUrl_node3 = "qa-node3-rpc.hamsa-ucl.com:50051"
-const rpcUrl_node4 = "qa-node4-rpc.hamsa-ucl.com:50051"
-const L1Url = hardhatConfig.networks.ucl_L2_qa.url;
-const adminPrivateKey = hardhatConfig.networks.ucl_L2_qa.accounts[1];
-const node4AdminPrivateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171";
-
-const client = createClient(rpcUrl_node3)
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
+// const rpcUrl_1 = "qa-node4-rpc.hamsa-ucl.com:50051"
+// const rpcUrl = 'a901f625f7fbc414d89f04b67325365c-1938211366.us-west-1.elb.amazonaws.com:50051'
+// const rpcUrl_1 = "a10062b98cbe34ba2a0b278754c41a1e-660863113.us-west-1.elb.amazonaws.com:50051"
+const client = createClient(rpcUrl)
 // const client1 = createClient(rpcUrl_1)
 
 const {

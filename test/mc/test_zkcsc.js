@@ -7,7 +7,12 @@ const {
     createAuthMetadata
 } = require("../help/testHelp");
 
-const rpcUrl = "dev-node3-rpc.hamsa-ucl.com:50051";
+// find node3 institution
+const node3Institution = config.institutions.find(institution => institution.name === "Node3");
+if (!node3Institution) {
+    throw new Error("Node3 institution not found in config");
+}
+const rpcUrl = node3Institution.rpcUrl;
 const client = createClient(rpcUrl);
 
 const l2CustomNetwork = {

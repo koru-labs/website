@@ -131,6 +131,20 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, owner, "InstitutionUpdated", body);
     }
 
+    function triggerReplaceInstCallersEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address owner,
+        address institutionAddress,
+        address[] memory callers
+    ) public {
+        ReplaceInstCallersEvent memory e = ReplaceInstCallersEvent({
+            institutionAddress: institutionAddress,
+            callers: callers
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, owner, "ReplaceInstCallers", body);
+    }
 
     function triggerUserRegisteredEvent(
         IL2Event _l2Event,

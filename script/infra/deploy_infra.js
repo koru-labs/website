@@ -13,8 +13,8 @@ const {
 } = require("./deploy_verifier");
 const hardhatConfig = require("../../hardhat.config");
 
-
-const Fixed_Addresses = require("../configuration").ADDRESSES;
+const {getEnvironmentConfig} = require("../deploy_help");
+const Fixed_Addresses = getEnvironmentConfig();
 
 async function deployLibs(deployed) {
     console.log("=== TokenSc Libs deployment starts ===");
@@ -56,7 +56,7 @@ async function deployL2Event(deployed) {
     console.log("HamsaL2Event deployment starts");
 
     const implementationAddress = await (async () => {
-        if (Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION === "") {
+        if (typeof Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION === 'undefined' || Fixed_Addresses.HAMSAL2EVENT_IMPLEMENTATION === "") {
             console.log("Deploying new HamsaL2Event implementation...");
             const HamsaL2EventFactory = await ethers.getContractFactory("HamsaL2Event");
             const hamsaL2Event = await HamsaL2EventFactory.deploy();
@@ -70,7 +70,7 @@ async function deployL2Event(deployed) {
 
     deployed.contracts.HamsaL2EventImplementation = implementationAddress;
 
-    if (Fixed_Addresses.HAMSAL2EVENT_PROXY === "") {
+    if (typeof Fixed_Addresses.HAMSAL2EVENT_PROXY === 'undefined' || Fixed_Addresses.HAMSAL2EVENT_PROXY === "") {
         console.log("Deploying new HamsaL2Event proxy...");
         const HamsaL2EventProxyFactory = await ethers.getContractFactory("HamsaL2EventProxy");
         const proxy = await HamsaL2EventProxyFactory.deploy(implementationAddress);
@@ -114,9 +114,6 @@ async function deployL2Event(deployed) {
 
     console.log("HamsaL2Event deployment finished");
 }
-
-
-
 
 
 module.exports = {

@@ -1,11 +1,12 @@
 const {ethers} = require("hardhat");
-const Fixed_Addresses = require("../configuration").ADDRESSES
+const {getEnvironmentConfig} = require('../deploy_help.js');
 
 async function deployInstProxy(deployed) {
-    let [deployer]= await ethers.getSigners();
+    let [deployer] = await ethers.getSigners();
 
+    const Fixed_Addresses = getEnvironmentConfig();
 
-    if (Fixed_Addresses.PROXY_ADDRESS == "") {
+    if (!Fixed_Addresses.ADDRESSES.PROXY_ADDRESS) {
         console.log("deployInstProxy deployment starts");
 
         const Proxy = await ethers.getContractFactory("InstPercentRouterProxy");
@@ -22,16 +23,16 @@ async function deployInstProxy(deployed) {
 
         console.log("proxy initialization is done")
 
-        let result = await proxied.getEventAddress( );
+        let result = await proxied.getEventAddress();
         console.log("registry event: ", result);
 
         console.log("deployInstProxy deployment completed");
     } else {
-        const proxy= await ethers.getContractAt("InstPercentRouterProxy", Fixed_Addresses.PROXY_ADDRESS);
-        let tx  = await proxy.setImplementationA(deployed.contracts.InstitutionUserRegistry)
+        const proxy = await ethers.getContractAt("InstPercentRouterProxy", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS);
+        let tx = await proxy.setImplementationA(deployed.contracts.InstitutionUserRegistry)
         await tx.wait();
 
-        deployed.contracts.InstUserProxy = Fixed_Addresses.PROXY_ADDRESS
+        deployed.contracts.InstUserProxy = Fixed_Addresses.ADDRESSES.PROXY_ADDRESS
         console.log("deployInstProxy is skipped due to address in circle/configuration.js")
     }
 }
@@ -40,7 +41,9 @@ async function deployInstUserRegistry(deployed) {
     let [deployer] = await ethers.getSigners();
     console.log("InstUserRegistry deployment starts");
 
-    if (Fixed_Addresses.INSTITUTION_REGISTRATION == "") {
+    const Fixed_Addresses = getEnvironmentConfig();
+
+    if (!Fixed_Addresses.ADDRESSES.INSTITUTION_REGISTRATION) {
         console.log("Deploying new InstitutionUserRegistry.sol contract...");
         const InstitutionUserRegistryFactory = await ethers.getContractFactory("InstitutionUserRegistry", {
             libraries: {
@@ -54,13 +57,13 @@ async function deployInstUserRegistry(deployed) {
         console.log("InstitutionUserRegistry.sol deployed to:", institutionUserRegistry.target);
 
     } else {
-        console.log("Reusing existing InstitutionUserRegistry.sol at:", Fixed_Addresses.INSTITUTION_REGISTRATION);
-        deployed.contracts.InstitutionUserRegistry = Fixed_Addresses.INSTITUTION_REGISTRATION;
+        console.log("Reusing existing InstitutionUserRegistry.sol at:", Fixed_Addresses.ADDRESSES.INSTITUTION_REGISTRATION);
+        deployed.contracts.InstitutionUserRegistry = Fixed_Addresses.ADDRESSES.INSTITUTION_REGISTRATION;
     }
     console.log("InstUserRegistry deployment finished");
 }
 
-module.exports= {
+module.exports = {
     deployInstProxy,
     deployInstUserRegistry
 };

@@ -1,10 +1,9 @@
 module.exports = {
-    // Contract addresses configuration
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-        "HAMSAL2EVENT_IMPLEMENTATION": "0x5cd0B2E2084b27Ca7C661038fed641Dd869dA955",
+        "HAMSAL2EVENT_IMPLEMENTATION": "0xaBCE63ba6B30faBe070423B9ce59b0429cd8c8bA",
         // Hamsa L2 event proxy address on target network
-        "HAMSAL2EVENT_PROXY": "0x51225e23E3D5b50f71Dddf6DA1Bf20D8A643A75c",
+        "HAMSAL2EVENT_PROXY": "0x65066888FFBBDFFE19FF37a9953e5C91e3a5B2F4",
         // Optional alternate implementation for A/B rollout
         "HAMSAL2EVENT_IMPLEMENTATION_B": "",
         // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +13,9 @@ module.exports = {
         // L1 blob commitment verification contract address
         "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
         // Institution registration contract address
-        "INSTITUTION_REGISTRATION": "0x0Dd48dcBe411C027ed8765A47426523C99341242",
+        "INSTITUTION_REGISTRATION": "0x4A7a1d11E2Ce6CDCCf72A24CF1A2eC12083B5952",
         // Proxy contract address for institution user operations
-        "PROXY_ADDRESS": "0x29271061626b552608e500664630568A2b5919E4"
+        "PROXY_ADDRESS": "0x4227842F10Bc3F6aD6987CF43E001F832fEf655f"
     },
     // Institution configurations
     institutions: [
@@ -43,7 +42,6 @@ module.exports = {
             // User accounts associated with Node3 institution on L2 network
             users: [
                 {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role:"minter"},// Node3 minter user account address
-                {address: "0xf17f52151EbEF6C7334FAD080c5704D77216b732", role:"admin"},// Node3 admin user account address
                 {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},// Node3 normal user account address
                 {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},// Node3 normal user account address
                 {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},// Node3 normal user account address

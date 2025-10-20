@@ -25,8 +25,8 @@ abstract contract InstUserDataTemplate {
          string nodeUrl;
          string httpUrl;
      }
-     mapping(address => Institution) public institutions;
-     mapping(address => address) public userToManager;
+     mapping(address => Institution) public institutions; // institutionManagerAddress => Institution
+     mapping(address => address) public userToManager; // userAddress => institutionManagerAddress
      mapping(address => mapping(address => bool)) internal institutionToCallers;
      mapping(address => address[]) internal institutionCallerList;
      address[] internal institutionAddresses;

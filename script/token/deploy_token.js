@@ -2,7 +2,9 @@ const hre = require("hardhat");
 const {ethers} = hre;
 const hardhatConfig = require('../../hardhat.config');
 const accounts = require("../../deployments/account.json");
-const config = require("../configuration");
+const { getEnvironmentConfig } = require('../deploy_help.js');
+const config = getEnvironmentConfig();
+
 const {createClient} = require("../../test/qa/token_grpc");
 const grpc = require("@grpc/grpc-js");
 
@@ -11,17 +13,13 @@ const node3Institution = config.institutions.find(institution => institution.nam
 if (!node3Institution) {
     throw new Error("Node3 institution not found in config");
 }
-const rpcUrl = node3Institution.rpcUrl;
+const rpcUrl =node3Institution.rpcUrl;
+
+
 async function deployToken(deployed) {
-    let hamsal2event = deployed.contracts.HamsaL2Event;
-    let institutionRegistration = deployed.contracts.InstUserProxy;
+    let hamsal2event = config.ADDRESSES.HAMSAL2EVENT_PROXY;
+    let institutionRegistration = config.ADDRESSES.PROXY_ADDRESS;
 
-
-    // find node3 institution
-    const node3Institution = config.institutions.find(institution => institution.name === "Node3");
-    if (!node3Institution) {
-        throw new Error("Node3 institution not found in config");
-    }
     const wallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
     console.log(`Deploying PrivateUSDC for Node3 institution ${node3Institution.name},institutionAddress:${node3Institution.address}...`);
 
@@ -51,7 +49,7 @@ async function deployToken(deployed) {
         "USDC",
         "USD",
         4,
-        accounts.MasterMinter,
+        accounts.Owner,
         accounts.Pauser,
         accounts.BlackLister,
         accounts.Owner,
@@ -153,8 +151,6 @@ function extractMinterUsers() {
 
 
 async function setMinterAllowed(deployed) {
-    // 100000000
-
     console.log("Configuring minter allowed amount...");
 
     // add minter users

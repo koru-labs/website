@@ -27,6 +27,11 @@ import "../model/TokenModel.sol";
         string httpUrl;
     }
 
+    struct ReplaceInstCallersEvent {
+        address institutionAddress;
+        address[] callers;
+    }
+
     struct UserRegisteredEvent {
         address userAddress;
         address managerAddress;

@@ -71,16 +71,19 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
     function registerInstitutionToken(address institutionManager) external {
         require(institutionManager != address(0), "Invalid institution manager");
 
+        Institution storage institution = institutions[institutionManager];
+        require(institution.managerAddress != address(0), "Institution not registered");
+
         address currentInstitution = tokenToManagerAddress[msg.sender];
         require(currentInstitution == address(0) || currentInstitution == institutionManager, "Token already linked");
 
         tokenToManagerAddress[msg.sender] = institutionManager;
     }
 
-    function updateInstitution(address institutionAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
-        require(institutionAddress != address(0), "Invalid address");
+    function updateInstitution(address managerAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
+        require(managerAddress != address(0), "Invalid address");
 
-        Institution storage institution = institutions[institutionAddress];
+        Institution storage institution = institutions[managerAddress];
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
@@ -100,11 +103,13 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             institution.httpUrl = httpUrl;
         }
 
+        institution.managerAddress = managerAddress;
+
         TokenEventLib.triggerInstitutionUpdatedEvent(
             l2Event,
             address(this),
             owner,
-            institutionAddress,
+            managerAddress,
             institution.name,
             institution.rpcUrl,
             institution.nodeUrl,
@@ -119,6 +124,13 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
         _replaceInstitutionCallers(institutionAddress, newCallers);
+        TokenEventLib.triggerReplaceInstCallersEvent(
+            l2Event,
+            address(this),
+            owner,
+            institutionAddress,
+            newCallers
+        );
     }
 
     function registerUser(address userAddress) external onlyInstitutionManager {
