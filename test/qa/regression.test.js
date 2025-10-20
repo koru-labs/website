@@ -336,13 +336,13 @@ describe.only("Function Cases", function () {
         to1Meta = await createAuthMetadata(accounts.To1PrivateKey);
         node4AdminMeta = await createAuthMetadata(node4AdminPrivateKey);
     })
-    describe.only("PirvateMint", function () {
+    describe("PirvateMint", function () {
         this.timeout(1200000);
         beforeEach(async function () {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
         });
 
-        it.only('Mint 1 tokens to minter', async () => {
+        it('Mint 1 tokens to minter', async () => {
             const amount = 100;
             let recepit = await mint(accounts.Minter, amount)
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
@@ -363,6 +363,7 @@ describe.only("Function Cases", function () {
         });
         it('Mint  10 to user another node', async () => {
             const userAddress = userInNode4;
+            console.log("userAddress", userAddress)
             const preBalanceUserInNode4 = await getTokenBalanceInNode4(userAddress);
             const preBalanceUserInNode3 = await getTokenBalanceByAdmin(userAddress)
             await mint(userAddress, amount);
@@ -417,6 +418,8 @@ describe.only("Function Cases", function () {
 
         });
         it('transfer all amount', async () => {
+            await mint(accounts.Minter, 100)
+            preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             await cancelAllSplitTokens(minterWallet);
             await revokeAllApprovedTokens(minterWallet)
             const amount = await getTokenBalanceByAdmin(accounts.Minter);
@@ -426,6 +429,7 @@ describe.only("Function Cases", function () {
             await SplitAndTransfer(toAddress1, amount, minterMeta);
             postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
+            console.log({preBalance, postBalance, preBalanceTo, postBalanceTo})
             expect(postBalance).to.equal(preBalance - amount);
             expect(postBalanceTo).to.equal(preBalanceTo + amount);
         });
