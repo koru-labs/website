@@ -5,7 +5,11 @@ const path = require("path");
 
 const { deployToken,
     allowBanksInTokenSmartContract,
-    setMinterAllowed, setMinterAllowedNode4, deployTokenForNode4
+    setMinterAllowed,
+    deployTokenDemoBank,
+    setMinterAllowedDemoBank,
+    allowBanksInTokenSmartContractDemoBank
+
 } = require("./deploy_token")
 
 const {loadExistingDeployments, saveDeploymentInfo, getImage9EnvironmentData} = require("../deploy_help");
@@ -13,11 +17,15 @@ const {loadExistingDeployments, saveDeploymentInfo, getImage9EnvironmentData} = 
 async function main() {
     const deployed = getImage9EnvironmentData();
 
-    await deployToken(deployed);
-    // await deployTokenForNode4(deployed);
-    await allowBanksInTokenSmartContract(deployed);
-    await setMinterAllowed(deployed);
-    await saveDeploymentInfo(deployed, hre, ethers, fs, path)
+    // await deployToken(deployed);
+    // await allowBanksInTokenSmartContract(deployed);
+    // await setMinterAllowed(deployed);
+    // await saveDeploymentInfo(deployed, hre, ethers, fs, path)
+    // deploy demo bank
+    await deployTokenDemoBank(deployed);
+    await allowBanksInTokenSmartContractDemoBank(deployed);
+    await setMinterAllowedDemoBank(deployed);
+
 }
 
 main().then();

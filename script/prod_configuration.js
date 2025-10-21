@@ -77,6 +77,43 @@ module.exports = {
             users: [
                 {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter"}, // Node4 minter user account address
             ]
+        },
+        {
+            // Ethereum address for Node4 institution on L2 network
+            address: "0xf03b090da2BCD2BDEF187a9b02b09a040A58b210",
+            // Private key for Node4 institution on L2 network
+            ethPrivateKey: "51337402cf7487ef11909398c029e53d3a60b828e7548603664f2ea8e8d0f5be",
+            // Institution name identifier
+            name: "demo_bank",
+            // gRPC endpoint for Node4 RPC services
+            rpcUrl: "ucl-nodeBank-rpc.hamsa-ucl.com:50051",// node rpc url, if needed to replace the external gRPC service, please update this value
+            nodeUrl: "https://ucl-nodeBank-proxy.hamsa-ucl.com:8443",// node https url, if needed to replace the external http service, please update this value
+            httpUrl: "http://ucl-nodeBank-http.hamsa-ucl.com:8080",// node http url, if needed to replace the external http service, please update this value
+            // curve public key coordinates for Node4 institution on L2 network
+            publicKey: {
+                x: "8961266057079077123319470703248735072115827785433220893254626692900397982739",
+                y: "5396183500247196396405767290333635828886468882623979993202523836471479877350",
+            },
+            // Elliptic curve integer private key for Node4 institution on L2 network
+            privateKey: "977361285194729869577973464040298253676221475078960155654572268707790766409",
+            // User accounts associated with Node4 institution on L2 network
+            users: [
+                {
+                    "address": "0xD486bd3B1Bb9d1980C5b624b5491325bF9628B43",
+                    "privateKey": "e0baa6238c61addf4e4b05ea2c8ad50565a38ca0589505228b35806a33df5d5b",
+                    "role": "normal"
+                },
+                {
+                    "address": "0x93d2Ce0461C2612F847e074434d9951c32e44327",
+                    "privateKey": "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
+                    "role": "normal"
+                },
+                {
+                    "address": "0x5a3288A7400B2cd5e0568728E8216D9392094892",
+                    "privateKey": "360b3f569579a0e824fab18c21d6e583b060e2339142c6833c899029fc8e428d",
+                    "role": "normal"
+                }
+            ]
         }
     ]
 }
