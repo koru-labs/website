@@ -2,7 +2,7 @@ const hre = require("hardhat");
 const {ethers} = hre;
 const hardhatConfig = require('../../hardhat.config');
 const accounts = require("../../deployments/account.json");
-const { getEnvironmentConfig } = require('../deploy_help.js');
+const {getEnvironmentConfig} = require('../deploy_help.js');
 const config = getEnvironmentConfig();
 
 const {createClient} = require("../../test/qa/token_grpc");
@@ -13,7 +13,7 @@ const node3Institution = config.institutions.find(institution => institution.nam
 if (!node3Institution) {
     throw new Error("Node3 institution not found in config");
 }
-const rpcUrl =node3Institution.rpcUrl;
+const rpcUrl = node3Institution.rpcUrl;
 
 
 async function deployToken(deployed) {
@@ -52,7 +52,7 @@ async function deployToken(deployed) {
         accounts.Owner,
         accounts.Pauser,
         accounts.BlackLister,
-        accounts.Owner,
+        node3Institution.address,
         hamsal2event,
         institutionRegistration
     );
@@ -63,61 +63,9 @@ async function deployToken(deployed) {
     deployed.contracts.PrivateERCTokenImplementation = implementation.target;
 }
 
-async function deployTokenForNode4(deployed) {
-    let hamsal2event = deployed.contracts.HamsaL2Event;
-    let institutionRegistration = deployed.contracts.InstUserProxy;
-
-
-    // find node4 institution
-    const node4Institution = config.institutions.find(institution => institution.name === "Node4");
-    if (!node4Institution) {
-        throw new Error("Node4 institution not found in config");
-    }
-    const wallet = new ethers.Wallet(node4Institution.ethPrivateKey, ethers.provider);
-    console.log(`Deploying PrivateUSDC for Node4 institution ${node4Institution.name},institutionAddress:${node4Institution.address}...`);
-
-    const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
-        libraries: {
-            "TokenEventLib": deployed.libraries.TokenEventLib,
-            "TokenUtilsLib": deployed.libraries.TokenUtilsLib,
-            "TokenVerificationLib": deployed.libraries.TokenVerificationLib,
-            "SignatureChecker": deployed.libraries.SignatureChecker
-        },
-        signer: wallet
-    });
-
-    const implementation = await PrivateUSDCFactory.deploy();
-    await implementation.waitForDeployment();
-    console.log("PrivateUSDC implementation deployed at:", implementation.target);
-
-    const ProxyFactory = await ethers.getContractFactory("PrivateUSDCProxy", wallet);
-    const proxy = await ProxyFactory.deploy(implementation.target);
-    await proxy.waitForDeployment();
-    console.log("PrivateUSDC proxy deployed at:", proxy.target);
-
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC", proxy.target, wallet);
-    console.log("Initializing PrivateUSDC...");
-    const initTx = await privateUSDC.initialize(
-        "Private USDC",
-        "PUSDC",
-        "USD",
-        6,
-        accounts.MasterMinter,
-        accounts.Pauser,
-        accounts.BlackLister,
-        accounts.Owner,
-        hamsal2event,
-        institutionRegistration
-    );
-    await initTx.wait();
-    console.log("PrivateUSDC initialized successfully");
-
-    deployed.contracts.PrivateERCTokenNode4 = proxy.target;
-    deployed.contracts.PrivateERCTokenNode4Implementation = implementation.target;
-}
-
 async function allowBanksInTokenSmartContract(deployed) {
-    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
+    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
+    const ownerWallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
 
     console.log(`Using wallet: ${ownerWallet.address}`);
 
@@ -168,7 +116,8 @@ async function setMinterAllowed(deployed) {
 
     const client = createClient(rpcUrl);
     console.log(`rpcUrl:${rpcUrl}`);
-    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    // const metadata = await createAuthMetadata(accounts.OwnerKey);
+    const metadata = await createAuthMetadata(node3Institution.ethPrivateKey);
     for (const minter of minters) {
         let response = await client.encodeElgamalAmount(100000000, metadata);
         const tokenId = ethers.toBigInt(response.token_id);
@@ -188,6 +137,7 @@ async function setMinterAllowed(deployed) {
         console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`);
     }
 }
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -205,10 +155,9 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 
     return metadata;
 }
+
 module.exports = {
     deployToken,
     allowBanksInTokenSmartContract,
-    setMinterAllowed,
-    deployTokenForNode4,
-    sleep
+    setMinterAllowed, sleep
 };

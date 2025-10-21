@@ -4,7 +4,6 @@ const hre = require("hardhat");
 const {ethers} = hre;
 
 
-
 // Helper function to get environment-specific configuration
 function getEnvironmentConfig() {
     const networkName = hre.network.name;
@@ -15,6 +14,8 @@ function getEnvironmentConfig() {
         environment = 'dev';
     } else if (networkName.includes('qa') || networkName.includes('test')) {
         environment = 'qa';
+    } else if (networkName.includes('demo')) {
+        environment = 'demo';
     } else if (networkName.includes('prod') || networkName.includes('production') || networkName.includes('mainnet')) {
         environment = 'prod';
     } else {
@@ -31,6 +32,8 @@ function getEnvironmentConfig() {
         configPath = path.join(__dirname, 'qa_configuration.js');
     } else if (networkName.includes('prod')) {
         configPath = path.join(__dirname, 'prod_configuration.js');
+    } else if (networkName.includes('demo')) {
+        configPath = path.join(__dirname, 'demo_configuration.js');
     } else {
         configPath = path.join(__dirname, 'dev_configuration.js');
     }
@@ -182,6 +185,8 @@ function getImage9EnvironmentData() {
         environment = 'qa';
     } else if (networkName.includes('prod') || networkName.includes('production') || networkName.includes('mainnet')) {
         environment = 'prod';
+    } else if (networkName.includes('demo')) {
+        environment = 'demo';
     } else {
         console.log(`Warning: Unknown environment for network "${networkName}", defaulting to dev configuration`);
         environment = 'dev';

@@ -73,6 +73,12 @@ module.exports = {
                 "5ce8c4aea462de54d0a8ecbfe5cc8c8ac18926979c66a66e5a463ba8506401c0", //fE5acd71116FB8a03510FF171222F01164609c97，admin,do not use business processes
             ],
         },
+        ucl_L2_demo: {
+            url: "http://L2-node1-prod.hamsa-ucl.com:8545",
+            accounts: [
+                "51337402cf7487ef11909398c029e53d3a60b828e7548603664f2ea8e8d0f5be"
+            ],
+        },
         eth_L1_qa: {
             url: 'http://eth-dev2.hamsa-ucl.com:33063',
             // url: 'http://54.193.75.6:33008',

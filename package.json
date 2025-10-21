@@ -50,6 +50,9 @@
     "deploy-infra-user-prod": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_prod",
     "deploy-token-prod": "npx hardhat run script/token/deploy.js --network ucl_L2_prod",
 
+    "deploy-infra-user-demo": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_demo",
+    "deploy-token-demo": "npx hardhat run script/token/deploy.js --network ucl_L2_demo",
+
 
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2_qa",
     "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_L2_qa",
