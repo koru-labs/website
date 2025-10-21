@@ -29,6 +29,8 @@ function getEnvironmentConfig() {
         configPath = path.join(__dirname, 'dev_configuration.js');
     } else if (networkName.includes('qa') || networkName.includes('test')) {
         configPath = path.join(__dirname, 'qa_configuration.js');
+    } else if (networkName.includes('prod')) {
+        configPath = path.join(__dirname, 'prod_configuration.js');
     } else {
         configPath = path.join(__dirname, 'dev_configuration.js');
     }
