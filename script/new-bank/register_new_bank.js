@@ -183,13 +183,21 @@ async function getOwner() {
 
 async  function checkUserInst() {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
-    let admin = await institutionUserRegistry.getUserManager("0xF8041E1185C7106121952bA9914ff904A4A01c80");
+    let admin = await institutionUserRegistry.getUserManager("0xD486bd3B1Bb9d1980C5b624b5491325bF9628B43");
     let inst = await institutionUserRegistry.getInstitution(admin);
     console.log("user inst:", inst);
 }
 
+async function deployDummy(){
+    const Dummy = await ethers.getContractFactory("DummyToken");
+    const dummy = await Dummy.deploy();
+    await dummy.waitForDeployment();
 
-getLastBlock().then();
+    console.log("dummy is deployed at:", await dummy.getAddress());
+}
+
+deployDummy().then();
+// getLastBlock().then();
 // verifyCode().then();
 // checkSeededBankInfo().then();
 // verifyEthAddress().then();
