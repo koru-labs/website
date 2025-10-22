@@ -18,6 +18,7 @@ const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
 
 const TokenService = protoDescriptor.tokenproof.v1.TokenService;
 const AccountService = protoDescriptor.tokenproof.v1.AccountService;
+const TestService = protoDescriptor.tokenproof.v1.TestKeyService;
 
 // Token action status enum
 const TokenActionStatusEnum = {
@@ -33,6 +34,7 @@ const TokenActionStatusEnum = {
 function createClient(url) {
     const client = new TokenService(url, grpc.credentials.createInsecure());
     const accountClient = new AccountService(url, grpc.credentials.createInsecure());
+    const testkeyClient = new TestService(url, grpc.credentials.createInsecure());
 
     // Proof generation methods
     client.convertToPUSDC = async function (request, metadata) {
@@ -104,7 +106,7 @@ function createClient(url) {
 
     client.decodeElgamalAmount = async function (balance,metadata) {
         const request = {
-            balance: balance,
+            token_id: balance,
         };
         return promisifyByMetadata(client.DecodeElgamalAmount.bind(client), request,metadata);
     };
@@ -114,6 +116,13 @@ function createClient(url) {
             amount: balance,
         };
         return promisifyByMetadata(client.EncodeElgamalAmount.bind(client), request,metadata);
+    };
+
+    client.getTokenAmount = async function (balance,metadata) {
+        const request = {
+            token_id: token_id,
+        };
+        return promisifyByMetadata(client.GetTokenAmount.bind(client), request,metadata);
     };
 
     client.getAddressAllowance = async function (ownerAddress, spenderAddress, scAddress, metadata) {
@@ -157,6 +166,10 @@ function createClient(url) {
 
     client.getSmartContractList = async function (request, metadata) {
         return promisifyByMetadata(client.GetSmartContractList.bind(client), request, metadata);
+    };
+
+    client.addSmartContract = async function (request, metadata) {
+        return promisifyByMetadata(client.AddSmartContract.bind(client), request, metadata);
     };
 
     client.activateSmartContract = async function (request, metadata) {
@@ -216,6 +229,18 @@ function createClient(url) {
 
     client.getAccount = async function (request, metadata) {
         return promisifyByMetadata(accountClient.getAccount.bind(accountClient), request, metadata);
+    };
+
+    client.getAccountList = async function (request, metadata) {
+        return promisifyByMetadata(accountClient.getAccountList.bind(accountClient), request, metadata);
+    };
+
+    client.getSignatureAndMessage = async function (request) {
+        return promisify(testkeyClient.getSignatureAndMessage.bind(testkeyClient), request);
+    };
+
+    client.registerBankCallerAccount = async function (request, metadata) {
+        return promisifyByMetadata(accountClient.registerBankCallerAccount.bind(accountClient), request, metadata);
     };
 
 
