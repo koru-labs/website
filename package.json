@@ -67,6 +67,7 @@
     "wlin-eth2-QA": "npx hardhat run test/wlin/eth2_prod_test.js --network eth2_qa",
     "wlin-local": "npx hardhat run test/wlin/simpleToken_test.js --network local_L2",
     "demo-bank-deploy": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa_bank",
+    "demo-bank-deploy2": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa",
 
     "mc-test-qa": "npx hardhat run test/mc/mc_test.js --network ucl_L2_qa",
     "mc-test-dev": "npx hardhat run test/mc/mc_test.js --network ucl_L2_dev",

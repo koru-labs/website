@@ -117,7 +117,8 @@ async function deployTokenDemoBank(deployed) {
 
 
 async function allowBanksInTokenSmartContract(deployed) {
-    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
+    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
+    const ownerWallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
 
     console.log(`Using wallet: ${ownerWallet.address}`);
 
@@ -264,6 +265,7 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 
     return metadata;
 }
+
 module.exports = {
     deployToken,
     allowBanksInTokenSmartContract,
