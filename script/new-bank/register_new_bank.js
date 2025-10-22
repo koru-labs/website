@@ -4,15 +4,15 @@ const grpc = require("@grpc/grpc-js");
 
 
 
-const registrar_address = "0x18a0a58728A3Ebd82492Ab03aEdc634B097d30A1";
-const token_address ="0xe801229a4F28DA75fC4752505F3A00fca61B6f6f";
+const registrar_address = "0xF3B8Ee2b8273A62f697CA730d8aBAb120E6C70cc";
+const token_address ="0x6883Dd89C54B0547022cbB058d8aC959AC0Fb089";
 
 const instInfo={
     address: "0xF8041E1185C7106121952bA9914ff904A4A01c80",    //manager address
     name: "demo_bank",          // bank name
-    rpcUrl: "ucl-nodeBank-rpc.hamsa-ucl.com:50051",
-    nodeUrl: "https://ucl-nodeBank-proxy.hamsa-ucl.com:8443",
-    httpUrl: "http://ucl-nodeBank-http.hamsa-ucl.com:8080",
+    rpcUrl: "ucl-nodebank-rpc.hamsa-ucl.com:50051",
+    nodeUrl: "https://ucl-nodebank-proxy.hamsa-ucl.com:8443",
+    httpUrl: "http://ucl-nodebank-http.hamsa-ucl.com:8080",
 
     publicKey: {
         x: "7230488632214515390939351614066831418110197551947786886664878007977472527345",
@@ -49,7 +49,7 @@ async function registerNewBank() {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
 
     let regTx = await institutionUserRegistry.registerInstitution(
-        instInfo.address, instInfo.name, instInfo.publicKey, instInfo.nodeUrl, instInfo.httpUrl);
+        instInfo.address, instInfo.name, instInfo.publicKey, instInfo.rpcUrl, instInfo.nodeUrl, instInfo.httpUrl);
     await regTx.wait();
 
     let resultInfo = await institutionUserRegistry.getInstitution(instInfo.address);
@@ -60,7 +60,7 @@ async function updateBank() {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
 
     let regTx = await institutionUserRegistry.updateInstitution(
-        instInfo.address, instInfo.name,  instInfo.nodeUrl, instInfo.httpUrl);
+        instInfo.address, instInfo.name, instInfo.rpcUrl, instInfo.nodeUrl, instInfo.httpUrl);
     await regTx.wait();
 
     let resultInfo = await institutionUserRegistry.getInstitution(instInfo.address);
@@ -164,7 +164,7 @@ async function getLastBlock() {
 }
 
 async function verifyCode(){
-    let code = await ethers.provider.getCode(registrar_address);
+    let code = await ethers.provider.getCode(token_address);
     console.log("code:", code);
 }
 
@@ -183,12 +183,20 @@ async function getOwner() {
 
 async  function checkUserInst() {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", registrar_address);
-    let admin = await institutionUserRegistry.getUserManager("0xF8041E1185C7106121952bA9914ff904A4A01c80");
+    let admin = await institutionUserRegistry.getUserManager("0xD486bd3B1Bb9d1980C5b624b5491325bF9628B43");
     let inst = await institutionUserRegistry.getInstitution(admin);
     console.log("user inst:", inst);
 }
 
+async function deployDummy(){
+    const Dummy = await ethers.getContractFactory("DummyToken");
+    const dummy = await Dummy.deploy();
+    await dummy.waitForDeployment();
 
+    console.log("dummy is deployed at:", await dummy.getAddress());
+}
+
+deployDummy().then();
 // getLastBlock().then();
 // verifyCode().then();
 // checkSeededBankInfo().then();
@@ -196,7 +204,7 @@ async  function checkUserInst() {
 
 // registerNewBank().then()
 // updateBank().then();
-registerBankUsers().then();
+// registerBankUsers().then();
 // getOwner().then();
 // enableBankInTokenSmartContract().then()
 // makeBankAdminMinter().then()
