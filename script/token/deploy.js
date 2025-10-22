@@ -21,6 +21,7 @@ async function main() {
     // await allowBanksInTokenSmartContract(deployed);
     // await setMinterAllowed(deployed);
     // await saveDeploymentInfo(deployed, hre, ethers, fs, path)
+
     // deploy demo bank
     await deployTokenDemoBank(deployed);
     await allowBanksInTokenSmartContractDemoBank(deployed);

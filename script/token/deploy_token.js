@@ -193,6 +193,8 @@ async function setMinterAllowedDemoBank(deployed) {
     const rpcUrl = demoBankInstitution.rpcUrl;
     // add minter users
     const minters = extractMinterUsers();
+    const l1Provider = ethers.provider;
+    const minterWallet = new ethers.Wallet(demoBankInstitution.ethPrivateKey, l1Provider);
 
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
@@ -202,7 +204,8 @@ async function setMinterAllowedDemoBank(deployed) {
             "SignatureChecker": deployed.libraries.SignatureChecker
         }
     });
-    const privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
+    let privateUSDC = await PrivateUSDCFactory.attach(deployed.contracts.PrivateERCToken);
+    privateUSDC = privateUSDC.connect(minterWallet);
 
     const client = createClient(rpcUrl);
     console.log(`rpcUrl:${rpcUrl}`);

@@ -80,9 +80,9 @@ module.exports = {
         },
         {
             // Ethereum address for Node4 institution on L2 network
-            address: "0xf03b090da2BCD2BDEF187a9b02b09a040A58b210",
+            address: "0x9105Ee9ec3549d21E14eddf37aa53f238F8bB688",
             // Private key for Node4 institution on L2 network
-            ethPrivateKey: "51337402cf7487ef11909398c029e53d3a60b828e7548603664f2ea8e8d0f5be",
+            ethPrivateKey: "5c231ce8344bac49d30d2c13db074ee7757c574caabfcb8349074b5486c08c7e",
             // Institution name identifier
             name: "demo_bank",
             // gRPC endpoint for Node4 RPC services
@@ -91,11 +91,11 @@ module.exports = {
             httpUrl: "http://ucl-nodeBank-http.hamsa-ucl.com:8080",// node http url, if needed to replace the external http service, please update this value
             // curve public key coordinates for Node4 institution on L2 network
             publicKey: {
-                x: "8961266057079077123319470703248735072115827785433220893254626692900397982739",
-                y: "5396183500247196396405767290333635828886468882623979993202523836471479877350",
+                x: "1263079846181183589047881614918361220592349036643657901406926813309141071585",
+                y: "9661166093242693427727959277256175027969009219246273472658449304422322754056",
             },
             // Elliptic curve integer private key for Node4 institution on L2 network
-            privateKey: "977361285194729869577973464040298253676221475078960155654572268707790766409",
+            privateKey: "1548713920852155049326738319927133338721390086502056721554918014934348349354",
             // User accounts associated with Node4 institution on L2 network
             users: [
                 {
