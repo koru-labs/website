@@ -42,15 +42,15 @@ module.exports = {
             privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
             // User accounts associated with Node3 institution on L2 network
             users: [
-                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role:"minter"},// Node3 minter user account address
-                {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},// Node3 normal user account address
-                {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},// Node3 normal user account address
-                {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},// Node3 normal user account address
-                {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},// Node3 normal user account address
-                {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},// Node3 minter user account address
-                {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},// Node3 minter user account address
-                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"minter"},// Node3 minter user account address
-                {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}// Node3 normal user account address
+                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role: "minter"},// Node3 minter user account address
+                {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role: "normal"},// Node3 normal user account address
+                {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role: "normal"},// Node3 normal user account address
+                {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role: "normal"},// Node3 normal user account address
+                {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role: "normal"},// Node3 normal user account address
+                {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role: "minter"},// Node3 minter user account address
+                {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role: "minter"},// Node3 minter user account address
+                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role: "minter"},// Node3 minter user account address
+                {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role: "normal"}// Node3 normal user account address
             ]
         },
         {
@@ -85,11 +85,12 @@ module.exports = {
             ethPrivateKey: "e7890d94662aa12a6f6079595e4fc9ebf161eca609a48154c49e2c6030c5cd9b",
             // Institution name identifier
             name: "demo_bank",
-            // gRPC endpoint for Node4 RPC services
-            rpcUrl: "ucl-nodeBank-rpc.hamsa-ucl.com:50051",// node rpc url, if needed to replace the external gRPC service, please update this value
-            nodeUrl: "https://ucl-nodeBank-proxy.hamsa-ucl.com:8443",// node https url, if needed to replace the external http service, please update this value
-            httpUrl: "http://ucl-nodeBank-http.hamsa-ucl.com:8080",// node http url, if needed to replace the external http service, please update this value
-            // curve public key coordinates for Node4 institution on L2 network
+            // gRPC endpoint for Node3 RPC services
+            rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",
+            // HTTPS proxy endpoint for Node3
+            nodeUrl: "https://demo-node3-proxy.hamsa-ucl.com:8443",
+            // HTTP endpoint for Node3 services
+            httpUrl: "http://demo-node3-http.hamsa-ucl.com:8080",// curve public key coordinates for Node4 institution on L2 network
             publicKey: {
                 x: "1065104639605578406571142978208666127086022795323606631858996834770305910120",
                 y: "20307667678556747341624423268708230461812237974991336745572481331911333635246",
