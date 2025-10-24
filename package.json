@@ -86,7 +86,7 @@
     "format:sol": "prettier --write \"**/*.sol\"",
     "format:check:sol": "prettier --check \"**/*.sol\"",
     "chenkun-test": "npx hardhat run test/chenkun/testUtils.js --network ucl_L2_prod",
-    "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js --network ucl_L2_qa",
+    "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js --network ucl_L2_prod",
     "qianwei-token-test": "npx hardhat run test/qianwei/test_token.js --network ucl_L2_qa",
     "qianwei-L1-test": "npx hardhat run test/qianwei/deploy_L1_verify.js --network eth_L1_dev",
     "sun-test": "npx hardhat run test/sun/sun_test.js --network ucl_L2_qa"
