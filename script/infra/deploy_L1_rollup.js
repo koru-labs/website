@@ -37,8 +37,8 @@ async function deployL1Handle(deployed) {
         console.log("L1VerifyAddress is deploy at :", handle.target);
         deployed.contracts.L1VerifyAddress = handle.target;
     } else {
-        deployed.contracts.L1VerifyAddress = Fixed_Addresses.L1_VERIFY_ADDRESS
-        console.log("Use already deployed L1VerifyAddress:", Fixed_Addresses.L1_VERIFY_ADDRESS);
+        deployed.contracts.L1VerifyAddress = Fixed_Addresses.ADDRESSES.L1_VERIFY_ADDRESS
+        console.log("Use already deployed L1VerifyAddress:", Fixed_Addresses.ADDRESSES.L1_VERIFY_ADDRESS);
     }
     console.log("L1VerifyAddress deployment finished");
 }
@@ -54,8 +54,8 @@ async function deployL1BlobCommitmentVerify(deployed) {
         console.log("L1BlobCommitmentVerify is deploy at :", blobCommitmentVerify.target);
         deployed.contracts.L1BlobCommitmentVerify = blobCommitmentVerify.target;
     } else {
-        deployed.contracts.L1BlobCommitmentVerify = Fixed_Addresses.L1_BLOB_COMMITMENT_VERIFY
-        console.log("Use already deployed L1BlobCommitmentVerify:", Fixed_Addresses.L1_BLOB_COMMITMENT_VERIFY);
+        deployed.contracts.L1BlobCommitmentVerify = Fixed_Addresses.ADDRESSES.L1_BLOB_COMMITMENT_VERIFY
+        console.log("Use already deployed L1BlobCommitmentVerify:", Fixed_Addresses.ADDRESSES.L1_BLOB_COMMITMENT_VERIFY);
     }
     console.log("L1HANDLE deployment finished");
 }
@@ -66,7 +66,7 @@ async function deployL1Contract() {
     await deployL1Handle(deployed);
     //need hardhat config ,Enable the parameter: evmVersion: "cancun",
     // and change the contract BlobCommitmentVerify.sol.bak to BlobCommitmentVerify.sol
-    // await deployL1BlobCommitmentVerify(deployed);
+    await deployL1BlobCommitmentVerify(deployed);
     await saveDeploymentInfo(deployed, hre, ethers, fs, path);
 }
 

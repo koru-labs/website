@@ -18,7 +18,8 @@ const node3Institution = configuration.institutions.find(institution => institut
 if (!node3Institution) {
   throw new Error("Node3 institution not found in config");
 }
-const rpcUrl = node3Institution.rpcUrl;
+// const rpcUrl = node3Institution.rpcUrl;
+const rpcUrl = "localhost:50051";
 const deployed = getImage9EnvironmentData();
 
 // Initialize client and provider
@@ -686,6 +687,68 @@ async function testGetBalance() {
     throw error;
   }
 }
+async function testGetAccountList() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let req = {
+      "manager_address": '0x93d2ce0461c2612f847e074434d9951c32e44327'
+    }
+    let resp = await client.getAccountList(req,metadata);
+    console.log("registerBankCallerAccount receipt:", resp);
+
+  } catch (error) {
+    console.error(`get mint allowed token failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function testSignKey() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let req = {
+
+    }
+    let resp = await client.getSignatureAndMessage(req,metadata);
+    console.log("registerBankCallerAccount receipt:", resp);
+
+  } catch (error) {
+    console.error(`get mint allowed token failed: ${error.message}`);
+    throw error;
+  }
+}
+
+
+async function testAddSmartContract() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let req = {
+      sc_address: "0xc0f61c0a8241e75ce7428b5c09d460a78def9b25",
+      status: 2
+    }
+    let resp = await client.addSmartContract(req,metadata);
+    console.log("registerBankCallerAccount receipt:", resp);
+
+  } catch (error) {
+    console.error(`get mint allowed token failed: ${error.message}`);
+    throw error;
+  }
+}
+
+
+async function  testChangeBankCallers() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let req = {
+      "account_address":[accounts.Owner,accounts.Minter]
+    }
+    let resp = await client.registerBankCallerAccount(req,metadata);
+    console.log("registerBankCallerAccount receipt:", resp);
+
+  } catch (error) {
+    console.error(`get mint allowed token failed: ${error.message}`);
+    throw error;
+  }
+}
 
 async function testGetBalance() {
   try {
@@ -719,7 +782,7 @@ async function testSetMintAllowed() {
 async function runTests() {
   try {
     // Basic tests
-    await mintForStart();
+    // await mintForStart();
 
     // Token operation tests
     // await testReserveTokensAndBurn();
@@ -742,6 +805,10 @@ async function runTests() {
 
     // await testGetBalance();
     // await testSetMintAllowed();
+    // await testChangeBankCallers();
+    // await testGetAccountList();
+    await testSignKey();
+    // await testAddSmartContract();
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);

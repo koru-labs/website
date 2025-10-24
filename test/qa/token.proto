@@ -173,6 +173,13 @@ service TokenService {
       body: "*"
     };
   }
+
+  rpc AddSmartContract      (AddSmartContractRequest)        returns (AddSmartContractResponse) {
+    option (google.api.http) = {
+      post: "/v1/add/smart-contract"
+      body: "*"
+    };
+  }
   rpc ActivateSmartContract      (ActivateSmartContractRequest)        returns (ActivateSmartContractResponse) {
     option (google.api.http) = {
       post: "/v1/active/smart-contract"
@@ -211,6 +218,15 @@ message SmartContract {
   uint64 status = 4;
   string icon = 5;
   uint64 currency_precision = 6;
+}
+message AddSmartContractRequest {
+  string sc_address = 1;
+  uint64 status = 2;
+}
+message AddSmartContractResponse {
+  SmartContract data = 1;
+  string code = 2;
+  string message = 3;
 }
 message ActivateSmartContractRequest {
   repeated string sc_addresses = 1;
@@ -668,6 +684,23 @@ service AccountService {
       body: "*"
     };
   };
+  rpc RegisterBankCallerAccount       (RegisterBankCallerRequest)         returns (RegisterBankCallerResponse)
+  {
+    option (google.api.http) = {
+      post: "/v1/bank/caller/register"
+      body: "*"
+    };
+  };
+}
+
+message RegisterBankCallerRequest {
+  repeated string account_address = 1;
+}
+
+message RegisterBankCallerResponse {
+  string request_id = 1;
+  AsyncActionStatusEnum status = 2;
+  string message = 3;
 }
 
 // Account action status enum
@@ -786,4 +819,27 @@ message Account {
   string account_address = 1;
   AccountStatusEnum account_status = 2;
   string account_roles = 3;
+}
+
+service TestKeyService {
+  rpc GetSignatureAndMessage       (GetSignatureAndMessageRequest)         returns (GetSignatureAndMessageResponse)
+  {
+    option (google.api.http) = {
+      post: "/v1/test/signature"
+      body: "*"
+    };
+  };
+}
+message GetSignatureAndMessageRequest {
+}
+
+message GetSignatureAndMessageResponse {
+  repeated SignatureAndMessage signature_and_message = 1;
+}
+
+message SignatureAndMessage {
+  string address = 1;
+  string message = 2;
+  string signature = 3;
+  string role = 4;
 }
