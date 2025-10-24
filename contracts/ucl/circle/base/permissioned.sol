@@ -4,7 +4,7 @@ import { Ownable } from "../../../usdc/v1/Ownable.sol";
 import "../inst_user_registry/InstitutionUserRegistry.sol";
 
 abstract contract Permissioned is Ownable {
-    mapping(address=>bool) allowedBanks;
+    mapping(address=>bool) public allowedBanks;
     InstitutionUserRegistry internal _instRegistry;
 
     function initializePermission(InstitutionUserRegistry instRegistry)  internal {
