@@ -218,6 +218,7 @@ message SmartContract {
   uint64 status = 4;
   string icon = 5;
   uint64 currency_precision = 6;
+  string manager_address = 7;
 }
 message AddSmartContractRequest {
   string sc_address = 1;
