@@ -37,6 +37,7 @@ abstract contract PrivateTokenConverter is
         uint256[8] calldata proof
     )
     external
+    onlyAllowedBank
     whenNotPaused
     notBlacklisted(msg.sender)
     virtual
@@ -115,6 +116,7 @@ abstract contract PrivateTokenConverter is
         uint256[8] calldata proof
     )
     external
+    onlyAllowedBank
     whenNotPaused
     notBlacklisted(msg.sender)
     virtual
