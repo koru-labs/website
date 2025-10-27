@@ -336,6 +336,7 @@ message Institution {
 
 message ConvertToPUSDCRequest {
   uint64 amount = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  string sc_address = 2;
 }
 
 message ConvertToPUSDCResponse {
@@ -349,6 +350,7 @@ message ConvertToPUSDCResponse {
 
 message ConvertToUSDCRequest {
   string token_id = 1;
+  string sc_address = 2;
 }
 
 message ConvertToUSDCResponse {
