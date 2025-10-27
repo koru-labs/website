@@ -182,7 +182,7 @@ abstract contract PrivateTokenCore is
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
         uint256[20] calldata publicInputs
-    ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) nonReentrant virtual {
+    ) external onlyAllowedBank whenNotPaused notBlacklisted(msg.sender) notBlacklisted(to) nonReentrant virtual {
 
         address institutionAddress = _institutionRegistration.getUserManager(from);
         require(institutionAddress != address(0), "institution is not registered for user");
@@ -221,51 +221,6 @@ abstract contract PrivateTokenCore is
         TokenUtilsLib.addToken(_accounts, from, transferToken);
         TokenUtilsLib.addToken(_accounts, from, rollBackToken);
         TokenEventLib.triggerRollupForSplit(_l2Event, address(this),  consumedTokens, newTokens, publicInputs, proof);
-    }
-
-    function privateTransfer(
-        uint256 tokenId
-    )
-    external
-    whenNotPaused
-    notBlacklisted(msg.sender)
-    onlyAllowedBank
-    nonReentrant
-    virtual
-    returns (bool)
-    {
-        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
-        require(_accounts[msg.sender].assets[tokenId].id != 0, "invalid token");
-        TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenId];
-        TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
-        address to = tokenEntity.to;
-        require(tokenEntity.tokenType == TokenModel.TokenType.transferred, "This token cannot be used for other purposes");
-
-        delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
-
-        uint256[] memory consumedTokens = new uint256[](2);
-        consumedTokens[0] = tokenEntity.id;
-        consumedTokens[1] = tokenEntity.rollbackTokenId;
-
-        delete _accounts[msg.sender].assets[tokenEntity.id];
-        TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
-
-        tokenEntity.rollbackTokenId = 0;
-        tokenEntity.owner = to;
-        tokenEntity.status = TokenModel.TokenStatus.active;
-        _accounts[tokenEntity.to].assets[tokenEntity.id] = tokenEntity;
-
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
-
-        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
-
-        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-        TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender,to, backupPk,backupEntity.id);
-
-        emit PrivateTransfer(msg.sender, to, tokenEntity.amount);
-
-        return true;
-
     }
 
     function privateTransfers(
