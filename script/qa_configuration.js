@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-            "HAMSAL2EVENT_IMPLEMENTATION": "",
+            "HAMSAL2EVENT_IMPLEMENTATION": "0x66089a4C14bcF917433417a46467297dab8d0e21",
             // Hamsa L2 event proxy address on target network
-            "HAMSAL2EVENT_PROXY": "",
+            "HAMSAL2EVENT_PROXY": "0x33739D11412101cF029987cBCefC298293230D65",
             // Optional alternate implementation for A/B rollout
             "HAMSAL2EVENT_IMPLEMENTATION_B": "",
             // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +14,9 @@ module.exports = {
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
             // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520",
+            "INSTITUTION_REGISTRATION": "0xD107409dd1d4619Ab4E969f7e2bd4A5d92672246",
             // Proxy contract address for institution user operations
-            "PROXY_ADDRESS": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520"
+            "PROXY_ADDRESS": "0xdB17395eC234AA0605207e61A55888c5482006D4"
         },
     // Institution configurations
     institutions: [
@@ -28,7 +28,7 @@ module.exports = {
             // Institution name identifier
             name: "Node3",
             // gRPC endpoint for Node3 RPC services
-            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+            rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
             nodeUrl: "https://qa-node3-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node3 services
@@ -61,7 +61,7 @@ module.exports = {
             // Institution name identifier
             name: "Node4",
             // gRPC endpoint for Node4 RPC services
-            rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
+            rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
             nodeUrl: "https://qa-node4-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node4 services
@@ -77,7 +77,8 @@ module.exports = {
             users: [
                 {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter"}, // Node4 minter user account address
             ]
-        },
+        }
+        ,
         {
             // Ethereum address for demo institution on L2 network
             address: "0xbE1C966E5D7250610AA2725cE286ECC3e1617070",

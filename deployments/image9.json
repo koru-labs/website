@@ -20,41 +20,43 @@
       "HamsaL2EventPercentageToB": 0,
       "InstitutionUserRegistry": "0xc2D9DAC9a16b686A0c14A528D2755a61AF14fCC8",
       "InstUserProxy": "0x4227842F10Bc3F6aD6987CF43E001F832fEf655f",
-      "PrivateERCToken": "0x3A13e637081D630D0E13B4378A7432Fd80A184f9",
-      "PrivateERCTokenImplementation": "0xDa23Bab76DD40E4F19ae856b6A4eA20434e172d9"
+      "PrivateERCToken": "0x3AE65bE6522F01155342b0457F4C5e8d7D30852a",
+      "PrivateERCTokenImplementation": "0xf42511af7cCB6796d5A57B5951c8ab3c8a001109"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-10-20T08:40:40.804Z",
+      "timestamp": "2025-10-24T07:44:08.853Z",
       "network": "ucl_L2_dev",
       "chainId": "1337"
     }
   },
   "qa": {
     "libraries": {
-      "CurveBabyJubJub": "0x98d9d026D2DD6Aa806799b8fa6631AE31989aCD4",
-      "CurveBabyJubJubHelper": "0x4a1C7060df655C10575BAaB57ecc0638bEFB4a4C",
-      "MintAllowedTokenVerifier": "0x5d161Da6F4Eb1E4849c2c7E9A2b5D104579BCFA0",
-      "SplitTokenVerifier": "0xDcE756dFf8FaB653b07Ab29912A079F049aa87E5",
-      "SplitAllowanceTokenVerifier": "0x669bff59bb18029fC77b6A7C701d09ABB060FF00",
-      "Convert2pUSDCVerifier": "0x6b551513b7E73B47F54857d0f9A9aCE89a1dB884",
-      "Convert2USDCVerifier": "0x6502c7e63f34a891a040A9E6E47882D14e0AD1be",
-      "TokenVerificationLib": "0x57814ECe98b4856eD88c7fac1F48b3F86903cA65",
-      "SignatureChecker": "0x2cD49E41eA0dBc0A4c2545F63d6d9943336D0434",
-      "TokenEventLib": "0x973E5e0BE1CC92d52A7A31889a6b96872668E6F7",
-      "TokenUtilsLib": "0xE88b651C797Cc4663DD03DAA054ac98459012ACE"
+      "CurveBabyJubJub": "0xc0b4Fd04127A690F257059c1Dcc3B6F54882631b",
+      "CurveBabyJubJubHelper": "0xE7668aF48Aa67833B950a1A0cF84f3a3BFb5edB9",
+      "MintAllowedTokenVerifier": "0xC8A179e690Eab443Ad1dacdC4504C1C4e313DD52",
+      "SplitTokenVerifier": "0xe87EE77E1e03a2247309dCe35Cd95b2714ae0E32",
+      "SplitAllowanceTokenVerifier": "0x8f7e4a018934027619601c04f7397682977170f1",
+      "Convert2pUSDCVerifier": "0xdE0cb70cf015Aa94D6efb2eE96811edDabdB42d9",
+      "Convert2USDCVerifier": "0x61de55b3FDb7fbdF39dEA6cBA87e0C712D5b6013",
+      "TokenVerificationLib": "0x854Bc1a6002116b47Bc4d20471D840a68e2f019a",
+      "SignatureChecker": "0x766942C1302B50824c61e447DAf28AAeD37636Ac",
+      "TokenEventLib": "0x17D14cb8C1a6cAe2C64eBa4542278C8bF43a51aa",
+      "TokenUtilsLib": "0x334F7437748E308148c667562430dd741FC5BD2D"
     },
     "contracts": {
-      "HamsaL2EventImplementation": "0x21BE09C3EA662d7194a1db80324E1B8F10f288a0",
-      "HamsaL2Event": "0xa7Cfb6052119C9a369dC26373a4c8847EE47681e",
+      "HamsaL2EventImplementation": "0x66089a4C14bcF917433417a46467297dab8d0e21",
+      "HamsaL2Event": "0x33739D11412101cF029987cBCefC298293230D65",
       "HamsaL2EventImplementationB": "",
       "HamsaL2EventPercentageToB": 0,
-      "InstitutionUserRegistry": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520",
-      "InstUserProxy": "0xD7D599cc2C2F6EE5Bb899F936163d5A384465520"
+      "InstitutionUserRegistry": "0xD107409dd1d4619Ab4E969f7e2bd4A5d92672246",
+      "InstUserProxy": "0xdB17395eC234AA0605207e61A55888c5482006D4",
+      "PrivateERCToken": "0x24fBBD4F8eB6F4b84C93E6D9fCEe004C661Ca84d",
+      "PrivateERCTokenImplementation": "0x38C8bdC768Cb2523722d840594013BaA3b6d4A56"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-10-16T07:58:36.691Z",
+      "timestamp": "2025-10-27T08:09:39.648Z",
       "network": "ucl_L2_qa",
       "chainId": "1337"
     }
@@ -79,11 +81,13 @@
       "HamsaL2EventImplementationB": "",
       "HamsaL2EventPercentageToB": 0,
       "InstitutionUserRegistry": "0x1f841d9c63B76923f0B544Dc6b605630377f3c55",
-      "InstUserProxy": "0x28C3CC08B4E14BD10591F43565c8AF69acafCB54"
+      "InstUserProxy": "0x28C3CC08B4E14BD10591F43565c8AF69acafCB54",
+      "PrivateERCToken": "0x030eCAc2A99E87228F157C7701B815B9E6f84409",
+      "PrivateERCTokenImplementation": "0xFdD1Bc5eD1269A1a8c170f286DF28a8780908c1f"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-10-24T06:53:54.747Z",
+      "timestamp": "2025-10-24T07:17:30.621Z",
       "network": "ucl_L2_prod",
       "chainId": "1337"
     }
