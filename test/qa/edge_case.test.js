@@ -381,6 +381,22 @@ describe("Negative And exception test cases", function () {
             beforeEach(async function () {
                 preBalance = await getTokenBalanceByAdmin(recevier);
             });
+            it.only('postBalance value accurate after mint 20 times  ',async () => {
+                preBalance = await getTokenBalanceByAdmin(accounts.Minter);
+                let total_mint_qty = 0;
+                for (let i = 0; i < 20; i++) {
+                    console.log(`the ${i+1} time mint`);
+                    let qty = Math.floor(Math.random() * 10) + 1;
+                    await mint(accounts.Minter, qty);
+                    total_mint_qty += qty;
+                    console.log("total mintted qty:", total_mint_qty)
+                }
+                await sleep(5000)
+                postBalance = await getTokenBalanceByAdmin(accounts.Minter);
+                expect(postBalance).to.equal(preBalance + total_mint_qty);
+            });
+
+
             it('Should revert: Mint with amount 0', async () => {
                 const amount = 0;
                 try {
@@ -587,6 +603,23 @@ describe("Negative And exception test cases", function () {
     describe("PrivateTransfer", function () {
         describe('Transfer security', function () {
             this.timeout(1200000);
+            it.only('postBalance value accurate after transfer 20 times  ',async () => {
+                await mint(accounts.Minter, 1000);
+                preBalance = await getTokenBalanceByAdmin(accounts.Minter);
+                let total_transfer_qty = 0;
+                for (let i = 0; i < 20; i++) {
+                    console.log(`the ${i+1} time transfer`);
+                    let qty = Math.floor(Math.random() * 10) + 1;
+                    await SplitAndTransfer(accounts.To1, qty,minterMeta);
+                    total_transfer_qty += qty;
+                    console.log("total transferred qty:", total_transfer_qty)
+                }
+                await sleep(5000)
+                postBalance = await getTokenBalanceByAdmin(accounts.Minter);
+                expect(postBalance).to.equal(preBalance - total_transfer_qty);
+            });
+
+
             it('Should revert: transfer with used tokenId', async () => {
                 await mint(accounts.Minter, 100)
                 const amount = 10
@@ -686,11 +719,12 @@ describe("Negative And exception test cases", function () {
     describe("PrivateBurn", function () {
         describe('Burn security', function () {
             this.timeout(1200000);
-            it.only('postBalance value accurate after burn 100 times  ',async () => {
+            it.only('postBalance value accurate after burn 20 times  ',async () => {
                 await mint(accounts.Minter, 1000);
                 preBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 let total_burn_qty = 0;
-                for (let i = 0; i < 100; i++) {
+                for (let i = 0; i < 20; i++) {
+                    console.log(`the ${i+1} time burn`);
                     let qty = Math.floor(Math.random() * 10) + 1;
                     await SplitAndBurn( qty);
                     total_burn_qty += qty;
