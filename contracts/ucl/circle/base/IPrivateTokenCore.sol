@@ -38,7 +38,9 @@ interface IPrivateTokenCore {
         uint256[20] calldata publicInputs
     ) external;
     
-    function privateTransfer(uint256 tokenId, address to) external returns (bool);
-    
     function privateCancelToken(uint256 tokenId) external returns (bool);
+
+    function privateTransfers(
+        uint256[] calldata tokenIds
+    ) external;
 }
