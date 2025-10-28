@@ -77,7 +77,9 @@ contract ZKCSC is ReentrancyGuard {
             require(signer == req.from, "DVP: Signature not from 'from' address for burn");
 
             // Execute burn from (burn on behalf of the token owner)
-            IPrivateERCToken(req.tokenAddress).privateBurnFrom(req.from, req.tokenId);
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = req.tokenId;
+            IPrivateERCToken(req.tokenAddress).privateBurnFromBatch(req.from, tokenIds);
         }
 
         emit DVPExecuted(bundleHash, msg.sender, totalOps);

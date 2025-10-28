@@ -82,36 +82,41 @@ abstract contract PrivateTokenApproval is
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
     }
 
-    function privateTransferFrom(
-        uint256 tokenId,
+    function privateTransferFromBatch(
+        uint256[] calldata tokenIds,
         address from,
         address to
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from)
     notBlacklisted(to) onlyAllowedBank nonReentrant virtual returns (bool) {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            _privateTransferFrom(msg.sender, from, to, tokenIds[i]);
+        }
+        return true;
+    }
+
+    function _privateTransferFrom(address spender, address from, address to, uint256 tokenId) internal {
         require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         require(from != address(0), "PrivateERCToken: from is the zero address");
 
-        TokenModel.TokenEntity memory allowanceToken = _accounts[from].assets[tokenId];
-        require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
-        require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
+        TokenModel.TokenEntity storage allowanceTokenStorage = _accounts[from].assets[tokenId];
+        require(allowanceTokenStorage.id != 0, "PrivateERCToken: invalid allowance token");
+        require(allowanceTokenStorage.to == to, "PrivateERCToken: tokenId is not matched");
 
-        require(TokenUtilsLib.isAllowanceExists(_accounts, from, msg.sender, tokenId), "PrivateERCToken: invalid allowance tokenId");
+        require(TokenUtilsLib.isAllowanceExists(_accounts, from, spender, tokenId), "PrivateERCToken: invalid allowance tokenId");
 
-        uint256[] memory rollbackTokens = new uint256[](1);
-        rollbackTokens[0] = allowanceToken.rollbackTokenId;
-        TokenUtilsLib.removeTokens(_accounts, from, rollbackTokens);
+        uint256 rollbackTokenId = allowanceTokenStorage.rollbackTokenId;
+        delete _accounts[from].assets[rollbackTokenId];
 
         uint256[] memory consumedTokens = new uint256[](2);
-        consumedTokens[0] = allowanceToken.id;
-        consumedTokens[1] = allowanceToken.rollbackTokenId;
+        consumedTokens[0] = allowanceTokenStorage.id;
+        consumedTokens[1] = rollbackTokenId;
 
-        uint256[] memory oldTokens = new uint256[](1);
-        oldTokens[0] = allowanceToken.id;
-        TokenUtilsLib.removeTokens(_accounts, from, oldTokens);
+        delete _accounts[from].assets[allowanceTokenStorage.id];
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, 0);
 
+        TokenModel.TokenEntity memory allowanceToken = allowanceTokenStorage;
         allowanceToken.rollbackTokenId = 0;
         allowanceToken.owner = to;
         allowanceToken.status = TokenModel.TokenStatus.active;
@@ -119,15 +124,14 @@ abstract contract PrivateTokenApproval is
         TokenUtilsLib.addToken(_accounts, allowanceToken.to, allowanceToken);
         TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
 
-        TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender, tokenId);
+        TokenUtilsLib.removeAllowanceRecord(_accounts, from, spender, tokenId);
 
-        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokens[0]);
+        TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokenId);
 
-        TokenModel.GrumpkinPublicKey memory ownerPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), msg.sender, to, ownerPk, consumedTokens[0]);
+        TokenModel.GrumpkinPublicKey memory spenderPk = _institutionRegistration.getUserInstGrumpkinPubKey(spender);
+        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), spender, to, spenderPk, consumedTokens[0]);
 
-        emit PrivateTransferFrom(msg.sender, from, to, tokenId);
-        return true;
+        emit PrivateTransferFrom(spender, from, to, tokenId);
     }
 
     function privateRevokeApproval(address spender, uint256 allowanceTokenId) external whenNotPaused
@@ -192,33 +196,51 @@ abstract contract PrivateTokenApproval is
         return TokenUtilsLib.isAllowanceExists(_accounts, owner, spender, tokenId);
     }
 
-    function privateBurnFrom(address from, uint256 allowanceTokenId) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
+    function privateBurnFromBatch(address from, uint256[] calldata allowanceTokenIds) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
+        for (uint256 i = 0; i < allowanceTokenIds.length; i++) {
+            _privateBurnFrom(msg.sender, from, allowanceTokenIds[i]);
+        }
+    }
+
+    function _privateBurnFrom(address spender, address from, uint256 allowanceTokenId) internal {
         require(from != address(0), "PrivateERCToken: from is the zero address");
         require(allowanceTokenId != 0, "PrivateERCToken: allowanceTokenId is zero");
 
-        require(TokenUtilsLib.isAllowanceExists(_accounts, from, msg.sender, allowanceTokenId), "PrivateERCToken: no allowance exists for this spender");
+        require(TokenUtilsLib.isAllowanceExists(_accounts, from, spender, allowanceTokenId), "PrivateERCToken: no allowance exists for this spender");
 
-        TokenModel.TokenEntity memory entity = _accounts[from].assets[allowanceTokenId];
+        TokenModel.TokenEntity storage entityStorage = _accounts[from].assets[allowanceTokenId];
+        require(entityStorage.id != 0, "PrivateERCToken: allowance token not found in assets");
+        require(entityStorage.owner == from, "PrivateERCToken: from is not the token owner");
+
+        TokenModel.TokenEntity memory entity = entityStorage;
         TokenModel.TokenEntity memory backupEntity = _accounts[from].assets[entity.rollbackTokenId];
-        require(entity.id != 0, "PrivateERCToken: allowance token not found in assets");
-        require(entity.owner == from, "PrivateERCToken: from is not the token owner");
 
-        TokenModel.ElGamal memory supplyDecrease = _accounts[from].assets[allowanceTokenId].amount;
+        TokenModel.ElGamal memory supplyDecrease = entityStorage.amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
 
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyDecrease);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
+            _privateTotalSupply,
+            _numberOfTotalSupplyChanges,
+            supplyDecrease
+        );
 
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = allowanceTokenId;
-        TokenUtilsLib.removeTokens(_accounts, from, tokenIds);
+        delete _accounts[from].assets[allowanceTokenId];
 
-        uint256[] memory rollbackTokenIds = new uint256[](1);
-        rollbackTokenIds[0] = entity.rollbackTokenId;
-        TokenUtilsLib.removeTokens(_accounts, from, rollbackTokenIds);
+        uint256 rollbackTokenId = entity.rollbackTokenId;
+        delete _accounts[from].assets[rollbackTokenId];
 
-        TokenUtilsLib.removeAllowanceRecord(_accounts, from, msg.sender, allowanceTokenId);
+        TokenUtilsLib.removeAllowanceRecord(_accounts, from, spender, allowanceTokenId);
 
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), from, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply, _numberOfTotalSupplyChanges);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(
+            _l2Event,
+            address(this),
+            from,
+            oldTotalSupply,
+            TokenModel.ElGamal(0, 0, 0, 0),
+            supplyDecrease,
+            _privateTotalSupply,
+            _numberOfTotalSupplyChanges
+        );
         TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), from, allowanceTokenId);
 
         TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(from);
@@ -232,6 +254,6 @@ abstract contract PrivateTokenApproval is
             backupTokenId: backupEntity.id
         });
         TokenEventLib.triggerRollupForBurn(_l2Event, address(this), e);
-        emit PrivateBurnFrom(msg.sender, from, allowanceTokenId);
+        emit PrivateBurnFrom(spender, from, allowanceTokenId);
     }
 }

@@ -136,32 +136,50 @@ abstract contract PrivateTokenCore is
         return true;
     }
 
-    function privateBurn(uint256 tokenId) external onlyAllowedBank nonReentrant virtual {
-        require(tokenId != 0, "tokenId is zero");
-        require(_accounts[msg.sender].assets[tokenId].id != 0, "token not exists");
-        TokenModel.TokenEntity memory entity = _accounts[msg.sender].assets[tokenId];
-        TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[entity.rollbackTokenId];
-        require(entity.id != 0, "invalid token");
+    function privateBurnBatch(uint256[] calldata tokenIds) external onlyAllowedBank nonReentrant virtual {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            _privateBurn(msg.sender, tokenIds[i]);
+        }
+    }
 
+    function _privateBurn(address account, uint256 tokenId) internal {
+        require(tokenId != 0, "tokenId is zero");
+        require(_accounts[account].assets[tokenId].id != 0, "token not exists");
+        TokenModel.TokenEntity memory entity = _accounts[account].assets[tokenId];
+        TokenModel.TokenEntity memory backupEntity = _accounts[account].assets[entity.rollbackTokenId];
+        require(entity.id != 0, "invalid token");
         require(entity.tokenType == TokenModel.TokenType.burned, "This token cannot be used for other purposes");
 
-        TokenModel.ElGamal memory supplyDecrease = _accounts[msg.sender].assets[tokenId].amount;
+        TokenModel.ElGamal memory supplyDecrease = _accounts[account].assets[tokenId].amount;
         TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
 
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, supplyDecrease);
+        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
+            _privateTotalSupply,
+            _numberOfTotalSupplyChanges,
+            supplyDecrease
+        );
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        TokenUtilsLib.removeTokens(_accounts, msg.sender, tokenIds);
+        TokenUtilsLib.removeTokens(_accounts, account, tokenIds);
 
         uint256[] memory rollbackTokenIds = new uint256[](1);
         rollbackTokenIds[0] = entity.rollbackTokenId;
-        TokenUtilsLib.removeTokens(_accounts, msg.sender, rollbackTokenIds);
+        TokenUtilsLib.removeTokens(_accounts, account, rollbackTokenIds);
 
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(0,0,0,0), supplyDecrease, _privateTotalSupply, _numberOfTotalSupplyChanges);
-        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), msg.sender, tokenId);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(
+            _l2Event,
+            address(this),
+            account,
+            oldTotalSupply,
+            TokenModel.ElGamal(0, 0, 0, 0),
+            supplyDecrease,
+            _privateTotalSupply,
+            _numberOfTotalSupplyChanges
+        );
+        TokenEventLib.triggerTokenBurnedEvent(_l2Event, address(this), account, tokenId);
 
-        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(account);
         TokenModel.GrumpkinPublicKey memory toPk = _institutionRegistration.getUserInstGrumpkinPubKey(entity.to);
         RollupBurnEvent memory e = RollupBurnEvent({
             fromAddress: backupEntity.owner,
@@ -171,8 +189,8 @@ abstract contract PrivateTokenCore is
             toTokenId: tokenId,
             backupTokenId: backupEntity.id
         });
-        TokenEventLib.triggerRollupForBurn(_l2Event, address(this),  e);
-        emit PrivateBurn(msg.sender, supplyDecrease);
+        TokenEventLib.triggerRollupForBurn(_l2Event, address(this), e);
+        emit PrivateBurn(account, supplyDecrease);
     }
 
     function privateSplitToken(
