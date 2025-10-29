@@ -120,39 +120,30 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 }
 
 
-async function callPrivateBurn(scAddress, proofResult, accountWallet) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, accountWallet)
-    const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
-
-    const amount = {
-        "cl_x": ethers.toBigInt(proofResult.supply_decrease.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.supply_decrease.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.amount.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.amount.cr_y)
-    }
-    const consumedTokensRemainingAmount = {
-        "cl_x": ethers.toBigInt(proofResult.new_balance.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.new_balance.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.new_balance.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.new_balance.cr_y)
-    }
-    const supplyDecrease = {
-        "cl_x": ethers.toBigInt(proofResult.supply_decrease.cl_x),
-        "cl_y": ethers.toBigInt(proofResult.supply_decrease.cl_y),
-        "cr_x": ethers.toBigInt(proofResult.supply_decrease.cr_x),
-        "cr_y": ethers.toBigInt(proofResult.supply_decrease.cr_y)
-    }
-    const proofData = Buffer.from(proofResult.proof, "hex");
-
-    const tx = await contract.privateBurn(consumedTokens,amount,consumedTokensRemainingAmount,supplyDecrease,proofData);
-    console.log("Result:", tx);
-    let receipt = await tx.wait();
-    return receipt
-}
-
 async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
     const tx = await contract.privateTransferFrom(tokenId,from,to);
+    let receipt = await tx.wait();
+    return receipt;
+}
+
+async function callPrivateTransferFromBatch(wallet, scAddress, from, to, tokenIds) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateTransferFromBatch(tokenIds, from, to);
+    let receipt = await tx.wait();
+    return receipt;
+}
+
+async function callPrivateBurnFromBatch(wallet, scAddress, from, tokenIds) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateBurnFromBatch(from, tokenIds);
+    let receipt = await tx.wait();
+    return receipt;
+}
+
+async function callPrivateBurnBatch(scAddress, wallet, tokenIds) {
+    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const tx = await contract.privateBurnBatch(tokenIds);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -300,10 +291,7 @@ function uint256ToBytes32(uint256) {
 }
 
 async function callPrivateBurn(scAddress, wallet, tokenId) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    let tx = await contract.privateBurn(tokenId)
-    let receipt = await tx.wait();
-    return receipt;
+    return callPrivateBurnBatch(scAddress, wallet, [tokenId]);
 }
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
@@ -643,6 +631,9 @@ module.exports =  {
     callPrivateTransfer,
     callPrivateTransfers,
     callPrivateTransferFrom,
+    callPrivateTransferFromBatch,
+    callPrivateBurnFromBatch,
+    callPrivateBurnBatch,
     callPrivateBurn,
     getAddressBalance,
     getAddressBalance2,

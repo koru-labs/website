@@ -2,7 +2,8 @@ const assert = require('node:assert');
 
 const {ethers, network} = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
-const config = require('./../../deployments/image9.json');
+const { getImage9EnvironmentData } = require("../../script/deploy_help");
+const config = getImage9EnvironmentData();
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
 
@@ -11,17 +12,16 @@ const client = createClient(rpcUrl)
 
 const {
     callPrivateMint,
-    callPrivateTransfer,
     callPrivateTransfers,
-    callPrivateBurn,
+    callPrivateBurnBatch,
     callPrivateApprove,
-    callPrivateTransferFrom,
+    callPrivateTransferFromBatch,
+    callPrivateBurnFromBatch,
     getAddressBalance,
     getAddressBalance2,
     createAuthMetadata,
     getApproveTokenList
 } = require("../help/testHelp")
-const deployed = require("../../deployments/image9.json");
 
 const l1CustomNetwork = {
     name: "BESU",
@@ -78,6 +78,7 @@ function sleep(ms) {
 async function mintForStart() {
     console.log("=== Starting Mint Process ===");
     const metadata = await createAuthMetadata(accounts.MinterKey);
+    console.log(config);
     const generateRequest = {
         sc_address: config.contracts.PrivateERCToken,
         token_type: '0',
@@ -112,7 +113,6 @@ async function testBurnToken() {
             sc_address: config.contracts.PrivateERCToken,
             token_type: '0',
             from_address: accounts.Minter,
-            to_address: accounts.Minter,
             amount: CONSTANTS.defaultAmount,
             comment: "for burn"
         };
@@ -126,10 +126,12 @@ async function testBurnToken() {
         await sleep(CONSTANTS.waitTimes.long);
 
         console.log("Burning split token...");
-        let receipt = await callPrivateBurn(
+        const burnTokenId = ethers.toBigInt(response.transfer_token_id);
+
+        let receipt = await callPrivateBurnBatch(
             config.contracts.PrivateERCToken,
             minterWallet,
-            '0x' + response.transfer_token_id
+            [burnTokenId]
         );
 
         await sleep(CONSTANTS.waitTimes.medium);
@@ -165,28 +167,46 @@ async function testApproveToken() {
     await sleep(CONSTANTS.waitTimes.medium);
     console.log("✅ Token approval completed successfully");
     
-    return '0x' + response.transfer_token_id;
+    return ethers.toBigInt(response.transfer_token_id);
 }
 
 async function testTransferFrom(approveTokenId) {
     console.log("=== Starting Transfer From Process ===");
-    console.log("Transferring token ID:", approveTokenId);
+    console.log("Transferring token ID:", ethers.toBeHex(approveTokenId));
     
     // Use Spender1 wallet to transfer the approved token to To1
     const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
     
-    // Transfer the approved token from Minter to To1 using Spender1's authority
-    let receipt = await callPrivateTransferFrom(
+    // Transfer the approved token from Minter to To1 using batch interface (single-element array)
+    let receipt = await callPrivateTransferFromBatch(
         spender1Wallet,
         config.contracts.PrivateERCToken,
         accounts.Minter,
         accounts.To1,
-        approveTokenId
+        [approveTokenId]
     );
     console.log("TransferFrom receipt:", receipt);
 
     await sleep(2000);
     console.log("✅ TransferFrom completed successfully");
+}
+
+async function testBurnFromBatch(approveTokenIds) {
+    console.log("=== Starting BurnFrom Batch Process ===");
+    console.log("Burning allowance token IDs:", approveTokenIds.map(id => ethers.toBeHex(id)));
+
+    const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
+
+    let receipt = await callPrivateBurnFromBatch(
+        spender1Wallet,
+        config.contracts.PrivateERCToken,
+        accounts.Minter,
+        approveTokenIds
+    );
+    console.log("BurnFrom batch receipt:", receipt);
+
+    await sleep(CONSTANTS.waitTimes.short);
+    console.log("✅ BurnFrom batch completed successfully");
 }
 
 async function testSplitTokens() {
@@ -207,8 +227,8 @@ async function testSplitTokens() {
     console.log("Split Token completed successfully");
 
     // Store the transfer token ID for cancellation test (use response.transfer_token_id)
-    global.transferTokenId = '0x' + response.transfer_token_id;
-    console.log("Transfer Token ID stored for cancellation:", global.transferTokenId);
+    global.transferTokenId = ethers.toBigInt(response.transfer_token_id);
+    console.log("Transfer Token ID stored for cancellation:", ethers.toBeHex(global.transferTokenId));
 
     console.log("✅ Token split completed successfully");
 
@@ -237,8 +257,8 @@ async function testApproveMultipleTokens() {
     console.log("First Split Token completed successfully");
 
     // 存储第一个授权token ID
-    const firstApprovalTokenId = '0x' + response1.transfer_token_id;
-    console.log("First Approval Token ID:", firstApprovalTokenId);
+    const firstApprovalTokenId = ethers.toBigInt(response1.transfer_token_id);
+    console.log("First Approval Token ID:", ethers.toBeHex(firstApprovalTokenId));
 
     // 第二次授权
     console.log("--- Second Approval ---");
@@ -258,8 +278,8 @@ async function testApproveMultipleTokens() {
     console.log("Second Split Token completed successfully");
 
     // 存储第二个授权token ID
-    const secondApprovalTokenId = '0x' + response2.transfer_token_id;
-    console.log("Second Approval Token ID:", secondApprovalTokenId);
+    const secondApprovalTokenId = ethers.toBigInt(response2.transfer_token_id);
+    console.log("Second Approval Token ID:", ethers.toBeHex(secondApprovalTokenId));
 
     var approvedTokens
     // 检查授权列表,查询10次
@@ -332,10 +352,12 @@ async function testTransfer() {
         await sleep(10000)
 
         console.log("Transferring split token with privateTransfer...");
+        const transferTokenId = ethers.toBigInt(response.transfer_token_id);
+
         let receipt = await callPrivateTransfer(
             minterWallet,
             config.contracts.PrivateERCToken,
-            '0x' + response.transfer_token_id
+            transferTokenId
         );
 
         await sleep(CONSTANTS.waitTimes.short);
@@ -370,10 +392,11 @@ async function testTransfers() {
         await sleep(10000)
 
         console.log("Transferring split token with privateTransfers...");
+        const transferTokenId = ethers.toBigInt(response.transfer_token_id);
         let receipt = await callPrivateTransfers(
             minterWallet,
             config.contracts.PrivateERCToken,
-            ['0x' + response.transfer_token_id]
+            [transferTokenId]
         );
 
         await sleep(CONSTANTS.waitTimes.short);
@@ -410,8 +433,13 @@ async function runMainTestProcess() {
         
         await sleep(5000);
 
-        // Test transfer functionality
-        await testTransfer();
+        // Prepare new approval for burnFrom batch
+        const burnApprovalTokenId = await testApproveToken();
+
+        await sleep(10000);
+
+        // Test burnFrom batch functionality
+        await testBurnFromBatch([burnApprovalTokenId]);
         
         await sleep(5000);
         
@@ -431,7 +459,7 @@ async function runMainTestProcess() {
 
 
 if (require.main === module) {
-    mintForStart().then(() => {
+    runMainTestProcess().then(() => {
         console.log("All tests completed!");
         process.exit(0);
     }).catch((error) => {
