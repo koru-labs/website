@@ -42,4 +42,6 @@ contract L2EventParser {
     function parseRollupConversionBurn(RollupConversionBurnEvent memory e) public view {}
     function parseRollupApproval(RollupApprovalEvent memory e) public view {}
 
+    function parseInstitutionManagerBlacklistUpdated(InstitutionManagerBlacklistUpdatedEvent memory e) public view {}
+    function parseBankPermissionUpdated(BankPermissionUpdatedEvent memory e) public view {}
 }
