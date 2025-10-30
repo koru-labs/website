@@ -32,31 +32,31 @@
   },
   "qa": {
     "libraries": {
-      "CurveBabyJubJub": "0xc0b4Fd04127A690F257059c1Dcc3B6F54882631b",
-      "CurveBabyJubJubHelper": "0xE7668aF48Aa67833B950a1A0cF84f3a3BFb5edB9",
-      "MintAllowedTokenVerifier": "0xC8A179e690Eab443Ad1dacdC4504C1C4e313DD52",
-      "SplitTokenVerifier": "0xe87EE77E1e03a2247309dCe35Cd95b2714ae0E32",
-      "SplitAllowanceTokenVerifier": "0x8f7e4a018934027619601c04f7397682977170f1",
-      "Convert2pUSDCVerifier": "0xdE0cb70cf015Aa94D6efb2eE96811edDabdB42d9",
-      "Convert2USDCVerifier": "0x61de55b3FDb7fbdF39dEA6cBA87e0C712D5b6013",
-      "TokenVerificationLib": "0x854Bc1a6002116b47Bc4d20471D840a68e2f019a",
-      "SignatureChecker": "0x766942C1302B50824c61e447DAf28AAeD37636Ac",
-      "TokenEventLib": "0x17D14cb8C1a6cAe2C64eBa4542278C8bF43a51aa",
-      "TokenUtilsLib": "0x334F7437748E308148c667562430dd741FC5BD2D"
+      "CurveBabyJubJub": "0xc2Ce9db990789899fe50e333D640009dbfA5Cd04",
+      "CurveBabyJubJubHelper": "0x72B8b8bDe81cf39E2e65eC845d79cb0023e2cB3c",
+      "MintAllowedTokenVerifier": "0x61c20DB5D94367ac7dDaA758c0ca02425db16C9e",
+      "SplitTokenVerifier": "0x05bF02E82004A5fB09fcFC6beAA1BF426cf9ba21",
+      "SplitAllowanceTokenVerifier": "0x43B5499e8d13E1bbA00217d4d0229991239eDc05",
+      "Convert2pUSDCVerifier": "0xCafAA2B6ebc7b60D57615aFEed81543Aefd9b24b",
+      "Convert2USDCVerifier": "0x7229405C5fe69348359f3aEA5dF7675310281902",
+      "TokenVerificationLib": "0xf6CF56bb176E7CED168D6681bbF0568b5028Dd58",
+      "SignatureChecker": "0x5109c1521A6e8f8A4AaB5BD0b819b33C3e3f701C",
+      "TokenEventLib": "0x5C83C38cD7647d46d1bC9f4e52b8C0bA54355eEB",
+      "TokenUtilsLib": "0x48184CD0046bE8C2e28aFa7aBf027807dd460C30"
     },
     "contracts": {
-      "HamsaL2EventImplementation": "0x66089a4C14bcF917433417a46467297dab8d0e21",
+      "HamsaL2EventImplementation": "0x519635b60392f303FB3f3595f86497B7FcDBc15D",
       "HamsaL2Event": "0x33739D11412101cF029987cBCefC298293230D65",
       "HamsaL2EventImplementationB": "",
       "HamsaL2EventPercentageToB": 0,
-      "InstitutionUserRegistry": "0xD107409dd1d4619Ab4E969f7e2bd4A5d92672246",
+      "InstitutionUserRegistry": "0xD5Ab658283Ed31420ad3b6Db3072Fbd7FB8d9Bc2",
       "InstUserProxy": "0xdB17395eC234AA0605207e61A55888c5482006D4",
-      "PrivateERCToken": "0xB4d519eaD535E9F02b107432B8517eD572E95E98",
-      "PrivateERCTokenImplementation": "0x89fD5516603c5Dee9a04f7a670AB11C4f92e4064"
+      "PrivateERCToken": "0x11F887BF9611B1C4E0Ce6244B16c80965B9910ee",
+      "PrivateERCTokenImplementation": "0x5554E5a6EA78bDb40F22FBb73407C4D4Cb73742C"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-10-30T03:01:36.473Z",
+      "timestamp": "2025-10-30T09:25:17.978Z",
       "network": "ucl_L2_qa",
       "chainId": "1337"
     }
