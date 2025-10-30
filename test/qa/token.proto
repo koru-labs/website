@@ -235,7 +235,7 @@ message ActivateSmartContractRequest {
 }
 
 message AssetAddressListRequest {
-  string asset_address = 1;
+  string account_address = 1;
   string sc_address = 2;
 }
 message AssetAddressListResponse {
