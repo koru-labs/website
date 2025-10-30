@@ -42,6 +42,16 @@ import "../model/TokenModel.sol";
         address managerAddress;
     }
 
+    struct InstitutionManagerBlacklistUpdatedEvent {
+        address managerAddress;
+        bool blacklisted;
+    }
+
+    struct BankPermissionUpdatedEvent {
+        address bankAddress;
+        bool allowed;
+    }
+
     struct TokenSCCreatedEvent {
         address TokenSCAddress;
         TokenModel.TokenSCTypeEnum TokenSCType;

@@ -176,6 +176,36 @@ library TokenEventLib {
         _l2Event.sendEvent(eventSource, owner, "UserRemoved", body);
     }
 
+    function triggerInstitutionManagerBlacklistUpdatedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address owner,
+        address managerAddress,
+        bool blacklisted
+    ) public {
+        InstitutionManagerBlacklistUpdatedEvent memory e = InstitutionManagerBlacklistUpdatedEvent({
+            managerAddress: managerAddress,
+            blacklisted: blacklisted
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, owner, "InstitutionManagerBlacklistUpdated", body);
+    }
+
+    function triggerBankPermissionUpdatedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address msgSender,
+        address bankAddress,
+        bool allowed
+    ) public {
+        BankPermissionUpdatedEvent memory e = BankPermissionUpdatedEvent({
+            bankAddress: bankAddress,
+            allowed: allowed
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, msgSender, "BankPermissionUpdated", body);
+    }
+
     function triggerTokenDeletedEvent(
         IL2Event _l2Event,
         address eventSource,

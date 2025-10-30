@@ -2,6 +2,8 @@ pragma solidity ^0.8.0;
 
 import { Ownable } from "../../../usdc/v1/Ownable.sol";
 import "../inst_user_registry/InstitutionUserRegistry.sol";
+import "../lib/TokenEventLib.sol";
+import "../event/IL2Event.sol";
 
 abstract contract Permissioned is Ownable {
     mapping(address=>bool) public allowedBanks;
@@ -22,18 +24,32 @@ abstract contract Permissioned is Ownable {
     }
 
     function updateAllowedBank(address bankAddress, bool allowed)  external onlyOwner {
-        if (! allowed) {
+        if (!allowed) {
             delete allowedBanks[bankAddress];
         } else {
-            allowedBanks[bankAddress] =true ;
+            allowedBanks[bankAddress] = true;
+        }
+
+        address l2EventAddress = address(0);
+        if (address(_instRegistry) != address(0)) {
+            l2EventAddress = _instRegistry.getEventAddress();
+        }
+        if (l2EventAddress != address(0)) {
+            TokenEventLib.triggerBankPermissionUpdatedEvent(
+                IL2Event(l2EventAddress),
+                address(this),
+                msg.sender,
+                bankAddress,
+                allowed
+            );
         }
     }
 
     modifier onlyAllowedBank() {
         address userAddress = msg.sender;
         if (! isContract(userAddress)) {
-            address managerAddress = _instRegistry.getUserManager(userAddress);
-            require(managerAddress != address(0), "bank/user is not registered");
+            address managerAddress = _instRegistry.getValidatedInstitutionManager(userAddress);
+            require(!_instRegistry.isInstitutionManagerBlacklisted(managerAddress), "institution manager blacklisted");
             require(allowedBanks[managerAddress] , "bank is not allowed in this token smart contract");
         }
         _;

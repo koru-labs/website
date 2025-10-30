@@ -48,7 +48,7 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         institutions[institutionAddress]  = institution;
         userToManager[institutionAddress] = institutionAddress;
         if (!institutionAddressTracked[institutionAddress]) {
-            institutionAddresses.push(institutionAddress);
+            institutionManagerAddresses.push(institutionAddress);
             institutionAddressTracked[institutionAddress] = true;
         }
         address[] memory defaultCallers = new address[](1);
@@ -74,10 +74,10 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         Institution storage institution = institutions[institutionManager];
         require(institution.managerAddress != address(0), "Institution not registered");
 
-        address currentInstitution = tokenToManagerAddress[msg.sender];
+        address currentInstitution = tokenToInstitutionManagerAddress[msg.sender];
         require(currentInstitution == address(0) || currentInstitution == institutionManager, "Token already linked");
 
-        tokenToManagerAddress[msg.sender] = institutionManager;
+        tokenToInstitutionManagerAddress[msg.sender] = institutionManager;
     }
 
     function updateInstitution(address managerAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
@@ -172,11 +172,11 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
     }
 
     function getTokenInstitutionManager(address tokenAddress) public view returns (address) {
-        return tokenToManagerAddress[tokenAddress];
+        return tokenToInstitutionManagerAddress[tokenAddress];
     }
 
     function getTokenInstitution(address tokenAddress) public view returns (Institution memory) {
-        return institutions[tokenToManagerAddress[tokenAddress]];
+        return institutions[tokenToInstitutionManagerAddress[tokenAddress]];
     }
 
     function getUserInstitution(address userAddress) public view returns (Institution memory) {
@@ -198,6 +198,34 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             result[i] = callers[i];
         }
         return result;
+    }
+
+    function setInstitutionManagerBlacklist(address managerAddress, bool blacklisted) external onlyOwner {
+        require(managerAddress != address(0), "Invalid manager address");
+
+        Institution storage institution = institutions[managerAddress];
+        require(institution.managerAddress != address(0), "Institution not registered");
+
+        institutionManagerBlacklist[managerAddress] = blacklisted;
+
+        TokenEventLib.triggerInstitutionManagerBlacklistUpdatedEvent(
+            l2Event,
+            address(this),
+            owner,
+            managerAddress,
+            blacklisted
+        );
+    }
+
+    function isInstitutionManagerBlacklisted(address managerAddress) public view returns (bool) {
+        return institutionManagerBlacklist[managerAddress];
+    }
+
+    function getValidatedInstitutionManager(address userAddress) external view returns (address) {
+        address managerAddress = userToManager[userAddress];
+        require(managerAddress != address(0), "User not registered");
+        require(institutionAddressTracked[managerAddress], "Institution manager not tracked");
+        return managerAddress;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -227,18 +255,18 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             require(institution.managerAddress != address(0), "Institution not registered");
 
             if (!institutionAddressTracked[managerAddress]) {
-                institutionAddresses.push(managerAddress);
+                institutionManagerAddresses.push(managerAddress);
                 institutionAddressTracked[managerAddress] = true;
             }
         }
     }
 
     function getAllInstitutions() external view returns (Institution[] memory) {
-        uint256 totalInstitutions = institutionAddresses.length;
+        uint256 totalInstitutions = institutionManagerAddresses.length;
         Institution[] memory result = new Institution[](totalInstitutions);
 
         for (uint256 i = 0; i < totalInstitutions; i++) {
-            address managerAddress = institutionAddresses[i];
+            address managerAddress = institutionManagerAddresses[i];
             result[i] = institutions[managerAddress];
         }
 
