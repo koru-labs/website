@@ -252,35 +252,42 @@ abstract contract PrivateTokenCore is
     virtual
     returns (bool)
     {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            require(tokenIds[i] != 0, "PrivateERCToken: tokenId is zero");
-            require(_accounts[msg.sender].assets[tokenIds[i]].id != 0, "invalid token");
+        address sender = msg.sender;
+        mapping(uint256 => TokenModel.TokenEntity) storage senderAssets = _accounts[sender].assets;
+        TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(sender);
+        uint256 length = tokenIds.length;
 
-            TokenModel.TokenEntity memory tokenEntity = _accounts[msg.sender].assets[tokenIds[i]];
-            TokenModel.TokenEntity memory backupEntity = _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+            TokenModel.TokenEntity memory tokenEntity = senderAssets[tokenId];
+            require(tokenEntity.id != 0, "invalid token");
             require(tokenEntity.tokenType == TokenModel.TokenType.transferred, "This token cannot be used for other purposes");
 
-            delete _accounts[msg.sender].assets[tokenEntity.rollbackTokenId];
+            uint256 rollbackTokenId = tokenEntity.rollbackTokenId;
+            TokenModel.TokenEntity memory backupEntity = senderAssets[rollbackTokenId];
+
+            delete senderAssets[rollbackTokenId];
+            delete senderAssets[tokenId];
 
             uint256[] memory consumedTokens = new uint256[](2);
-            consumedTokens[0] = tokenEntity.id;
-            consumedTokens[1] = tokenEntity.rollbackTokenId;
+            consumedTokens[0] = tokenId;
+            consumedTokens[1] = rollbackTokenId;
 
-            delete _accounts[msg.sender].assets[tokenEntity.id];
-            TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), msg.sender, consumedTokens, 0);
+            TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), sender, consumedTokens, 0);
 
             tokenEntity.rollbackTokenId = 0;
             tokenEntity.owner = tokenEntity.to;
             tokenEntity.status = TokenModel.TokenStatus.active;
 
-            _accounts[tokenEntity.to].assets[tokenEntity.id] = tokenEntity;
-            TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), tokenEntity.to, tokenEntity.id, address(this), tokenEntity.status, tokenEntity.amount);
-            TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, consumedTokens[1]);
+            address recipient = tokenEntity.to;
+            _accounts[recipient].assets[tokenId] = tokenEntity;
 
-            TokenModel.GrumpkinPublicKey memory backupPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
-            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), msg.sender, tokenEntity.to, backupPk, backupEntity.id);
+            TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), recipient, tokenId, address(this), tokenEntity.status, tokenEntity.amount);
+            TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), sender, rollbackTokenId);
+            TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), sender, recipient, backupPk, backupEntity.id);
 
-            emit PrivateTransfer(msg.sender, tokenEntity.to, tokenEntity.amount);
+            emit PrivateTransfer(sender, recipient, tokenEntity.amount);
         }
 
         return true;
