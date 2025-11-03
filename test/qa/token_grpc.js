@@ -106,7 +106,7 @@ function createClient(url) {
 
     client.decodeElgamalAmount = async function (balance,metadata) {
         const request = {
-            token_id: balance,
+            balance: balance,
         };
         return promisifyByMetadata(client.DecodeElgamalAmount.bind(client), request,metadata);
     };

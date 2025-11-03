@@ -204,7 +204,11 @@ message UploadSmartContractIconResponse {
 }
 message GetSmartContractRequest {
   string sc_address = 1;
-  uint64 status = 2;
+  SmartContractStatusEnum status = 2;
+}
+enum SmartContractStatusEnum {
+  SMART_CONTRACT_STATUS_INACTIVE = 0;
+  SMART_CONTRACT_STATUS_ACTIVE = 2;
 }
 message GetSmartContractResponse {
   repeated SmartContract data = 1;
@@ -231,7 +235,7 @@ message AddSmartContractResponse {
 }
 message ActivateSmartContractRequest {
   repeated string sc_addresses = 1;
-  uint64 status = 2;
+  SmartContractStatusEnum status = 2;
 }
 
 message AssetAddressListRequest {
