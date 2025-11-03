@@ -24,6 +24,7 @@ abstract contract InstUserDataTemplate {
          string rpcUrl;
          string nodeUrl;
          string httpUrl;
+         bool isDisabled;
      }
      mapping(address => Institution) public institutions; // institutionManagerAddress => Institution
      mapping(address => address) public userToManager; // userAddress => institutionManagerAddress

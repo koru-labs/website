@@ -42,7 +42,8 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         publicKey : publicKey,
         rpcUrl : rpcUrl,
         nodeUrl : nodeUrl,
-        httpUrl : httpUrl
+        httpUrl : httpUrl,
+        isDisabled : false
         });
 
         institutions[institutionAddress]  = institution;
@@ -207,6 +208,7 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         require(institution.managerAddress != address(0), "Institution not registered");
 
         institutionManagerBlacklist[managerAddress] = blacklisted;
+        institution.isDisabled = blacklisted;
 
         TokenEventLib.triggerInstitutionManagerBlacklistUpdatedEvent(
             l2Event,
