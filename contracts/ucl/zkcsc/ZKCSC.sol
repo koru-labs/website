@@ -47,7 +47,7 @@ contract ZKCSC is ReentrancyGuard {
         // Process transferFrom requests
         for (uint256 i = 0; i < totalTransferFroms; i++) {
             PrivateTransferFromRequest calldata req = transferFromRequests[i];
-            
+
             // Verify signature
             bytes32 chunkHash = _hashTransferFrom(bundleHash, req);
             try this.recoverSigner(chunkHash, req.signature) returns (address recovered) {
@@ -55,11 +55,13 @@ contract ZKCSC is ReentrancyGuard {
             } catch {
                 revert("DVP: Invalid signature for transferFrom");
             }
-            
+
             require(signer == req.from, "DVP: Signature not from 'from' address for transferFrom");
-            
-            // Execute transferFrom
-            IPrivateERCToken(req.tokenAddress).privateTransferFrom(req.tokenId, req.from, req.to);
+
+            // Execute transferFrom using batch interface with single token
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = req.tokenId;
+            IPrivateERCToken(req.tokenAddress).privateTransferFromBatch(tokenIds, req.from, req.to);
         }
 
         // Process burn requests

@@ -88,48 +88,57 @@ abstract contract PrivateTokenApproval is
         address to
     ) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from)
     notBlacklisted(to) onlyAllowedBank nonReentrant virtual returns (bool) {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            _privateTransferFrom(msg.sender, from, to, tokenIds[i]);
-        }
-        return true;
-    }
-
-    function _privateTransferFrom(address spender, address from, address to, uint256 tokenId) internal {
-        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
         require(to != address(0), "PrivateERCToken: to is the zero address");
         require(from != address(0), "PrivateERCToken: from is the zero address");
 
-        TokenModel.TokenEntity storage allowanceTokenStorage = _accounts[from].assets[tokenId];
-        require(allowanceTokenStorage.id != 0, "PrivateERCToken: invalid allowance token");
-        require(allowanceTokenStorage.to == to, "PrivateERCToken: tokenId is not matched");
+        TokenModel.GrumpkinPublicKey memory spenderPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
 
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            _processTransferFrom(msg.sender, from, to, tokenIds[i], spenderPk);
+        }
+
+        return true;
+    }
+
+    function _processTransferFrom(
+        address spender,
+        address from,
+        address to,
+        uint256 tokenId,
+        TokenModel.GrumpkinPublicKey memory spenderPk
+    ) internal {
+        require(tokenId != 0, "PrivateERCToken: tokenId is zero");
+
+        mapping(uint256 => TokenModel.TokenEntity) storage fromAssets = _accounts[from].assets;
+        mapping(uint256 => TokenModel.TokenEntity) storage toAssets = _accounts[to].assets;
+
+        TokenModel.TokenEntity memory allowanceToken = fromAssets[tokenId];
+        require(allowanceToken.id != 0, "PrivateERCToken: invalid allowance token");
+        require(allowanceToken.to == to, "PrivateERCToken: tokenId is not matched");
         require(TokenUtilsLib.isAllowanceExists(_accounts, from, spender, tokenId), "PrivateERCToken: invalid allowance tokenId");
 
-        uint256 rollbackTokenId = allowanceTokenStorage.rollbackTokenId;
-        delete _accounts[from].assets[rollbackTokenId];
+        uint256 rollbackTokenId = allowanceToken.rollbackTokenId;
+
+        delete fromAssets[rollbackTokenId];
+        delete fromAssets[tokenId];
 
         uint256[] memory consumedTokens = new uint256[](2);
-        consumedTokens[0] = allowanceTokenStorage.id;
+        consumedTokens[0] = tokenId;
         consumedTokens[1] = rollbackTokenId;
-
-        delete _accounts[from].assets[allowanceTokenStorage.id];
 
         TokenEventLib.triggerTokenDeletedEvent(_l2Event, address(this), from, consumedTokens, 0);
 
-        TokenModel.TokenEntity memory allowanceToken = allowanceTokenStorage;
         allowanceToken.rollbackTokenId = 0;
         allowanceToken.owner = to;
         allowanceToken.status = TokenModel.TokenStatus.active;
 
-        TokenUtilsLib.addToken(_accounts, allowanceToken.to, allowanceToken);
-        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, allowanceToken.id, address(this), allowanceToken.status, allowanceToken.amount);
+        toAssets[tokenId] = allowanceToken;
+        TokenEventLib.triggerTokenReceivedEvent(_l2Event, address(this), to, tokenId, address(this), allowanceToken.status, allowanceToken.amount);
 
         TokenUtilsLib.removeAllowanceRecord(_accounts, from, spender, tokenId);
 
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), from, rollbackTokenId);
-
-        TokenModel.GrumpkinPublicKey memory spenderPk = _institutionRegistration.getUserInstGrumpkinPubKey(spender);
-        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), spender, to, spenderPk, consumedTokens[0]);
+        TokenEventLib.triggerRollupForTransferFrom(_l2Event, address(this), spender, to, spenderPk, tokenId);
 
         emit PrivateTransferFrom(spender, from, to, tokenId);
     }

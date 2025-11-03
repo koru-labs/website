@@ -120,9 +120,9 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 }
 
 
-async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
+async function callPrivateTransferFrom(wallet, scAddress, from, to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransferFrom(tokenId,from,to);
+    const tx = await contract.privateTransferFromBatch([tokenId], from, to);
     let receipt = await tx.wait();
     return receipt;
 }
