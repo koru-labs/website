@@ -49,7 +49,7 @@ import "../model/TokenModel.sol";
 
     struct BankPermissionUpdatedEvent {
         address bankAddress;
-        bool allowed;
+        bool blocked;
     }
 
     struct TokenSCCreatedEvent {

@@ -6,7 +6,7 @@ import "../lib/TokenEventLib.sol";
 import "../event/IL2Event.sol";
 
 abstract contract Permissioned is Ownable {
-    mapping(address=>bool) public allowedBanks;
+    mapping(address=>bool) public blockedBanks;
     InstitutionUserRegistry internal _instRegistry;
 
     function initializePermission(InstitutionUserRegistry instRegistry)  internal {
@@ -23,11 +23,11 @@ abstract contract Permissioned is Ownable {
         return _instRegistry;
     }
 
-    function updateAllowedBank(address bankAddress, bool allowed)  external onlyOwner {
-        if (!allowed) {
-            delete allowedBanks[bankAddress];
+    function updateBlockedBank(address bankAddress, bool blocked)  external onlyOwner {
+        if (!blocked) {
+            delete blockedBanks[bankAddress];
         } else {
-            allowedBanks[bankAddress] = true;
+            blockedBanks[bankAddress] = true;
         }
 
         address l2EventAddress = address(0);
@@ -40,7 +40,7 @@ abstract contract Permissioned is Ownable {
                 address(this),
                 msg.sender,
                 bankAddress,
-                allowed
+                blocked
             );
         }
     }
@@ -50,7 +50,7 @@ abstract contract Permissioned is Ownable {
         if (! isContract(userAddress)) {
             address managerAddress = _instRegistry.getValidatedInstitutionManager(userAddress);
             require(!_instRegistry.isInstitutionManagerBlacklisted(managerAddress), "institution manager blacklisted");
-            require(allowedBanks[managerAddress] , "bank is not allowed in this token smart contract");
+            require(!blockedBanks[managerAddress] , "bank is blocked in this token smart contract");
         }
         _;
     }

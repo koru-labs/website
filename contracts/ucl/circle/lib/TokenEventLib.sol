@@ -196,11 +196,11 @@ library TokenEventLib {
         address eventSource,
         address msgSender,
         address bankAddress,
-        bool allowed
+        bool blocked
     ) public {
         BankPermissionUpdatedEvent memory e = BankPermissionUpdatedEvent({
             bankAddress: bankAddress,
-            allowed: allowed
+            blocked: blocked
         });
         bytes memory body = abi.encode(e);
         _l2Event.sendEvent(eventSource, msgSender, "BankPermissionUpdated", body);
