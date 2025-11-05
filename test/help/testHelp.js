@@ -65,10 +65,10 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 
 
 async function callPrivateTransfer(wallet, scAddress, tokenId) {
-    const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
     // const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
     console.log("contract address is :",contract.target)
-    const tx = await contract.privateTransfer(tokenId);
+    const tx = await contract.privateTransfers([tokenId]);
     let receipt = await tx.wait();
     console.log("Result:", receipt);
     return receipt;
@@ -120,9 +120,9 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 }
 
 
-async function callPrivateTransferFrom(wallet, scAddress, from, to, tokenId) {
+async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransferFromBatch([tokenId], from, to);
+    const tx = await contract.privateTransferFromBatch([tokenId],from,to);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -194,8 +194,11 @@ async function getAddressBalance2(grpcClient, scAddress, account) {
 
 async function getTotalSupplyNode3(grpcClient, scAddress,metadata,wallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
+    // let contractFact = await ethers.getContractAt("PrivateERCToken", scAddress);
+    // let contract = contractFact.attach(wallet)
+
     let amount = await contract.privateTotalSupply()
-    console.log("Total Supply:", amount)
+    // console.log("Total Supply:", amount)
     // let balance=  {
     //     cl_x: convertBigInt2Hex(amount[0]),
     //     cl_y: convertBigInt2Hex(amount[1]),
@@ -214,7 +217,9 @@ async function getTotalSupplyNode3(grpcClient, scAddress,metadata,wallet) {
             cr_x: convertBigInt2Hex(amount[2]),
             cr_y: convertBigInt2Hex(amount[3])
         }
+    console.log(balance)
     let result = await grpcClient.decodeElgamalAmount(balance,metadata)
+    console.log(result)
     return Number(result.balance)
 }
 
