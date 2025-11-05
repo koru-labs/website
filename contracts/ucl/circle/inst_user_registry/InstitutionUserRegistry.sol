@@ -52,9 +52,6 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             institutionManagerAddresses.push(institutionAddress);
             institutionAddressTracked[institutionAddress] = true;
         }
-        address[] memory defaultCallers = new address[](1);
-        defaultCallers[0] = institutionAddress;
-        _replaceInstitutionCallers(institutionAddress, defaultCallers);
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
