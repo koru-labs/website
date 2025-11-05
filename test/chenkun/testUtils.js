@@ -766,7 +766,8 @@ async function testGetBalance() {
 async function testSetMintAllowed() {
   try {
     const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, adminWallet);
-    // let tx = await contract.updateAllowedBank(accounts.Owner, true);
+    // NOTE: Changed to blacklist mode - use updateBlockedBank to block banks
+    // let tx = await contract.updateBlockedBank(accounts.Owner, true);
     // await tx.wait();
     let tx = await contract.getAccountTokenById(accounts.Minter,17904666504371553379015644188718150815607032362468671403327646253243945533638n );
     console.log("Conversion transaction receipt:", tx);

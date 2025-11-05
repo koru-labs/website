@@ -459,7 +459,7 @@ async function runMainTestProcess() {
 
 
 if (require.main === module) {
-    runMainTestProcess().then(() => {
+    mintForStart().then(() => {
         console.log("All tests completed!");
         process.exit(0);
     }).catch((error) => {
