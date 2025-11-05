@@ -117,19 +117,16 @@ async function deployTokenDemoBank(deployed) {
 
 
 async function allowBanksInTokenSmartContract(deployed) {
-    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
-    const ownerWallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
+    // NOTE: Changed to blacklist mode - banks are allowed by default
+    // Use updateBlockedBank(bankAddress, true) to block specific banks
+    console.log('Banks are now allowed by default (blacklist mode). No action needed.');
 
-    console.log(`Using wallet: ${ownerWallet.address}`);
-
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
-
-    for (let i = 0; i < config.institutions.length; i++) {
-        let bankAddress = config.institutions[i].address;
-        let tx = await privateUSDC.updateAllowedBank(bankAddress, true);
-        await tx.wait();
-        console.log(`Bank ${bankAddress} allowed successfully`);
-    }
+    // Example to block a bank (uncomment if needed):
+    // const ownerWallet = new ethers.Wallet(node3Institution.ethPrivateKey, ethers.provider);
+    // const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
+    // let tx = await privateUSDC.updateBlockedBank(bankAddress, true);
+    // await tx.wait();
+    // console.log(`Bank ${bankAddress} blocked successfully`);
 }
 
 
@@ -234,18 +231,16 @@ async function setMinterAllowedDemoBank(deployed) {
 }
 
 async function allowBanksInTokenSmartContractDemoBank(deployed) {
-    const ownerWallet = new ethers.Wallet(demoBankInstitution.ethPrivateKey, ethers.provider);
+    // NOTE: Changed to blacklist mode - banks are allowed by default
+    // Use updateBlockedBank(bankAddress, true) to block specific banks
+    console.log('Banks are now allowed by default (blacklist mode). No action needed.');
 
-    console.log(`Using wallet: ${ownerWallet.address}`);
-
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
-
-    for (let i = 0; i < config.institutions.length; i++) {
-        let bankAddress = config.institutions[i].address;
-        let tx = await privateUSDC.updateAllowedBank(bankAddress, true);
-        await tx.wait();
-        console.log(`Bank ${bankAddress} allowed successfully`);
-    }
+    // Example to block a bank (uncomment if needed):
+    // const ownerWallet = new ethers.Wallet(demoBankInstitution.ethPrivateKey, ethers.provider);
+    // const privateUSDC = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, ownerWallet);
+    // let tx = await privateUSDC.updateBlockedBank(bankAddress, true);
+    // await tx.wait();
+    // console.log(`Bank ${bankAddress} blocked successfully`);
 }
 
 function sleep(ms) {

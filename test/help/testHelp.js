@@ -541,26 +541,25 @@ async function registerConfigureMinter(address) {
 
 
 async function allowBanksInTokenSmartContract(minterAddress) {
-    const l1CustomNetwork = {
-        name: "BESU",
-        chainId: 1337
-    };
-    const options = {
-        batchMaxCount: 1,
-        staticNetwork: true
-    };
+    // NOTE: Changed to blacklist mode - banks are allowed by default
+    // This function now does nothing unless you want to unblock a previously blocked bank
+    console.log(`Bank ${minterAddress} is allowed by default (blacklist mode). No action needed.`);
 
-    // const L1Url = hardhatConfig.networks.ucl_L2.url;
-    const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
-    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
-    console.log(`PrivateERCToken : ${config.contracts.PrivateERCToken}`)
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
-    console.log(`Add ${minterAddress} to contract`)
-    let tx = await privateUSDC.updateAllowedBank(minterAddress, true);
-    await tx.wait();
-    console.log(tx);
-    // const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
-    // console.log("manager: ",await Institution.getUserManager(minterAddress))
+    // To unblock a previously blocked bank (uncomment if needed):
+    // const l1CustomNetwork = {
+    //     name: "BESU",
+    //     chainId: 1337
+    // };
+    // const options = {
+    //     batchMaxCount: 1,
+    //     staticNetwork: true
+    // };
+    // const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+    // const ownerWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
+    // const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
+    // let tx = await privateUSDC.updateBlockedBank(minterAddress, false);
+    // await tx.wait();
+    // console.log(tx);
 }
 
 async function getUserManager(address) {

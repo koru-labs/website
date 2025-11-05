@@ -103,12 +103,16 @@ async function registerUser(nodeUrl, auth, userAddress, role) {
 
 
 async function enableBankInTokenSmartContract() {
-    let [deployer, node3Owner] = await ethers.getSigners();
+    // NOTE: Changed to blacklist mode - banks are allowed by default
+    // This function is no longer needed unless you want to unblock a previously blocked bank
+    console.log("Bank is allowed by default (blacklist mode). No action needed.");
 
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC", token_address, node3Owner);
-    let tx = await privateUSDC.updateAllowedBank(instInfo.address, true);
-    let r = await tx.wait();
-    console.log("receipt: ", r)
+    // To unblock a previously blocked bank (uncomment if needed):
+    // let [deployer, node3Owner] = await ethers.getSigners();
+    // const privateUSDC = await ethers.getContractAt("PrivateUSDC", token_address, node3Owner);
+    // let tx = await privateUSDC.updateBlockedBank(instInfo.address, false);
+    // let r = await tx.wait();
+    // console.log("receipt: ", r)
 }
 
 
