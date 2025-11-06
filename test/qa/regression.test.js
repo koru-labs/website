@@ -353,7 +353,7 @@ async function getPublicBalance(account) {
     return Number(amount)
 }
 
-describe("Function Cases", function () {
+describe.only("Function Cases", function () {
 
     let adminMeta, minterMeta, spenderMeta, to1Meta, node4AdminMeta
 
@@ -1008,7 +1008,7 @@ describe("Function Cases", function () {
             expect(receipt.gasUsed).to.be.lessThan(MAX_GAS_LIMIT)
         });
     });
-    describe.only("convert USDC and pUSDC", function () {
+    describe("convert USDC and pUSDC", function () {
         this.timeout(1200000);
         let prePublicBalance, postPublicBalance;
         let prePrivateBalance, postPrivateBalance;
