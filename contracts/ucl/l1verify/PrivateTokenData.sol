@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./model/TokenModel.sol";
-import "../circle/base/Ownable.sol";
+import { Ownable } from "../../usdc/v1/Ownable.sol";
 
 abstract contract PrivateTokenData is Ownable {
     bool internal _initialized;
