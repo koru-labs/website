@@ -201,3 +201,14 @@ import "../model/TokenModel.sol";
         address account;
         TokenModel.ElGamalToken limit;
     }
+
+    struct PrivateTotalSupplyRecordedEvent {
+        uint256 blockNumber;
+        TokenModel.ElGamal privateTotalSupply;
+    }
+
+    struct PrivateTotalSupplyRevealedEvent {
+        uint256 blockNumber;
+        uint256 publicTotalSupply;
+        TokenModel.ElGamal privateTotalSupply;
+    }

@@ -18,7 +18,13 @@ abstract contract PrivateTokenData is Ownable {
     TokenModel.ElGamal internal _privateTotalSupply;
     uint256 internal _numberOfTotalSupplyChanges;
     uint256 internal _publicTotalSupply;
-    
+
+    mapping(uint256 => TokenModel.ElGamal) internal _privateTotalSupplyHistory; // blockNumber -> privateTotalSupply snapshot
+    uint256 internal _lastRevealedPublicTotalSupply;
+    uint256 internal _lastRevealedBlockNumber;
+    uint256 internal _lastProcessedBlockNumber;// The event was sent but not reveal
+    uint256 internal _stepLength;
+
     mapping(address => bool) internal _authorizedContracts;
     mapping(uint256 => bool) internal _usedElGamalHashes;
 
@@ -107,5 +113,33 @@ abstract contract PrivateTokenData is Ownable {
     
     function setPublicTotalSupply(uint256 totalSupply) external onlyAuthorized {
         _publicTotalSupply = totalSupply;
+    }
+
+    function getPrivateTotalSupplyHistory(uint256 blockNumber) external view returns (TokenModel.ElGamal memory) {
+        return _privateTotalSupplyHistory[blockNumber];
+    }
+
+    function getLastRevealedPublicTotalSupply() external view returns (uint256) {
+        return _lastRevealedPublicTotalSupply;
+    }
+
+    function getLastRevealedBlockNumber() external view returns (uint256) {
+        return _lastRevealedBlockNumber;
+    }
+
+    function getLastProcessedBlockNumber() external view returns (uint256) {
+        return _lastProcessedBlockNumber;
+    }
+
+    function setLastProcessedBlockNumber(uint256 blockNumber) external onlyAuthorized {
+        _lastProcessedBlockNumber = blockNumber;
+    }
+
+    function getStepLength() external view returns (uint256) {
+        return _stepLength;
+    }
+
+    function setStepLength(uint256 stepLength) external onlyAuthorized {
+        _stepLength = stepLength;
     }
 }

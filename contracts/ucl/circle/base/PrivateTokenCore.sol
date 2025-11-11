@@ -23,6 +23,8 @@ abstract contract PrivateTokenCore is
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
+    event PrivateTotalSupplyRecorded(uint256 indexed blockNumber, TokenModel.ElGamal privateTotalSupply);
+    event PrivateTotalSupplyRevealed(uint256 indexed blockNumber, uint256 publicTotalSupply);
 
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
@@ -39,6 +41,11 @@ abstract contract PrivateTokenCore is
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
         initializePermission(institutionRegistration);
+
+        // Initialize step length to 300 blocks by default
+        _stepLength = 300;
+        _lastProcessedBlockNumber = block.number;
+
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), newOwner, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
 
@@ -78,11 +85,88 @@ abstract contract PrivateTokenCore is
         });
         return true;
     }
-    
-    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof)
-        external nonReentrant virtual
-    {
-        _publicTotalSupply = publicTotalSupply;
+
+    function configureStepLength(uint256 stepLength) external onlyOwner {
+        require(stepLength > 0, "PrivateTokenCore: step length must be greater than 0");
+        _stepLength = stepLength;
+    }
+
+    function _updatePrivateTotalSupply() internal {
+        uint256 currentBlockNumber = block.number;
+
+        if (currentBlockNumber - _lastProcessedBlockNumber >= _stepLength) {
+            _recordPrivateTotalSupplySnapshot(currentBlockNumber, _privateTotalSupply);
+            _lastProcessedBlockNumber = currentBlockNumber;
+        }
+    }
+
+    function _recordPrivateTotalSupplySnapshot(
+        uint256 blockNumber,
+        TokenModel.ElGamal memory supplySnapshot
+    ) internal {
+        _privateTotalSupplyHistory[blockNumber] = supplySnapshot;
+
+        emit PrivateTotalSupplyRecorded(blockNumber, supplySnapshot);
+
+        TokenEventLib.triggerPrivateTotalSupplyRecordedEvent(
+            _l2Event,
+            address(this),
+            msg.sender,
+            blockNumber,
+            supplySnapshot
+        );
+    }
+
+    function revealPrivateTotalSupply(
+        uint256 blockNumber,
+        uint256 revealedAmount,
+        TokenModel.ElGamal memory privateTotalSupply,
+        uint256[8] calldata proof,
+        uint256[11] calldata publicInputs
+    ) external whenNotPaused onlyOwner nonReentrant {
+        TokenModel.ElGamal memory recordedPrivateTotalSupply = _privateTotalSupplyHistory[blockNumber];
+        require(
+            recordedPrivateTotalSupply.cl_x != 0 ||
+            recordedPrivateTotalSupply.cl_y != 0 ||
+            recordedPrivateTotalSupply.cr_x != 0 ||
+            recordedPrivateTotalSupply.cr_y != 0,
+            "PrivateTokenCore: no snapshot exists for this block number"
+        );
+
+        require(
+            recordedPrivateTotalSupply.cl_x == privateTotalSupply.cl_x &&
+            recordedPrivateTotalSupply.cl_y == privateTotalSupply.cl_y &&
+            recordedPrivateTotalSupply.cr_x == privateTotalSupply.cr_x &&
+            recordedPrivateTotalSupply.cr_y == privateTotalSupply.cr_y,
+            "PrivateTokenCore: provided private total supply does not match recorded snapshot"
+        );
+
+        require(proof.length > 0, "PrivateTokenCore: proof is required");
+        TokenModel.GrumpkinPublicKey memory ownerPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+        TokenModel.VerifyRevealPrivateTotalSupplyParams memory params = TokenModel.VerifyRevealPrivateTotalSupplyParams({
+            revealedAmount: revealedAmount,
+            privateTotalSupply: privateTotalSupply,
+            ownerPk:ownerPk,
+            proof: proof,
+            publicInputs: publicInputs
+        });
+        TokenVerificationLib.verifyRevealPrivateTotalSupply(params);
+
+        _lastRevealedPublicTotalSupply = revealedAmount;
+        _lastRevealedBlockNumber = blockNumber;
+
+        _publicTotalSupply = revealedAmount;
+
+        emit PrivateTotalSupplyRevealed(blockNumber, revealedAmount);
+
+        TokenEventLib.triggerPrivateTotalSupplyRevealedEvent(
+            _l2Event,
+            address(this),
+            msg.sender,
+            blockNumber,
+            revealedAmount,
+            privateTotalSupply
+        );
     }
     
     function privateMint(
@@ -125,6 +209,8 @@ abstract contract PrivateTokenCore is
 
         (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y));
 
+        _updatePrivateTotalSupply();
+
         TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y), TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
 
         TokenUtilsLib.addToken(_accounts, to, entity);
@@ -158,6 +244,8 @@ abstract contract PrivateTokenCore is
             _numberOfTotalSupplyChanges,
             supplyDecrease
         );
+
+        _updatePrivateTotalSupply();
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
