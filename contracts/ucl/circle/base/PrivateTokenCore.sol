@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PrivateTokenData.sol";
+import "./PrivateTotalSupplyManager.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../lib/TokenVerificationLib.sol";
@@ -13,7 +13,7 @@ import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 abstract contract PrivateTokenCore is
-    PrivateTokenData,
+    PrivateTotalSupplyManager,
     Pausable,
     Blacklistable,
     Mintable,
@@ -23,8 +23,6 @@ abstract contract PrivateTokenCore is
     event PrivateMint(address indexed from, TokenModel.ElGamal value);
     event PrivateBurn(address indexed from, TokenModel.ElGamal value);
     event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
-    event PrivateTotalSupplyRecorded(uint256 indexed blockNumber, TokenModel.ElGamal privateTotalSupply);
-    event PrivateTotalSupplyRevealed(uint256 indexed blockNumber, uint256 publicTotalSupply);
 
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
@@ -89,32 +87,6 @@ abstract contract PrivateTokenCore is
     function configureStepLength(uint256 stepLength) external onlyOwner {
         require(stepLength > 0, "PrivateTokenCore: step length must be greater than 0");
         _stepLength = stepLength;
-    }
-
-    function _updatePrivateTotalSupply() internal {
-        uint256 currentBlockNumber = block.number;
-
-        if (currentBlockNumber - _lastProcessedBlockNumber >= _stepLength) {
-            _recordPrivateTotalSupplySnapshot(currentBlockNumber, _privateTotalSupply);
-            _lastProcessedBlockNumber = currentBlockNumber;
-        }
-    }
-
-    function _recordPrivateTotalSupplySnapshot(
-        uint256 blockNumber,
-        TokenModel.ElGamal memory supplySnapshot
-    ) internal {
-        _privateTotalSupplyHistory[blockNumber] = supplySnapshot;
-
-        emit PrivateTotalSupplyRecorded(blockNumber, supplySnapshot);
-
-        TokenEventLib.triggerPrivateTotalSupplyRecordedEvent(
-            _l2Event,
-            address(this),
-            msg.sender,
-            blockNumber,
-            supplySnapshot
-        );
     }
 
     function revealPrivateTotalSupply(
@@ -205,13 +177,15 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, _privateMinterAllowed[msg.sender], newAllowed);
         _privateMinterAllowed[msg.sender] = newAllowed;
 
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
+        TokenModel.ElGamal memory supplyDelta = TokenModel.ElGamal(
+            supplyIncrease.cl_x,
+            supplyIncrease.cl_y,
+            supplyIncrease.cr_x,
+            supplyIncrease.cr_y
+        );
+        TokenModel.ElGamal memory oldTotalSupply = _increasePrivateTotalSupply(supplyDelta);
 
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y));
-
-        _updatePrivateTotalSupply();
-
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y), TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyDelta, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
 
         TokenUtilsLib.addToken(_accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, entity, msg.sender);
@@ -237,15 +211,7 @@ abstract contract PrivateTokenCore is
         require(entity.tokenType == TokenModel.TokenType.burned, "This token cannot be used for other purposes");
 
         TokenModel.ElGamal memory supplyDecrease = _accounts[account].assets[tokenId].amount;
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
-            _privateTotalSupply,
-            _numberOfTotalSupplyChanges,
-            supplyDecrease
-        );
-
-        _updatePrivateTotalSupply();
+        TokenModel.ElGamal memory oldTotalSupply = _decreasePrivateTotalSupply(supplyDecrease);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
