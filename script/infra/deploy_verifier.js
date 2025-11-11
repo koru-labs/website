@@ -71,6 +71,15 @@ async function deployConvert2USDCVerifier(deployed) {
     console.log("deployed.libraries.Convert2USDCVerifier :", deployed.libraries.Convert2USDCVerifier);
 }
 
+// Deploy RevealTotalSupplyVerifier
+async function deployRevealTotalSupplyVerifier(deployed) {
+    const RevealTotalSupplyVerifier = await ethers.getContractFactory("RevealTotalSupplyVerifier");
+    const revealTotalSupplyVerifier = await RevealTotalSupplyVerifier.deploy();
+    await revealTotalSupplyVerifier.waitForDeployment();
+    console.log("RevealTotalSupplyVerifier is deployed at :", revealTotalSupplyVerifier.target);
+    deployed.libraries.RevealTotalSupplyVerifier = revealTotalSupplyVerifier.target;
+}
+
 // deploy TokenVerificationLib.sol
 async function deployTokenVerificationLib(deployed) {
     console.log("Deploy TokenVerificationLib.sol...");
@@ -80,7 +89,8 @@ async function deployTokenVerificationLib(deployed) {
             SplitTokenVerifier: deployed.libraries.SplitTokenVerifier,
             SplitAllowanceTokenVerifier: deployed.libraries.SplitAllowanceTokenVerifier,
             Convert2pUSDCVerifier: deployed.libraries.Convert2pUSDCVerifier,
-            Convert2USDCVerifier: deployed.libraries.Convert2USDCVerifier
+            Convert2USDCVerifier: deployed.libraries.Convert2USDCVerifier,
+            RevealTotalSupplyVerifier: deployed.libraries.RevealTotalSupplyVerifier
         }
     });
     const TokenVerificationLib = await TokenVerificationLibFactory.deploy();
@@ -98,3 +108,4 @@ exports.deploySplitTokenVerifier = deploySplitTokenVerifier;
 exports.deploySplitAllowanceTokenVerifier = deploySplitAllowanceTokenVerifier;
 exports.deployConvert2pUSDCVerifier = deployConvert2pUSDCVerifier;
 exports.deployConvert2USDCVerifier = deployConvert2USDCVerifier;
+exports.deployRevealTotalSupplyVerifier = deployRevealTotalSupplyVerifier;

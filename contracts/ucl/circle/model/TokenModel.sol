@@ -124,4 +124,12 @@ library TokenModel {
         uint256 x;
         uint256 y;
     }
+
+    struct VerifyRevealPrivateTotalSupplyParams{
+        uint256 revealedAmount;
+        ElGamal privateTotalSupply;
+        GrumpkinPublicKey ownerPk;
+        uint256[8] proof;
+        uint256[11] publicInputs;
+    }
 }

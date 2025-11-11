@@ -9,7 +9,8 @@ const {
     deploySplitTokenVerifier,
     deploySplitAllowanceTokenVerifier,
     deployConvert2pUSDCVerifier,
-    deployConvert2USDCVerifier
+    deployConvert2USDCVerifier,
+    deployRevealTotalSupplyVerifier
 } = require("./deploy_verifier");
 const hardhatConfig = require("../../hardhat.config");
 
@@ -26,6 +27,7 @@ async function deployLibs(deployed) {
     await deploySplitAllowanceTokenVerifier(deployed); // Deploy SplitAllowanceTokenVerifier
     await deployConvert2pUSDCVerifier(deployed);
     await deployConvert2USDCVerifier(deployed);
+    await deployRevealTotalSupplyVerifier(deployed);
     await deployTokenVerificationLib(deployed);
 
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PrivateTokenData.sol";
+import "./PrivateTotalSupplyManager.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../lib/TokenVerificationLib.sol";
@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * @dev Abstract contract providing token conversion functionality between public and private tokens
  */
 abstract contract PrivateTokenConverter is 
-    PrivateTokenData, 
+    PrivateTotalSupplyManager, 
     Pausable, 
     Blacklistable, 
     Permissioned, 
@@ -59,8 +59,7 @@ abstract contract PrivateTokenConverter is
         TokenVerificationLib.verifyConvert2pUSDC(params);
 
         // Increase private total supply
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, entity.amount);
+        TokenModel.ElGamal memory oldTotalSupply = _increasePrivateTotalSupply(entity.amount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event,
             address(this),
@@ -141,8 +140,7 @@ abstract contract PrivateTokenConverter is
         TokenVerificationLib.verifyConvert2USDC(params);
 
         // Decrease private total supply
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, entity.amount);
+        TokenModel.ElGamal memory oldTotalSupply = _decreasePrivateTotalSupply(entity.amount);
         TokenEventLib.triggerTokenSupplyUpdatedEvent(
             _l2Event,
             address(this),

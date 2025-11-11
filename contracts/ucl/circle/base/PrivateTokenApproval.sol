@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PrivateTokenData.sol";
+import "./PrivateTotalSupplyManager.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../lib/TokenVerificationLib.sol";
@@ -12,7 +12,7 @@ import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 abstract contract PrivateTokenApproval is 
-    PrivateTokenData, 
+    PrivateTotalSupplyManager, 
     Pausable, 
     Blacklistable, 
     Permissioned, 
@@ -225,13 +225,7 @@ abstract contract PrivateTokenApproval is
         TokenModel.TokenEntity memory backupEntity = _accounts[from].assets[entity.rollbackTokenId];
 
         TokenModel.ElGamal memory supplyDecrease = entityStorage.amount;
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
-            _privateTotalSupply,
-            _numberOfTotalSupplyChanges,
-            supplyDecrease
-        );
+        TokenModel.ElGamal memory oldTotalSupply = _decreasePrivateTotalSupply(supplyDecrease);
 
         delete _accounts[from].assets[allowanceTokenId];
 

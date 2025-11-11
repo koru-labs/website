@@ -8,6 +8,7 @@ import "./verify/SplitTokenVerifier.sol";
 import "./verify/SplitAllowanceTokenVerifier.sol";
 import "./verify/Convert2pUSDCVerifier.sol";
 import "./verify/Convert2USDCVerifier.sol";
+import "./verify/RevealTotalSupplyVerifier.sol";
 
 library TokenVerificationLib {
 
@@ -146,5 +147,17 @@ library TokenVerificationLib {
         require(owner.x == params.publicInputs[5] && owner.y == params.publicInputs[6], "owner public key not match");
 
         return;
+    }
+
+    function verifyRevealPrivateTotalSupply(TokenModel.VerifyRevealPrivateTotalSupplyParams calldata params) public view {
+        RevealTotalSupplyVerifier.verifyProof(params.proof, params.publicInputs);
+        require(params.publicInputs[8] == params.revealedAmount, "revealedAmount is not match");
+
+        require(params.privateTotalSupply.cl_x == params.publicInputs[4]
+        && params.privateTotalSupply.cl_y == params.publicInputs[5]
+        && params.privateTotalSupply.cr_x == params.publicInputs[6]
+        && params.privateTotalSupply.cr_y == params.publicInputs[7], "encrypted amount not match");
+
+        require(params.publicInputs[9] == params.ownerPk.x && params.publicInputs[10] == params.ownerPk.y, "institution public key not match");
     }
 }

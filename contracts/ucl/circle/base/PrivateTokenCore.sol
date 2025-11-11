@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PrivateTokenData.sol";
+import "./PrivateTotalSupplyManager.sol";
 import "../model/TokenModel.sol";
 import "../lib/TokenEventLib.sol";
 import "../lib/TokenVerificationLib.sol";
@@ -13,7 +13,7 @@ import { Permissioned } from "./permissioned.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 abstract contract PrivateTokenCore is
-    PrivateTokenData,
+    PrivateTotalSupplyManager,
     Pausable,
     Blacklistable,
     Mintable,
@@ -39,6 +39,11 @@ abstract contract PrivateTokenCore is
         _l2Event = l2Event;
         _institutionRegistration = institutionRegistration;
         initializePermission(institutionRegistration);
+
+        // Initialize step length to 300 blocks by default
+        _stepLength = 300;
+        _lastProcessedBlockNumber = block.number;
+
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), newOwner, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
 
@@ -78,11 +83,62 @@ abstract contract PrivateTokenCore is
         });
         return true;
     }
-    
-    function revealTotalSupply(uint256 publicTotalSupply, bytes calldata proof)
-        external nonReentrant virtual
-    {
-        _publicTotalSupply = publicTotalSupply;
+
+    function configureStepLength(uint256 stepLength) external onlyOwner {
+        require(stepLength > 0, "PrivateTokenCore: step length must be greater than 0");
+        _stepLength = stepLength;
+    }
+
+    function revealPrivateTotalSupply(
+        uint256 blockNumber,
+        uint256 revealedAmount,
+        TokenModel.ElGamal memory privateTotalSupply,
+        uint256[8] calldata proof,
+        uint256[11] calldata publicInputs
+    ) external whenNotPaused onlyOwner nonReentrant {
+        TokenModel.ElGamal memory recordedPrivateTotalSupply = _privateTotalSupplyHistory[blockNumber];
+        require(
+            recordedPrivateTotalSupply.cl_x != 0 ||
+            recordedPrivateTotalSupply.cl_y != 0 ||
+            recordedPrivateTotalSupply.cr_x != 0 ||
+            recordedPrivateTotalSupply.cr_y != 0,
+            "PrivateTokenCore: no snapshot exists for this block number"
+        );
+
+        require(
+            recordedPrivateTotalSupply.cl_x == privateTotalSupply.cl_x &&
+            recordedPrivateTotalSupply.cl_y == privateTotalSupply.cl_y &&
+            recordedPrivateTotalSupply.cr_x == privateTotalSupply.cr_x &&
+            recordedPrivateTotalSupply.cr_y == privateTotalSupply.cr_y,
+            "PrivateTokenCore: provided private total supply does not match recorded snapshot"
+        );
+
+        require(proof.length > 0, "PrivateTokenCore: proof is required");
+        TokenModel.GrumpkinPublicKey memory ownerPk = _institutionRegistration.getUserInstGrumpkinPubKey(msg.sender);
+        TokenModel.VerifyRevealPrivateTotalSupplyParams memory params = TokenModel.VerifyRevealPrivateTotalSupplyParams({
+            revealedAmount: revealedAmount,
+            privateTotalSupply: privateTotalSupply,
+            ownerPk:ownerPk,
+            proof: proof,
+            publicInputs: publicInputs
+        });
+        TokenVerificationLib.verifyRevealPrivateTotalSupply(params);
+
+        _lastRevealedPublicTotalSupply = revealedAmount;
+        _lastRevealedBlockNumber = blockNumber;
+
+        _publicTotalSupply = revealedAmount;
+
+        emit PrivateTotalSupplyRevealed(blockNumber, revealedAmount);
+
+        TokenEventLib.triggerPrivateTotalSupplyRevealedEvent(
+            _l2Event,
+            address(this),
+            msg.sender,
+            blockNumber,
+            revealedAmount,
+            privateTotalSupply
+        );
     }
     
     function privateMint(
@@ -121,11 +177,15 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenMintAllowedUpdatedEvent(_l2Event, address(this), msg.sender, msg.sender, _privateMinterAllowed[msg.sender], newAllowed);
         _privateMinterAllowed[msg.sender] = newAllowed;
 
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
+        TokenModel.ElGamal memory supplyDelta = TokenModel.ElGamal(
+            supplyIncrease.cl_x,
+            supplyIncrease.cl_y,
+            supplyIncrease.cr_x,
+            supplyIncrease.cr_y
+        );
+        TokenModel.ElGamal memory oldTotalSupply = _increasePrivateTotalSupply(supplyDelta);
 
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(_privateTotalSupply, _numberOfTotalSupplyChanges, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y));
-
-        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, TokenModel.ElGamal(supplyIncrease.cl_x,supplyIncrease.cl_y,supplyIncrease.cr_x,supplyIncrease.cr_y), TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
+        TokenEventLib.triggerTokenSupplyUpdatedEvent(_l2Event, address(this), msg.sender, oldTotalSupply, supplyDelta, TokenModel.ElGamal(0,0,0,0), _privateTotalSupply, _numberOfTotalSupplyChanges);
 
         TokenUtilsLib.addToken(_accounts, to, entity);
         TokenEventLib.triggerTokenMintedEvent(_l2Event, address(this), to, entity, msg.sender);
@@ -151,13 +211,7 @@ abstract contract PrivateTokenCore is
         require(entity.tokenType == TokenModel.TokenType.burned, "This token cannot be used for other purposes");
 
         TokenModel.ElGamal memory supplyDecrease = _accounts[account].assets[tokenId].amount;
-        TokenModel.ElGamal memory oldTotalSupply = _privateTotalSupply;
-
-        (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
-            _privateTotalSupply,
-            _numberOfTotalSupplyChanges,
-            supplyDecrease
-        );
+        TokenModel.ElGamal memory oldTotalSupply = _decreasePrivateTotalSupply(supplyDecrease);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;

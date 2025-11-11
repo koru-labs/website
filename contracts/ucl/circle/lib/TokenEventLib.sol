@@ -494,4 +494,36 @@ library TokenEventLib {
         bytes memory body = abi.encode(e);
         _l2Event.sendRollupEvent(eventSource, "RollupRevokeApproval", body);
     }
-} 
+
+    function triggerPrivateTotalSupplyRecordedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address msgSender,
+        uint256 blockNumber,
+        TokenModel.ElGamal memory privateTotalSupply
+    ) public {
+        PrivateTotalSupplyRecordedEvent memory e = PrivateTotalSupplyRecordedEvent({
+            blockNumber: blockNumber,
+            privateTotalSupply: privateTotalSupply
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, msgSender, "PrivateTotalSupplyRecorded", body);
+    }
+
+    function triggerPrivateTotalSupplyRevealedEvent(
+        IL2Event _l2Event,
+        address eventSource,
+        address msgSender,
+        uint256 blockNumber,
+        uint256 publicTotalSupply,
+        TokenModel.ElGamal memory privateTotalSupply
+    ) public {
+        PrivateTotalSupplyRevealedEvent memory e = PrivateTotalSupplyRevealedEvent({
+            blockNumber: blockNumber,
+            publicTotalSupply: publicTotalSupply,
+            privateTotalSupply: privateTotalSupply
+        });
+        bytes memory body = abi.encode(e);
+        _l2Event.sendEvent(eventSource, msgSender, "PrivateTotalSupplyRevealed", body);
+    }
+}
