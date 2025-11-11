@@ -33,11 +33,6 @@ abstract contract PrivateTokenData is Ownable {
     address internal _implementationA;
     address internal _implementationB;
     uint8 internal _percentageToB;
-
-    modifier onlyAuthorized() {
-        require(_authorizedContracts[msg.sender] || msg.sender == this.owner(), "PrivateTokenData: unauthorized access");
-        _;
-    }
     
     function authorizeContract(address contractAddress) external onlyOwner {
         _authorizedContracts[contractAddress] = true;
@@ -51,7 +46,7 @@ abstract contract PrivateTokenData is Ownable {
         return _initialized;
     }
     
-    function setInitialized(bool initialized) external onlyAuthorized {
+    function setInitialized(bool initialized) external onlyOwner {
         _initialized = initialized;
     }
     
@@ -59,7 +54,7 @@ abstract contract PrivateTokenData is Ownable {
         return _institutionRegistration;
     }
     
-    function setInstitutionRegistration(InstitutionUserRegistry institutionRegistration) external onlyAuthorized {
+    function setInstitutionRegistration(InstitutionUserRegistry institutionRegistration) external onlyOwner {
         _institutionRegistration = institutionRegistration;
     }
     
@@ -67,7 +62,7 @@ abstract contract PrivateTokenData is Ownable {
         return _l2Event;
     }
     
-    function setL2Event(IL2Event l2Event) external onlyAuthorized {
+    function setL2Event(IL2Event l2Event) external onlyOwner {
         _l2Event = l2Event;
     }
     
@@ -75,11 +70,11 @@ abstract contract PrivateTokenData is Ownable {
         return _accounts[account].assets[tokenId];
     }
     
-    function setAccountToken(address account, uint256 tokenId, TokenModel.TokenEntity memory token) external onlyAuthorized {
+    function setAccountToken(address account, uint256 tokenId, TokenModel.TokenEntity memory token) external onlyOwner {
         _accounts[account].assets[tokenId] = token;
     }
     
-    function deleteAccountToken(address account, uint256 tokenId) external onlyAuthorized {
+    function deleteAccountToken(address account, uint256 tokenId) external onlyOwner {
         delete _accounts[account].assets[tokenId];
     }
     
@@ -87,7 +82,7 @@ abstract contract PrivateTokenData is Ownable {
         return _privateMinterAllowed[minter];
     }
     
-    function setPrivateMinterAllowed(address minter, TokenModel.ElGamalToken memory allowed) external onlyAuthorized {
+    function setPrivateMinterAllowed(address minter, TokenModel.ElGamalToken memory allowed) external onlyOwner {
         _privateMinterAllowed[minter] = allowed;
     }
     
@@ -95,7 +90,7 @@ abstract contract PrivateTokenData is Ownable {
         return _privateTotalSupply;
     }
     
-    function setPrivateTotalSupply(TokenModel.ElGamal memory totalSupply) external onlyAuthorized {
+    function setPrivateTotalSupply(TokenModel.ElGamal memory totalSupply) external onlyOwner {
         _privateTotalSupply = totalSupply;
     }
     
@@ -103,7 +98,7 @@ abstract contract PrivateTokenData is Ownable {
         return _numberOfTotalSupplyChanges;
     }
     
-    function setNumberOfTotalSupplyChanges(uint256 changes) external onlyAuthorized {
+    function setNumberOfTotalSupplyChanges(uint256 changes) external onlyOwner {
         _numberOfTotalSupplyChanges = changes;
     }
     
@@ -111,7 +106,7 @@ abstract contract PrivateTokenData is Ownable {
         return _publicTotalSupply;
     }
     
-    function setPublicTotalSupply(uint256 totalSupply) external onlyAuthorized {
+    function setPublicTotalSupply(uint256 totalSupply) external onlyOwner {
         _publicTotalSupply = totalSupply;
     }
 
@@ -131,7 +126,7 @@ abstract contract PrivateTokenData is Ownable {
         return _lastProcessedBlockNumber;
     }
 
-    function setLastProcessedBlockNumber(uint256 blockNumber) external onlyAuthorized {
+    function setLastProcessedBlockNumber(uint256 blockNumber) external onlyOwner {
         _lastProcessedBlockNumber = blockNumber;
     }
 
@@ -139,7 +134,7 @@ abstract contract PrivateTokenData is Ownable {
         return _stepLength;
     }
 
-    function setStepLength(uint256 stepLength) external onlyAuthorized {
+    function setStepLength(uint256 stepLength) external onlyOwner {
         _stepLength = stepLength;
     }
 }
