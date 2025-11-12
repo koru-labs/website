@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-            "HAMSAL2EVENT_IMPLEMENTATION": "0x735064D5ecF4fa2D145B87C60A734f04d9b70553",
+            "HAMSAL2EVENT_IMPLEMENTATION": "0xcA81B4081b3b946d2e0C3681363a0f996CaA0363",
             // Hamsa L2 event proxy address on target network
-            "HAMSAL2EVENT_PROXY": "0xf1970f1d8860e3169728eA29B8D5C189893753a4",
+            "HAMSAL2EVENT_PROXY": "0x37bd34BaB4E41884e5c4b396d231E1749d6ba85F",
             // Optional alternate implementation for A/B rollout
             "HAMSAL2EVENT_IMPLEMENTATION_B": "",
             // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +14,9 @@ module.exports = {
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x0F17F5D753A37a13CbE34b7978aD7f9249C32D88",
             // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0x1f841d9c63B76923f0B544Dc6b605630377f3c55",
+            "INSTITUTION_REGISTRATION": "0x885848F6c2E149139A12a54c5acEC86722b26930",
             // Proxy contract address for institution user operations
-            "PROXY_ADDRESS": "0x28C3CC08B4E14BD10591F43565c8AF69acafCB54"
+            "PROXY_ADDRESS": "0xB8FE1b14470F3A6Ab8DB1c29d9d1753f475CD88b"
         },
     // Institution configurations
     institutions: [
@@ -79,37 +79,24 @@ module.exports = {
             ]
         },
         {
-            // Ethereum address for demo institution on L2 network
-            address: "0xbE1C966E5D7250610AA2725cE286ECC3e1617070",
-            // Private key for demo institution on L2 network
-            ethPrivateKey: "e7890d94662aa12a6f6079595e4fc9ebf161eca609a48154c49e2c6030c5cd9b",
+            // Ethereum address for Node3 institution on L2 network
+            address: "0xcf5540987a85c212b3d70a2bf52b6703fb43a161",
+            // Private key for Node3 institution on L2 network
+            ethPrivateKey: "b0949940af4dc8c186215707f6c9e6f0a9bd26fb9328faf7059aa221354446ff",
             // Institution name identifier
             name: "demo_bank",
-            // gRPC endpoint for Node3 RPC services
-            rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",
+            // Access address of the newly deployed node; update according to your actual deployment.
+            rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",// node rpc url, if needed to replace the external gRPC service, please update this value
             // HTTPS proxy endpoint for Node3
             nodeUrl: "https://demo-node3-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node3 services
             httpUrl: "http://demo-node3-http.hamsa-ucl.com:8080",// curve public key coordinates for Node4 institution on L2 network
+            // Generate ElGamal key pair using the L2NodeKeyGen tool, then replace the placeholder publicKey and privateKey with the generated values.
             publicKey: {
-                x: "1065104639605578406571142978208666127086022795323606631858996834770305910120",
-                y: "20307667678556747341624423268708230461812237974991336745572481331911333635246",
+                x: "11257825812231698187313853746328416655159338794577562839602577286185930542457",
+                y: "2875382375793102349705196160931603328412588408892071657613985125195044230032",
             },
-            // Elliptic curve integer private key for Node4 institution on L2 network
-            privateKey: "2312760227391842286208215149331263073895356067007141634667233984892059663704",
-            // User accounts associated with Node4 institution on L2 network
-            users: [
-                {
-                    "address": "0xC2BE674C4C5fD6b2BE89218A059FeA6a0CE1F88f",
-                    "privateKey": "9ce3dd1d1ad467bd95216b2de2b10a5c89dbca9192a661116ec60d4e2483ba74",
-                    "role": "normal"
-                },
-                {
-                    "address": "0xBaF3913ae798CfA107Af80312B6dfBEa5B9871a1",
-                    "privateKey": "9bf603f8f1ab8ad535279242ff875d8a248a67b751149a730198b5aa95c2d33c",
-                    "role": "normal"
-                }
-            ]
+            privateKey: "1994615739482146458699760580478287864526144865878289253343117160425639577643"
         }
     ]
 }
