@@ -42,7 +42,7 @@ describe('Institution Cases', function () {
     let l1Provider;
     let proxyAddress
     let scAddress;
-    let node3Instution; ;
+    let node3Instution;
 
     before(async function () {
         testConfig = new TestConfig();
@@ -118,16 +118,48 @@ describe('Institution Cases', function () {
             }
         });
 
-        it('get InstitutionCallers ',async () => {
+        it.only('get InstitutionCallers ',async () => {
             let insi
+            // const adminWallet = new ethers.Wallet(testConfig.configuration.institutions[0].ethPrivateKey, l1Provider);
             for (institution of testConfig.configuration.institutions){
                 console.log(`#########Institution ${institution.name}############`);
-                const adminWallet = new ethers.Wallet(institution.ethPrivateKey, l1Provider);
-                insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, adminWallet);
-                const result = await insi.getInstitutionCallers(adminWallet.address)
+                const adminWalletNode = new ethers.Wallet(institution.ethPrivateKey, l1Provider);
+                console.log(`Institution ${institution.name} admin: ${adminWalletNode.address}`)
+                insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, adminWalletNode);
+                const result = await insi.getInstitutionCallers(adminWalletNode.address)
                 console.log(`Institution ${institution.name} callers: ${result}`);
 
             }
+        });
+
+        it.skip("replaceInstitutionCallers for node3 and demo", async function () {
+            let callerResult,result
+            let adminWalletNode
+            let institition
+            let insi
+            const proxyAdmin = new ethers.Wallet(node3Instution.ethPrivateKey, l1Provider);
+            insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, proxyAdmin);
+            //node4
+            institition = testConfig.configuration.institutions[1]
+            adminWalletNode = new ethers.Wallet(institition.ethPrivateKey, l1Provider);
+            callerResult = await insi.getInstitutionCallers(adminWalletNode.address)
+            console.log(`Institution ${institition.name} callers: ${callerResult}`);
+            if (callerResult.length === 0) {
+                result = await insi.replaceInstitutionCallers(adminWalletNode.address, [adminWalletNode.address])
+            }
+            await sleep(3000)
+            //demo
+            institition = testConfig.configuration.institutions[2]
+            adminWalletNode = new ethers.Wallet(institition.ethPrivateKey, l1Provider);
+            callerResult = await insi.getInstitutionCallers(adminWalletNode.address)
+            console.log(`Institution ${institition.name} callers: ${callerResult}`);
+            if (callerResult.length === 0) {
+                result = await insi.replaceInstitutionCallers(adminWalletNode.address, [adminWalletNode.address])
+            }
+            await sleep(3000)
+
+
+
         });
     });
 
