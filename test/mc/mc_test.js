@@ -13,10 +13,10 @@ const client = createClient(rpcUrl)
 const {
     callPrivateMint,
     callPrivateTransfers,
-    callPrivateBurnBatch,
+    callPrivateBurns,
     callPrivateApprove,
-    callPrivateTransferFromBatch,
-    callPrivateBurnFromBatch,
+    callPrivateTransferFroms,
+    callPrivateBurnFroms,
     getAddressBalance,
     getAddressBalance2,
     createAuthMetadata,
@@ -128,7 +128,7 @@ async function testBurnToken() {
         console.log("Burning split token...");
         const burnTokenId = ethers.toBigInt(response.transfer_token_id);
 
-        let receipt = await callPrivateBurnBatch(
+        let receipt = await callPrivateBurns(
             config.contracts.PrivateERCToken,
             minterWallet,
             [burnTokenId]
@@ -178,7 +178,7 @@ async function testTransferFrom(approveTokenId) {
     const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
     
     // Transfer the approved token from Minter to To1 using batch interface (single-element array)
-    let receipt = await callPrivateTransferFromBatch(
+    let receipt = await callPrivateTransferFroms(
         spender1Wallet,
         config.contracts.PrivateERCToken,
         accounts.Minter,
@@ -197,7 +197,7 @@ async function testBurnFromBatch(approveTokenIds) {
 
     const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
 
-    let receipt = await callPrivateBurnFromBatch(
+    let receipt = await callPrivateBurnFroms(
         spender1Wallet,
         config.contracts.PrivateERCToken,
         accounts.Minter,
