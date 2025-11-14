@@ -12,7 +12,7 @@ const client = createClient(rpcUrl)
 
 const {
     callPrivateMint,
-    callPrivateTransferFromBatch,
+    callPrivateTransferFroms,
     createAuthMetadata,
 } = require("../help/testHelp")
 
@@ -189,8 +189,8 @@ async function testTransferFromEvent(approveTokenId) {
     console.log();
 
     // 执行 transferFrom
-    console.log("Executing privateTransferFromBatch...");
-    let receipt = await callPrivateTransferFromBatch(
+    console.log("Executing privateTransferFroms...");
+    let receipt = await callPrivateTransferFroms(
         spender1Wallet,
         config.contracts.PrivateERCToken,
         accounts.Minter,
@@ -244,7 +244,7 @@ async function testTransferFromEvent(approveTokenId) {
  */
 async function runTest() {
     console.log("========================================");
-    console.log("Testing privateTransferFromBatch Event");
+    console.log("Testing privateTransferFroms Event");
     console.log("========================================");
     console.log("Contract:", config.contracts.PrivateERCToken);
     console.log("HamsaL2Event:", config.contracts.HamsaL2Event);
@@ -296,4 +296,3 @@ if (require.main === module) {
 }
 
 module.exports = { runTest };
-

@@ -82,7 +82,7 @@ abstract contract PrivateTokenApproval is
         emit PrivateApprovalToken(msg.sender, spender, allowanceToken.id);
     }
 
-    function privateTransferFromBatch(
+    function privateTransferFroms(
         uint256[] calldata tokenIds,
         address from,
         address to
@@ -205,7 +205,7 @@ abstract contract PrivateTokenApproval is
         return TokenUtilsLib.isAllowanceExists(_accounts, owner, spender, tokenId);
     }
 
-    function privateBurnFromBatch(address from, uint256[] calldata allowanceTokenIds) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
+    function privateBurnFroms(address from, uint256[] calldata allowanceTokenIds) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
         for (uint256 i = 0; i < allowanceTokenIds.length; i++) {
             _privateBurnFrom(msg.sender, from, allowanceTokenIds[i]);
         }

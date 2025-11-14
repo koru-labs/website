@@ -122,28 +122,28 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 
 async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransferFromBatch([tokenId],from,to);
+    const tx = await contract.privateTransferFroms([tokenId],from,to);
     let receipt = await tx.wait();
     return receipt;
 }
 
-async function callPrivateTransferFromBatch(wallet, scAddress, from, to, tokenIds) {
+async function callPrivateTransferFroms(wallet, scAddress, from, to, tokenIds) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransferFromBatch(tokenIds, from, to);
+    const tx = await contract.privateTransferFroms(tokenIds, from, to);
     let receipt = await tx.wait();
     return receipt;
 }
 
-async function callPrivateBurnFromBatch(wallet, scAddress, from, tokenIds) {
+async function callPrivateBurnFroms(wallet, scAddress, from, tokenIds) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateBurnFromBatch(from, tokenIds);
+    const tx = await contract.privateBurnFroms(from, tokenIds);
     let receipt = await tx.wait();
     return receipt;
 }
 
-async function callPrivateBurnBatch(scAddress, wallet, tokenIds) {
+async function callPrivateBurns(scAddress, wallet, tokenIds) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateBurnBatch(tokenIds);
+    const tx = await contract.privateBurns(tokenIds);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -296,7 +296,7 @@ function uint256ToBytes32(uint256) {
 }
 
 async function callPrivateBurn(scAddress, wallet, tokenId) {
-    return callPrivateBurnBatch(scAddress, wallet, [tokenId]);
+    return callPrivateBurns(scAddress, wallet, [tokenId]);
 }
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
@@ -635,9 +635,9 @@ module.exports =  {
     callPrivateTransfer,
     callPrivateTransfers,
     callPrivateTransferFrom,
-    callPrivateTransferFromBatch,
-    callPrivateBurnFromBatch,
-    callPrivateBurnBatch,
+    callPrivateTransferFroms,
+    callPrivateBurnFroms,
+    callPrivateBurns,
     callPrivateBurn,
     getAddressBalance,
     getAddressBalance2,

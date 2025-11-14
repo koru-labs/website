@@ -61,7 +61,7 @@ contract ZKCSC is ReentrancyGuard {
             // Execute transferFrom using batch interface with single token
             uint256[] memory tokenIds = new uint256[](1);
             tokenIds[0] = req.tokenId;
-            IPrivateERCToken(req.tokenAddress).privateTransferFromBatch(tokenIds, req.from, req.to);
+            IPrivateERCToken(req.tokenAddress).privateTransferFroms(tokenIds, req.from, req.to);
         }
 
         // Process burn requests
@@ -81,7 +81,7 @@ contract ZKCSC is ReentrancyGuard {
             // Execute burn from (burn on behalf of the token owner)
             uint256[] memory tokenIds = new uint256[](1);
             tokenIds[0] = req.tokenId;
-            IPrivateERCToken(req.tokenAddress).privateBurnFromBatch(req.from, tokenIds);
+            IPrivateERCToken(req.tokenAddress).privateBurnFroms(req.from, tokenIds);
         }
 
         emit DVPExecuted(bundleHash, msg.sender, totalOps);

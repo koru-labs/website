@@ -37,7 +37,7 @@ interface IPrivateTokenCore {
         uint256[22] calldata publicInputs
     ) external returns (bool);
 
-    function privateBurnBatch(uint256[] calldata tokenIds) external;
+    function privateBurns(uint256[] calldata tokenIds) external;
     
     function privateSplitToken(
         uint256[] memory consumedTokenIds, 

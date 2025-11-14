@@ -196,7 +196,7 @@ abstract contract PrivateTokenCore is
         return true;
     }
 
-    function privateBurnBatch(uint256[] calldata tokenIds) external onlyAllowedBank nonReentrant virtual {
+    function privateBurns(uint256[] calldata tokenIds) external onlyAllowedBank nonReentrant virtual {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _privateBurn(msg.sender, tokenIds[i]);
         }

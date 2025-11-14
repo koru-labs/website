@@ -13,7 +13,7 @@ interface IPrivateTokenApproval {
         uint256[20] calldata publicInputs
     ) external;
 
-    function privateTransferFromBatch(
+    function privateTransferFroms(
         uint256[] calldata tokenIds,
         address from,
         address to
@@ -25,5 +25,5 @@ interface IPrivateTokenApproval {
 
     function isAllowanceExists(address owner, address spender, uint256 tokenId) external view returns (bool);
 
-    function privateBurnFromBatch(address from, uint256[] calldata allowanceTokenIds) external;
+    function privateBurnFroms(address from, uint256[] calldata allowanceTokenIds) external;
 }
