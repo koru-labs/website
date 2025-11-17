@@ -43,6 +43,7 @@ abstract contract PrivateTokenCore is
         // Initialize step length to 300 blocks by default
         _stepLength = 300;
         _lastProcessedBlockNumber = block.number;
+        _previousBlockNumber = block.number;
 
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), newOwner, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }

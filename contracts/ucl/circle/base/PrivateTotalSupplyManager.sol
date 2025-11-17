@@ -17,33 +17,49 @@ abstract contract PrivateTotalSupplyManager is PrivateTokenData {
     function _increasePrivateTotalSupply(
         TokenModel.ElGamal memory amount
     ) internal returns (TokenModel.ElGamal memory oldTotalSupply) {
+        _updatePrivateTotalSupply();
+
         oldTotalSupply = _privateTotalSupply;
         (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.addSupply(
             _privateTotalSupply,
             _numberOfTotalSupplyChanges,
             amount
         );
-        _updatePrivateTotalSupply();
     }
 
     function _decreasePrivateTotalSupply(
         TokenModel.ElGamal memory amount
     ) internal returns (TokenModel.ElGamal memory oldTotalSupply) {
+        _updatePrivateTotalSupply();
+
         oldTotalSupply = _privateTotalSupply;
         (_privateTotalSupply, _numberOfTotalSupplyChanges) = TokenUtilsLib.subSupply(
             _privateTotalSupply,
             _numberOfTotalSupplyChanges,
             amount
         );
-        _updatePrivateTotalSupply();
     }
 
     function _updatePrivateTotalSupply() internal {
         uint256 currentBlockNumber = block.number;
 
-        if (currentBlockNumber - _lastProcessedBlockNumber >= _stepLength) {
-            _recordPrivateTotalSupplySnapshot(currentBlockNumber, _privateTotalSupply);
-            _lastProcessedBlockNumber = currentBlockNumber;
+        // When entering a new block, save the snapshot of the previous block
+        // At this point, _privateTotalSupply contains the final state of the previous block
+        if (currentBlockNumber != _previousBlockNumber && _previousBlockNumber != 0) {
+            // Save the snapshot for the previous block
+            _previousBlockTotalSupply = _privateTotalSupply;
+
+            // Check if we need to record the snapshot for the previous block
+            // Record snapshot when: previousBlock - lastProcessedBlock >= stepLength
+            if (_previousBlockNumber - _lastProcessedBlockNumber >= _stepLength) {
+                _recordPrivateTotalSupplySnapshot(_previousBlockNumber, _previousBlockTotalSupply);
+                _lastProcessedBlockNumber = _previousBlockNumber;
+            }
+        }
+
+        // Update the previous block number to current
+        if (currentBlockNumber != _previousBlockNumber) {
+            _previousBlockNumber = currentBlockNumber;
         }
     }
 

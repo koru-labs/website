@@ -25,6 +25,10 @@ abstract contract PrivateTokenData is Ownable {
     uint256 internal _lastProcessedBlockNumber;// The event was sent but not reveal
     uint256 internal _stepLength;
 
+    // Store the total supply snapshot at the end of previous block
+    TokenModel.ElGamal internal _previousBlockTotalSupply;
+    uint256 internal _previousBlockNumber;
+
     mapping(address => bool) internal _authorizedContracts;
     mapping(uint256 => bool) internal _usedElGamalHashes;
 
@@ -136,5 +140,21 @@ abstract contract PrivateTokenData is Ownable {
 
     function setStepLength(uint256 stepLength) external onlyOwner {
         _stepLength = stepLength;
+    }
+
+    function getPreviousBlockTotalSupply() external view returns (TokenModel.ElGamal memory) {
+        return _previousBlockTotalSupply;
+    }
+
+    function setPreviousBlockTotalSupply(TokenModel.ElGamal memory totalSupply) external onlyOwner {
+        _previousBlockTotalSupply = totalSupply;
+    }
+
+    function getPreviousBlockNumber() external view returns (uint256) {
+        return _previousBlockNumber;
+    }
+
+    function setPreviousBlockNumber(uint256 blockNumber) external onlyOwner {
+        _previousBlockNumber = blockNumber;
     }
 }
