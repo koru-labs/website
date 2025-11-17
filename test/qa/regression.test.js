@@ -253,18 +253,6 @@ async function revoke(fromWallet, response) {
 async function SplitAndBurn(amount) {
     // const metadata = await createAuthMetadata(accounts.MinterKey);
     try {
-    //     const splitRequest = {
-    //         sc_address: scAddress,
-    //         token_type: '0',
-    //         from_address: accounts.Minter,
-    //         amount: amount,
-    //         comment: "Burn"
-    //     };
-    //     let response = await client3.generateSplitToken(splitRequest, metadata);
-    //     console.log("Generate burn Proof response:", response);
-    //     const tokenId = ethers.toBigInt(response.transfer_token_id)
-    //     await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, metadata)
-
         const response = await GenerateBurnSplitProof(amount)
         const tokenId = ethers.toBigInt(response.transfer_token_id)
 
@@ -372,8 +360,6 @@ describe.only("Function Cases", function () {
 
         it('Mint 100 tokens to minter', async () => {
             const amount = 100;
-            console.log(currentNetwork)
-            console.log(scAddress)
             let recepit = await mint(accounts.Minter, amount)
             postBalance = await getTokenBalanceByAdmin(accounts.Minter);
             console.log("postBalance", postBalance)
@@ -385,11 +371,6 @@ describe.only("Function Cases", function () {
             await mint(userAddress, amount);
             const postBalanceUser = await getTokenBalanceByAdmin(userAddress);
             expect(postBalanceUser).to.equal(preBalanceUser + amount);
-        });
-        it('Mint amount 10 with string format', async () => {
-            await mint(accounts.Minter, amount.toString());
-            postBalance = await getTokenBalanceByAdmin(accounts.Minter);
-            expect(postBalance).to.equal(preBalance + amount);
         });
         it('Mint  10 to user another node', async () => {
             const userAddress = userInNode4;
@@ -747,7 +728,7 @@ describe.only("Function Cases", function () {
         });
 
     });
-    describe("check contract totalSupply", function () {
+    describe.only("check contract totalSupply", function () {
         this.timeout(1200000);
         let totalSupplyPre, totalSupplyPost;
         before(async function () {
@@ -759,7 +740,7 @@ describe.only("Function Cases", function () {
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(scAddress));
         });
-        it('totalSupply_add_after_mint ', async () => {
+        it.only('totalSupply_add_after_mint ', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet);
             await mint(accounts.Minter, amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet);

@@ -40,29 +40,30 @@ async function registerInstitutionAndUser() {
             });
             continue;
         }
+        if (institutions[i].users && institutions[i].users.length > 0) {
+            for (let j = 0; j < institutions[i].users.length; j++) {
+                let {address, role} = institutions[i].users[j];
+                // don't remove below line
+                if (address == institutions[i].address) {
+                    continue;
+                }
+                // RPC call contract to register user
+                await registerUser(client, institutions[i].ethPrivateKey, address, role);
 
-        for (let j = 0; j < institutions[i].users.length; j++) {
-            let {address, role} = institutions[i].users[j];
-            // don't remove below line
-            if (address == institutions[i].address) {
-                continue;
+                //JS call contract to register user
+                // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
+                // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry",     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS, wallet);
+                // try {
+                //     let regTx = await institutionUserRegistry.registerUser(address);
+                //     await regTx.wait();
+                // } catch (error) {
+                //     if (!error.message.includes("User already registered")) {
+                //         console.log(error)
+                //     }
+                //     continue;
+                // }
+                console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
             }
-            // RPC call contract to register user
-            await registerUser(client, institutions[i].ethPrivateKey, address, role);
-
-            //JS call contract to register user
-            // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
-            // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry",     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS, wallet);
-            // try {
-            //     let regTx = await institutionUserRegistry.registerUser(address);
-            //     await regTx.wait();
-            // } catch (error) {
-            //     if (!error.message.includes("User already registered")) {
-            //         console.log(error)
-            //     }
-            //     continue;
-            // }
-            console.log(`Registered user ${address} under Bank ${institutions[i].address}`);
         }
     }
 }
