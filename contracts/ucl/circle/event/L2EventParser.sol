@@ -44,4 +44,6 @@ contract L2EventParser {
 
     function parseInstitutionManagerBlacklistUpdated(InstitutionManagerBlacklistUpdatedEvent memory e) public view {}
     function parseBankPermissionUpdated(BankPermissionUpdatedEvent memory e) public view {}
+    function ParsePrivateTotalSupplyRecordedEvent(PrivateTotalSupplyRecordedEvent memory e) public view {}
+    function ParsePrivateTotalSupplyRevealedEvent(PrivateTotalSupplyRevealedEvent memory e) public view {}
 }
