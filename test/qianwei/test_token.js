@@ -1,6 +1,8 @@
 const hre = require("hardhat");
 const {ignition, ethers} = hre;
 const provider = ethers.provider;
+const {getEnvironmentConfig} = require('../../script/deploy_help.js');
+const Fixed_Addresses = getEnvironmentConfig();
 
 const contractAddress = '0xa918ac1c8860C3b35A5dFFd9bdFA3994e383c820';
 
@@ -351,11 +353,31 @@ async function batchTransferEth() {
     }
 }
 
+
+
+async function checkUserToManager() {
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS);
+    console.log("InstitutionUserRegistry address:", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS)
+    const user1 = "0xf17f52151EbEF6C7334FAD080c5704D77216b732";
+    // const user1 = "0x56dB25C3a60ba429675CBcD7C99CA633d27dFe22";
+    // const user1 = "0x64Be3358B20e9fd3F53789243164946442B6fab9";
+    // const user1 = "0x6858C7830Ed03975Ce204C8C1622dca7D8790f72";
+    // query admin
+    const manager1 = await institutionUserRegistry.userToManager(user1);
+    console.log(`user ${user1} admin is ${manager1}`);
+    // query caller
+    institutionUserRegistry.getInstitutionCallers(user1).then((callers) => {
+        console.log(`user ${user1}  caller list is :`, callers);
+    });
+}
+
+
 // batchTransferEth().then();
 // stresssTest().then()
 // getEthBalance2().then();
 // main().catch((error) => {
 //     console.log(error)
 // })
-testDeployToken().then();
+// testDeployToken().then();
 // testFindToken().then();
+checkUserToManager().then();
