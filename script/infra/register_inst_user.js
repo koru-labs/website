@@ -2,7 +2,7 @@ const {ethers} = require("hardhat");
 
 const {createAuthMetadata} = require("../../test/help/testHelp.js")
 const {createClient} = require('../../test/qa/token_grpc');
-const { getEnvironmentConfig } = require('../deploy_help.js');
+const {getEnvironmentConfig} = require('../deploy_help.js');
 const Fixed_Addresses = getEnvironmentConfig();
 
 async function registerInstitutionAndUser() {
@@ -26,6 +26,16 @@ async function registerInstitutionAndUser() {
             if (!error.message.includes("institution already registered")) {
                 console.log(error)
             }
+        }
+
+        try {
+            let regTx = await institutionUserRegistry.replaceInstitutionCallers(
+                institutions[i].address, [institutions[i].address]
+            );
+            await regTx.wait();
+            console.log(`Bank ${institutions[i].address} is set Callers successfully in InstitutionUserRegistry`);
+        } catch (error) {
+            console.log(error)
         }
 
         let client;
