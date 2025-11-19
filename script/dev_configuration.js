@@ -1,9 +1,9 @@
 module.exports = {
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-        "HAMSAL2EVENT_IMPLEMENTATION": "0x0724481Fa4b590Bb98C425684F402D3Cb65bb3e0",
+        "HAMSAL2EVENT_IMPLEMENTATION": "0xA8c005cf57D52aBE56FD910A8352b9AE2D27CAEf",
         // Hamsa L2 event proxy address on target network
-        "HAMSAL2EVENT_PROXY": "0x65066888FFBBDFFE19FF37a9953e5C91e3a5B2F4",
+        "HAMSAL2EVENT_PROXY": "0x3f79bf69182120146D7a661Dd72d527ca1FcF720",
         // Optional alternate implementation for A/B rollout
         "HAMSAL2EVENT_IMPLEMENTATION_B": "",
         // Percentage of traffic delegated to implementation B (0 - 100)
@@ -13,9 +13,9 @@ module.exports = {
         // L1 blob commitment verification contract address
         "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
         // Institution registration contract address
-        "INSTITUTION_REGISTRATION": "0xc2D9DAC9a16b686A0c14A528D2755a61AF14fCC8",
+        "INSTITUTION_REGISTRATION": "0x343cA46ea40c96677BEc4CDA7a9A1a20DAaFB17B",
         // Proxy contract address for institution user operations
-        "PROXY_ADDRESS": "0x4227842F10Bc3F6aD6987CF43E001F832fEf655f"
+        "PROXY_ADDRESS": "0x1E64309fa00aEC5cAa58616A98111272E2f7856b"
     },
     // Institution configurations
     institutions: [
@@ -26,6 +26,11 @@ module.exports = {
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             // Institution name identifier
             name: "Node3",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
@@ -59,6 +64,11 @@ module.exports = {
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             // Institution name identifier
             name: "Node4",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // gRPC endpoint for Node4 RPC services
             rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
@@ -84,6 +94,11 @@ module.exports = {
             ethPrivateKey: "e7890d94662aa12a6f6079595e4fc9ebf161eca609a48154c49e2c6030c5cd9b",
             // Institution name identifier
             name: "demo_bank",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3

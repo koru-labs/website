@@ -12,14 +12,20 @@ async function registerInstitutionAndUser() {
     for (let i = 0; i < institutions.length; i++) {
         console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         try {
-            let regTx = await institutionUserRegistry.registerInstitution(
-                institutions[i].address,
-                institutions[i].name,
-                institutions[i].publicKey,
-                institutions[i].rpcUrl,
-                institutions[i].nodeUrl,
-                institutions[i].httpUrl
-            );
+            let requestRegisterInstitution = {
+                managerAddress: institutions[i].address,
+                name: institutions[i].name,
+                streetAddress: institutions[i].streetAddress,
+                suiteNo: institutions[i].suiteNo,
+                city: institutions[i].city,
+                state: institutions[i].state,
+                zip: institutions[i].zip,
+                publicKey: institutions[i].publicKey,
+                rpcUrl: institutions[i].rpcUrl,
+                nodeUrl: institutions[i].nodeUrl,
+                httpUrl: institutions[i].httpUrl
+            }
+            let regTx = await institutionUserRegistry.registerInstitution(requestRegisterInstitution);
             await regTx.wait();
             console.log(`Bank ${institutions[i].address} is registered successfully in InstitutionUserRegistry`);
         } catch (error) {

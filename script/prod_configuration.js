@@ -27,6 +27,11 @@ module.exports = {
             ethPrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
             // Institution name identifier
             name: "Node3",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "prod-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
@@ -60,6 +65,11 @@ module.exports = {
             ethPrivateKey: "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
             // Institution name identifier
             name: "Node4",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // gRPC endpoint for Node4 RPC services
             rpcUrl: "prod-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
@@ -85,6 +95,11 @@ module.exports = {
             ethPrivateKey: "b0949940af4dc8c186215707f6c9e6f0a9bd26fb9328faf7059aa221354446ff",
             // Institution name identifier
             name: "demo_bank",
+            streetAddress: "123 Market St",
+            suiteNo: "Suite 400",
+            city: "San Francisco",
+            state: "CA",
+            zip: "94107",
             // Access address of the newly deployed node; update according to your actual deployment.
             rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",// node rpc url, if needed to replace the external gRPC service, please update this value
             // HTTPS proxy endpoint for Node3
