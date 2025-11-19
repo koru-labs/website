@@ -19,12 +19,44 @@ abstract contract InstUserDataTemplate {
 
      struct Institution {
          string name;
+         string streetAddress;
+         string suiteNo;
+         string city;
+         string state;
+         string zip;
          address managerAddress;
          TokenModel.GrumpkinPublicKey publicKey;
          string rpcUrl;
          string nodeUrl;
          string httpUrl;
          bool isDisabled;
+     }
+
+     struct RegisterInstitutionParams {
+         address managerAddress;
+         string name;
+         string streetAddress;
+         string suiteNo;
+         string city;
+         string state;
+         string zip;
+         TokenModel.GrumpkinPublicKey publicKey;
+         string rpcUrl;
+         string nodeUrl;
+         string httpUrl;
+     }
+
+     struct UpdateInstitutionParams {
+         address managerAddress;
+         string name;
+         string streetAddress;
+         string suiteNo;
+         string city;
+         string state;
+         string zip;
+         string rpcUrl;
+         string nodeUrl;
+         string httpUrl;
      }
      mapping(address => Institution) public institutions; // institutionManagerAddress => Institution
      mapping(address => address) public userToManager; // userAddress => institutionManagerAddress

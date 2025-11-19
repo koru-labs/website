@@ -13,6 +13,11 @@ import "../model/TokenModel.sol";
     struct InstitutionRegisteredEvent {
         address institutionAddress;
         string name;
+        string streetAddress;
+        string suiteNo;
+        string city;
+        string state;
+        string zip;
         TokenModel.GrumpkinPublicKey publicKey;
         string rpcUrl;
         string nodeUrl;
@@ -22,6 +27,11 @@ import "../model/TokenModel.sol";
     struct InstitutionUpdatedEvent {
         address institutionAddress;
         string name;
+        string streetAddress;
+        string suiteNo;
+        string city;
+        string state;
+        string zip;
         string rpcUrl;
         string nodeUrl;
         string httpUrl;

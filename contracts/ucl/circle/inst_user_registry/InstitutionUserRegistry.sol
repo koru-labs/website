@@ -2,6 +2,7 @@ pragma solidity ^0.8.0;
 
 
 import "./InstUserDataTemplate.sol";
+import "../event/L2EventDefinitions.sol";
 
 contract InstitutionUserRegistry is InstUserDataTemplate {
 
@@ -23,46 +24,59 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         _;
     }
 
-    function registerInstitution(address institutionAddress, string memory name, TokenModel.GrumpkinPublicKey memory publicKey, string memory rpcUrl,
-        string memory nodeUrl, string memory httpUrl) external onlyOwner {
+    function registerInstitution(RegisterInstitutionParams calldata params) external onlyOwner {
 
-        require(institutionAddress != address(0), "Invalid address");
-        require(! isEmptyString(name), "institution name can't be empty");
-        require(! isEmptyString(rpcUrl), "institution rpcUrl can't be empty");
-        require(! isEmptyString(nodeUrl), "institution nodeUrl can't be empty");
-        require(! isEmptyString(httpUrl), "institution httpUrl can't be empty");
+        require(params.managerAddress != address(0), "Invalid address");
+        require(! isEmptyString(params.name), "institution name can't be empty");
+        require(! isEmptyString(params.rpcUrl), "institution rpcUrl can't be empty");
+        require(! isEmptyString(params.nodeUrl), "institution nodeUrl can't be empty");
+        require(! isEmptyString(params.httpUrl), "institution httpUrl can't be empty");
 
-        require(publicKey.x != 0, "invalid public key");
-        require(isEmptyString(institutions[institutionAddress].name), "institution already registered. Call updateInstitution to update");
+        require(params.publicKey.x != 0, "invalid public key");
+        require(isEmptyString(institutions[params.managerAddress].name), "institution already registered. Call updateInstitution to update");
 
 
         Institution memory institution = Institution({
-        name : name,
-        managerAddress : institutionAddress,
-        publicKey : publicKey,
-        rpcUrl : rpcUrl,
-        nodeUrl : nodeUrl,
-        httpUrl : httpUrl,
+        name : params.name,
+        streetAddress: params.streetAddress,
+        suiteNo: params.suiteNo,
+        city: params.city,
+        state: params.state,
+        zip: params.zip,
+        managerAddress : params.managerAddress,
+        publicKey : params.publicKey,
+        rpcUrl : params.rpcUrl,
+        nodeUrl : params.nodeUrl,
+        httpUrl : params.httpUrl,
         isDisabled : false
         });
 
-        institutions[institutionAddress]  = institution;
-        userToManager[institutionAddress] = institutionAddress;
-        if (!institutionAddressTracked[institutionAddress]) {
-            institutionManagerAddresses.push(institutionAddress);
-            institutionAddressTracked[institutionAddress] = true;
+        institutions[params.managerAddress]  = institution;
+        userToManager[params.managerAddress] = params.managerAddress;
+        if (!institutionAddressTracked[params.managerAddress]) {
+            institutionManagerAddresses.push(params.managerAddress);
+            institutionAddressTracked[params.managerAddress] = true;
         }
+
+        InstitutionRegisteredEvent memory eventData = InstitutionRegisteredEvent({
+            institutionAddress: params.managerAddress,
+            name: params.name,
+            streetAddress: params.streetAddress,
+            suiteNo: params.suiteNo,
+            city: params.city,
+            state: params.state,
+            zip: params.zip,
+            publicKey: params.publicKey,
+            rpcUrl: params.rpcUrl,
+            nodeUrl: params.nodeUrl,
+            httpUrl: params.httpUrl
+        });
 
         TokenEventLib.triggerInstitutionRegisteredEvent(
             l2Event,
             address(this),
             owner,
-            institutionAddress,
-            name,
-            publicKey,
-            rpcUrl,
-            nodeUrl,
-            httpUrl
+            eventData
         );
     }
 
@@ -78,40 +92,69 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         tokenToInstitutionManagerAddress[msg.sender] = institutionManager;
     }
 
-    function updateInstitution(address managerAddress, string memory name, string memory rpcUrl, string memory nodeUrl, string memory httpUrl) external onlyOwner {
-        require(managerAddress != address(0), "Invalid address");
+    function updateInstitution(UpdateInstitutionParams calldata params) external onlyOwner {
+        require(params.managerAddress != address(0), "Invalid address");
 
-        Institution storage institution = institutions[managerAddress];
+        Institution storage institution = institutions[params.managerAddress];
         require(institution.managerAddress != address(0), "Institution is still not registered yet");
 
 
-        if (! isEmptyString(name)) {
-            institution.name = name;
+        if (! isEmptyString(params.name)) {
+            institution.name = params.name;
         }
 
-        if (! isEmptyString(rpcUrl)) {
-            institution.rpcUrl = rpcUrl;
+        if (! isEmptyString(params.streetAddress)) {
+            institution.streetAddress = params.streetAddress;
         }
 
-        if (! isEmptyString(nodeUrl)) {
-            institution.nodeUrl = nodeUrl;
+        if (! isEmptyString(params.suiteNo)) {
+            institution.suiteNo = params.suiteNo;
         }
 
-        if (! isEmptyString(httpUrl)) {
-            institution.httpUrl = httpUrl;
+        if (! isEmptyString(params.city)) {
+            institution.city = params.city;
         }
 
-        institution.managerAddress = managerAddress;
+        if (! isEmptyString(params.state)) {
+            institution.state = params.state;
+        }
+
+        if (! isEmptyString(params.zip)) {
+            institution.zip = params.zip;
+        }
+
+        if (! isEmptyString(params.rpcUrl)) {
+            institution.rpcUrl = params.rpcUrl;
+        }
+
+        if (! isEmptyString(params.nodeUrl)) {
+            institution.nodeUrl = params.nodeUrl;
+        }
+
+        if (! isEmptyString(params.httpUrl)) {
+            institution.httpUrl = params.httpUrl;
+        }
+
+        institution.managerAddress = params.managerAddress;
+
+        InstitutionUpdatedEvent memory eventData = InstitutionUpdatedEvent({
+            institutionAddress: params.managerAddress,
+            name: institution.name,
+            streetAddress: institution.streetAddress,
+            suiteNo: institution.suiteNo,
+            city: institution.city,
+            state: institution.state,
+            zip: institution.zip,
+            rpcUrl: institution.rpcUrl,
+            nodeUrl: institution.nodeUrl,
+            httpUrl: institution.httpUrl
+        });
 
         TokenEventLib.triggerInstitutionUpdatedEvent(
             l2Event,
             address(this),
             owner,
-            managerAddress,
-            institution.name,
-            institution.rpcUrl,
-            institution.nodeUrl,
-            institution.httpUrl
+            eventData
         );
     }
 

@@ -91,22 +91,9 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address owner,
-        address institutionAddress,
-        string memory name,
-        TokenModel.GrumpkinPublicKey memory publicKey,
-        string memory rpcUrl,
-        string memory nodeUrl,
-        string memory httpUrl
+        InstitutionRegisteredEvent memory eventData
     ) public {
-        InstitutionRegisteredEvent memory e = InstitutionRegisteredEvent({
-            institutionAddress: institutionAddress,
-            name: name,
-            publicKey: publicKey,
-            rpcUrl: rpcUrl,
-            nodeUrl: nodeUrl,
-            httpUrl: httpUrl
-        });
-        bytes memory body = abi.encode(e);
+        bytes memory body = abi.encode(eventData);
         _l2Event.sendEvent(eventSource, owner, "InstitutionRegistered", body);
     }
 
@@ -114,20 +101,9 @@ library TokenEventLib {
         IL2Event _l2Event,
         address eventSource,
         address owner,
-        address institutionAddress,
-        string memory name,
-        string memory rpcUrl,
-        string memory nodeUrl,
-        string memory httpUrl
+        InstitutionUpdatedEvent memory eventData
     ) public {
-        InstitutionUpdatedEvent memory e = InstitutionUpdatedEvent({
-        institutionAddress: institutionAddress,
-        name: name,
-        rpcUrl: rpcUrl,
-        nodeUrl: nodeUrl,
-        httpUrl: httpUrl
-        });
-        bytes memory body = abi.encode(e);
+        bytes memory body = abi.encode(eventData);
         _l2Event.sendEvent(eventSource, owner, "InstitutionUpdated", body);
     }
 
