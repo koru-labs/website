@@ -69,4 +69,32 @@ contract SimpleToken is ERC20 {
 
         sumToken = CurveBabyJubJubHelper.subElGamal(token1, token2);
     }
+
+    function precompiledAddMultipleElGamal(
+        TokenModel.ElGamal[] memory tokens
+    ) public view returns (TokenModel.ElGamal memory result) {
+        uint256 inputSize = tokens.length * 128;
+        bytes memory input = new bytes(inputSize);
+        for (uint i = 0; i < tokens.length; i++) {
+            uint256 offset = i * 128;
+            TokenModel.ElGamal memory token = tokens[i];
+            assembly {
+                mstore(add(add(input, 32), offset), mload(add(token, 0)))   // cl_x
+                mstore(add(add(input, 32), add(offset, 32)), mload(add(token, 32))) // cl_y
+                mstore(add(add(input, 32), add(offset, 64)), mload(add(token, 64))) // cr_x
+                mstore(add(add(input, 32), add(offset, 96)), mload(add(token, 96))) // cr_y
+            }
+        }
+        (bool success, bytes memory data) = address(0x2041).staticcall(input);
+        require(success, "Precompiled multiple addition failed");
+        require(data.length == 128, "Invalid response length");
+        (uint256 leftX, uint256 leftY, uint256 rightX, uint256 rightY) = abi.decode(data, (uint256, uint256, uint256, uint256));
+
+        result = TokenModel.ElGamal({
+            cl_x: leftX,
+            cl_y: leftY,
+            cr_x: rightX,
+            cr_y: rightY
+        });
+    }
 }
