@@ -5,16 +5,16 @@ const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
 const { getEnvironmentConfig } = require('../../script/deploy_help.js');
 const config = getEnvironmentConfig();
-// const rpcUrl = "localhost:50051";
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+const rpcUrl = "localhost:50051";
+// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // find node3 institution
 // const node3Institution = config.institutions.find(institution => institution.name === "Node3");
 // if (!node3Institution) {
 //     throw new Error("Node3 institution not found in config");
 // }
 // const rpcUrl = node3Institution.rpcUrl;
-// const httpUrl = "http://localhost:8080";
-const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+const httpUrl = "http://localhost:8080";
+// const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
 const client = createClient(rpcUrl);
 
@@ -60,7 +60,7 @@ async function testUpdateAccountStatus() {
 
         const request = {
             account_address: address,
-            account_status: 2, //0:inactive,2:active
+            account_status: 0, //0:inactive,2:active
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
@@ -120,14 +120,18 @@ async function testGetAsyncAction() {
 }
 
 
-async function testUpdateAccountRole() {
+async function testUpdateAccount() {
     try {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
             account_address: address,
-            account_roles: "normal",//minter,admin,normal
+            account_roles: "normal",//admin,normal
+            first_name: "11John111",
+            last_name: "11Doe111",
+            phone_number: "1(555) 123-4567111",
+            email: "11john.doe@example.com",
         };
-        const actionResponse = await client.updateAccountRole(actionRequest, metadata);
+        const actionResponse = await client.updateAccount(actionRequest, metadata);
         console.log("action response:", actionResponse);
     } catch (error) {
         console.error("gRPC call failed:", error);
@@ -208,11 +212,61 @@ async function testRegisterAccountForHttp() {
     }
 }
 
+async function testUpdateAccountForHttp() {
+    const request = {
+        accountAddress: address,
+        accountRoles: "admin,normal",//admin,normal
+        firstName: "22John",
+        lastName: "22Doe",
+        phoneNumber: "22(555) 123-4567",
+        email: "22john.doe@example.com",
+    };
+    try {
+        const headers = await createAuthHeaders(privateKey);
+        // console.log('Request headers:', headers);
+        const response = await axios.post(`${httpUrl}/v1/account-update`,
+            request
+            , {
+                headers: headers,
+                timeout: 15000
+            });
 
+        console.log("HTTP response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("HTTP call failed:", error.response?.data || error.message);
+        throw error;
+    }
+}
+
+async function testUpdateAccountStatusForHttp() {
+    const request = {
+        account_address: address,
+        account_status: 2, //0:inactive,2:active
+    };
+    try {
+        const headers = await createAuthHeaders(privateKey);
+        // console.log('Request headers:', headers);
+        const response = await axios.post(`${httpUrl}/v1/account-status-update`,
+            request
+            , {
+                headers: headers,
+                timeout: 15000
+            });
+
+        console.log("HTTP response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("HTTP call failed:", error.response?.data || error.message);
+        throw error;
+    }
+}
 // testRegisterAccount().then();
 // testRegisterAccountForHttp().then();
 // testGetAsyncAction().then();
 // testUpdateAccountStatus().then();
-// testUpdateAccountRole().then();
+// testUpdateAccountStatusForHttp().then();
+// testUpdateAccount().then();
+// testUpdateAccountForHttp().then();
 // testGetAccount().then();
-testGetAccountForHttp().then();
+// testGetAccountForHttp().then();

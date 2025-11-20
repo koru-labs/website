@@ -219,8 +219,8 @@ function createClient(url) {
     };
 
 
-    client.updateAccountRole = async function (request, metadata) {
-        return promisifyByMetadata(accountClient.updateAccountRole.bind(accountClient), request, metadata);
+    client.updateAccount = async function (request, metadata) {
+        return promisifyByMetadata(accountClient.updateAccount.bind(accountClient), request, metadata);
     };
 
     client.getAsyncAction = async function (request, metadata) {

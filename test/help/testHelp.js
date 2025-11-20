@@ -389,14 +389,10 @@ async function updateAccountStatus(privateKey,client,userAddress,status) {
     }
 }
 
-async function updateAccountRole(privateKey,client,userAddress,role) {
+async function updateAccount(privateKey,client,actionRequest) {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const actionRequest = {
-            account_address: userAddress,
-            account_roles: role,//minter,admin,normal
-        };
-        const actionResponse = await client.updateAccountRole(actionRequest, metadata);
+        const actionResponse = await client.updateAccount(actionRequest, metadata);
         await sleep(3000)
         console.log("action response:", actionResponse);
         return actionResponse
@@ -648,7 +644,7 @@ module.exports =  {
     callPrivateRevoke,
     createAuthMetadata,
     registerUser,
-    updateAccountRole,
+    updateAccount,
     updateAccountStatus,
     getAccount,
     isBlackList,
