@@ -3,22 +3,22 @@ const {ethers} = require('ethers');
 const grpc = require('@grpc/grpc-js');
 const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
-const { getEnvironmentConfig } = require('../../script/deploy_help.js');
+const {getEnvironmentConfig} = require('../../script/deploy_help.js');
 const config = getEnvironmentConfig();
-const rpcUrl = "localhost:50051";
-// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+// const rpcUrl = "localhost:50051";
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // find node3 institution
 // const node3Institution = config.institutions.find(institution => institution.name === "Node3");
 // if (!node3Institution) {
 //     throw new Error("Node3 institution not found in config");
 // }
 // const rpcUrl = node3Institution.rpcUrl;
-const httpUrl = "http://localhost:8080";
-// const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+// const httpUrl = "http://localhost:8080";
+const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
 const client = createClient(rpcUrl);
 
-const request_id = "203811416ade1a647f6dae34470de12fb1f8cee706d2d3a9bf717081b6e432a1"
+let request_id = "203811416ade1a647f6dae34470de12fb1f8cee706d2d3a9bf717081b6e432a1"
 
 // admin
 const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"; //N0DE3
@@ -198,11 +198,11 @@ async function testRegisterAccountForHttp() {
         const headers = await createAuthHeaders(privateKey);
         // console.log('Request headers:', headers);
         const response = await axios.post(`${httpUrl}/v1/account-register`,
-           request
-        , {
-            headers: headers,
-            timeout: 15000
-        });
+            request
+            , {
+                headers: headers,
+                timeout: 15000
+            });
 
         console.log("HTTP response:", response.data);
         return response.data;
@@ -242,10 +242,10 @@ async function testUpdateAccountForHttp() {
 async function testUpdateAccountStatusForHttp() {
     const request = {
         account_address: address,
-        account_status: 2, //0:inactive,2:active
+        account_status: 0, //0:inactive,2:active
     };
+    const headers = await createAuthHeaders(privateKey);
     try {
-        const headers = await createAuthHeaders(privateKey);
         // console.log('Request headers:', headers);
         const response = await axios.post(`${httpUrl}/v1/account-status-update`,
             request
@@ -255,15 +255,36 @@ async function testUpdateAccountStatusForHttp() {
             });
 
         console.log("HTTP response:", response.data);
+        request_id = response.data.request_id;
         return response.data;
     } catch (error) {
         console.error("HTTP call failed:", error.response?.data || error.message);
         throw error;
     }
 }
+
+
+
+async function testGetAsyncActionForHttp(request_id) {
+    const headers = await createAuthHeaders(privateKey);
+    try {
+        // console.log('Request headers:', headers);
+        const response = await axios.get(`${httpUrl}/v1/account-actions-async/${request_id}`, {
+            headers: headers,
+            timeout: 15000
+        });
+        console.log("HTTP response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("HTTP call failed:", error.response?.data || error.message);
+        throw error;
+    }
+}
+
 // testRegisterAccount().then();
 // testRegisterAccountForHttp().then();
 // testGetAsyncAction().then();
+// testGetAsyncActionForHttp("8c94606e20cefc41ef461b8e47d8c68a71221a4ceccca907341425cc7c244a1d").then();
 // testUpdateAccountStatus().then();
 // testUpdateAccountStatusForHttp().then();
 // testUpdateAccount().then();
