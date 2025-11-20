@@ -18,7 +18,6 @@ async function main() {
     const deployed = getImage9EnvironmentData();
 
     await deployToken(deployed);
-    await allowBanksInTokenSmartContract(deployed);
     await setMinterAllowed(deployed);
     await saveDeploymentInfo(deployed, hre, ethers, fs, path)
 
