@@ -728,15 +728,23 @@ message RegisterAccountRequest {
   string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to register"}];
   string account_roles = 2 [(validate.rules).string = {
-    pattern: "^((normal|admin|minter)(,(normal|admin|minter))*)?$"
+    pattern: "^((normal|admin)(,(normal|admin))*)?$"
   },
-    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin,minter)"}];
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin)"}];
+  string first_name = 3 [(validate.rules).string = {max_len: 50},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "First name of the account holder"}];
+  string last_name = 4 [(validate.rules).string = {max_len: 50},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last name of the account holder"}];
+  string email = 5 [(validate.rules).string = {max_len: 50, pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Email address of the account holder"}];
+  string phone_number = 6 [(validate.rules).string = {max_len: 50},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Phone number of the account holder (US format)"}];
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
       required:["account_address", "account_roles"]
     },
-    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_roles\": \"admin,minter\"}"
+    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_roles\": \"admin,normal\", \"first_name\": \"John\", \"last_name\": \"Doe\", \"email\": \"john.doe@example.com\", \"phone_number\": \"(555) 123-4567\"}"
   };
 }
 
@@ -802,6 +810,10 @@ message GetAccountResponse {
   AccountStatusEnum account_status = 2;
   string account_roles = 3;
   repeated string sc_address_list = 4;
+  string first_name = 5;
+  string last_name = 6;
+  string email = 7;
+  string phone_number = 8;
 }
 
 message GetAccountListRequest {
@@ -825,6 +837,10 @@ message Account {
   string account_address = 1;
   AccountStatusEnum account_status = 2;
   string account_roles = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string email = 6;
+  string phone_number = 7;
 }
 
 // TestKey service interface
