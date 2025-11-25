@@ -661,7 +661,7 @@ describe('Private Token - Function Cases', function () {
 
 });
 
-describe('Http api test cases', function () {
+describe.only('Http api test cases', function () {
     this.timeout(1200000);
 
     let testConfig;
@@ -679,6 +679,7 @@ describe('Http api test cases', function () {
         }
         throw new Error(`Timeout: account ${addr} never reached ${wantStatus}`);
     }
+
 
     before(async function () {
         testConfig = new TestConfig();
@@ -701,7 +702,6 @@ describe('Http api test cases', function () {
 
         it('query account status', async function () {
             const result = await apiClient.queryAccount({ accountAddress: user });
-            console.log(result)
             expect(result.accountAddress.toLowerCase()).equal(user.toLowerCase());
         });
         it('update account of node3 to Active', async function () {
@@ -714,9 +714,7 @@ describe('Http api test cases', function () {
                     accountStatus: 'ACCOUNT_STATUS_ACTIVE'
                 });
             }
-            await sleep(5000)
-            result = await apiClient.queryAccount({ accountAddress: user });
-            expect(result.accountStatus).equal('ACCOUNT_STATUS_ACTIVE')
+            await waitForStatus(user, 'ACCOUNT_STATUS_ACTIVE');
             await helper.mint(user,100)
         });
         it('update account of node3 to Inactive', async function () {
@@ -760,7 +758,7 @@ describe('Http api test cases', function () {
                     accountStatus: 'ACCOUNT_STATUS_INACTIVE'
                 });
                 const requestId = result.requestId;
-                await sleep(5000)
+                await sleep(10000)
                 result = await apiClient.queryAccountActionStatus(requestId)
                 expect(result.status).equal('ASYNC_ACTION_STATUS_FAIL')
                 expect(result.message).equal('User not managed by this institution')
@@ -775,7 +773,7 @@ describe('Http api test cases', function () {
         });
     });
 
-    describe.only('register and update account', function () {
+    describe('register and update account', function () {
         let userWallet, userAddress;
 
         before(async function () {
@@ -804,7 +802,7 @@ describe('Http api test cases', function () {
             expect(result.email).equal(request.email);
         });
 
-        it.only('register without email – should succeed', async function () {
+        it('register without email – should succeed', async function () {
             const tmpWallet = ethers.Wallet.createRandom();
             const request = {
                 accountAddress: tmpWallet.address,
@@ -817,7 +815,6 @@ describe('Http api test cases', function () {
             try {
                 await apiClient.regesterAccount(request);
             }catch ( error){
-                console.log(error)
                 expect(error.response.status).equal(400)
             }
 
@@ -950,9 +947,7 @@ describe('Http api test cases', function () {
             console.log(afterTransferBalance,afterMintBalance)
             expect(afterTransferBalance).equal(afterMintBalance - 10);
         });
-
     });
-
 
 });
 // 辅助函数
