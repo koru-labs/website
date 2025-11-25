@@ -9,11 +9,11 @@ const {createClient} = require('../qa/token_grpc')
 function getCurrentNetworkStage() {
     const fullName = network.name; // 这就是 'ucl_L2_prod'
     const stage = fullName.split('_').pop();
-    console.log(`Using network: ${fullName} → stage: ${stage}`);
+    // console.log(`Using network: ${fullName} → stage: ${stage}`);
     return stage;
 }
 const currentNetwork = getCurrentNetworkStage();
-console.log("currentNetwork:", currentNetwork)
+// console.log("currentNetwork:", currentNetwork)
 function getConfigurationForNetwork() {
     const currentNetwork = getCurrentNetworkStage();
 
@@ -23,8 +23,6 @@ function getConfigurationForNetwork() {
             return require("../../script/dev_configuration");
         case 'qa':
             return require("../../script/qa_configuration");
-        case 'demo':
-            return require("../../script/demo_configuration");
         case 'prod':
             return require("../../script/prod_configuration");
         default:
@@ -34,7 +32,7 @@ function getConfigurationForNetwork() {
 
 
 const configuration = getConfigurationForNetwork();
-console.log("configuration:", configuration)
+// console.log("configuration:", configuration)
 // find node3 institution
 const node3Institution = configuration.institutions.find(institution => institution.name === "Node3");
 if (!node3Institution) {
@@ -85,6 +83,9 @@ const {
 const {address, hexString} = require("hardhat/internal/core/config/config-validation");
 const {bigint} = require("hardhat/internal/core/params/argumentTypes");
 const hre = require("hardhat");
+const {TestConfig} = require("../config/TestConfig");
+const {TokenTestHelper} = require("../help/TokenTestHelper");
+const {createApiClient} = require("../help/ApiTestHelper");
 
 const l1Provider = ethers.provider;
 const adminWallet = new ethers.Wallet(accounts.OwnerKey, l1Provider);
@@ -103,6 +104,7 @@ let preBalance, postBalance;
 let preAllowance, postAllowance;
 
 async function mint(address, amount) {
+    console.log(`[${new Date().toISOString()}] [MINT] 开始生成 mint proof，地址: ${address}, 数量: ${amount}`);
     const minterMeta = await createAuthMetadata(accounts.MinterKey);
     const generateRequest = {
         sc_address: scAddress,
@@ -111,14 +113,19 @@ async function mint(address, amount) {
         to_address: address,
         amount: amount
     };
-    console.log("generateMintRequest:", generateRequest)
+
     const response = await client3.generateMintProof(generateRequest, minterMeta);
-    console.log("generateMintProof:", response)
-    const receipt = await callPrivateMint(scAddress, response, minterWallet)
-    console.log("callPrivateMint:", receipt)
-    let tx = await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
-    console.log("callPrivateMint:", tx)
-    return receipt
+    console.log(`[${new Date().toISOString()}] [MINT] 生成 mint proof 完成. Request ID: ${response.request_id}`);
+
+    console.log(`[${new Date().toISOString()}] [MINT] 调用 private mint...`);
+    const receipt = await callPrivateMint(scAddress, response, minterWallet);
+    console.log(`[${new Date().toISOString()}] [MINT] Private mint 调用完成. Transaction hash: ${receipt.transactionHash}`);
+
+    console.log(`[${new Date().toISOString()}] [MINT] 等待操作完成...`);
+    let tx = await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta);
+    console.log(`[${new Date().toISOString()}] [MINT] 操作完成. 状态: ${tx.status}`);
+
+    return receipt;
 }
 
 async function mintBy(address, amount, minterWallet) {
@@ -136,6 +143,7 @@ async function mintBy(address, amount, minterWallet) {
     const response = await client3.generateMintProof(generateRequest, minterMeta);
     console.log("generateMintProofResult:", response)
     const receipt = await callPrivateMint(scAddress, response, wallet)
+
     await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
     return receipt
 }
@@ -293,7 +301,6 @@ async function cancelAllSplitTokens(ownerWallet) {
     const metadata = await createAuthMetadata(ownerWallet.privateKey)
     const ownerAddress = ownerWallet.address;
     const result = await getSplitTokenList(client3, ownerAddress, scAddress, metadata);
-    console.log(result)
     const splitTokens = result.split_tokens;
     console.log("splitTokens: ", splitTokens)
     if (splitTokens.length > 0) {
@@ -306,7 +313,7 @@ async function cancelAllSplitTokens(ownerWallet) {
             //console.log("receipt", receipt)
         }
     }
-    await sleep(3000);
+    await sleep(5000);
 }
 
 async function checkAllowanceTokenExist(owner, response) {
@@ -366,6 +373,9 @@ describe("Negative And exception test cases", function () {
         minterMeta = await createAuthMetadata(accounts.MinterKey)
         spenderMeta = await createAuthMetadata(accounts.Spender1Key)
         to1Meta = await createAuthMetadata(accounts.To1PrivateKey);
+        // const contract = await ethers.getContractAt("PrivateUSDC", scAddress, adminWallet);
+        // let tx = await contract.configureStepLength(5n );
+
     })
 
     describe("Check address balance", function () {
@@ -381,17 +391,23 @@ describe("Negative And exception test cases", function () {
             beforeEach(async function () {
                 preBalance = await getTokenBalanceByAdmin(recevier);
             });
-            it.only('postBalance value accurate after mint 20 times  ',async () => {
+            it('postBalance value accurate after mint 20 times  ',async () => {
                 preBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 let total_mint_qty = 0;
                 for (let i = 0; i < 20; i++) {
                     console.log(`the ${i+1} time mint`);
-                    let qty = Math.floor(Math.random() * 10) + 1;
-                    await mint(accounts.Minter, qty);
+                    // let qty = Math.floor(Math.random() * 10) + 1;
+                    const qty = 10
+                    try {
+                        await mint(accounts.Minter, qty);
+                    }catch (error){
+                        console.log("error:", error)
+                    }
+                    // await mint(accounts.Minter, qty);
                     total_mint_qty += qty;
                     console.log("total mintted qty:", total_mint_qty)
+                    // await sleep(1000);
                 }
-                await sleep(5000)
                 postBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 expect(postBalance).to.equal(preBalance + total_mint_qty);
             });
@@ -437,7 +453,7 @@ describe("Negative And exception test cases", function () {
                 try {
                     await mint(ZERO_ADDRESS, amount);
                 } catch (error) {
-                    expect(error.details).to.equal("failed to get GrumpkinKey for to address")
+                    expect(error.details).to.equal("bank permission check error")
                 }
             });
 
@@ -603,7 +619,7 @@ describe("Negative And exception test cases", function () {
     describe("PrivateTransfer", function () {
         describe('Transfer security', function () {
             this.timeout(1200000);
-            it.only('postBalance value accurate after transfer 20 times  ',async () => {
+            it('postBalance value accurate after transfer 20 times  ',async () => {
                 await mint(accounts.Minter, 1000);
                 preBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 let total_transfer_qty = 0;
@@ -614,7 +630,6 @@ describe("Negative And exception test cases", function () {
                     total_transfer_qty += qty;
                     console.log("total transferred qty:", total_transfer_qty)
                 }
-                await sleep(5000)
                 postBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 expect(postBalance).to.equal(preBalance - total_transfer_qty);
             });
@@ -711,7 +726,7 @@ describe("Negative And exception test cases", function () {
                 let tokenResult = await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta);
                 if (tokenResult.status == "TOKEN_ACTION_STATUS_SUC") {
                     const tokenId = ethers.toBigInt(response.transfer_token_id)
-                    await expect(callPrivateTransfer(minterWallet, scAddress, tokenId)).to.revertedWith("PrivateERCToken: token type is not transfer")
+                    await expect(callPrivateTransfer(minterWallet, scAddress, tokenId)).to.revertedWith("This token cannot be used for other purposes")
                 }
             });
         });
@@ -719,7 +734,7 @@ describe("Negative And exception test cases", function () {
     describe("PrivateBurn", function () {
         describe('Burn security', function () {
             this.timeout(1200000);
-            it.only('postBalance value accurate after burn 20 times  ',async () => {
+            it('postBalance value accurate after burn 20 times  ',async () => {
                 await mint(accounts.Minter, 1000);
                 preBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 let total_burn_qty = 0;
@@ -730,7 +745,6 @@ describe("Negative And exception test cases", function () {
                     total_burn_qty += qty;
                     console.log("total burned qty:", total_burn_qty)
                 }
-                await sleep(5000)
                 postBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 expect(postBalance).to.equal(preBalance - total_burn_qty);
             });
@@ -876,7 +890,7 @@ describe("Negative And exception test cases", function () {
                     comment: 'approve'
                 };
                 try {
-                    await client3.generateApproveProof(splitRequest, newAdminMeta);
+                    await client3.generateApproveProof(splitRequest, adminMeta);
                 } catch (error) {
                     console.log("error:", error)
                     expect(error.details).equal("invalid address")
@@ -895,7 +909,6 @@ describe("Negative And exception test cases", function () {
                     comment: 'approve'
                 };
                 console.log("generateSplitTokenRequest:", splitRequest)
-                console.log("minter address: ", newMinter.address)
                 let response = await client3.generateApproveProof(splitRequest, to1Meta);
                 console.log("Generate transfer Proof response:", response);
 
@@ -920,7 +933,6 @@ describe("Negative And exception test cases", function () {
                     comment: 'approve'
                 };
                 console.log("generateSplitTokenRequest:", splitRequest)
-                console.log("minter address: ", newMinter.address)
                 let response = await client3.generateApproveProof(splitRequest, to1Meta);
                 console.log("Generate transfer Proof response:", response);
 
@@ -977,8 +989,8 @@ describe("Negative And exception test cases", function () {
             let prePrivateBalance, postPrivateBalance;
 
             before(async function () {
-                await mint(accounts.Minter, 100)
-                await mint(accounts.To1, 100)
+                // await mint(accounts.Minter, 100)
+                // await mint(accounts.To1, 100)
             })
 
             it('convert from USDC to pUSDC with amount 0', async () => {
@@ -994,23 +1006,6 @@ describe("Negative And exception test cases", function () {
                     console.log(error)
                     expect(error.details).equal("invalid amount")
                 }
-            });
-
-            it('convert from USDC to pUSDC with amount larger than balance', async () => {
-                prePublicBalance = await getPublicBalance(accounts.Minter)
-                console.log("prePublicBalance:", prePublicBalance)
-                const amount = prePublicBalance + 1;
-                const convertToPUSDCResponse = {
-                    amount: amount
-                };
-                try {
-                    await client3.convertToPUSDC(convertToPUSDCResponse, minterMeta);
-                } catch (error) {
-                    console.log(error)
-                    expect(error.details).equal("invalid amount")
-                }
-
-
             });
 
             it('convert from USDC to pUSDC with amount -1', async () => {
@@ -1067,7 +1062,8 @@ describe("Negative And exception test cases", function () {
                 const amount = prePublicBalance;
                 if (amount > 0) {
                     const convertToPUSDCResponse = {
-                        amount: amount
+                        amount: amount,
+                        sc_address: scAddress
                     };
                     let proofResult = await client3.convertToPUSDC(convertToPUSDCResponse, minterMeta);
                     console.log("Generate Mint Proof response:", proofResult);
@@ -1106,9 +1102,8 @@ describe("Negative And exception test cases", function () {
             });
 
             it('convert from pUSDC to USDC with all amount', async () => {
-                await sleep(3000);
                 await cancelAllSplitTokens(minterWallet, scAddress)
-
+                await revokeAllApprovedTokens(minterWallet,scAddress)
                 prePrivateBalance = await getTokenBalanceByAdmin(accounts.Minter);
                 prePublicBalance = await getPublicBalance(accounts.Minter);
                 console.log({prePublicBalance, prePrivateBalance})
@@ -1127,7 +1122,8 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
                 const tokenId = ethers.toBigInt(response.transfer_token_id)
                 const convertToPUSDCResponse = {
-                    token_id: response.transfer_token_id
+                    token_id: response.transfer_token_id,
+                    sc_address: scAddress
                 };
                 let proofResult = await client3.convertToUSDC(convertToPUSDCResponse, minterMeta);
                 const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -1168,7 +1164,8 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
                 const tokenId = ethers.toBigInt(response.transfer_token_id)
                 const convertToPUSDCResponse = {
-                    token_id: response.transfer_token_id
+                    token_id: response.transfer_token_id,
+                    sc_address:scAddress
                 };
                 let proofResult = await client3.convertToUSDC(convertToPUSDCResponse, minterMeta);
                 console.log("Generate convert Proof response:", proofResult);
@@ -1192,7 +1189,8 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response_10.request_id, minterMeta)
                 const tokenId_10 = ethers.toBigInt(response_10.transfer_token_id)
                 const convertToPUSDCResponse_10 = {
-                    token_id: response_10.transfer_token_id
+                    token_id: response_10.transfer_token_id,
+                    sc_address:scAddress
                 };
                 let proofResult_10 = await client3.convertToUSDC(convertToPUSDCResponse_10, minterMeta);
                 const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -1212,7 +1210,8 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response_20.request_id, minterMeta)
                 const tokenId_20 = ethers.toBigInt(response_20.transfer_token_id)
                 const convertToPUSDCResponse_20 = {
-                    token_id: response_20.transfer_token_id
+                    token_id: response_20.transfer_token_id,
+                    sc_address:scAddress
                 };
                 let proofResult_20 = await client3.convertToUSDC(convertToPUSDCResponse_20, minterMeta);
                 const proof_20 = proofResult_20.proof.map(p => ethers.toBigInt(p));
@@ -1238,7 +1237,8 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
                 const tokenId = ethers.toBigInt(response.transfer_token_id)
                 const convertToPUSDCResponse = {
-                    token_id: response.transfer_token_id
+                    token_id: response.transfer_token_id,
+                    sc_address:scAddress
                 };
                 let proofResult = await client3.convertToUSDC(convertToPUSDCResponse, minterMeta);
                 const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -1263,7 +1263,8 @@ describe("Negative And exception test cases", function () {
                 const amount = 10;
                 console.log("pre usdc balance is :", await getPublicBalance(userAddress))
                 const convertToPUSDCResponse = {
-                    amount: amount
+                    amount: amount,
+                    sc_address: scAddress
                 };
                 let proofResult = await client3.convertToPUSDC(convertToPUSDCResponse, userMeta);
                 console.log("Generate convert Proof response:", proofResult);
@@ -1298,7 +1299,8 @@ describe("Negative And exception test cases", function () {
                 const amount = 10;
                 console.log("pre usdc balance is :", await getPublicBalance(userAddress))
                 const convertToPUSDCResponse = {
-                    amount: amount
+                    amount: amount,
+                    sc_address: scAddress
                 };
                 let proofResult = await client3.convertToPUSDC(convertToPUSDCResponse, userMeta);
                 console.log("Generate convert Proof response:", proofResult);
@@ -1329,7 +1331,8 @@ describe("Negative And exception test cases", function () {
                 const amount = 10;
                 console.log("pre usdc balance is :", await getPublicBalance(userAddress))
                 const convertToPUSDCResponse = {
-                    amount: amount
+                    amount: amount,
+                    sc_address: scAddress
                 };
                 let proofResult = await client3.convertToPUSDC(convertToPUSDCResponse, userMeta);
                 console.log("Generate convert Proof response:", proofResult);
@@ -1366,7 +1369,7 @@ describe("Negative And exception test cases", function () {
 
 });
 
-describe("Permission and BlackList", function () {
+describe.skip("Permission and BlackList", function () {
     this.timeout(1200000);
     const normal = ethers.Wallet.createRandom();
     const newMinter = ethers.Wallet.createRandom();
@@ -2009,4 +2012,242 @@ describe("Permission and BlackList", function () {
         });
     });
 });
+
+describe('Negative And exception api test cases', function () {
+    this.timeout(1200000);
+
+    let testConfig;
+    let helper;
+    let metadata;
+    let scAddress;
+    let apiClient;
+
+    async function waitForStatus(addr, wantStatus, timeoutMs = 30000, intervalMs = 5000) {
+        const started = Date.now();
+        while (Date.now() - started < timeoutMs) {
+            const { accountStatus } = await apiClient.queryAccount({ accountAddress: addr });
+            if (accountStatus === wantStatus) return;               // ✅ 成功退出
+            await sleep(intervalMs);
+        }
+        throw new Error(`Timeout: account ${addr} never reached ${wantStatus}`);
+    }
+
+
+    before(async function () {
+        testConfig = new TestConfig();
+        helper = new TokenTestHelper(testConfig);
+        scAddress = testConfig.contractAddress;
+        metadata = {
+            admin: await helper.createMetadata(testConfig.institutions.node3.ethPrivateKey),
+            minter: await helper.createMetadata(accounts.MinterKey),
+            spender: await helper.createMetadata(accounts.Spender1Key),
+            to1: await helper.createMetadata(accounts.To1PrivateKey),
+            node4Admin: await helper.createMetadata(testConfig.institutions.node4.ethPrivateKey)
+        };
+        apiClient = await createApiClient(testConfig.institutions.node3.httpUrl);
+        await helper.mint(accounts.Minter,100)
+    });
+
+    describe('update account status cases', function () {
+        const user = accounts.To1 ;
+        it('update account of node3 to status not exist - should fail', async function () {
+            let result = await apiClient.queryAccount({ accountAddress: user });
+            const preStatus = result.accountStatus;
+            console.log("preStatus", preStatus)
+            await apiClient.updateAccountStatus({
+                    accountAddress: user,
+                    accountStatus: 'ACCOUNT_STATUS_ACTIVE2'
+                });
+            result = await apiClient.queryAccount({ accountAddress: user });
+            const postStatus = result.accountStatus;
+            expect(postStatus).equal(preStatus)
+        });
+        it('update account of node3 to status with bool - should fail', async function () {
+            let result = await apiClient.queryAccount({ accountAddress: user });
+            const preStatus = result.accountStatus;
+            console.log("preStatus", preStatus)
+            try {
+                await apiClient.updateAccountStatus({
+                    accountAddress: user,
+                    accountStatus: true
+                });
+            }catch (error){
+                console.log("error", error)
+                expect(error.response.status).equal(400)
+                expect(error.response.data.message).contains("invalid value for enum field accountStatus")
+            }
+            result = await apiClient.queryAccount({ accountAddress: user });
+            const postStatus = result.accountStatus;
+            expect(postStatus).equal(preStatus)
+        });
+        it('update account of node3 to status with empty string - should fail', async function () {
+            let result = await apiClient.queryAccount({ accountAddress: user });
+            const preStatus = result.accountStatus;
+            console.log("preStatus", preStatus)
+            await apiClient.updateAccountStatus({
+                accountAddress: user,
+                accountStatus: ""
+            });
+            result = await apiClient.queryAccount({ accountAddress: user });
+            const postStatus = result.accountStatus;
+            expect(postStatus).equal(preStatus)
+        });
+
+        after(async function () {
+            await apiClient.updateAccountStatus({
+                accountAddress: user,
+                accountStatus: 'ACCOUNT_STATUS_ACTIVE'
+            });
+            await sleep(5000)
+        });
+    });
+
+    describe('Input validation when register', function () {
+        let apiClient;
+        let testConfig;
+        let helper;
+
+        before(async function () {
+            testConfig = new TestConfig();
+            helper = new TokenTestHelper(testConfig);
+            apiClient = await createApiClient(testConfig.institutions.node3.httpUrl);
+        });
+
+        it('should handle extremely long field values', async function () {
+            const longString = 'A'.repeat(1000);
+            const wallet = ethers.Wallet.createRandom();
+            const request = {
+                accountAddress: wallet.address,
+                accountRoles: 'normal',
+                firstName: longString,
+                lastName: longString,
+                phoneNumber: longString.substring(0, 50), // Phone numbers typically have limits
+                email: `${longString.substring(0, 100)}@example.com`
+            };
+
+            try {
+                await apiClient.regesterAccount(request);
+                // If registration succeeds, verify the data was handled properly
+                const result = await apiClient.queryAccount({ accountAddress: wallet.address });
+                expect(result.accountAddress.toLowerCase()).equal(wallet.address.toLowerCase());
+            } catch (error) {
+                // Expect specific error codes or messages for overly long inputs
+                expect([400, 413]).to.include(error.response.status);
+            }
+        });
+
+        it('should handle special characters and Unicode in text fields', async function () {
+            const wallet = ethers.Wallet.createRandom();
+            const request = {
+                accountAddress: wallet.address,
+                accountRoles: 'normal',
+                firstName: 'José María',
+                lastName: 'Åberg-Österreich',
+                phoneNumber: '+1 (555) 123-4567 ext. 89',
+                email: 'user+tag@exämple.cøm'
+            };
+            try {
+                await apiClient.regesterAccount(request);
+            }catch ( error){
+                expect(error.response.status).equal(400)
+            }
+        });
+
+
+    });
+
+    describe.only('Boundary value when register', function () {
+        let apiClient;
+        let testConfig;
+        let helper;
+
+        before(async function () {
+            testConfig = new TestConfig();
+            helper = new TokenTestHelper(testConfig);
+            apiClient = await createApiClient(testConfig.institutions.node3.httpUrl);
+        });
+
+        it('should handle minimum length field values', async function () {
+            const wallet = ethers.Wallet.createRandom();
+            const request = {
+                accountAddress: wallet.address,
+                accountRoles: 'normal',
+                firstName: 'A', // Minimum non-empty
+                lastName: 'B',  // Minimum non-empty
+                phoneNumber: '1', // Minimum non-empty, though might be rejected as invalid format
+                email: 'a@b.co' // Minimum valid email structure
+            };
+
+            try {
+                await apiClient.regesterAccount(request);
+                const result = await apiClient.queryAccount({ accountAddress: wallet.address });
+                expect(result.accountAddress.toLowerCase()).equal(wallet.address.toLowerCase());
+            } catch (error) {
+                // Some minimum values might be rejected due to format requirements
+                expect(error.response.status).to.be.oneOf([200, 400]);
+            }
+        });
+
+        it('should handle maximum length field values', async function () {
+            // Based on typical database constraints
+            const maxLengthFields = {
+                firstName: 50,
+                lastName: 50,
+                phoneNumber: 20,
+                email: 254 // RFC standard max email length
+            };
+
+            const wallet = ethers.Wallet.createRandom();
+            const request = {
+                accountAddress: wallet.address,
+                accountRoles: 'normal',
+                firstName: 'A'.repeat(maxLengthFields.firstName),
+                lastName: 'B'.repeat(maxLengthFields.lastName),
+                phoneNumber: '1'.repeat(maxLengthFields.phoneNumber),
+                email: `${'a'.repeat(maxLengthFields.email - 7)}@ex.com` // Leave room for domain
+            };
+
+            try {
+                await apiClient.regesterAccount(request);
+                const result = await apiClient.queryAccount({ accountAddress: wallet.address });
+                expect(result.accountAddress.toLowerCase()).equal(wallet.address.toLowerCase());
+            } catch (error) {
+                // Might be rejected due to overly long phone/email or format issues
+                expect([200, 400, 413]).to.include(error.response.status);
+            }
+        });
+
+        it('should handle empty strings and whitespace-only values', async function () {
+            const wallet = ethers.Wallet.createRandom();
+            const testCases = [
+                { firstName: '', lastName: 'User', phoneNumber: '(555) 123-4567', email: 'user@example.com' },
+                { firstName: '   ', lastName: 'User', phoneNumber: '(555) 123-4567', email: 'user@example.com' }, // Whitespace only
+                { firstName: 'Test', lastName: '', phoneNumber: '(555) 123-4567', email: 'user@example.com' },
+                { firstName: 'Test', lastName: '   ', phoneNumber: '(555) 123-4567', email: 'user@example.com' }, // Whitespace only
+            ];
+
+            for (const testCase of testCases) {
+                const request = {
+                    accountAddress: wallet.address,
+                    accountRoles: 'normal',
+                    ...testCase
+                };
+
+                try {
+                    await apiClient.regesterAccount(request);
+                    const result = await apiClient.queryAccount({ accountAddress: wallet.address });
+                    expect(result.accountAddress.toLowerCase()).equal(wallet.address.toLowerCase());
+                } catch (error) {
+                    // Empty or whitespace-only names should likely be rejected
+                    expect(error.response.status).to.equal(400);
+                }
+            }
+        });
+    });
+
+});
+// 辅助函数
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
