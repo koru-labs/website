@@ -10,7 +10,7 @@ async function registerInstitutionAndUser() {
     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS);
     let institutions = Fixed_Addresses.institutions;
     for (let i = 0; i < institutions.length; i++) {
-        console.log(`Register institution ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
+        console.log(`Register institution ${institutions[i].name} with address ${institutions[i].address} in InstitutionUserRegistry smart contract...`);
         try {
             let requestRegisterInstitution = {
                 managerAddress: institutions[i].address,
@@ -64,7 +64,16 @@ async function registerInstitutionAndUser() {
                     continue;
                 }
                 // RPC call contract to register user
-                await registerUser(client, institutions[i].ethPrivateKey, address, role);
+                const roles = role.split(',');
+                const validRoles = roles.map(r => {
+                    r = r.trim();
+                    return (r === 'normal' || r === 'admin') ? r : 'normal';// normal,admin
+                }).filter((value, index, self) => self.indexOf(value) === index);
+
+                role = validRoles.join(',');
+                if (!role) role = 'normal';
+                institutions[i].users[j].role = role;
+                await registerUser(client, institutions[i].ethPrivateKey, institutions[i].users[j]);
 
                 //JS call contract to register user
                 // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
@@ -85,13 +94,18 @@ async function registerInstitutionAndUser() {
 }
 
 
-async function registerUser(client, privateKey, userAddress, role) {
+async function registerUser(client, privateKey, user) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
-        account_address: userAddress,
-        account_roles: role,//minter,admin,normal
+        account_address: user.address,
+        account_roles: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone_number: user.phone_number,
     };
     try {
+        // console.log("registerAccount request:", request);
         const response = await client.registerAccount(request, metadata);
         console.log("registerAccount response:", response);
     } catch (error) {
