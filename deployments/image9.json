@@ -82,11 +82,13 @@
       "HamsaL2EventImplementationB": "",
       "HamsaL2EventPercentageToB": 0,
       "InstitutionUserRegistry": "0xb1468e7DdAfD29b3953aA89b6C97A09E2A1859bf",
-      "InstUserProxy": "0x57526682408129D461413FfdC828e08B165e9af7"
+      "InstUserProxy": "0x57526682408129D461413FfdC828e08B165e9af7",
+      "PrivateERCToken": "0xf5F416E634189cE56F806fF373216c0B931fC8b4",
+      "PrivateERCTokenImplementation": "0xAC64cE9bc31C7B1dEbd48392eB686ad0148b80a8"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-11-25T02:07:24.888Z",
+      "timestamp": "2025-11-25T08:05:01.672Z",
       "network": "ucl_L2_prod",
       "chainId": "1337"
     }
