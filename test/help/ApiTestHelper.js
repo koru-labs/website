@@ -6,6 +6,10 @@ class ApiClient {
         this.headers = headers;
         this.queryAccount = this.queryAccount.bind(this);
         this.updateAccountStatus = this.updateAccountStatus.bind(this);
+        this.queryAccountActionStatus = this.queryAccountActionStatus.bind(this);
+        this.regesterAccount = this.regesterAccount.bind(this);
+        this.updateAccount = this.updateAccount.bind(this);
+
     }
 
     static async create(baseURL) {
@@ -33,7 +37,6 @@ class ApiClient {
         );
         return data;
     }
-
     async updateAccountStatus(request) {
         const url = '/v1/account-status-update';
         const { data } = await this.client.post(
@@ -43,7 +46,6 @@ class ApiClient {
         );
         return data;
     }
-
     async queryAccountActionStatus(requestId) {
         const url = `/v1/account-register`;
         const { data } = await this.client.get(
@@ -52,7 +54,6 @@ class ApiClient {
         );
         return data;
     }
-
     async regesterAccount(request) {
         const url = '/v1/account-register';
         const { data } = await this.client.post(
