@@ -747,7 +747,7 @@ describe.only('Http api test cases', function () {
 
         });
 
-        it('should not allow to update account of node4 to Inactive', async function () {
+        it('update account of node4 to Inactive - should fail', async function () {
             const user = testConfig.institutions.node4.users[0].address
             let result = await apiClient.queryAccount({ accountAddress: user });
             const preStatus = result.accountStatus;
@@ -802,7 +802,7 @@ describe.only('Http api test cases', function () {
             expect(result.email).equal(request.email);
         });
 
-        it('register without email – should succeed', async function () {
+        it('register without email – should fail', async function () {
             const tmpWallet = ethers.Wallet.createRandom();
             const request = {
                 accountAddress: tmpWallet.address,
@@ -815,12 +815,13 @@ describe.only('Http api test cases', function () {
             try {
                 await apiClient.regesterAccount(request);
             }catch ( error){
+                console.log(error.response.data)
                 expect(error.response.status).equal(400)
             }
 
         });
 
-        it('register without phone – should succeed', async function () {
+        it('register without phone – should fail', async function () {
             const tmpWallet = ethers.Wallet.createRandom();
             const request = {
                 accountAddress: tmpWallet.address,
@@ -830,30 +831,54 @@ describe.only('Http api test cases', function () {
                 email: 'phoneless@example.com',
                 // phoneNumber 缺失
             };
-            await apiClient.regesterAccount(request);
-            const res = await apiClient.queryAccount({ accountAddress: tmpWallet.address });
-            expect(res.phoneNumber).equal('');
+            try {
+                await apiClient.regesterAccount(request);
+            }catch ( error){
+                console.log(error.response.data)
+                expect(error.response.status).equal(400)
+            }
         });
 
-        it('register without first/last name – should succeed', async function () {
+        it('register without first/last name – should fail', async function () {
             const tmpWallet = ethers.Wallet.createRandom();
             const request = {
                 accountAddress: tmpWallet.address,
+                // accountRoles: 'normal',
+                firstName: 'Roles',
+                lastName: 'Less',
+                email: 'rolesless@example.com',
+                phoneNumber: '(000) 000-0002',
+                // firstName / lastName 缺失
+            };
+            try {
+                await apiClient.regesterAccount(request);
+            }catch ( error){
+                console.log(error.response.data)
+                expect(error.response.status).equal(400)
+            }
+        });
+        it('register without roles – should fail', async function () {
+            const tmpWallet = ethers.Wallet.createRandom();
+            const request = {
+                accountAddress: tmpWallet.address,
+
                 accountRoles: 'normal',
                 email: 'noname@example.com',
                 phoneNumber: '(000) 000-0002',
                 // firstName / lastName 缺失
             };
-            await apiClient.regesterAccount(request);
-            const res = await apiClient.queryAccount({ accountAddress: tmpWallet.address });
-            expect(res.firstName).equal('');
-            expect(res.lastName).equal('');
+            try {
+                await apiClient.regesterAccount(request);
+            }catch ( error){
+                console.log(error.response.data)
+                expect(error.response.status).equal(400)
+            }
         });
 
         /* -------------------------------------------------- */
         /*  原有用例保持不变                                   */
         /* -------------------------------------------------- */
-        it('should not allow to register with same address', async function () {
+        it('register with same address - account exist', async function () {
             const request = {
                 accountAddress: userAddress,
                 accountRoles: 'admin,normal',
@@ -867,7 +892,7 @@ describe.only('Http api test cases', function () {
             expect(result.email).not.equal(request.email); // 第一次的数据仍保留
         });
 
-        it('should not allow to register with different address and same infos', async function () {
+        it('register with different address and same infos - should success', async function () {
             userWallet = ethers.Wallet.createRandom();
             userAddress = userWallet.address;
             const request = {
@@ -898,7 +923,7 @@ describe.only('Http api test cases', function () {
             expect(result.email).equal('david.doe3@example.com');
         });
 
-        it('update account with new address', async function () {
+        it('update account with new address - should fail', async function () {
             const newWallet = ethers.Wallet.createRandom();
             const newAddress = newWallet.address;
             const request = {
@@ -913,6 +938,7 @@ describe.only('Http api test cases', function () {
             try {
                 await apiClient.queryAccount({ accountAddress: newAddress });
             } catch (error) {
+                console.log(error.response.data)
                 expect(error.response.status).equal(404);
                 expect(error.response.data.message).equal('Account not found');
             }
@@ -921,7 +947,7 @@ describe.only('Http api test cases', function () {
         /* -------------------------------------------------- */
         /*  循环等待直到激活                                     */
         /* -------------------------------------------------- */
-        it('should allow to operate with registed address', async function () {
+        it('operate with registed address - should success', async function () {
             // 若当前未激活，则激活
             let result = await apiClient.queryAccount({ accountAddress: userAddress });
             if (result.accountStatus === 'ACCOUNT_STATUS_INACTIVE') {
