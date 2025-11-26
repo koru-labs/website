@@ -2,7 +2,7 @@ const {ethers, network}=require("hardhat");
 const {networks} = require("../../hardhat.config");
 const {ether} = require("@openzeppelin/test-helpers");
 
-const dummyTokenAddress = "0x05CFcc5c600945df11BB799344bE75429Dc72097";
+const dummyTokenAddress = "0x4D2D24899c0B115a1fce8637FCa610Fe02f1909e";
 
 
 async function deployDummyToken() {
@@ -90,7 +90,7 @@ async function getOtherCassStudent() {
 // getFixArrayItem().then()
 // getDynArrayItem().then()
 // getFirstCassStudent().then();
-getOtherCassStudent().then();
+// getOtherCassStudent().then();
 
 // updateFirstCassStudent().then();
 // updateOtherCassStudent().then();
