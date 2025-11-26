@@ -43,6 +43,8 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
         city: params.city,
         state: params.state,
         zip: params.zip,
+        email: params.email,
+        phoneNumber: params.phoneNumber,
         managerAddress : params.managerAddress,
         publicKey : params.publicKey,
         rpcUrl : params.rpcUrl,
@@ -66,6 +68,8 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             city: params.city,
             state: params.state,
             zip: params.zip,
+            email: params.email,
+            phoneNumber: params.phoneNumber,
             publicKey: params.publicKey,
             rpcUrl: params.rpcUrl,
             nodeUrl: params.nodeUrl,
@@ -123,6 +127,14 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             institution.zip = params.zip;
         }
 
+        if (! isEmptyString(params.email)) {
+            institution.email = params.email;
+        }
+
+        if (! isEmptyString(params.phoneNumber)) {
+            institution.phoneNumber = params.phoneNumber;
+        }
+
         if (! isEmptyString(params.rpcUrl)) {
             institution.rpcUrl = params.rpcUrl;
         }
@@ -145,6 +157,8 @@ contract InstitutionUserRegistry is InstUserDataTemplate {
             city: institution.city,
             state: institution.state,
             zip: institution.zip,
+            email: institution.email,
+            phoneNumber: institution.phoneNumber,
             rpcUrl: institution.rpcUrl,
             nodeUrl: institution.nodeUrl,
             httpUrl: institution.httpUrl

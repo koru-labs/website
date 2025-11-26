@@ -24,6 +24,8 @@ abstract contract InstUserDataTemplate {
          string city;
          string state;
          string zip;
+         string email;
+         string phoneNumber;
          address managerAddress;
          TokenModel.GrumpkinPublicKey publicKey;
          string rpcUrl;
@@ -40,6 +42,8 @@ abstract contract InstUserDataTemplate {
          string city;
          string state;
          string zip;
+         string email;
+         string phoneNumber;
          TokenModel.GrumpkinPublicKey publicKey;
          string rpcUrl;
          string nodeUrl;
@@ -54,6 +58,8 @@ abstract contract InstUserDataTemplate {
          string city;
          string state;
          string zip;
+         string email;
+         string phoneNumber;
          string rpcUrl;
          string nodeUrl;
          string httpUrl;
