@@ -14,7 +14,7 @@ module.exports = {
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
             // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0x0c5279cFF94a3a504b03c73ABF54c645908F8DE1",
+            "INSTITUTION_REGISTRATION": "0x3A18d5ff180c5978Bec74d22373B1E87A9e79264",
             // Proxy contract address for institution user operations
             "PROXY_ADDRESS": "0x6cC963500561C22E761EF6e2BDC5600808b4cE89"
         },
