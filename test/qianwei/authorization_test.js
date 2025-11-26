@@ -5,16 +5,16 @@ const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
 const {getEnvironmentConfig} = require('../../script/deploy_help.js');
 const config = getEnvironmentConfig();
-// const rpcUrl = "localhost:50051";
-const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+const rpcUrl = "localhost:50051";
+// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // find node3 institution
 // const node3Institution = config.institutions.find(institution => institution.name === "Node3");
 // if (!node3Institution) {
 //     throw new Error("Node3 institution not found in config");
 // }
 // const rpcUrl = node3Institution.rpcUrl;
-// const httpUrl = "http://localhost:8080";
-const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+const httpUrl = "http://localhost:8080";
+// const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
 const client = createClient(rpcUrl);
 
@@ -35,6 +35,9 @@ const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d
 const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
 // const address = "0x983b4ba7e42e664ddbfe4ed3e0ea07d90efcc13b";//test
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";//test
+// const address = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB";//test
+// const address = "0x8a09954a872b129137dcf7dd42dee2bfbc92a40f";//lender
+// const privateKey = "afa79a4f0139eb0636d603de7fbce8150df45cdf01784e22240d749f45e94bfc";//lender
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -57,10 +60,9 @@ function delay(ms) {
 async function testUpdateAccountStatus() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-
         const request = {
             account_address: address,
-            account_status: 0, //0:inactive,2:active
+            account_status: 2, //0:inactive,2:active
         };
         const response = await client.updateAccountStatus(request, metadata);
         console.log("Success:", response);
@@ -77,15 +79,13 @@ async function testUpdateAccountStatus() {
 
 async function testRegisterAccount() {
     const metadata = await createAuthMetadata(privateKey);
-    // example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_roles\": \"admin,normal\", \"first_name\": \"John\", \"last_name\": \"Doe\", \"email\": \"john.doe@example.com\", \"phone_number\": \"(555) 123-4567\"}"
-
     const request = {
         account_address: address,
         account_roles: "admin,normal",//admin,normal
-        first_name: "John",
-        last_name: "Doe",
-        phone_number: "(555) 123-4567",
-        email: "john.doe@example.com",
+        first_name: "Mike",
+        last_name: "Job",
+        phone_number: "(666) 234-4567",
+        email: "mike.job@example.com",
     };
 
     try {
@@ -123,15 +123,15 @@ async function testGetAsyncAction() {
 async function testUpdateAccount() {
     try {
         const metadata = await createAuthMetadata(privateKey);
-        const actionRequest = {
+        const request = {
             account_address: address,
             account_roles: "normal",//admin,normal
-            first_name: "11John111",
-            last_name: "11Doe111",
-            phone_number: "1(555) 123-4567111",
-            email: "11john.doe@example.com",
+            first_name: "Mike3",
+            last_name: "Job3",
+            phone_number: "(888) 234-4567",
+            email: "mike.job@example.com",
         };
-        const actionResponse = await client.updateAccount(actionRequest, metadata);
+        const actionResponse = await client.updateAccount(request, metadata);
         console.log("action response:", actionResponse);
     } catch (error) {
         console.error("gRPC call failed:", error);
@@ -196,7 +196,6 @@ async function testRegisterAccountForHttp() {
     };
     try {
         const headers = await createAuthHeaders(privateKey);
-        // console.log('Request headers:', headers);
         const response = await axios.post(`${httpUrl}/v1/account-register`,
             request
             , {
@@ -281,7 +280,7 @@ async function testGetAsyncActionForHttp(request_id) {
     }
 }
 
-// testRegisterAccount().then();
+testRegisterAccount().then();
 // testRegisterAccountForHttp().then();
 // testGetAsyncAction().then();
 // testGetAsyncActionForHttp("8c94606e20cefc41ef461b8e47d8c68a71221a4ceccca907341425cc7c244a1d").then();

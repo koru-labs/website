@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-            "HAMSAL2EVENT_IMPLEMENTATION": "0xcA81B4081b3b946d2e0C3681363a0f996CaA0363",
+            "HAMSAL2EVENT_IMPLEMENTATION": "0x13aE71DFF52636718A43F4421ECEC7e74b8e7a76",
             // Hamsa L2 event proxy address on target network
-            "HAMSAL2EVENT_PROXY": "0x37bd34BaB4E41884e5c4b396d231E1749d6ba85F",
+            "HAMSAL2EVENT_PROXY": "0x1DA57249f0bAbdD524f1B62CD7edc064212609B8",
             // Optional alternate implementation for A/B rollout
             "HAMSAL2EVENT_IMPLEMENTATION_B": "",
             // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +14,9 @@ module.exports = {
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x0F17F5D753A37a13CbE34b7978aD7f9249C32D88",
             // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0x885848F6c2E149139A12a54c5acEC86722b26930",
+            "INSTITUTION_REGISTRATION": "0xb1468e7DdAfD29b3953aA89b6C97A09E2A1859bf",
             // Proxy contract address for institution user operations
-            "PROXY_ADDRESS": "0xB8FE1b14470F3A6Ab8DB1c29d9d1753f475CD88b"
+            "PROXY_ADDRESS": "0x57526682408129D461413FfdC828e08B165e9af7"
         },
     // Institution configurations
     institutions: [
@@ -47,15 +47,78 @@ module.exports = {
             privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
             // User accounts associated with Node3 institution on L2 network
             users: [
-                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role: "minter"},// Node3 minter user account address
-                {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role: "normal"},// Node3 normal user account address
-                {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role: "normal"},// Node3 normal user account address
-                {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role: "normal"},// Node3 normal user account address
-                {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role: "normal"},// Node3 normal user account address
-                {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role: "minter"},// Node3 minter user account address
-                {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role: "minter"},// Node3 minter user account address
-                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role: "minter"},// Node3 minter user account address
-                {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role: "normal"}// Node3 normal user account address
+                {
+                    address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb",
+                    role: "minter",
+                    first_name: "Node3",
+                    last_name: "Minter",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.minter@example.com",
+                },// Node3 minter user account address
+                {
+                    address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766",
+                    role: "normal",
+                    first_name: "Node3",
+                    last_name: "Normal",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.normal1@example.com",
+                },// Node3 normal user account address
+                {
+                    address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C",
+                    role: "normal",
+                    first_name: "Node3",
+                    last_name: "Normal",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.normal2@example.com",
+                },// Node3 normal user account address
+                {
+                    address: "0x4312488937D47A007De24d48aB82940C809EEb2b",
+                    role: "normal",
+                    first_name: "Node3",
+                    last_name: "Normal",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.normal3@example.com",
+                },// Node3 normal user account address
+                {
+                    address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f",
+                    role: "normal",
+                    first_name: "Node3",
+                    last_name: "Normal",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.normal4@example.com",
+                },// Node3 normal user account address
+                {
+                    address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4",
+                    role: "minter",
+                    first_name: "Node3",
+                    last_name: "Minter",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.minter2@example.com",
+                },// Node3 minter user account address
+                {
+                    address: "0x4568E35F2c4590Bde059be615015AaB6cc873004",
+                    role: "minter",
+                    first_name: "Node3",
+                    last_name: "Minter",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.minter3@example.com",
+                },// Node3 minter user account address
+                {
+                    address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B",
+                    role: "minter",
+                    first_name: "Node3",
+                    last_name: "Minter",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.minter4@example.com",
+                },// Node3 minter user account address
+                {
+                    address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383",
+                    role: "normal",
+                    first_name: "Node3",
+                    last_name: "Normal",
+                    phone_number: "(666) 234-4567",
+                    email: "node3.normal5@example.com",
+                },// Node3 normal user account address
             ]
         },
         {
@@ -85,14 +148,21 @@ module.exports = {
             privateKey: "1225488842017272744135636207705567620992992264873252888631714276279179716352",
             // User accounts associated with Node4 institution on L2 network
             users: [
-                {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter"}, // Node4 minter user account address
+                {
+                    address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed",
+                    role: "minter",
+                    first_name: "Node4",
+                    last_name: "Minter",
+                    phone_number: "(666) 234-4567",
+                    email: "node4.minter@example.com",
+                },// Node4 minter user account address
             ]
         },
         {
             // Ethereum address for Node3 institution on L2 network
-            address: "0xcf5540987a85c212b3d70a2bf52b6703fb43a161",
+            address: "0x73494abc9681D133d7Fb4241f1760B314205994c",
             // Private key for Node3 institution on L2 network
-            ethPrivateKey: "b0949940af4dc8c186215707f6c9e6f0a9bd26fb9328faf7059aa221354446ff",
+            ethPrivateKey: "59b08ece967520c64b642fcdc5d2a9aa82b55474f1c1f03419d504d96c8221e5",
             // Institution name identifier
             name: "demo_bank",
             streetAddress: "123 Market St",
@@ -111,7 +181,7 @@ module.exports = {
                 x: "11257825812231698187313853746328416655159338794577562839602577286185930542457",
                 y: "2875382375793102349705196160931603328412588408892071657613985125195044230032",
             },
-            privateKey: "1994615739482146458699760580478287864526144865878289253343117160425639577643"
+            privateKey: "1994615739482146458699760580478287864526144865878289253343117160425639577643",
         }
     ]
 }
