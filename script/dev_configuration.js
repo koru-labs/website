@@ -31,6 +31,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "node3.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
@@ -46,15 +48,15 @@ module.exports = {
             privateKey: "2607683766450702001126943055270332377994929386369594371567962723856157825017",
             // User accounts associated with Node3 institution on L2 network
             users: [
-                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role:"minter"},// Node3 minter user account address
-                {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role:"normal"},// Node3 normal user account address
-                {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role:"normal"},// Node3 normal user account address
-                {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role:"normal"},// Node3 normal user account address
-                {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role:"normal"},// Node3 normal user account address
-                {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role:"minter"},// Node3 minter user account address
-                {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role:"minter"},// Node3 minter user account address
-                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role:"minter"},// Node3 minter user account address
-                {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role:"normal"}// Node3 normal user account address
+                {address: "0xe46fe251dd1d9ffc247bc0ddb6d61e4ee4416ecb", role: "minter",first_name: "Node3", last_name: "Minter",phone_number: "(666) 234-4567",email: "node3.minter@example.com",},// Node3 minter user account address
+                {address: "0xf0b6C36D47f82Fc13eFEE4CC8223Dc19E6c0D766", role: "normal",first_name: "Node3", last_name: "Normal",phone_number: "(666) 234-4567",email: "node3.normal1@example.com",},// Node3 normal user account address
+                {address: "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C", role: "normal",first_name: "Node3", last_name: "Normal",phone_number: "(666) 234-4567",email: "node3.normal2@example.com",},// Node3 normal user account address
+                {address: "0x4312488937D47A007De24d48aB82940C809EEb2b", role: "normal",first_name: "Node3", last_name: "Normal",phone_number: "(666) 234-4567",email: "node3.normal3@example.com",},// Node3 normal user account address
+                {address: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f", role: "normal",first_name: "Node3", last_name: "Normal",phone_number: "(666) 234-4567",email: "node3.normal4@example.com",},// Node3 normal user account address
+                {address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", role: "minter",first_name: "Node3", last_name: "Minter",phone_number: "(666) 234-4567",email: "node3.minter2@example.com",},// Node3 minter user account address
+                {address: "0x4568E35F2c4590Bde059be615015AaB6cc873004", role: "minter",first_name: "Node3", last_name: "Minter",phone_number: "(666) 234-4567",email: "node3.minter3@example.com",},// Node3 minter user account address
+                {address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B", role: "minter",first_name: "Node3", last_name: "Minter",phone_number: "(666) 234-4567",email: "node3.minter4@example.com",},// Node3 minter user account address
+                {address: "0x46946c52eb91cd2c8ed347b0a7758d9b22cee383", role: "normal",first_name: "Node3", last_name: "Normal",phone_number: "(666) 234-4567",email: "node3.normal5@example.com",},// Node3 normal user account address
             ]
         },
         {
@@ -69,6 +71,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "node3.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node4 RPC services
             rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
@@ -84,7 +88,7 @@ module.exports = {
             privateKey: "1225488842017272744135636207705567620992992264873252888631714276279179716352",
             // User accounts associated with Node4 institution on L2 network
             users: [
-                {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter"}, // Node4 minter user account address
+                {address: "0xbA268f776F70caDB087e73020dfE41c7298363Ed", role: "minter",first_name: "Node4", last_name: "Minter",phone_number: "(666) 234-4567",email: "node4.minter@example.com",},// Node4 minter user account address
             ]
         },
         {
@@ -99,6 +103,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "node3.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
