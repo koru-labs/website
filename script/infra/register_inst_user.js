@@ -20,6 +20,8 @@ async function registerInstitutionAndUser() {
                 city: institutions[i].city,
                 state: institutions[i].state,
                 zip: institutions[i].zip,
+                email: institutions[i].email,
+                phoneNumber: institutions[i].phoneNumber,
                 publicKey: institutions[i].publicKey,
                 rpcUrl: institutions[i].rpcUrl,
                 nodeUrl: institutions[i].nodeUrl,

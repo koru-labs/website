@@ -32,6 +32,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "node3.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "qa-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
@@ -70,6 +72,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "node3.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node4 RPC services
             rpcUrl: "qa-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
@@ -101,6 +105,8 @@ module.exports = {
             city: "San Francisco",
             state: "CA",
             zip: "94107",
+            email: "demo.admin@example.com",
+            phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node3 RPC services
             rpcUrl: "demo-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
