@@ -12,22 +12,34 @@ const {
     getSplitTokenList,
     getAccount,
     registerUser,
-    updateAccountStatus, isBlackList, addToBlackList, getEvents, callPrivateMint, removeFromBlackList
+    updateAccountStatus, isBlackList, addToBlackList, getEvents, callPrivateMint, removeFromBlackList,
+    callPrivateTransfer
 } = require('../help/testHelp');
+const {applyProviderWrappers} = require("hardhat/internal/core/providers/construction");
 
 
-describe('Private Token - Function Cases', function () {
+describe.only('Private Token - Function Cases', function () {
     this.timeout(1200000);
+    const MINT_AMOUNT = 100;
+    const TRANSFER_AMOUNT = 10;
 
     let testConfig;
     let helper;
     let metadata;
     let scAddress;
+    let result;
+    let node3Instution,node4Instution;
+    let l1Provider;
+    let proxyAddress
 
     before(async function () {
         testConfig = new TestConfig();
         helper = new TokenTestHelper(testConfig);
         scAddress = testConfig.contractAddress;
+        node3Instution = testConfig.institutions.node3;
+        node4Instution = testConfig.institutions.node4;
+        l1Provider = helper.ethersProvider;
+        proxyAddress = testConfig.configuration.ADDRESSES.PROXY_ADDRESS;
         metadata = {
             admin: await helper.createMetadata(testConfig.institutions.node3.ethPrivateKey),
             minter: await helper.createMetadata(accounts.MinterKey),
@@ -36,54 +48,58 @@ describe('Private Token - Function Cases', function () {
             node4Admin: await helper.createMetadata(testConfig.institutions.node4.ethPrivateKey)
         };
     });
-    describe.skip('Insititutions Check', function () {
+    describe('Insititutions Check', function () {
 
         let registryContract;
-        let l1Provider;
-        let proxyAddress
-        let node3Instution;
 
         before(async function () {
-            proxyAddress = testConfig.configuration.ADDRESSES.PROXY_ADDRESS;
             registryContract = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress);
-            node3Instution = testConfig.configuration.institutions[0];
-            l1Provider = helper.ethersProvider;
         });
         it('getAllInstitutions', async function () {
             const institutions = await registryContract.getAllInstitutions();
             console.log("Institutions:", institutions);
             expect(institutions[0].name).to.equal(testConfig.configuration.institutions[0].name);
         });
-        it('Should all Institution are enabled', async function () {
-            for (institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                const result = await registryContract.getInstitution(institution.address);
-                expect(result[1].toLowerCase()).to.equal(institution.address.toLowerCase());
-                expect(result[6]).to.equal(false);
-            }
+        it('Should node3 and node4 Institution are enabled', async function () {
+            //node3
+            result = await registryContract.getInstitution(node3Instution.address);
+            expect(result[8].toLowerCase()).to.equal(node3Instution.address.toLowerCase());
+            expect(result[13]).to.equal(false);
+            //node4
+            result = await registryContract.getInstitution(node4Instution.address);
+            expect(result[8].toLowerCase()).to.equal(node4Instution.address.toLowerCase());
+            expect(result[13]).to.equal(false);
+
+
         });
         it('should map token to institution', async function () {
             const institution = await registryContract.getTokenInstitution(testConfig.contractAddress);
             expect(institution[0]).to.equal(testConfig.configuration.institutions[0].name);
+
         });
         it('should map users to their managers', async function () {
-            for(institutions of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institutions.name}############`);
-                for (const user of institutions.users) {
-                    const manager = await registryContract.getUserManager(user.address);
-                    console.log(`User ${user.address} manager: ${manager}`);
-                    expect(manager.toLowerCase()).to.equal(institutions.address.toLowerCase());
-                }
+            //node3
+            for (const user of node3Instution.users) {
+                const manager = await registryContract.getUserManager(user.address);
+                console.log(`User ${user.address} manager: ${manager}`);
+                expect(manager.toLowerCase()).to.equal(node3Instution.address.toLowerCase());
+            }
+            //node4
+            for (const user of node4Instution.users) {
+                const manager = await registryContract.getUserManager(user.address);
+                console.log(`User ${user.address} manager: ${manager}`);
+                expect(manager.toLowerCase()).to.equal(node4Instution.address.toLowerCase());
             }
         });
 
         it("should map institution address to their manager", async function () {
-            for (institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                const result = await registryContract.getInstitution(institution.address);
-                console.log(result)
-                expect(result[6].toLowerCase()).to.equal(institution.address.toLowerCase());
-            }
+            //node3
+            result = await registryContract.getInstitution(node3Instution.address);
+            expect(result[8].toLowerCase()).to.equal(node3Instution.address.toLowerCase());
+            //node4
+            result = await registryContract.getInstitution(node4Instution.address);
+            expect(result[8].toLowerCase()).to.equal(node4Instution.address.toLowerCase());
+
         });
 
         it("Should get token institution manager", async function () {
@@ -91,14 +107,19 @@ describe('Private Token - Function Cases', function () {
         });
 
         it("Should map user and its institution", async function () {
-            for (institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                for(user of institution.users){
-                    console.log(`User ${user.address} `)
-                    const result = await registryContract.getUserInstitution(user.address);
-                    expect(result[1].toLowerCase()).to.equal(institution.address.toLowerCase());
-                }
+            //node3
+            for (const user of node3Instution.users) {
+                console.log(`User ${user.address} `)
+                result = await registryContract.getUserInstitution(user.address);
+                expect(result[8].toLowerCase()).to.equal(node3Instution.address.toLowerCase());
             }
+            //node4
+            for (const user of node4Instution.users) {
+                console.log(`User ${user.address} `)
+                result = await registryContract.getUserInstitution(user.address);
+                expect(result[8].toLowerCase()).to.equal(node4Instution.address.toLowerCase());
+            }
+
         });
 
         it("Should get manger Grumpkin public key", async function () {
@@ -107,24 +128,28 @@ describe('Private Token - Function Cases', function () {
         });
 
         it("Should check if address is institution manager", async function () {
-            for(institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                expect(await registryContract.isInstitutionManager(institution.address)).to.equal(true);
-            }
+            //node3
+            expect(await registryContract.isInstitutionManager(node3Instution.address)).to.equal(true);
+            //node4
+            expect(await registryContract.isInstitutionManager(node4Instution.address)).to.equal(true);
+
         });
 
         it('get InstitutionCallers ',async () => {
             let insi
-            // const adminWallet = new ethers.Wallet(testConfig.configuration.institutions[0].ethPrivateKey, l1Provider);
-            for (institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                const adminWalletNode = new ethers.Wallet(institution.ethPrivateKey, l1Provider);
-                console.log(`Institution ${institution.name} admin: ${adminWalletNode.address}`)
-                insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, adminWalletNode);
-                const result = await insi.getInstitutionCallers(adminWalletNode.address)
-                console.log(`Institution ${institution.name} callers: ${result}`);
-                expect( result.length)>0
-            }
+            //node3
+            let adminWalletNode = new ethers.Wallet(node3Instution.ethPrivateKey, l1Provider);
+            insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, adminWalletNode);
+            result = await insi.getInstitutionCallers(adminWalletNode.address)
+            console.log(`Institution ${node3Instution.name} callers: ${result}`);
+            expect( result.length)>0
+            //node4
+            adminWalletNode = new ethers.Wallet(node4Instution.ethPrivateKey, l1Provider);
+            insi = await ethers.getContractAt("InstitutionUserRegistry", proxyAddress, adminWalletNode);
+            result = await insi.getInstitutionCallers(adminWalletNode.address)
+            console.log(`Institution ${node4Instution.name} callers: ${result}`);
+            expect( result.length)>0
+
         });
         it.skip("replaceInstitutionCallers for node3 and demo", async function () {
             let callerResult,result
@@ -151,39 +176,57 @@ describe('Private Token - Function Cases', function () {
                 result = await insi.replaceInstitutionCallers(adminWalletNode.address, [adminWalletNode.address])
             }
             await sleep(3000)
-
-
-
         });
-        it('Should be active of institution users ',async function (){
-            for (const institution of testConfig.configuration.institutions){
-                console.log(`#########Institution ${institution.name}############`);
-                const client = testConfig.institutions[institution.name.toLowerCase()].client
-                const privateKey = institution.ethPrivateKey;
-                for (const user of institution.users){
-                    console.log(`User ${user.address} `)
-                    // console.log(client)
-                    let result = await getAccount(privateKey,client, user.address)
-                    console.log(`User ${user.address} status: ${result.account_status}`);
+        it.skip('Should be active of institution users ',async function (){
+            let client
+            //node3
+            client = node3Instution.client
+            let privateKey = node3Instution.ethPrivateKey;
+            for (const user of node3Instution.users){
+                console.log(`Node3 user ${user.address}  `)
+                // console.log(client)
+                let result = await getAccount(privateKey,client, user.address)
+                console.log(`User ${user.address} status: ${result.account_status}`);
 
-                    // If user is not active, activate them
-                    if (result.account_status !== 'ACCOUNT_STATUS_ACTIVE'){
-                        console.log(`User ${user.address} ${result.account_status}, need to update to active`)
-                        await updateAccountStatus(privateKey,client, user.address,2)
-                        // Re-check the status after update
-                        result = await getAccount(privateKey,client, user.address)
-                        console.log(`User ${user.address} new status: ${result.account_status}`);
-                    }
-
-                    // Assert that the user is now active
-                    expect(result.account_status).to.equal('ACCOUNT_STATUS_ACTIVE');
+                // If user is not active, activate them
+                if (result.account_status !== 'ACCOUNT_STATUS_ACTIVE'){
+                    console.log(`User ${user.address} ${result.account_status}, need to update to active`)
+                    await updateAccountStatus(privateKey,client, user.address,2)
+                    // Re-check the status after update
+                    result = await getAccount(privateKey,client, user.address)
+                    console.log(result)
+                    console.log(`User ${user.address} new status: ${result.account_status}`);
                 }
+
+                // Assert that the user is now active
+                expect(result.account_status).to.equal('ACCOUNT_STATUS_ACTIVE');
+            }
+
+            //node4
+            client = node4Instution.client
+            privateKey = node4Instution.ethPrivateKey;
+            for (const user of node4Instution.users){
+                console.log(`Node4 user ${user.address} `)
+                // console.log(client)
+                let result = await getAccount(privateKey,client, user.address)
+                console.log(`User ${user.address} status: ${result.account_status}`);
+
+                // If user is not active, activate them
+                if (result.account_status !== 'ACCOUNT_STATUS_ACTIVE'){
+                    console.log(`User ${user.address} ${result.account_status}, need to update to active`)
+                    await updateAccountStatus(privateKey,client, user.address,2)
+                    // Re-check the status after update
+                    result = await getAccount(privateKey,client, user.address)
+                    console.log(result)
+                    console.log(`User ${user.address} new status: ${result.account_status}`);
+                }
+
+                // Assert that the user is now active
+                expect(result.account_status).to.equal('ACCOUNT_STATUS_ACTIVE');
             }
         });
     });
     describe('Private Mint', function () {
-        const MINT_AMOUNT = 100;
-
         beforeEach(async function () {
             this.minterInitialBalance = await helper.getPrivateBalance(accounts.Minter);
         });
@@ -204,22 +247,6 @@ describe('Private Token - Function Cases', function () {
             expect(finalBalance).to.equal(initialBalance + MINT_AMOUNT);
         });
 
-        it('should mint tokens to user in different node', async function () {
-            const crossNodeUser = testConfig.institutions.node4.users[0].address;
-            console.log(`Cross node user: ${crossNodeUser}`)
-            const node3BalanceBefore = await helper.getPrivateBalance(crossNodeUser);
-            const node4BalanceBefore = await helper.getPrivateBalance(crossNodeUser, 'node4');
-
-            await helper.mint(crossNodeUser, MINT_AMOUNT);
-            await sleep(3000);
-
-            const node3BalanceAfter = await helper.getPrivateBalance(crossNodeUser);
-            const node4BalanceAfter = await helper.getPrivateBalance(crossNodeUser, 'node4');
-            console.log(`Node3 balance: ${node3BalanceBefore} -> ${node3BalanceAfter}`)
-            console.log(`Node4 balance: ${node4BalanceBefore} -> ${node4BalanceAfter}`)
-            expect(node3BalanceAfter).to.equal(node3BalanceBefore);
-            expect(node4BalanceAfter).to.equal(node4BalanceBefore + MINT_AMOUNT);
-        });
     });
     describe('Private Transfer', function () {
         const TRANSFER_AMOUNT = 10;
@@ -253,23 +280,8 @@ describe('Private Token - Function Cases', function () {
             expect(senderFinalBalance).to.equal(0);
             expect(recipientFinalBalance).to.equal(recipientInitialBalance + fullAmount);
         });
-
-        it('should perform cross-node transfer', async function () {
-            await helper.mint(helper.wallets.minter.address,100)
-            const crossNodeUser = testConfig.institutions.node4.users[0].address;
-
-            const node4BalanceBefore = await helper.getPrivateBalance(crossNodeUser, 'node4');
-
-            await helper.transfer(helper.wallets.minter, crossNodeUser, TRANSFER_AMOUNT, metadata.minter);
-            await sleep(3000);
-
-            const node4BalanceAfter = await helper.getPrivateBalance(crossNodeUser, 'node4');
-
-            expect(node4BalanceAfter).to.equal(node4BalanceBefore + TRANSFER_AMOUNT);
-        });
-
         it('should transfers tokens ', async function () {
-            await helper.mint(accounts.Minter, 100)
+            await helper.mint(accounts.Minter, 110)
             const senderInitialBalance = await helper.getPrivateBalance(accounts.Minter);
             const recipientInitialBalance = await helper.getPrivateBalance(accounts.To1);
             await helper.transfers(helper.wallets.minter, accounts.To1, 10,10, metadata.minter)
@@ -287,7 +299,7 @@ describe('Private Token - Function Cases', function () {
             await helper.mint(accounts.To1, 100);
         });
 
-        it('should approve and transfer tokens', async function () {
+        it('should approve and transfer token', async function () {
             const ownerInitialBalance = await helper.getPrivateBalance(accounts.To1);
 
             await helper.approveTransferFrom(
@@ -397,12 +409,14 @@ describe('Private Token - Function Cases', function () {
             expect(finalBalance).to.equal(initialBalance - 10);
         });
 
-        it.skip('should burns tokens successfully', async function () {
-            await helper.mint(accounts.Minter, 100)
+        it('should burns tokens successfully', async function () {
+            await helper.mint(accounts.Minter, 210)
             const initialBalance = await helper.getPrivateBalance(accounts.Minter);
-            await helper.burns(helper.wallets.minter, 10,10, metadata.minter);
+            await helper.burns(helper.wallets.minter, 10,20, metadata.minter);
+            await sleep(3000)
             const finalBalance = await helper.getPrivateBalance(accounts.Minter);
-            expect(finalBalance).to.equal(initialBalance - 100);
+            console.log(initialBalance,finalBalance)
+            expect(finalBalance).to.equal(initialBalance - 200);
         })
 
         it('should burn all available tokens', async function () {
@@ -467,15 +481,6 @@ describe('Private Token - Function Cases', function () {
             await helper.transfer(helper.wallets.minter, accounts.To1, 25, metadata.minter);
             const afterTransfer = await helper.getTotalSupply();
             expect(afterTransfer).to.equal(afterBurn);
-            //transfers
-            // await helper.transfers(helper.wallets.minter, accounts.To1, 10, 10, metadata.minter);
-            // const afterTransfers = await helper.getTotalSupply();
-            // expect(afterTransfers).to.equal(afterTransfer);
-            // //burns
-            // await helper.burns(helper.wallets.minter, 10, 10, metadata.minter);
-            // const afterBurns = await helper.getTotalSupply();
-            // expect(afterBurns).to.equal(afterTransfers-100);
-            //to USDC
             const splitRequest = {
                 sc_address: testConfig.contractAddress,
                 token_type: '0',
@@ -586,7 +591,76 @@ describe('Private Token - Function Cases', function () {
             expect(publicAfter).to.equal(publicBefore - CONVERT_AMOUNT);
         });
     });
-    describe.skip('Institution Disable',function (){
+    describe('Transactions with node4',function (){
+
+        it('mint tokens to user in different node', async function () {
+            console.log(`Cross node user: ${node4Instution.address}`)
+            const node3BalanceBefore = await helper.getPrivateBalance(node4Instution.address);
+            const node4BalanceBefore = await helper.getPrivateBalance(node4Instution.address, 'node4');
+
+            await helper.mint(node4Instution.address, 200);
+            await sleep(3000);
+
+            const node3BalanceAfter = await helper.getPrivateBalance(node4Instution.address);
+            const node4BalanceAfter = await helper.getPrivateBalance(node4Instution.address, 'node4');
+            console.log(`Node3 balance: ${node3BalanceBefore} -> ${node3BalanceAfter}`)
+            console.log(`Node4 balance: ${node4BalanceBefore} -> ${node4BalanceAfter}`)
+            expect(node3BalanceAfter).to.equal(node3BalanceBefore);
+            expect(node4BalanceAfter).to.equal(node4BalanceBefore + 200);
+        });
+        it('transfer tokens to user in different node', async function () {
+            await helper.mint(helper.wallets.minter.address,100)
+            const crossNodeUser = node4Instution.address;
+
+            const node4BalanceBefore = await helper.getPrivateBalance(crossNodeUser, 'node4');
+
+            await helper.transfer(helper.wallets.minter, crossNodeUser, TRANSFER_AMOUNT, metadata.minter);
+            await sleep(3000);
+
+            const node4BalanceAfter = await helper.getPrivateBalance(crossNodeUser, 'node4');
+
+            expect(node4BalanceAfter).to.equal(node4BalanceBefore + TRANSFER_AMOUNT);
+        });
+
+        it('approve transfer tokens to user in different node', async function () {
+            const ownerInitialBalance = await helper.getPrivateBalance(accounts.To1);
+            await helper.approveTransferFrom(
+                helper.wallets.to1,
+                helper.wallets.spender,
+                node4Instution.address,
+                10,
+                metadata.to1
+            );
+            await sleep(3000);
+            const ownerFinalBalance = await helper.getPrivateBalance(accounts.To1);
+            expect(ownerFinalBalance).to.equal(ownerInitialBalance - 10);
+        });
+
+        it('transfer token from user of node4 to node3',async function (){
+            const crossNodeUser = node4Instution.address;
+            const node4BalanceBefore = await helper.getPrivateBalance(crossNodeUser, 'node4');
+            console.log(`Node4 balance: ${node4BalanceBefore}`)
+            //split token
+            const fromWallet = helper.wallets.node4Admin;
+            const toAddress = accounts.Minter;
+            await helper.transferFromNode4(fromWallet,toAddress,TRANSFER_AMOUNT)
+            await sleep(3000);
+            const node4BalanceAfter = await helper.getPrivateBalance( crossNodeUser, 'node4');
+            expect(node4BalanceAfter).to.equal(node4BalanceBefore - TRANSFER_AMOUNT);
+        })
+        it('burn token from user of node4 ',async function (){
+            const crossNodeUser = node4Instution.address;
+            const node4BalanceBefore = await helper.getPrivateBalance(crossNodeUser, 'node4');
+            console.log(`Node4 balance: ${node4BalanceBefore}`)
+            //split token
+            const fromWallet = helper.wallets.node4Admin;
+            await helper.burnFromNode4(fromWallet,TRANSFER_AMOUNT)
+            const node4BalanceAfter = await helper.getPrivateBalance( crossNodeUser, 'node4');
+            expect(node4BalanceAfter).to.equal(node4BalanceBefore - TRANSFER_AMOUNT);
+        })
+
+    });
+    describe('Institution Disable',function (){
         let registryContract;
         let l1Provider;
         let proxyAddress
@@ -658,10 +732,12 @@ describe('Private Token - Function Cases', function () {
         })
 
     })
-
 });
+describe.skip('demo-bank function cases',function (){
 
-describe.only('Http api test cases', function () {
+})
+
+describe('Http api test cases', function () {
     this.timeout(1200000);
 
     let testConfig;
@@ -973,6 +1049,84 @@ describe.only('Http api test cases', function () {
             console.log(afterTransferBalance,afterMintBalance)
             expect(afterTransferBalance).equal(afterMintBalance - 10);
         });
+    });
+
+    describe('token service', function () {
+        // const node3Admin = testConfig.institutions.node3.address
+        const node3Minter = accounts.Minter
+        const toAddress = accounts.To1
+        let result
+        let requestId
+
+        it('Step1: asset query ', async () => {
+            const request = {
+                accountAddress: node3Minter,
+                scAddress: scAddress
+            };
+            result = await apiClient.queryAssets(request);
+            expect(result.data.some(item => item.scAddress === scAddress)).to.be.true;
+        });
+        it('Step2: generate mint proof ', async () => {
+            const request = {
+                scAddress: scAddress,
+                tokenType: 0,
+                fromAddress: node3Minter,
+                toAddress: toAddress,
+                amount: 1000
+            };
+
+        });
+        it('Step3: query mint proof ',async () => {
+
+        });
+        it('Step4: mint token ',async () => {
+
+        });
+        it('Step5: query user token balance',async () => {
+
+        });
+        it('Step6: bank mintAllowance query',async () => {
+
+        });
+        it('Step7: generate split proof for transfer',async () => {
+
+        });
+        it('Step8: token status query',async () => {
+
+        });
+        it('Step9: generate split proof for burn',async () => {
+
+        });
+        it('Step10: generate approve proof',async () => {
+
+        });
+        it('Step11: query approves tokens',async () => {
+
+        });
+        it('Step12: usdc convert',async () => {
+
+        });
+        it('Step13: pusdc convert',async () => {
+
+        });
+        it('Step14: amount encode',async () => {
+
+        });
+        it('Step15: amount decode',async () => {
+
+        });
+        it('Step16: bank profile query',async () => {
+
+        });
+        it('Step17: bank managers query',async () => {
+
+        });
+        it('Step18: smart contract status update',async () => {
+
+        });
+
+
+
     });
 
 });
