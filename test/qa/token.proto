@@ -776,24 +776,20 @@ message UpdateAccountStatusRequest {
 message UpdateAccountRequest {
   string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to register"}];
-  string account_roles = 2 [(validate.rules).string = {
-    pattern: "^((normal|admin)(,(normal|admin))*)?$"
-  },
-    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin)"}];
-  string first_name = 3 [(validate.rules).string = {max_len: 50},
+  string first_name = 2 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "First name of the account holder"}];
-  string last_name = 4 [(validate.rules).string = {max_len: 50},
+  string last_name = 3 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last name of the account holder"}];
-  string email = 5 [(validate.rules).string = {max_len: 100, pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"},
+  string email = 4 [(validate.rules).string = {min_len: 1,max_len: 256, pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Email address of the account holder"}];
-  string phone_number = 6 [(validate.rules).string = {max_len: 50},
+  string phone_number = 5 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Phone number of the account holder (US format)"}];
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
-      required:["account_address"]
+      required:["account_address","first_name", "last_name", "email", "phone_number"]
     },
-    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_roles\": \"admin,normal\", \"first_name\": \"John\", \"last_name\": \"Doe\", \"email\": \"john.doe@example.com\", \"phone_number\": \"(555) 123-4567\"}"
+    example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"first_name\": \"John\", \"last_name\": \"Doe\", \"email\": \"john.doe@example.com\", \"phone_number\": \"(555) 123-4567\"}"
   };
 }
 
