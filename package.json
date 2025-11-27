@@ -2,7 +2,7 @@
   "name": "hardhat-project",
   "devDependencies": {
     "@0xpolygonhermez/zkevm-commonjs": "github:0xPolygonHermez/zkevm-commonjs#develop",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.5",
     "@openzeppelin/contracts5": "npm:@openzeppelin/contracts@^5.0.0",
@@ -10,6 +10,7 @@
     "@openzeppelin/test-helpers": "^0.5.16",
     "chai": "4.3.7",
     "hardhat": "^2.22.5",
+    "hardhat-storage-layout": "^0.1.7",
     "mocha": "^10.7.3",
     "mocha-multi-reporters": "^1.5.1",
     "mochawesome": "^7.1.3",
@@ -20,7 +21,6 @@
     "@grpc/grpc-js": "^1.13.4",
     "@grpc/proto-loader": "^0.7.15",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
-    "@nomicfoundation/hardhat-ignition": "^0.15.5",
     "circomlibjs": "^0.1.7",
     "ethers": "^6.13.1",
     "google-proto-files": "^5.0.0",
@@ -33,18 +33,15 @@
     "poseidon-lite": "^0.2.0",
     "protobufjs": "^7.5.0"
   },
-
   "scripts": {
     "deploy-infra-qa": "npx hardhat run script/infra/deploy.js --network ucl_L2_qa",
     "deploy-L1-qa": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_qa",
     "deploy-infra-user-qa": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_qa",
     "deploy-token-qa": "npx hardhat run script/token/deploy.js --network ucl_L2_qa",
-
     "deploy-infra-dev": "npx hardhat run script/infra/deploy.js --network ucl_L2_dev",
     "deploy-L1-dev": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_dev",
     "deploy-infra-user-dev": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_dev",
     "deploy-token-dev": "npx hardhat run script/token/deploy.js --network ucl_L2_dev",
-
     "deploy-infra-prod": "npx hardhat run script/infra/deploy.js --network ucl_L2_prod",
     "deploy-L1-prod": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_prod",
     "deploy-infra-user-prod": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_prod",
@@ -67,9 +64,12 @@
     "wlin-eth2-prod": "npx hardhat run test/wlin/eth2_prod_test.js --network eth2_prod",
     "wlin-eth2-QA": "npx hardhat run test/wlin/eth2_prod_test.js --network eth2_qa",
     "wlin-local": "npx hardhat run test/wlin/simpleToken_test.js --network local_L2",
+    "wlin-dummy-storage": "npx hardhat run test/wlin/dummy_storage_test.js --network local_L2",
+    "wlin-private-dummy": "npx hardhat run test/wlin/dummy_private_token_test.js --network local_L2",
+
+    "storage-layout": "node script/util/storageLayout.js",
     "demo-bank-deploy": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa_bank",
     "demo-bank-deploy2": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa",
-
     "mc-test-qa": "npx hardhat run test/mc/mc_test.js --network ucl_L2_qa",
     "mc-test-dev": "npx hardhat run test/mc/mc_test.js --network ucl_L2_dev",
 

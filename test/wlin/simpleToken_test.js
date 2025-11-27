@@ -2,7 +2,7 @@ const {ethers, network}=require("hardhat");
 const {networks} = require("../../hardhat.config");
 const {ether} = require("@openzeppelin/test-helpers");
 
-const simpleTokenAddress = "0xf624b6e5df15F9046C32D2dDaE9dfFEd3343a20E";
+const simpleTokenAddress = "0xC8c03647d39a96f02f6Ce8999bc22493C290e734";
 
 async function printNetwork(){
     const net = await ethers.provider.getNetwork();
@@ -57,7 +57,7 @@ async function getLastBlock() {
 
 // printNetwork().then();
 // deploySimpleToken().then()
-checkBalance().then();
+// checkBalance().then();
 // transfer().then();
 //
 // getLastBlock().then();
