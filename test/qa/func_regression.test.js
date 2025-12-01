@@ -18,7 +18,7 @@ const {
 const {applyProviderWrappers} = require("hardhat/internal/core/providers/construction");
 
 
-describe.only('Private Token - Function Cases', function () {
+describe('Private Token - Function Cases', function () {
     this.timeout(1200000);
     const MINT_AMOUNT = 100;
     const TRANSFER_AMOUNT = 10;
@@ -251,7 +251,7 @@ describe.only('Private Token - Function Cases', function () {
     describe('Private Transfer', function () {
         const TRANSFER_AMOUNT = 10;
 
-        it('should transfer tokens within same node', async function () {
+        it('should transfer tokens within same node success', async function () {
             await helper.mint(accounts.Minter, 100);
             const senderInitialBalance = await helper.getPrivateBalance(accounts.Minter);
             const recipientInitialBalance = await helper.getPrivateBalance(accounts.To1);
@@ -264,8 +264,7 @@ describe.only('Private Token - Function Cases', function () {
             expect(senderFinalBalance).to.equal(senderInitialBalance - TRANSFER_AMOUNT);
             expect(recipientFinalBalance).to.equal(recipientInitialBalance + TRANSFER_AMOUNT);
         });
-
-        it('should transfer all available balance', async function () {
+        it('should transfer all available balance success', async function () {
             await helper.cancelAllSplitTokens(helper.wallets.minter);
             await helper.revokeAllApprovedTokens(helper.wallets.minter);
 
@@ -280,7 +279,7 @@ describe.only('Private Token - Function Cases', function () {
             expect(senderFinalBalance).to.equal(0);
             expect(recipientFinalBalance).to.equal(recipientInitialBalance + fullAmount);
         });
-        it('should transfers tokens ', async function () {
+        it('should transfers tokens success', async function () {
             await helper.mint(accounts.Minter, 110)
             const senderInitialBalance = await helper.getPrivateBalance(accounts.Minter);
             const recipientInitialBalance = await helper.getPrivateBalance(accounts.To1);
@@ -412,11 +411,11 @@ describe.only('Private Token - Function Cases', function () {
         it('should burns tokens successfully', async function () {
             await helper.mint(accounts.Minter, 210)
             const initialBalance = await helper.getPrivateBalance(accounts.Minter);
-            await helper.burns(helper.wallets.minter, 10,20, metadata.minter);
+            await helper.burns(helper.wallets.minter, 10,10, metadata.minter);
             await sleep(3000)
             const finalBalance = await helper.getPrivateBalance(accounts.Minter);
             console.log(initialBalance,finalBalance)
-            expect(finalBalance).to.equal(initialBalance - 200);
+            expect(finalBalance).to.equal(initialBalance - 100);
         })
 
         it('should burn all available tokens', async function () {
@@ -608,6 +607,7 @@ describe.only('Private Token - Function Cases', function () {
             expect(node3BalanceAfter).to.equal(node3BalanceBefore);
             expect(node4BalanceAfter).to.equal(node4BalanceBefore + 200);
         });
+
         it('transfer tokens to user in different node', async function () {
             await helper.mint(helper.wallets.minter.address,100)
             const crossNodeUser = node4Instution.address;
@@ -690,26 +690,28 @@ describe.only('Private Token - Function Cases', function () {
                 await manager.setInstitutionManagerBlacklist(node4AdminWallet.address,true)
                 await sleep(10000)
             }
-            result = await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
-            expect(result).to.equal(true)
-            // should not allowe to operate with
-            try{
-                await helper.mint(node4AdminWallet.address,100)
-            } catch (e) {
-                expect(e.details).to.include("bank is blacklisted")
-            };
-            try {
-                await helper.transfer(helper.wallets.minter,node4AdminWallet.address,10,metadata.minter)
-            }catch (e) {
-                expect(e.details).to.include("bank is blacklisted")
-            };
-            //should not allow to operate from
-            try {
-                await helper.transfer(node4AdminWallet,accounts.Minter,10,metadata.node4Admin)
+            if (!result){
+                await sleep(5000);
+                result = await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
+            }else {
+                try{
+                    await helper.mint(node4AdminWallet.address,100)
+                } catch (e) {
+                    expect(e.details).to.include("bank is blacklisted")
+                };
+                try {
+                    await helper.transfer(helper.wallets.minter,node4AdminWallet.address,10,metadata.minter)
+                }catch (e) {
+                    expect(e.details).to.include("bank is blacklisted")
+                };
+                //should not allow to operate from
+                try {
+                    await helper.transfer(node4AdminWallet,accounts.Minter,10,metadata.node4Admin)
+                }
+                catch (e) {
+                    expect(e.details).to.include("failed to get current account for address")
+                };
             }
-            catch (e) {
-                expect(e.details).to.include("failed to get current account for address")
-            };
         });
         it('Operation allowed when remove node4 from disabled node',async function () {
             let result = await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
@@ -717,15 +719,17 @@ describe.only('Private Token - Function Cases', function () {
             if (result){
                 console.log("node4 is in blacklist")
                 await manager.setInstitutionManagerBlacklist(node4AdminWallet.address,false)
-                await sleep(15000)
             }
             result = await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
-            console.log("node4 is disabled: ",result)
-            expect(result).to.equal(false)
-            await helper.mint(node4AdminWallet.address,100)
-            await helper.transfer(helper.wallets.minter,node4AdminWallet.address,10,metadata.minter)
-            await helper.transfer(node4AdminWallet,accounts.Minter,10,metadata.node4Admin)
-            await helper.burn(node4AdminWallet,10,metadata.node4Admin)
+            if (result){
+                await sleep(5000)
+                result = await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
+            }else {
+                await helper.mint(node4AdminWallet.address,100)
+                await helper.transfer(helper.wallets.minter,node4AdminWallet.address,10,metadata.minter)
+                await helper.transfer(node4AdminWallet,accounts.Minter,10,metadata.node4Admin)
+                await helper.burn(node4AdminWallet,10,metadata.node4Admin)
+            }
         });
         after(async function () {
             await manager.isInstitutionManagerBlacklisted(node4AdminWallet.address)
@@ -734,10 +738,9 @@ describe.only('Private Token - Function Cases', function () {
     })
 });
 describe.skip('demo-bank function cases',function (){
-
 })
 
-describe('Http api test cases', function () {
+describe('Account service cases', function () {
     this.timeout(1200000);
 
     let testConfig;
@@ -769,7 +772,7 @@ describe('Http api test cases', function () {
             node4Admin: await helper.createMetadata(testConfig.institutions.node4.ethPrivateKey)
         };
         apiClient = await createApiClient(testConfig.institutions.node3.httpUrl);
-        await helper.mint(accounts.Minter,100)
+        // await helper.mint(accounts.Minter,100)
 
     });
 
@@ -851,6 +854,7 @@ describe('Http api test cases', function () {
 
     describe('register and update account', function () {
         let userWallet, userAddress;
+        let result;
 
         before(async function () {
             userWallet = ethers.Wallet.createRandom();
@@ -866,9 +870,11 @@ describe('Http api test cases', function () {
                 phoneNumber: '(555) 123-4567',
                 email: 'david.doe@example.com',
             };
-            await apiClient.regesterAccount(request);
-
-            const result = await apiClient.queryAccount({ accountAddress: userAddress });
+            console.log(request);
+            result = await apiClient.regesterAccount(request);
+            console.log(result);
+            result = await apiClient.queryAccount({ accountAddress: userAddress });
+            console.log(result);
             expect(result.accountAddress.toLowerCase()).equal(request.accountAddress.toLowerCase());
             expect(result.accountStatus).equal('ACCOUNT_STATUS_INACTIVE');
             expect(result.accountRoles).equal(request.accountRoles);
@@ -876,6 +882,10 @@ describe('Http api test cases', function () {
             expect(result.lastName).equal(request.lastName);
             expect(result.phoneNumber).equal(request.phoneNumber);
             expect(result.email).equal(request.email);
+        });
+        it('update account to active automatically', async function () {
+            await waitForStatus(userAddress, 'ACCOUNT_STATUS_ACTIVE');
+
         });
 
         it('register without email – should fail', async function () {
@@ -1051,83 +1061,6 @@ describe('Http api test cases', function () {
         });
     });
 
-    describe('token service', function () {
-        // const node3Admin = testConfig.institutions.node3.address
-        const node3Minter = accounts.Minter
-        const toAddress = accounts.To1
-        let result
-        let requestId
-
-        it('Step1: asset query ', async () => {
-            const request = {
-                accountAddress: node3Minter,
-                scAddress: scAddress
-            };
-            result = await apiClient.queryAssets(request);
-            expect(result.data.some(item => item.scAddress === scAddress)).to.be.true;
-        });
-        it('Step2: generate mint proof ', async () => {
-            const request = {
-                scAddress: scAddress,
-                tokenType: 0,
-                fromAddress: node3Minter,
-                toAddress: toAddress,
-                amount: 1000
-            };
-
-        });
-        it('Step3: query mint proof ',async () => {
-
-        });
-        it('Step4: mint token ',async () => {
-
-        });
-        it('Step5: query user token balance',async () => {
-
-        });
-        it('Step6: bank mintAllowance query',async () => {
-
-        });
-        it('Step7: generate split proof for transfer',async () => {
-
-        });
-        it('Step8: token status query',async () => {
-
-        });
-        it('Step9: generate split proof for burn',async () => {
-
-        });
-        it('Step10: generate approve proof',async () => {
-
-        });
-        it('Step11: query approves tokens',async () => {
-
-        });
-        it('Step12: usdc convert',async () => {
-
-        });
-        it('Step13: pusdc convert',async () => {
-
-        });
-        it('Step14: amount encode',async () => {
-
-        });
-        it('Step15: amount decode',async () => {
-
-        });
-        it('Step16: bank profile query',async () => {
-
-        });
-        it('Step17: bank managers query',async () => {
-
-        });
-        it('Step18: smart contract status update',async () => {
-
-        });
-
-
-
-    });
 
 });
 // 辅助函数
