@@ -18,6 +18,7 @@ const {
     getTotalSupplyNode3,
     createAuthMetadata
 } = require('../help/testHelp');
+const {createClient} = require("../qa/token_grpc");
 
 const TokenType = Object.freeze({ PRIVATE: '0' });
 const CommentType = Object.freeze({
@@ -41,10 +42,11 @@ class TokenTestHelper {
     _initializeWallets() {
         return {
             admin: new ethers.Wallet(this.institutions.node3.ethPrivateKey, this.ethersProvider),
+            node4Admin: new ethers.Wallet(this.institutions.node4.ethPrivateKey, this.ethersProvider),
             minter: new ethers.Wallet(accounts.MinterKey, this.ethersProvider),
             spender: new ethers.Wallet(accounts.Spender1Key, this.ethersProvider),
             to1: new ethers.Wallet(accounts.To1PrivateKey, this.ethersProvider),
-            to2: new ethers.Wallet(accounts.To2PrivateKey, this.ethersProvider)
+            to2: new ethers.Wallet(accounts.To2PrivateKey, this.ethersProvider),
         };
     }
 
@@ -144,7 +146,7 @@ class TokenTestHelper {
         await this.waitForCompletion(proof.request_id, ownerMetadata);
 
         const tokenId = ethers.toBigInt(proof.transfer_token_id);
-        return callPrivateTransferFroms(spenderWallet, this.contractAddress, ownerWallet.address, toAddress, tokenId);
+        return callPrivateTransferFroms(spenderWallet, this.contractAddress, ownerWallet.address, toAddress, [tokenId]);
     }
 
     async approveTransferFroms(ownerWallet, spenderWallet, toAddress, amount,count, ownerMetadata) {
@@ -330,6 +332,50 @@ class TokenTestHelper {
 
         const tx = await contract.convert2pUSDC(amount, token, input, proof);
         return tx.wait();
+    }
+
+    async transferFromNode4(fromWallet, toAddress, amount) {
+        const metadata = await this.createMetadata(fromWallet.privateKey);
+        const request = {
+            sc_address: this.contractAddress,
+            token_type: TokenType.PRIVATE,
+            from_address: fromWallet.address,
+            to_address: toAddress,
+            amount: String(amount),
+            comment: CommentType.TRANSFER,
+        };
+
+        const response = await this.institutions.node4.client.generateSplitToken(request, metadata);
+        const requestId = response.request_id
+        await this.institutions.node4.client.waitForActionCompletion(
+            this.institutions.node4.client.getTokenActionStatus,
+            requestId,
+            metadata
+        );
+        const tokenId =  ethers.toBigInt(response.transfer_token_id);
+        await callPrivateTransfer(fromWallet,this.contractAddress,tokenId)
+
+    }
+    async burnFromNode4(fromWallet, amount) {
+        const metadata = await this.createMetadata(fromWallet.privateKey);
+        const request = {
+            sc_address: this.contractAddress,
+            token_type: TokenType.PRIVATE,
+            from_address: fromWallet.address,
+            to_address: null,
+            amount: String(amount),
+            comment: CommentType.BURN,
+        };
+
+        const response = await this.institutions.node4.client.generateSplitToken(request, metadata);
+        const requestId = response.request_id
+        await this.institutions.node4.client.waitForActionCompletion(
+            this.institutions.node4.client.getTokenActionStatus,
+            requestId,
+            metadata
+        );
+        const tokenId =  ethers.toBigInt(response.transfer_token_id);
+        await callPrivateBurn(this.contractAddress,fromWallet,tokenId)
     }
 }
 

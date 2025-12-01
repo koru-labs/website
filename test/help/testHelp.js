@@ -7,6 +7,7 @@ const {getEnvironmentConfig, getImage9EnvironmentData} = require("../../script/d
 const config = getImage9EnvironmentData();
 const accounts = require('./../../deployments/account.json');
 const {createClient} = require('../qa/token_grpc')
+const axios   = require('axios');
 const configuration = getEnvironmentConfig();
 
 
@@ -23,6 +24,18 @@ if (!node3Institution) {
 }
 
 const key = node3Institution.privateKey
+
+async function sendHttpRPC(httpUrl,endpoint, body, headers) {
+    const url = `${httpUrl}${endpoint}`;
+    try {
+        console.log('[HTTP] ➜', url);
+        const res = await axios.post(url, body, { headers, timeout: 15000 });
+        return res.data;
+    } catch (e) {
+        console.error('[HTTP] ❌', e.response?.data || e.message);
+        throw e;
+    }
+}
 
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
@@ -57,9 +70,10 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
     };
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
-    console.log(newToken,mintAllowed,supplyAmount)
+    // console.log(newToken,mintAllowed,supplyAmount)
     const tx = await contract.privateMint(proofResult.to_address,newToken,mintAllowed,supplyAmount,proof,input);
     let receipt = await tx.wait();
+    await sleep(1000)
     return receipt;
 }
 
@@ -150,6 +164,7 @@ async function callPrivateBurns(scAddress, wallet, tokenIds) {
 
 async function getAddressBalance(grpcClient, scAddress, address,meta) {
     let result = await grpcClient.getAccountBalance(scAddress, address, meta)
+    // console.log(result)
     // let decodeAmount = await grpcClient.decodeElgamalAmount(balance)
     return Number(result.balance)
 }
@@ -194,23 +209,7 @@ async function getAddressBalance2(grpcClient, scAddress, account) {
 
 async function getTotalSupplyNode3(grpcClient, scAddress,metadata,wallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    // let contractFact = await ethers.getContractAt("PrivateERCToken", scAddress);
-    // let contract = contractFact.attach(wallet)
-
     let amount = await contract.privateTotalSupply()
-    // console.log("Total Supply:", amount)
-    // let balance=  {
-    //     cl_x: convertBigInt2Hex(amount[0]),
-    //     cl_y: convertBigInt2Hex(amount[1]),
-    //     cr_x: convertBigInt2Hex(amount[2]),
-    //     cr_y: convertBigInt2Hex(amount[3])
-    // }
-    //  amount = [
-    //     4454341540565941680420336000337082971104667342900809180771646425082108053854n,
-    //     646733961612468307970552120021574606487878303051279260636940126306882543090n,
-    //     3315709687871048041818972036061985732604328766579592931346435598881325352763n,
-    //     13178588232214544695572971480419066046621516549265728004469502354242495923189n
-    // ]
     let balance = {
             cl_x: convertBigInt2Hex(amount[0]),
             cl_y: convertBigInt2Hex(amount[1]),
@@ -229,14 +228,6 @@ async function getPublicTotalSupply(scAddress) {
     // console.log("Public Total Supply: ", amount[0])
     return amount[0]
 }
-
-// async function getApprovedAllowance(scAddress,wallet,owner) {
-//     const contract = await ethers.getContractAt("PrivateERCToken", scAddress,wallet)
-//     console.log("Approve owner: ", owner)
-//     let approvedToken = await contract.getAllowanceTokensFrom(owner)
-//     console.log("Approve token: ", '0x'+approvedToken.toString(16))
-//     return '0x'+approvedToken.toString(16)
-// }
 
 async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
     const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress, metadata);
@@ -309,7 +300,6 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
     // metadata.set('address', wallet.address.toLowerCase());
     metadata.set('signature', signature);
     metadata.set('message', message);
-
     return metadata;
 }
 
@@ -661,5 +651,6 @@ module.exports =  {
     assertEventsContain,
     getApproveTokenList,
     isAllowanceExists,
-    getMinterAllowed
+    getMinterAllowed,
+    sendHttpRPC
 }

@@ -43,11 +43,14 @@ class TestConfig {
     #loadInstitutions() {
         const node3 = this.configuration.institutions.find(i => i.name === 'Node3');
         const node4 = this.configuration.institutions.find(i => i.name === 'Node4');
-        const demo_bank = this.configuration.institutions.find(i => i.name === 'demo_bank');
+        // const demo_bank = this.configuration.institutions.find(i => i.name === 'demo_bank');
 
-        if (!node3 || !node4 || !demo_bank) {
-            throw new Error('Node3/Node4/demo institution not found in configuration');
+        if (!node3 || !node4) {
+            throw new Error('Node3/Node4 institution not found in configuration');
         }
+        // if (!node3 || !node4 || !demo_bank) {
+        //     throw new Error('Node3/Node4/demo institution not found in configuration');
+        // }
 
         return {
             node3: {
@@ -62,11 +65,11 @@ class TestConfig {
                 provider: new ethers.JsonRpcProvider(node4.nodeUrl, l1CustomNetwork, options),
                 httpUrl: node4.httpUrl
             },
-            demo_bank: {
-                ...demo_bank,
-                client: createClient(demo_bank.rpcUrl),
-                provider: new ethers.JsonRpcProvider(demo_bank.nodeUrl, l1CustomNetwork, options)
-            }
+            // demo_bank: {
+            //     ...demo_bank,
+            //     client: createClient(demo_bank.rpcUrl),
+            //     provider: new ethers.JsonRpcProvider(demo_bank.nodeUrl, l1CustomNetwork, options)
+            // }
         };
     }
 }
