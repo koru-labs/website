@@ -697,6 +697,20 @@ service AccountService {
     };
 
   };
+  rpc RegisterInstitution (RegisterInstitutionRequest)        returns (InstitutionResponse) {
+    option (google.api.http) = {
+      post: "/v1/institution-register"
+      body: "*"
+    };
+  }
+
+  rpc UpdateInstitution (UpdateInstitutionRequest)        returns (InstitutionResponse) {
+    option (google.api.http) = {
+      post: "/v1/institution-update"
+      body: "*"
+    };
+  }
+
 }
 
 // Account action status enum
@@ -719,25 +733,66 @@ enum SmartContractStatusEnum {
 }
 
 
+message RegisterInstitutionRequest {
+  string manager_address = 1[(validate.rules).string = {max_len: 50}];
+  string inst_name = 2[(validate.rules).string = {max_len: 200}];
+  string pk_x = 3 [(validate.rules).string = {max_len: 100},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Grumpkin public key x"}];
+  string pk_y = 4[(validate.rules).string = {max_len: 100},
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Grumpkin public key y"}];
+  string rpc_url = 5[(validate.rules).string = {max_len: 100}];
+  string node_url = 6[(validate.rules).string = {max_len: 100}];
+  string http_url = 7[(validate.rules).string = {max_len: 100}];
+  string street_address = 8[(validate.rules).string = {max_len: 100}];
+  string city = 9[(validate.rules).string = {max_len: 100}];
+  string state = 10[(validate.rules).string = {max_len: 100}];
+  string zip = 11[(validate.rules).string = {max_len: 100}];
+  string suite_no = 12[(validate.rules).string = {max_len: 100}];
+  string email = 13[(validate.rules).string = {max_len: 256}];
+  string phone_number = 14[(validate.rules).string = {max_len: 50}];
+}
+
+message UpdateInstitutionRequest {
+  string manager_address = 1[(validate.rules).string = {max_len: 50}];
+  string inst_name = 2[(validate.rules).string = {max_len: 200}];
+  string rpc_url = 3[(validate.rules).string = {max_len: 100}];
+  string node_url = 4[(validate.rules).string = {max_len: 100}];
+  string http_url = 5[(validate.rules).string = {max_len: 100}];
+  string street_address = 6[(validate.rules).string = {max_len: 100}];
+  string city = 7[(validate.rules).string = {max_len: 100}];
+  string state = 8[(validate.rules).string = {max_len: 100}];
+  string zip = 9[(validate.rules).string = {max_len: 100}];
+  string suite_no = 10[(validate.rules).string = {max_len: 100}];
+  string email = 11[(validate.rules).string = {max_len: 256}];
+  string phone_number = 12[(validate.rules).string = {max_len: 50}];
+}
+
+message InstitutionResponse {
+  AsyncActionStatusEnum status = 1;
+  string message = 2;
+  string request_id = 3;
+  string code = 4;
+}
+
 message RegisterAccountRequest {
   string account_address = 1 [(validate.rules).string = {min_len: 42, max_len: 42, pattern: "^0x[a-fA-F0-9]{40}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "The Ethereum address of the account to register"}];
   string account_roles = 2 [(validate.rules).string = {
-    pattern: "^((normal|admin)(,(normal|admin))*)?$"
+    min_len: 1,pattern: "^((normal|admin)(,(normal|admin))*)?$"
   },
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Comma-separated roles of the account (normal,admin)"}];
-  string first_name = 3 [(validate.rules).string = {max_len: 50},
+  string first_name = 3 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "First name of the account holder"}];
-  string last_name = 4 [(validate.rules).string = {max_len: 50},
+  string last_name = 4 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Last name of the account holder"}];
-  string email = 5 [(validate.rules).string = {max_len: 100, pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"},
+  string email = 5 [(validate.rules).string = {min_len: 1,max_len: 256, pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Email address of the account holder"}];
-  string phone_number = 6 [(validate.rules).string = {max_len: 50},
+  string phone_number = 6 [(validate.rules).string = {min_len: 1,max_len: 50},
     (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "Phone number of the account holder (US format)"}];
 
   option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
     json_schema:{
-      required:["account_address", "account_roles"]
+      required:["account_address", "account_roles", "first_name", "last_name", "email", "phone_number"]
     },
     example: "{\"account_address\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"account_roles\": \"admin,normal\", \"first_name\": \"John\", \"last_name\": \"Doe\", \"email\": \"john.doe@example.com\", \"phone_number\": \"(555) 123-4567\"}"
   };
@@ -747,6 +802,7 @@ message RegisterAccountResponse {
   string request_id = 1;
   AsyncActionStatusEnum status = 2;
   string message = 3;
+  string code = 4;
 }
 
 message RegisterBankCallerRequest {
@@ -757,6 +813,7 @@ message RegisterBankCallerResponse {
   string request_id = 1;
   AsyncActionStatusEnum status = 2;
   string message = 3;
+  string code = 4;
 }
 
 message UpdateAccountStatusRequest {
@@ -807,6 +864,7 @@ message AsyncActionResponse {
   string request_id = 1;
   AsyncActionStatusEnum status = 2;
   string message = 3;
+  string code = 4;
 }
 
 message GetAccountRequest {

@@ -31,32 +31,30 @@
   },
   "qa": {
     "libraries": {
-      "CurveBabyJubJub": "0xa78E98ca24bce462A166dee69674e28c061E92AB",
-      "CurveBabyJubJubHelper": "0xfD4f37B51E2F1D157c01f31e017FB70FEb3a2322",
-      "MintAllowedTokenVerifier": "0x6dD1BaA83Afb97Aa0417CEb6CFE593A899A1dcec",
-      "SplitTokenVerifier": "0x274043F8181F55A490Ec803951a942a8DED4704F",
-      "SplitAllowanceTokenVerifier": "0xee226f49F9Bf98Be1c71140FcdbB0a05aa1d139A",
-      "Convert2pUSDCVerifier": "0x558A11a1f229D292Bb3B644Db3072b2F099a6E76",
-      "Convert2USDCVerifier": "0xD928Be5a7C71cF1d506bd9B7530B0Cbe81a792d8",
-      "RevealTotalSupplyVerifier": "0x83c2b225A84bb2A5B0B98DD51A15d1325C34f7b5",
-      "TokenVerificationLib": "0x727A95b3312Ed1B16d228Bd9a7b7485a180e8EA8",
-      "SignatureChecker": "0xf046F0A410cF74d5126551C0e0e4c4d33FD6967a",
-      "TokenEventLib": "0xFd9cEB1b3f3c008069407B32F9c6fbb51919FEf8",
-      "TokenUtilsLib": "0x335Ec05Daa320e9bc24d6F8EF982405dc611bF0a"
+      "CurveBabyJubJub": "0x704BA15CE18D80394A549a51aE90e52975b922fB",
+      "CurveBabyJubJubHelper": "0xa6f470eCb74102D6fa7D6985E772B1C32fE715d7",
+      "MintAllowedTokenVerifier": "0xb745F08c4Db7d9B1da4ecd54E40525255107EC8f",
+      "SplitTokenVerifier": "0x5348135AdDa15755691a4Ac02B554DF20555EeBF",
+      "SplitAllowanceTokenVerifier": "0x91F147dD2b1ad22664dD3881deA130393A5c8136",
+      "Convert2pUSDCVerifier": "0xe7Cbb2886A0FD62cD421Dff9f426f493A03B5d18",
+      "Convert2USDCVerifier": "0x3e66f84bFfD3B1cB36658632B3930a763935d127",
+      "RevealTotalSupplyVerifier": "0x84130717f6dad8291aA4A745e3618F80891a60D6",
+      "TokenVerificationLib": "0x12d0Cc6D331d40A988608D51D1D47606eA3B5b56",
+      "SignatureChecker": "0x78Cb29d85E913C0FdA079c5D249E11f17b84796D",
+      "TokenEventLib": "0xD785D49D540Ea079B3e67a141FAD49b93EA80CBc",
+      "TokenUtilsLib": "0x6D7Fe36cF7AB48704E492afEBB2762aEC89bcB2F"
     },
     "contracts": {
       "HamsaL2EventImplementation": "0x6B29B0759195F6AE2cf0242FF5e2Ac8d0ED8b25E",
       "HamsaL2Event": "0xa0a58283101047B8B10C27818167E26363713a7E",
       "HamsaL2EventImplementationB": "",
       "HamsaL2EventPercentageToB": 0,
-      "InstitutionUserRegistry": "0x79d29b1d7B418CC668A94d03AD9435069cbDD6be",
-      "InstUserProxy": "0x3d21298fAf9deDAF2B06E362E74494F54eFbE614",
-      "PrivateERCToken": "0xAF8eD834bbDD976D2ddE0b139847e759018C92d2",
-      "PrivateERCTokenImplementation": "0x92aea7227Ca0C41209c605008F21109C2F8Ffa11"
+      "InstitutionUserRegistry": "0x037f503d966ff1b5BF15453D00953aFe8c0EBaAe",
+      "InstUserProxy": "0x9950e4B83154c832283e1c4Ab0e6aC81AA57aaBf"
     },
     "accounts": {},
     "metadata": {
-      "timestamp": "2025-11-26T09:05:52.197Z",
+      "timestamp": "2025-12-01T07:00:17.095Z",
       "network": "ucl_L2_qa",
       "chainId": "1337"
     }
