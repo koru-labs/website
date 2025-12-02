@@ -51,7 +51,7 @@ abstract contract PrivateTotalSupplyManager is PrivateTokenData {
 
             // Check if we need to record the snapshot for the previous block
             // Record snapshot when: previousBlock - lastProcessedBlock >= stepLength
-            if (_previousBlockNumber - _lastProcessedBlockNumber >= _stepLength) {
+            if (_previousBlockNumber >= (_stepLength + _lastProcessedBlockNumber)) {
                 _recordPrivateTotalSupplySnapshot(_previousBlockNumber, _previousBlockTotalSupply);
                 _lastProcessedBlockNumber = _previousBlockNumber;
             }
