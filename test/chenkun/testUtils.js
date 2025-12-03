@@ -149,7 +149,6 @@ async function mintForStart() {
     console.log("Executing on-chain minting operation...");
     let receipt = await callPrivateMint(deployed.contracts.PrivateERCToken, response, minterWallet);
     console.log("Minting transaction receipt:", receipt);
-
     return receipt;
   } catch (error) {
     console.error(`Minting test failed: ${error.message}`);
@@ -205,7 +204,7 @@ async function batchedMint() {
     const input = response.input.map(i => ethers.toBigInt(i));
     let tx = child.verifyProof(proof,input)
     console.log(tx)
-    return receipt;
+    return response;
   } catch (error) {
     console.error(`Minting test failed: ${error.message}`);
     throw error;
