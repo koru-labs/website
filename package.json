@@ -67,6 +67,8 @@
     "wlin-dummy-storage": "npx hardhat run test/wlin/dummy_storage_test.js --network local_L2",
     "wlin-private-dummy": "npx hardhat run test/wlin/dummy_private_token_test.js --network local_L2",
     "native-registry": "npx hardhat run test/wlin/native_registry_test.js --network local_L2",
+    "wlin-native": "npx hardhat run test/wlin/native_token_test.js --network local_L2",
+
 
     "storage-layout": "node script/util/storageLayout.js",
     "demo-bank-deploy": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa_bank",
