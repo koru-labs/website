@@ -280,9 +280,11 @@ describe('Private Token - Function Cases', function () {
             expect(recipientFinalBalance).to.equal(recipientInitialBalance + fullAmount);
         });
         it('should transfers tokens success', async function () {
-            await helper.mint(accounts.Minter, 110)
+            await helper.mint(accounts.Minter, 120)
+            await sleep(5000)
             const senderInitialBalance = await helper.getPrivateBalance(accounts.Minter);
             const recipientInitialBalance = await helper.getPrivateBalance(accounts.To1);
+            console.log(`Sender ${accounts.Minter} balance: ${senderInitialBalance}`)
             await helper.transfers(helper.wallets.minter, accounts.To1, 10,10, metadata.minter)
             const TRANSFER_AMOUNT = 100;
             const senderFinalBalance = await helper.getPrivateBalance(accounts.Minter);
@@ -432,6 +434,7 @@ describe('Private Token - Function Cases', function () {
     describe('Cancel Split Tokens', function () {
         before(async function () {
             await helper.mint(accounts.Minter, 100);
+            await sleep(5000)
         });
 
         it('should cancel split tokens', async function () {
@@ -737,9 +740,6 @@ describe('Private Token - Function Cases', function () {
 
     })
 });
-describe.skip('demo-bank function cases',function (){
-
-})
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
