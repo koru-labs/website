@@ -103,6 +103,7 @@ async function callPrivateBurn2(scAddress, tokenId, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const tx = await contract.privateBurn(tokenId);
     let receipt = await tx.wait();
+
     return receipt;
 }
 

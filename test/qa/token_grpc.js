@@ -19,7 +19,7 @@ const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
 const TokenService = protoDescriptor.tokenproof.v1.TokenService;
 const AccountService = protoDescriptor.tokenproof.v1.AccountService;
 const TestService = protoDescriptor.tokenproof.v1.TestKeyService;
-
+const NativeService = protoDescriptor.tokenproof.v1.NativeTokenService;
 // Token action status enum
 const TokenActionStatusEnum = {
     TOKEN_ACTION_STATUS_PENDING: 0,
@@ -35,6 +35,7 @@ function createClient(url) {
     const client = new TokenService(url, grpc.credentials.createInsecure());
     const accountClient = new AccountService(url, grpc.credentials.createInsecure());
     const testkeyClient = new TestService(url, grpc.credentials.createInsecure());
+    const nativeClient = new NativeService(url, grpc.credentials.createInsecure());
 
     // Proof generation methods
     client.convertToPUSDC = async function (request, metadata) {
@@ -179,7 +180,13 @@ function createClient(url) {
     client.uploadSmartContractIcon = async function (request, metadata) {
         return promisifyByMetadata(client.UploadSmartContractIcon.bind(client), request, metadata);
     };
+    client.getBankManagerList = async function (request, metadata) {
+        return promisifyByMetadata(client.GetBankManagerList.bind(client), request, metadata);
+    };
 
+    client.getBankProfile = async function (request, metadata) {
+        return promisifyByMetadata(client.GetBankProfile.bind(client), request, metadata);
+    };
 
     client.getAddressBalanceDetail = async function (request, metadata) {
         // return promisify(accountClient.GetMintAllowed.bind(client), request);
@@ -243,6 +250,17 @@ function createClient(url) {
         return promisifyByMetadata(accountClient.registerBankCallerAccount.bind(accountClient), request, metadata);
     };
 
+
+    client.registerInstitution = async function (request, metadata) {
+        return promisifyByMetadata(accountClient.RegisterInstitution.bind(accountClient), request, metadata);
+    };
+    client.updateInstitution = async function (request, metadata) {
+        return promisifyByMetadata(accountClient.UpdateInstitution.bind(accountClient), request, metadata);
+    };
+
+    client.generateBatchMintProof = async function (request, metadata) {
+        return promisifyByMetadata(nativeClient.GenerateBatchMintProof.bind(nativeClient), request, metadata);
+    };
 
     client.waitForProofCompletion = async function (callBack, request_id, interval = 4000) {
         return new Promise(async (resolve, reject) => {

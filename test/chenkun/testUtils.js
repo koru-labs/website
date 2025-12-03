@@ -18,8 +18,8 @@ const node3Institution = configuration.institutions.find(institution => institut
 if (!node3Institution) {
   throw new Error("Node3 institution not found in config");
 }
-// const rpcUrl = node3Institution.rpcUrl;
-const rpcUrl = "localhost:50051";
+const rpcUrl = node3Institution.rpcUrl;
+// const rpcUrl = "localhost:50051";
 const deployed = getImage9EnvironmentData();
 
 // Initialize client and provider
@@ -150,6 +150,61 @@ async function mintForStart() {
     let receipt = await callPrivateMint(deployed.contracts.PrivateERCToken, response, minterWallet);
     console.log("Minting transaction receipt:", receipt);
 
+    return receipt;
+  } catch (error) {
+    console.error(`Minting test failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function batchedMint() {
+  try {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const to_accounts = [
+      {
+        address: accounts.To1,
+        amount: 1
+      },
+      {
+        address: accounts.To1,
+        amount: 2
+      },
+      {
+        address: accounts.To1,
+        amount: 3
+      },
+      {
+        address: accounts.Minter,
+        amount: 4
+      },
+      {
+        address: accounts.Minter,
+        amount: 5
+      }
+    ]
+    const generateRequest = {
+      sc_address: deployed.contracts.PrivateERCToken,
+      token_type: '0',
+      from_address:accounts.Minter,
+      to_accounts: to_accounts,
+    };
+
+    console.log("Starting to generate mint proof...");
+    let response = await client.generateBatchMintProof(generateRequest, metadata);
+    response.to_accounts.forEach((account, index) => {
+      console.log(`\n--- 账户 ${index + 1} ---`);
+      console.log(`地址: ${account.address}`);
+      console.log("Token详情:", JSON.stringify(account.token, null, 2));
+      console.log("supply详情:", JSON.stringify(account.supply_amount, null, 2));
+    });
+    console.log("Mint proof generation response:", response);
+    const Verifier = await ethers.getContractFactory("BatchedMintAllowedTokenVerifier");
+    const child = await Verifier.deploy();
+    await child.waitForDeployment();
+    const proof = response.proof.map(p => ethers.toBigInt(p));
+    const input = response.input.map(i => ethers.toBigInt(i));
+    let tx = child.verifyProof(proof,input)
+    console.log(tx)
     return receipt;
   } catch (error) {
     console.error(`Minting test failed: ${error.message}`);
@@ -342,9 +397,6 @@ async function testReserveTokensAndBurn() {
 
     await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
     var tokenId1 = ethers.toBigInt(response.transfer_token_id)
-    let tokenId2 = ethers.getBigInt(response.transfer_token_id);
-    let tokenId3 = BigInt(parseInt(response.transfer_token_id));
-    console.log("Token ID:", tokenId1, tokenId2, tokenId3);
     console.log("Burning split token...");
     let receipt = await callPrivateBurn(
         deployed.contracts.PrivateERCToken,
@@ -544,12 +596,15 @@ async function testInstituteInformation() {
   const instRegistry = await InstRegistry.attach(deployed.contracts.InstUserProxy);
   // let tx = await instRegistry.registerUser(accounts.Minter);
   // await tx.wait();
-  let inst = await instRegistry.getUserManager(accounts.Minter);
-  console.log("user registration ", inst);
-  let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Minter);
-  console.log("user registration ", inst1);
-  let inst2 = await instRegistry.getInstitution(accounts.Owner);
-  console.log("user registration ", inst2);
+  // let inst = await instRegistry.getUserManager(accounts.Minter);
+  // console.log("user registration ", inst);
+  // let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Minter);
+  // console.log("user registration ", inst1);
+  // let inst2 = await instRegistry.getInstitution(accounts.Owner);
+  // console.log("user registration ", inst2);
+  let tx = await instRegistry.setInstitutionManagerBlacklist('0x93d2ce0461c2612f847e074434d9951c32e44327', true);
+  await tx.wait();
+  console.log("user registration ", tx);
 }
 
 /**
@@ -564,14 +619,15 @@ async function testConvert2pUSDC() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
     const convertToPUSDCResponse = {
-      amount: CONSTANTS.defaultAmount
+      amount: CONSTANTS.defaultAmount,
+      sc_address: sc_address,
     };
 
     console.log("Generating proof for conversion to private USDC...");
     let proofResult = await client.convertToPUSDC(convertToPUSDCResponse, metadata);
     console.log("Conversion proof response:", proofResult);
 
-    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, minterWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", sc_address, minterWallet);
     const elAmount = {
       cl_x: ethers.toBigInt(proofResult.elgamal.cl_x),
       cl_y: ethers.toBigInt(proofResult.elgamal.cl_y),
@@ -600,7 +656,23 @@ async function testConvert2pUSDC() {
     throw error;
   }
 }
+var sc_address = '0x88236d4C0Fb5875Df22CD39F4c20b0a0CAC352C4';
 
+async function getTotalSupplyNode() {
+  const contract = await ethers.getContractAt("PrivateERCToken", '0x272517f7A5AF91C19F42970c8D643780f7403c50', adminWallet);
+  const metadata = await createAuthMetadata(accounts.OwnerKey);
+  let amount = await contract.privateTotalSupply()
+  let balance = {
+    cl_x: ethers.toBigInt(amount[0]),
+    cl_y: ethers.toBigInt(amount[1]),
+    cr_x: ethers.toBigInt(amount[2]),
+    cr_y: ethers.toBigInt(amount[3])
+  }
+  console.log(balance)
+  let result = await client.decodeElgamalAmount(balance,metadata)
+  console.log(result)
+  return Number(result.balance)
+}
 /**
  * Test conversion to public USDC
  * @returns {Promise<void>}
@@ -610,7 +682,7 @@ async function testConvert2USDC() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
 
     const splitRequest = {
-      sc_address: deployed.contracts.PrivateERCToken,
+      sc_address: sc_address,
       token_type: '0',
       from_address: accounts.Minter,
       to_address: accounts.Minter,
@@ -626,14 +698,15 @@ async function testConvert2USDC() {
     let tokenId = response.transfer_token_id;
 
     const convertToPUSDCResponse = {
-      token_id: tokenId
+      token_id: tokenId,
+      sc_address:  sc_address,
     };
 
     console.log("Generating proof for conversion to public USDC...");
     let proofResult = await client.convertToUSDC(convertToPUSDCResponse, metadata);
     console.log("Conversion proof response:", proofResult);
 
-    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, minterWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC",  sc_address, minterWallet);
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
 
@@ -720,9 +793,11 @@ async function testSignKey() {
 
 async function testAddSmartContract() {
   try {
+    console.log("rpcUrl",rpcUrl)
+    const client = createClient(rpcUrl);
     const metadata = await createAuthMetadata(accounts.OwnerKey);
     let req = {
-      sc_address: "0xc0f61c0a8241e75ce7428b5c09d460a78def9b25",
+      sc_address: "0x7e06b8bb62b40460271104302c21817e4dea27cb",
       status: 2
     }
     let resp = await client.addSmartContract(req,metadata);
@@ -766,11 +841,107 @@ async function testGetBalance() {
 async function testSetMintAllowed() {
   try {
     const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, adminWallet);
-    // NOTE: Changed to blacklist mode - use updateBlockedBank to block banks
-    // let tx = await contract.updateBlockedBank(accounts.Owner, true);
-    // await tx.wait();
-    let tx = await contract.getAccountTokenById(accounts.Minter,17904666504371553379015644188718150815607032362468671403327646253243945533638n );
+    let tx = await contract.updateAllowedBank('0x93d2Ce0461C2612F847e074434d9951c32e44327',true );
     console.log("Conversion transaction receipt:", tx);
+  } catch (error) {
+    console.error(`Conversion to public USDC test failed: ${error.message}`);
+    throw error;
+  }
+}
+async function mintForTest() {
+  for (let i = 0; i < 20; i++) {
+    await mintForStart();
+    await sleep(1000)
+  }
+}
+async function configureStepLength() {
+  try {
+    const contract = await ethers.getContractAt("PrivateUSDC", deployed.contracts.PrivateERCToken, adminWallet);
+    let tx = await contract.configureStepLength(3n );
+    console.log("Conversion transaction receipt:", tx);
+  } catch (error) {
+    console.error(`Conversion to public USDC test failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function test1111() {
+  try {
+    const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", '0xdB17395eC234AA0605207e61A55888c5482006D4');
+    let requestRegisterInstitution = {
+      managerAddress: '0xba268f776f70cadb087e73020dfe41c7298363ed',
+      name: 'test22',
+      streetAddress: "Market St123",
+      suiteNo: "Suite 400",
+      city: "San Francisco",
+      state:"CA",
+      zip: "94107",
+      email: "123@qq.com",
+      phoneNumber: "123123123123",
+      publicKey: {
+        x: 321312312312312n,
+        y: 123123123123123n
+      },
+      rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+      nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
+      httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
+    }
+    let regTx = await institutionUserRegistry.registerInstitution(requestRegisterInstitution);
+    await regTx.wait();
+    console.log("registerInstitution receipt:", regTx);
+  } catch (error) {
+    console.error(`Conversion to public USDC test failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function testRegisterInstitution() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let requestRegisterInstitution = {
+      manager_address: '0x2308b915ff150643d32A599e11e87E20fA3798c2',
+      inst_name: 'test22',
+      pk_x: '321312312312312',
+      pk_y: '123123123123123',
+      street_address: "Market St123",
+      suite_no: "Suite 400",
+      city: "San Francisco",
+      state:"CA",
+      zip: "94107",
+      email: '123@qq.com',
+      phone_number: '123123123123',
+      rpc_url: "dev-node3-rpc.hamsa-ucl.com:50051",
+      node_url: "https://dev-node3-proxy.hamsa-ucl.com:8443",
+      http_url: "http://dev-node3-http.hamsa-ucl.com:8080",
+    }
+    let regTx = await client.registerInstitution(requestRegisterInstitution,metadata);
+    console.log("registerInstitution receipt:", regTx);
+  } catch (error) {
+    console.error(`Conversion to public USDC test failed: ${error.message}`);
+    throw error;
+  }
+}
+
+
+async function testUpdateInstitution() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    let requestRegisterInstitution = {
+      manager_address: '0x2308b915ff150643d32A599e11e87E20fA3798c2',
+      inst_name: 'test223311',
+      street_address: "Market St1",
+      suite_no: "Suite 4001",
+      city: "San Francisco a",
+      state:"CA 1",
+      zip: "94107 1",
+      email: '123@qq.com 1',
+      phone_number: '123123123123 1',
+      rpc_url: "dev-node3-rpc.hamsa-ucl.com:50051 1",
+      node_url: "https://dev-node3-proxy.hamsa-ucl.com:8443 1",
+      http_url: "http://dev-node3-http.hamsa-ucl.com:8080 1",
+    }
+    let regTx = await client.updateInstitution(requestRegisterInstitution,metadata);
+    console.log("registerInstitution receipt:", regTx);
   } catch (error) {
     console.error(`Conversion to public USDC test failed: ${error.message}`);
     throw error;
@@ -784,6 +955,8 @@ async function runTests() {
   try {
     // Basic tests
     // await mintForStart();
+    // await mintForTest();
+    // await configureStepLength();
 
     // Token operation tests
     // await testReserveTokensAndBurn();
@@ -808,8 +981,16 @@ async function runTests() {
     // await testSetMintAllowed();
     // await testChangeBankCallers();
     // await testGetAccountList();
-    await testSignKey();
+    // await testSignKey();
     // await testAddSmartContract();
+
+    // await getTotalSupplyNode();
+
+    // await test1111();
+    // await testRegisterInstitution();
+    // await testUpdateInstitution();
+
+    await batchedMint();
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);

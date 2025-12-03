@@ -941,3 +941,50 @@ message SignatureAndMessage {
   string signature = 3;
   string role = 4;
 }
+
+
+service NativeTokenService {
+  rpc GenerateBatchMintProof       (GenerateBatchedMintRequest)         returns (BatchedMintProofResponse) {
+    option (google.api.http) = {
+      post: "/v1/batch-mint-proof-generate"
+      body: "*"
+    };
+  };
+}
+
+
+message GenerateBatchedMintRequest {
+  string sc_address = 1 ;
+  uint64 token_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"not needed for ERC20"}];
+  string from_address = 3;
+  repeated AccountInfo to_accounts = 4;
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema:{
+      required:["sc_address", "to_address", "amount", "from_address"]
+    },
+    example: "{\"scAddress\": \"0x65580aEaF79a26aC0f61F7BA914bF900956eBA98\", \"tokenType\": \"0\", \"fromAddress\": \"0xf17f52151EbEF6C7334FAD080c5704D77216b732\", \"toAddress\": \"0x57829d5E80730D06B1364A2b05342F44bFB70E8f\", \"amount\":1 }"
+  };
+}
+
+message AccountInfo {
+  string address = 1;
+  uint64 amount = 2[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+}
+
+message BatchedMintProofResponse {
+  string request_id = 1;
+  string sc_address = 2;
+  uint64 token_type = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  string from_address = 4;
+  repeated ToAccountInfo to_accounts = 5;
+  ElGamalToken mint_allowed = 6;
+  repeated string  proof = 7;
+  repeated string  input = 8;
+  TokenActionStatusEnum status = 9;
+}
+
+message ToAccountInfo {
+  string address = 1;
+  ElGamalToken token = 6;
+  ElGamalToken supply_amount = 7;
+}
