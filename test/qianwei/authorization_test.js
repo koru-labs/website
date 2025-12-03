@@ -5,34 +5,35 @@ const {createClient} = require('../qa/token_grpc');
 const axios = require('axios');
 const {getEnvironmentConfig} = require('../../script/deploy_help.js');
 const config = getEnvironmentConfig();
-const rpcUrl = "localhost:50051";
-// const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
+// const rpcUrl = "localhost:50051";
+const rpcUrl = "qa-node3-rpc.hamsa-ucl.com:50051";
 // find node3 institution
 // const node3Institution = config.institutions.find(institution => institution.name === "Node3");
 // if (!node3Institution) {
 //     throw new Error("Node3 institution not found in config");
 // }
 // const rpcUrl = node3Institution.rpcUrl;
-const httpUrl = "http://localhost:8080";
-// const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
+// const httpUrl = "http://localhost:8080";
+const httpUrl = "http://qa-node3-http.hamsa-ucl.com:8080";
 
 const client = createClient(rpcUrl);
 
 let request_id = "203811416ade1a647f6dae34470de12fb1f8cee706d2d3a9bf717081b6e432a1"
 
 // admin
-const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"; //N0DE3
+// const privateKey = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"; //N0DE3
 // const privateKey = "5c231ce8344bac49d30d2c13db074ee7757c574caabfcb8349074b5486c08c7e"; //demobank
 // const privateKey = "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171"; //NODE4
 // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
-// const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
+const privateKey = "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787";
 
 // normal
 // const privateKey = "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca";//0x4568E35F2c4590Bde059be615015AaB6cc873004
 
 // const address = "0x8c8af239FfB9A6e93AC4b434C71a135572A1021C";
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";
-const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
+const address = "0xf17f52151ebef6c7334fad080c5704d77216b732";//admin
+// const address = "0x1a245eF2f03911Bf782FBdEAe379113ff068A311";//test
 // const address = "0x983b4ba7e42e664ddbfe4ed3e0ea07d90efcc13b";//test
 // const address = "0x4312488937D47A007De24d48aB82940C809EEb2b";//test
 // const address = "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB";//test
@@ -125,7 +126,7 @@ async function testUpdateAccount() {
         const metadata = await createAuthMetadata(privateKey);
         const request = {
             account_address: address,
-            account_roles: "normal",//admin,normal
+            // account_roles: "normal",//admin,normal
             first_name: "Mike3",
             last_name: "Job3",
             phone_number: "(888) 234-4567",
@@ -280,11 +281,11 @@ async function testGetAsyncActionForHttp(request_id) {
     }
 }
 
-testRegisterAccount().then();
+// testRegisterAccount().then();
 // testRegisterAccountForHttp().then();
 // testGetAsyncAction().then();
 // testGetAsyncActionForHttp("8c94606e20cefc41ef461b8e47d8c68a71221a4ceccca907341425cc7c244a1d").then();
-// testUpdateAccountStatus().then();
+testUpdateAccountStatus().then();
 // testUpdateAccountStatusForHttp().then();
 // testUpdateAccount().then();
 // testUpdateAccountForHttp().then();

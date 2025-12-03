@@ -90,12 +90,14 @@ async function batchSendTransactions() {
     const { ethers } = require("hardhat");
     const axios = require("axios");
 
-    const providerUrl = "http://qa-ucl-l2.hamsa-ucl.com:8545";
+    // const providerUrl = "http://qa-ucl-l2.hamsa-ucl.com:8545";
+    // const providerUrl = "http://l2-node1-dev.hamsa-ucl.com:8545";
+    const providerUrl = "http://localhost:8545";
     const provider = new ethers.JsonRpcProvider(providerUrl);
     const accounts = await ethers.getSigners();
     const sender = accounts[8];
     const receiver = accounts[9];
-    const BATCH_SIZE = 5000;
+    const BATCH_SIZE = 100;
 
     // 获取发送者的私钥（需要先在Hardhat配置中设置）
     const senderPrivateKey = "f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc"; // 替换为实际私钥
