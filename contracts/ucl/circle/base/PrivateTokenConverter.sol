@@ -47,6 +47,8 @@ abstract contract PrivateTokenConverter is
 
         require(!_usedElGamalHashes[entity.id], "PrivateTokenConverter: ElGamal hash already used");
 
+        _updatePrivateTotalSupply();
+
         TokenModel.VerifyTokenConvert2pUSDCParams memory params = TokenModel.VerifyTokenConvert2pUSDCParams({
             institutionRegistration: _institutionRegistration,
             owner: msg.sender,
@@ -127,6 +129,8 @@ abstract contract PrivateTokenConverter is
         require(entity.id != 0, "invalid token");
         require(entity.status == TokenModel.TokenStatus.active || entity.status == TokenModel.TokenStatus.inactive, "token is invalid");
         require(entity.owner == msg.sender, "PrivateTokenConverter: only owner can convert");
+
+        _updatePrivateTotalSupply();
 
         TokenModel.VerifyTokenConvert2USDCParams memory params = TokenModel.VerifyTokenConvert2USDCParams({
             institutionRegistration: _institutionRegistration,

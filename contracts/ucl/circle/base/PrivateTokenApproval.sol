@@ -206,6 +206,8 @@ abstract contract PrivateTokenApproval is
     }
 
     function privateBurnFroms(address from, uint256[] calldata allowanceTokenIds) external whenNotPaused notBlacklisted(msg.sender) notBlacklisted(from) onlyAllowedBank nonReentrant {
+         _updatePrivateTotalSupply();
+        
         for (uint256 i = 0; i < allowanceTokenIds.length; i++) {
             _privateBurnFrom(msg.sender, from, allowanceTokenIds[i]);
         }
