@@ -48,6 +48,26 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenSCCreatedEvent(_l2Event, address(this), newOwner, tokenSCType, tokenName, tokenSymbol, tokenDecimals);
     }
 
+    function _updatePrivateTotalSupply() internal override {
+        uint256 currentBlockNumber = block.number;
+
+        // When entering a new block, save the snapshot of the previous block
+        // At this point, _privateTotalSupply contains the final state of the previous block
+        if (currentBlockNumber != _previousBlockNumber && _previousBlockNumber != 0) {
+            _previousBlockTotalSupply = _privateTotalSupply;
+
+            // Record snapshot when previousBlock - lastProcessedBlock >= stepLength
+            if (_previousBlockNumber >= (_stepLength + _lastProcessedBlockNumber)) {
+                _recordPrivateTotalSupplySnapshot(_previousBlockNumber, _previousBlockTotalSupply);
+                _lastProcessedBlockNumber = _previousBlockNumber;
+            }
+        }
+
+        if (currentBlockNumber != _previousBlockNumber) {
+            _previousBlockNumber = currentBlockNumber;
+        }
+    }
+
     function privateTotalSupply() external view virtual returns (TokenModel.ElGamal memory) {
         return _privateTotalSupply;
     }
@@ -130,6 +150,8 @@ abstract contract PrivateTokenCore is
 
         _publicTotalSupply = revealedAmount;
 
+        delete _privateTotalSupplyHistory[blockNumber];
+
         emit PrivateTotalSupplyRevealed(blockNumber, revealedAmount);
 
         TokenEventLib.triggerPrivateTotalSupplyRevealedEvent(
@@ -161,6 +183,8 @@ abstract contract PrivateTokenCore is
     returns (bool)
     {
         require(to != address(0), "PrivateERCToken: mint to the zero address");
+
+        _updatePrivateTotalSupply();
 
         TokenModel.VerifyTokenMintParams memory params = TokenModel.VerifyTokenMintParams({
             institutionRegistration: _institutionRegistration,
@@ -198,6 +222,8 @@ abstract contract PrivateTokenCore is
     }
 
     function privateBurns(uint256[] calldata tokenIds) external onlyAllowedBank nonReentrant virtual {
+        _updatePrivateTotalSupply();
+
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _privateBurn(msg.sender, tokenIds[i]);
         }
