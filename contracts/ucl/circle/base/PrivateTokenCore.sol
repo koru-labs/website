@@ -20,9 +20,9 @@ abstract contract PrivateTokenCore is
     Permissioned,
     ReentrancyGuard
 {
-    event PrivateMint(address indexed from, TokenModel.ElGamal value);
-    event PrivateBurn(address indexed from, TokenModel.ElGamal value);
-    event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value);
+    event PrivateMint(address indexed from, TokenModel.ElGamal value, uint256 blockNumber);
+    event PrivateBurn(address indexed from, TokenModel.ElGamal value, uint256 blockNumber);
+    event PrivateTransfer(address indexed from, address indexed to, TokenModel.ElGamal value, uint256 blockNumber);
 
     function initialize_hamsa(
         TokenModel.TokenSCTypeEnum tokenSCType,
@@ -217,7 +217,7 @@ abstract contract PrivateTokenCore is
         TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), msg.sender, entity.id);
         TokenEventLib.triggerRollupForMint(_l2Event, address(this), entity, publicInputs, proof, initialMinterAllowed.id, newAllowed.id, supplyIncrease.id);
 
-        emit PrivateMint(to, entity.amount);
+        emit PrivateMint(to, entity.amount, block.number);
         return true;
     }
 
@@ -271,7 +271,7 @@ abstract contract PrivateTokenCore is
             backupTokenId: backupEntity.id
         });
         TokenEventLib.triggerRollupForBurn(_l2Event, address(this), e);
-        emit PrivateBurn(account, supplyDecrease);
+        emit PrivateBurn(account, supplyDecrease, block.number);
     }
 
     function privateSplitToken(
@@ -368,7 +368,7 @@ abstract contract PrivateTokenCore is
             TokenEventLib.triggerTokenActionCompletedEvent(_l2Event, address(this), sender, rollbackTokenId);
             TokenEventLib.triggerRollupForTransfer(_l2Event, address(this), sender, recipient, backupPk, backupEntity.id);
 
-            emit PrivateTransfer(sender, recipient, tokenEntity.amount);
+            emit PrivateTransfer(sender, recipient, tokenEntity.amount, block.number);
         }
 
         return true;
