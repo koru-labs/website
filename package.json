@@ -98,6 +98,8 @@
     "qianwei-test": "npx hardhat run test/qianwei/authorization_test.js --network ucl_L2_prod",
     "qianwei-token-test": "npx hardhat run test/qianwei/test_token.js --network ucl_L2_qa",
     "qianwei-L1-test": "npx hardhat run test/qianwei/deploy_L1_verify.js --network eth_L1_dev",
-    "sun-test": "npx hardhat run test/sun/sun_test.js --network ucl_L2_qa"
+    "sun-test": "npx hardhat run test/sun/sun_test.js --network ucl_L2_qa",
+    "sun-native-registry": "npx hardhat run test/sun/test_native_token_registry.js --network local_L2",
+    "sun-native": "npx hardhat run test/sun/native_token_test.js --network local_L2"
   }
 }
