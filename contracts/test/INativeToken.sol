@@ -83,4 +83,6 @@ interface INativeToken {
         uint256 tokenId,
         string calldata memo
     ) external returns (bool);
+
+    function getToken(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory);
 }

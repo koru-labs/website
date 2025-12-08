@@ -107,7 +107,16 @@ async function testSplit() {
     console.log(rc);
 }
 
+async function getTokenById(){
+    const [signer] = await ethers.getSigners();
+
+    const native = await ethers.getContractAt("INativeToken", native_token_address);
+    console.log("signerAddress", signer.address);
+    let response = await native.getToken(signer.address, 2)
+    console.log("response", response);
+}
 
 // testMint().then();
-testTransfer().then();
+// testTransfer().then();
 // testSplit().then();
+getTokenById().then();
