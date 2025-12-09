@@ -6,6 +6,8 @@ const l2EventAbi = [
     "event RollupEventReceived(string eventId, address eventSource, string topic, bytes eventBody)"
 ];
 
+const tokenNativeTokenAddr = "0x2025"
+
 /**
  * Setup event listeners for native token events
  * @param {string} nativeTokenAddress - The native token contract address (events are emitted from this contract)
@@ -72,12 +74,12 @@ async function setupEventListeners(nativeTokenAddress) {
 
 /**
  * Parse events from transaction receipt
+ * Events are emitted from the fixed L2Event address (0x2025)
  * @param {object} receipt - Transaction receipt
- * @param {string} nativeTokenAddress - The native token contract address
  */
-async function parseEventsFromReceipt(receipt, nativeTokenAddress) {
+async function parseEventsFromReceipt(receipt) {
     const [signer] = await ethers.getSigners();
-    const l2Event = new ethers.Contract(nativeTokenAddress, l2EventAbi, signer);
+    const l2Event = new ethers.Contract(tokenNativeTokenAddr, l2EventAbi, signer);
     
     console.log("\n========== Parsing Events from Receipt ==========");
     
