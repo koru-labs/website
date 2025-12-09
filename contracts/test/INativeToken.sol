@@ -35,9 +35,37 @@ library TokenModel {
     }
 }
 
+// /**
+//  * @title IL2Event
+//  * @dev Interface for L2Event contract events
+//  */
+// interface IL2Event {
+//     // Generic event container for token events
+//     event EventReceived(
+//         string eventId,
+//         address eventSource,
+//         address eventAccount,
+//         string topic,
+//         bytes eventBody
+//     );
+
+//     // Generic event container for rollup events
+//     event RollupEventReceived(
+//         string eventId,
+//         address eventSource,
+//         string topic,
+//         bytes eventBody
+//     );
+// }
+
 /**
  * @title INativeToken
  * @dev Interface for native token operations - used for ABI generation
+ * 
+ * Events emitted via L2Event contract:
+ * - Mint: TokenMintAllowedUpdated (EventReceived), TokenMinted (EventReceived)
+ * - Split: TokenDeleted (EventReceived), RollupSplit (RollupEventReceived)
+ * - Transfer: RollupTransfer (RollupEventReceived)
  */
 interface INativeToken {
     /**
