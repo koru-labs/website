@@ -112,5 +112,23 @@ interface INativeToken {
         string calldata memo
     ) external returns (bool);
 
-    function getToken(address owner, uint256 tokenId) external view returns (TokenModel.TokenEntity memory);
+    /**
+     * @dev Get a token by owner and token ID
+     * @param owner Owner address
+     * @param tokenId Token ID
+     */
+    function getToken(
+        address owner,
+        uint256 tokenId
+    ) external view returns (TokenModel.TokenEntity memory);
+
+    /**
+     * @dev Set mint allowed for a minter
+     * @param minter Minter address
+     * @param allowed ElGamal token representing the allowed mint amount
+     */
+    function setMintAllowed(
+        address minter,
+        TokenModel.ElGamalToken memory allowed
+    ) external;
 }
