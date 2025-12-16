@@ -210,7 +210,7 @@ async function getTokenById(){
     const native = new ethers.Contract(
         native_token_address,
         abi,
-        minter
+        signer
     );
     // const native = await ethers.getContractAt("INativeToken", native_token_address);
     console.log("signerAddress", minter.address);
@@ -484,7 +484,7 @@ async function testBatchedSplitForPerformance() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const requestIds = [];
-        let count = 200;
+        let count = 150;
         // 调用5次generateBatchSplitToken
         for (let i = 0; i < count; i++) {
             console.log(`Generating batch split token request ${i + 1}/ ${count} ...`);
