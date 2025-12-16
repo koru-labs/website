@@ -326,8 +326,9 @@ message GetTransactionRequest {
 
 message GetTransactionResponse {
   repeated Transaction data = 1;
-  string code = 2;
-  string message = 3;
+  uint64 total_count = 2;
+  string code = 3;
+  string message = 4;
 }
 
 message Transaction {
@@ -950,8 +951,55 @@ service NativeTokenService {
       body: "*"
     };
   };
+  rpc GenerateBatchSplitToken       (GenerateBatchedSplitRequest)         returns (BatchedSplitTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/batch-split-proof-generate"
+      body: "*"
+    };
+  }
+  rpc GetBatchSplitTokenDetail       (GetBatchSplitTokenDetailRequest)         returns (GetBatchSplitTokenDetailResponse) {
+    option (google.api.http) = {
+      post: "/v1/batch-split-token-detail-query"
+      body: "*"
+    };
+  }
 }
 
+message GetBatchSplitTokenDetailRequest {
+  string request_id = 1;
+}
+message GetBatchSplitTokenDetailResponse {
+  string code = 1;
+  string message = 2;
+  repeated TokenDetail consumedIds = 3;
+  repeated TokenDetail newTokens = 4;
+  repeated string proof = 5;
+  repeated string public_input = 6;
+  repeated string to_addresses = 7;
+}
+message TokenDetail {
+  string token_id = 1;
+  string cl_x = 2;
+  string cl_y = 3;
+  string cr_x = 4;
+  string cr_y = 5;
+}
+message BatchedSplitProof {
+  string request_id = 1;
+  repeated string proof = 2;
+  repeated string public_input = 3;
+}
+message GenerateBatchedSplitRequest {
+  string sc_address = 1 ;
+  uint64 token_type = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER, description:"Token type identifier (optional for ERC20 tokens)"}];
+  string from_address = 3;
+  repeated AccountInfo to_accounts = 4;
+
+}
+message BatchedSplitTokenResponse {
+  string request_id = 1;
+  TokenActionStatusEnum status = 2;
+}
 
 message GenerateBatchedMintRequest {
   string sc_address = 1 ;
@@ -969,6 +1017,7 @@ message GenerateBatchedMintRequest {
 message AccountInfo {
   string address = 1;
   uint64 amount = 2[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {type: INTEGER}];
+  string comment = 3;
 }
 
 message BatchedMintProofResponse {

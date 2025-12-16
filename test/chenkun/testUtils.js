@@ -18,8 +18,8 @@ const node3Institution = configuration.institutions.find(institution => institut
 if (!node3Institution) {
   throw new Error("Node3 institution not found in config");
 }
-const rpcUrl = node3Institution.rpcUrl;
-// const rpcUrl = "localhost:50051";
+// const rpcUrl = node3Institution.rpcUrl;
+const rpcUrl = "localhost:50051";
 const deployed = getImage9EnvironmentData();
 
 // Initialize client and provider
@@ -139,7 +139,7 @@ async function mintForStart() {
       token_type: '0',
       from_address:accounts.Minter,
       to_address: accounts.Minter,
-      amount: 100
+      amount: 100000
     };
 
     console.log("Starting to generate mint proof...");
@@ -159,28 +159,7 @@ async function mintForStart() {
 async function batchedMint() {
   try {
     const metadata = await createAuthMetadata(accounts.MinterKey);
-    const to_accounts = [
-      {
-        address: accounts.To1,
-        amount: 1
-      },
-      {
-        address: accounts.To1,
-        amount: 2
-      },
-      {
-        address: accounts.To1,
-        amount: 3
-      },
-      {
-        address: accounts.Minter,
-        amount: 4
-      },
-      {
-        address: accounts.Minter,
-        amount: 5
-      }
-    ]
+
     const generateRequest = {
       sc_address: deployed.contracts.PrivateERCToken,
       token_type: '0',
@@ -592,18 +571,17 @@ async function testInstituteInformation() {
       "TokenEventLib": deployed.libraries.TokenEventLib,
     }
   });
-  const instRegistry = await InstRegistry.attach(deployed.contracts.InstUserProxy);
+  const instRegistry = await InstRegistry.attach('0x9950e4B83154c832283e1c4Ab0e6aC81AA57aaBf');
   // let tx = await instRegistry.registerUser(accounts.Minter);
   // await tx.wait();
   // let inst = await instRegistry.getUserManager(accounts.Minter);
   // console.log("user registration ", inst);
-  // let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Minter);
-  // console.log("user registration ", inst1);
+  let inst1 = await instRegistry.getUserInstGrumpkinPubKey(accounts.Minter);
+  console.log("user registration ", inst1);
   // let inst2 = await instRegistry.getInstitution(accounts.Owner);
   // console.log("user registration ", inst2);
-  let tx = await instRegistry.setInstitutionManagerBlacklist('0x93d2ce0461c2612f847e074434d9951c32e44327', true);
-  await tx.wait();
-  console.log("user registration ", tx);
+  // let tx = await instRegistry.setInstitutionManagerBlacklist('0x93d2ce0461c2612f847e074434d9951c32e44327', true);
+  // await tx.wait();
 }
 
 /**
@@ -946,6 +924,76 @@ async function testUpdateInstitution() {
     throw error;
   }
 }
+
+async function testBatchedSplit() {
+  try {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    console.time('testDirectBurn');
+
+    const startTime = Date.now();
+    console.log("Starting direct burn, time:", new Date(startTime).toISOString());
+    const to_accounts = [
+      {
+        address: accounts.To1,
+        amount: 1,
+        comment:"1"
+      },{
+        address: accounts.To1,
+        amount: 2,
+        comment:"2"
+      },{
+        address: accounts.To1,
+        amount: 3,
+        comment:"3"
+      },{
+        address: "",
+        amount: 4,
+        comment:"4"
+      },{
+        address: "",
+        amount: 5,
+        comment:"5"
+      }
+    ]
+    const splitRequest = {
+      sc_address: deployed.contracts.PrivateERCToken,
+      token_type: '0',
+      from_address: accounts.Minter,
+      to_accounts: to_accounts,
+    };
+
+    let response = await client.generateBatchSplitToken(splitRequest, metadata);
+    console.log("Direct burn response:", response);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+    console.timeEnd('testDirectBurn');
+
+    const endTime = Date.now();
+    console.log("Direct burn completed, time:", new Date(endTime).toISOString());
+    console.log(`Total time: ${(endTime - startTime) / 1000} seconds`);
+
+    // await getAddressBalance2(client, deployed.contracts.PrivateERCToken, accounts.Minter, metadata);
+    return response;
+  } catch (error) {
+    console.error(`Direct burn test failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function testGetBatchedSplitDetail() {
+  try {
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const splitRequest = {
+      request_id: 'f15d458819f04cb7367d1d29ec14f92720ca0f9cea33caf1f8ba1f0251fd56fe'
+    };
+    let response = await client.getBatchSplitTokenDetail(splitRequest,metadata);
+    console.log("batched Split:", response);
+    return response;
+  } catch (error) {
+    console.error(`test failed: ${error.message}`);
+    throw error;
+  }
+}
 /**
  * Run all tests
  * Uncomment tests you want to run
@@ -970,7 +1018,7 @@ async function runTests() {
     // await testDirectTransferByAuth();
 
     // Other tests
-    // await testInstituteInformation();
+    await testInstituteInformation();
     // await testConvert2pUSDC();
     // await testConvert2USDC();
     // await testGetMintAllowed();
@@ -989,7 +1037,9 @@ async function runTests() {
     // await testRegisterInstitution();
     // await testUpdateInstitution();
 
-    await batchedMint();
+    // await batchedMint();
+    // await testBatchedSplit();
+    // await testGetBatchedSplitDetail();
     console.log("All tests completed!");
   } catch (error) {
     console.error(`Test run failed: ${error.message}`);

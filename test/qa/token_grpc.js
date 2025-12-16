@@ -262,6 +262,14 @@ function createClient(url) {
         return promisifyByMetadata(nativeClient.GenerateBatchMintProof.bind(nativeClient), request, metadata);
     };
 
+    client.generateBatchSplitToken = async function (request, metadata) {
+        return promisifyByMetadata(nativeClient.GenerateBatchSplitToken.bind(nativeClient), request, metadata);
+    };
+
+    client.getBatchSplitTokenDetail = async function (request,metadata) {
+        return promisifyByMetadata(nativeClient.GetBatchSplitTokenDetail.bind(nativeClient), request,metadata);
+    };
+
     client.waitForProofCompletion = async function (callBack, request_id, interval = 4000) {
         return new Promise(async (resolve, reject) => {
             while (true) {

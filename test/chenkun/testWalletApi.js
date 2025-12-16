@@ -41,11 +41,6 @@ const CONSTANTS = {
 
 // Initialize client and provider
 const client = createClient(CONSTANTS.rpcUrl);
-const l1Provider = new ethers.JsonRpcProvider(
-  hardhatConfig.networks.ucl_L2.url, 
-  CONSTANTS.network, 
-  CONSTANTS.providerOptions
-);
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
   const wallet = new ethers.Wallet(privateKey);
@@ -60,7 +55,6 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 
   return metadata;
 }
-var sc_address = '0x5dc1E82631a4BE896333F38a8214554326C11796'
 async function getSmartContractList() {
   try {
     const metadata = await createAuthMetadata(accounts.OwnerKey);
@@ -92,7 +86,7 @@ async function activateSmartContract() {
 
 async function getAssetAddressList() {
   try {
-    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    const metadata = await createAuthMetadata(accounts.MinterKey);
     var request = {
       "asset_address": accounts.Minter,
     }
@@ -121,7 +115,82 @@ async function UploadSmartContractIcon() {
   }
 }
 
+async function SaveTransaction() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    const currentRandom = Math.floor(Math.random() * 100) + 1;
+    const currentRandom2 = Math.floor(Math.random() * 10) + 1;  // 获取1-10随机数
+
+    var request = {
+      "asset_name": "0x1234",
+      "from_address":"0x1234431223asdvasdva",
+      "to_address":"0x1234431223asdvasdva",
+      "amount": currentRandom2 * 100 + currentRandom,
+      "type": "transfer",
+      "hash": "1234431223asdvasdva" + currentRandom + currentRandom2,
+      "timestamp": Date.now(),
+      "metadata": "",
+      "currency_precision": 4,
+      "exchange_rate": "123.4431"
+    }
+    const response = await client.saveTransaction(request, metadata);
+    console.log("response:", response);
+  } catch (error) {
+    console.error(`failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function SaveTransactionMultiple() {
+  var times = 100;
+  for (let i = 1; i <= times; i++) {
+    await SaveTransaction();
+    console.log(`Transaction ${i} saved successfully.`);
+  }
+}
+
+async function GetTransaction() {
+  try {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    var request = {
+      "page_num": 2,
+      "page_size": 3,
+    }
+    const response = await client.getTransaction(request, metadata);
+    console.log("response:", response);
+  } catch (error) {
+    console.error(`failed: ${error.message}`);
+    throw error;
+  }
+}
+
+async function getBankManagerList() {
+    const metadata = await createAuthMetadata(accounts.OwnerKey);
+    var request = {
+      sc_address : '0x3c3c2b7e0195a5a8002e0dc0040402589484f6f2',
+      manager_address : ''
+    }
+
+    const response = await client.getBankManagerList(request, metadata);
+    console.log("response:", response);
+}
+
+async function getBankProfile() {
+  const metadata = await createAuthMetadata(accounts.OwnerKey);
+  var request = {
+    manager_address : '0xf17f52151ebef6c7334fad080c5704d77216b732'
+  }
+
+  const response = await client.getBankProfile(request, metadata);
+  console.log("response:", response);
+}
 // getSmartContractList().then();
 // activateSmartContract().then();
-getAssetAddressList().then();
+// getAssetAddressList().then();
 // UploadSmartContractIcon().then();
+// SaveTransaction().then();
+// GetTransaction().then();
+// SaveTransactionMultiple().then();
+GetTransaction().then();
+// getBankManagerList().then()
+// getBankProfile().then();
