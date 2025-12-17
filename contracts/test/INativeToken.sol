@@ -75,13 +75,15 @@ interface INativeToken {
      * @param newAllowed Updated ElGamal authorization info
      * @param proof ZKP proof (8 elements)
      * @param publicInputs Public inputs for proof verification
+     * @param paddingNum Number of dummy values to pad in publicInputs
      */
     function mint(
         address[] calldata recipients,
         TokenModel.TokenEntity[] memory tokens,
         TokenModel.ElGamalToken memory newAllowed,
         uint256[8] calldata proof,
-        uint256[] calldata publicInputs
+        uint256[] calldata publicInputs,
+        uint256 paddingNum
     ) external returns (bool);
 
     /**
@@ -92,6 +94,7 @@ interface INativeToken {
      * @param newTokens New token entities to create
      * @param proof ZKP proof (8 elements)
      * @param publicInputs Public inputs for proof verification
+     * @param paddingNum Number of dummy values to pad in publicInputs
      */
     function split(
         address from,
@@ -99,7 +102,8 @@ interface INativeToken {
         uint256[] memory consumedIds,
         TokenModel.TokenEntity[] calldata newTokens,
         uint256[8] calldata proof,
-        uint256[] calldata publicInputs
+        uint256[] calldata publicInputs,
+        uint256 paddingNum
     ) external returns (bool);
 
     /**
