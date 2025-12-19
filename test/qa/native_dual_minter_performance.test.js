@@ -11,9 +11,13 @@ const client = createClient(rpcUrl);
 // 固定的两个minter地址和私钥
 const MINTER_CONFIG = {
     minter1: {
-        address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4", 
-        privateKey: "8d62b2ea374152ebf46f122166319f96ee5847f21d8045dddf35bca772d3fa96"   // 使用配置文件中的另一个私钥
+        address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B",
+        privateKey: "f7a610afa00eac908941fe2c9f8cd57142408d2edf13aed4e4efa52fe7958ab1"   // 使用配置文件中的另一个私钥
     },
+    // minter1: {
+    //     address: "0xF50F25915126d936C64A194b2C1DAa1EA45392c4",
+    //     privateKey: "8d62b2ea374152ebf46f122166319f96ee5847f21d8045dddf35bca772d3fa96"   // 使用配置文件中的另一个私钥
+    // },
     minter2: {
         address: "0x4568E35F2c4590Bde059be615015AaB6cc873004",
         privateKey: "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca"   // 使用配置文件中的另一个私钥
