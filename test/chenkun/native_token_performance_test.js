@@ -434,7 +434,7 @@ async function testBatchedSplitForPerformance() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const requestIds = [];
-        let count = 40;
+        let count = 150;
         // 调用5次generateBatchSplitToken
         for (let i = 0; i < count; i++) {
             console.log(`Generating batch split token request ${i + 1}/ ${count} ...`);
@@ -537,7 +537,7 @@ async function testMintSequential() {
     }
 }
 // testSetMintAllowed().then();
-testMint().then();
+// testMint().then();
 // testMintSequential().then();
 // testBatchedSplit().then();
 // getTokenById().then();
@@ -546,4 +546,4 @@ testMint().then();
 
 // testGetSplitToken().then()
 // testBatched().then()
-// testBatchedSplitForPerformance().then()
+testBatchedSplitForPerformance().then()
