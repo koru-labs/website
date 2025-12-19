@@ -7,7 +7,7 @@ const grpc = require("@grpc/grpc-js");
 const {parseEventsFromReceipt} = require("../sun/native_token_event_test");
 
 const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-const native_token_address = "0x9f041c66a62783c899928875d7387e63dfab70a8";
+const native_token_address = "0xE752b9013333Ae56C0DbEF69F66beBE227a3388A";
 
 const fromAddress = accounts.Minter;
 // const rpcUrl = "localhost:50051";
@@ -160,9 +160,8 @@ async function getTokenById(){
         abi,
         signer
     );
-    // const native = await ethers.getContractAt("INativeToken", native_token_address);
     console.log("signerAddress", minter.address);
-    let response = await native.getToken(accounts.Minter, "6977966215661930594392328880707204758083584647887782972258446026172469606001")
+    let response = await native.getToken('0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B', "4385598658768795221101503380093200974804168076317207794219303818609721418979")
     console.log("response", response);
 }
 async function testSplit(requestId,fromAddress) {
@@ -536,8 +535,117 @@ async function testMintSequential() {
         console.log(`完成第 ${i + 1} 次调用 testMint`);
     }
 }
+async function testTransferConcurrent(tokenIds) {
+    try {
+        const [signer, minter] = await ethers.getSigners();
+        const native = new ethers.Contract(
+            native_token_address,
+            abi,
+            minter
+        );
+
+        console.log(`开始并发执行 ${tokenIds.length} 个transfer操作`);
+        const startTime = Date.now();
+
+        // 获取账户当前nonce，用于显式管理nonce
+        const startingNonce = await minter.getNonce();
+        console.log(`起始nonce: ${startingNonce}`);
+
+        // 创建并发的transfer操作数组
+        const transferPromises = tokenIds.map((tokenId, index) => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log(`开始执行第 ${index + 1} 个transfer操作，tokenId: ${tokenId}`);
+
+                    // 为每个交易分配一个唯一的nonce
+                    const nonce = startingNonce + index;
+                    console.log(`第 ${index + 1} 个交易使用nonce: ${nonce}`);
+
+                    // 显式指定nonce发送交易
+                    let tx = await native.transfer(
+                        tokenId,
+                        `hello word ${index + 1}`,
+                        { nonce: nonce } // 显式指定nonce
+                    );
+
+                    console.log(`第 ${index + 1} 个transfer操作已发送，tx hash: ${tx.hash}, nonce: ${nonce}`);
+                    let rc = await tx.wait();
+                    console.log(`第 ${index + 1} 个transfer操作已完成，receipt nonce: ${rc.nonce}`);
+                    resolve({ success: true, tokenId, txHash: tx.hash, nonce: nonce, receipt: rc });
+                } catch (error) {
+                    console.error(`第 ${index + 1} 个transfer操作失败，tokenId: ${tokenId}，错误: ${error.message}`);
+                    resolve({ success: false, tokenId, error: error.message });
+                }
+            });
+        });
+
+        // 并发执行所有transfer操作
+        const results = await Promise.all(transferPromises);
+
+        const endTime = Date.now();
+        const totalTime = endTime - startTime;
+
+        // 统计结果
+        const successfulTransfers = results.filter(result => result.success).length;
+        const failedTransfers = results.filter(result => !result.success).length;
+
+        console.log(`\n=== 并发transfer操作结果统计 ===`);
+        console.log(`总操作数: ${tokenIds.length}`);
+        console.log(`成功操作数: ${successfulTransfers}`);
+        console.log(`失败操作数: ${failedTransfers}`);
+        console.log(`总耗时: ${totalTime} 毫秒`);
+        console.log(`平均耗时: ${Math.round(totalTime / tokenIds.length)} 毫秒/操作`);
+
+        return results;
+    } catch (error) {
+        console.error(`并发transfer操作执行失败: ${error.message}`);
+        throw error;
+    }
+}
+
+async function testTransfers() {
+    const tokenIds = [
+        '1959638575550990603320548750781691395032427107305952096002298799845415140525',
+        '8962815611116123569610421009364173946262796802819620336139590999795083329913',
+        '21866601158687426373179398453393658086397047655792553425064046538505616897707',
+        '14843313671378035743446088870588153531594818848011361150837369189521373956943',
+        '2373861657360026689896294442169029271610896378061725307365638434424158556533',
+        '18919140638282579923933478153861055104765893530973370482959480708177277253296',
+        '11023446684178911882316150860878885011138918037692984505928866666803741898304',
+        '15144217353832658690604150561327639919863975952673566260034014910963899607467',
+        '13704401578236207559314982550539508056957987819927280923469053232215817115071',
+        '7628953566750631722381128650397781208247395195368718079551418542046388076232',
+        '3876877179757234547002860863912097261435928869442332322614684336741995474822',
+        '12548863085420229163763492203305369316117212986684178431731691584147406092174',
+        '1053683940063761641171888137324607349177529231632068787377011960444577197324',
+        '8805325156418013850186169514347393576057448937293326417051025387064156725955',
+        '18092067383437205026149342538690327532043532150669035635650698225884599547407',
+        '13502864120574229960520802400865357072600021234202953073787942728254712945449',
+        '17140478961380858998307426358212306428639344482390389365962562121420983386759',
+        '11705963622057369580625327992118494635482961326166607598188108028986738922233',
+        '16010429620173833918508823732547949929721243898636874530296023478564807597745',
+        '3859868357652196277317340304061771849258042891761020180735788680577937243371',
+        '19450892471605054657087860657316113413524922841742285057700833790499341321759',
+        '12018721373316406290752153658341151698520267298137281451358569296817933738336',
+        '7056568821158080402947299942524297504137250232867873304076689692122530737716',
+        '8016247909526787537174479097796479950570602822722989289001802089209640565795',
+        '14967660985379114534527249564474006636733614414951246739882880582583955099336',
+        '557914357004437658977419154319122846067387511674974799839579155755575321986',
+        '11529309480424318153958479800963969892212232177571686613426207406088702384219',
+        '20467417085197104215371503493571265087079892088679792261539306387120702607242',
+        '4385598658768795221101503380093200974804168076317207794219303818609721418979',
+        '373292785665268722327308623597187901202723023011143006276633832026027851028',
+
+    ];
+    testTransferConcurrent(tokenIds).then(results => {
+        console.log('所有transfer操作执行完成');
+        console.log('详细结果:', results);
+    }).catch(error => {
+        console.error('并发transfer操作失败:', error);
+    });
+}
 // testSetMintAllowed().then();
-// testMint().then();
+testMint().then();
 // testMintSequential().then();
 // testBatchedSplit().then();
 // getTokenById().then();
@@ -546,4 +654,5 @@ async function testMintSequential() {
 
 // testGetSplitToken().then()
 // testBatched().then()
-testBatchedSplitForPerformance().then()
+// testBatchedSplitForPerformance().then()
+// testTransfers().then()
