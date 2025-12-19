@@ -531,6 +531,8 @@ async function testMintSequential() {
     for (let i = 0; i < 10; i++) {
         console.log(`开始第 ${i + 1} 次调用 testMint`);
         await testMint();
+        // 等待一段时间，例如1秒
+        await new Promise(resolve => setTimeout(resolve, 5000));
         console.log(`完成第 ${i + 1} 次调用 testMint`);
     }
 }
