@@ -976,6 +976,7 @@ message GetBatchSplitTokenDetailResponse {
   repeated string proof = 5;
   repeated string public_input = 6;
   repeated string to_addresses = 7;
+  uint64 batched_size = 8;
 }
 message TokenDetail {
   string token_id = 1;
@@ -998,8 +999,10 @@ message GenerateBatchedSplitRequest {
 }
 message BatchedSplitTokenResponse {
   string request_id = 1;
-  TokenActionStatusEnum status = 2;
+  uint64 BatchedSize = 2;
+  TokenActionStatusEnum status = 3;
 }
+
 
 message GenerateBatchedMintRequest {
   string sc_address = 1 ;
@@ -1029,7 +1032,8 @@ message BatchedMintProofResponse {
   ElGamalToken mint_allowed = 6;
   repeated string  proof = 7;
   repeated string  input = 8;
-  TokenActionStatusEnum status = 9;
+  uint64 batched_size = 9;
+  TokenActionStatusEnum status = 10;
 }
 
 message ToAccountInfo {
