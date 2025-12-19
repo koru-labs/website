@@ -162,7 +162,7 @@ async function getTokenById(){
     );
     // const native = await ethers.getContractAt("INativeToken", native_token_address);
     console.log("signerAddress", minter.address);
-    let response = await native.getToken(accounts.Minter, "4683979180028596418636960116215541970947703876173175470760849050835674256688")
+    let response = await native.getToken(accounts.Minter, "13080291398052979831713037722296735538358086789358972298100049883518745961684")
     console.log("response", response);
 }
 async function testSplit(requestId,fromAddress) {
@@ -527,7 +527,7 @@ async function testGetSplitToken() {
     console.log("Get split token list response:", tokens.split_tokens.length);
 }
 // testSetMintAllowed().then();
-// testMint().then();
+testMint().then();
 // testBatchedSplit().then();
 // getTokenById().then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
@@ -535,4 +535,4 @@ async function testGetSplitToken() {
 
 // testGetSplitToken().then()
 // testBatched().then()
-testBatchedSplitForPerformance().then()
+// testBatchedSplitForPerformance().then()
