@@ -538,7 +538,7 @@ async function testMintSequential() {
 }
 // testSetMintAllowed().then();
 // testMint().then();
-testMintSequential().then();
+// testMintSequential().then();
 // testBatchedSplit().then();
 // getTokenById().then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
@@ -546,4 +546,4 @@ testMintSequential().then();
 
 // testGetSplitToken().then()
 // testBatched().then()
-// testBatchedSplitForPerformance().then()
+testBatchedSplitForPerformance().then()
