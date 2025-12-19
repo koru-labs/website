@@ -526,8 +526,17 @@ async function testGetSplitToken() {
     console.log("Get split token list response:", tokens);
     console.log("Get split token list response:", tokens.split_tokens.length);
 }
+
+async function testMintSequential() {
+    for (let i = 0; i < 10; i++) {
+        console.log(`开始第 ${i + 1} 次调用 testMint`);
+        await testMint();
+        console.log(`完成第 ${i + 1} 次调用 testMint`);
+    }
+}
 // testSetMintAllowed().then();
-testMint().then();
+// testMint().then();
+testMintSequential().then();
 // testBatchedSplit().then();
 // getTokenById().then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
