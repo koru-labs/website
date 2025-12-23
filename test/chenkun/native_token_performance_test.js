@@ -7,7 +7,7 @@ const grpc = require("@grpc/grpc-js");
 const {parseEventsFromReceipt} = require("../sun/native_token_event_test");
 
 const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-const native_token_address = "0xE752b9013333Ae56C0DbEF69F66beBE227a3388A";
+const native_token_address = "0x455413b11d8e2cddd1443990349221590684a5f0";
 
 const fromAddress = accounts.Minter;
 // const rpcUrl = "localhost:50051";
@@ -39,37 +39,37 @@ async function testMint() {
 
     const to_accounts = [
         { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
-        // { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
     ]
     const generateRequest = {
         sc_address: native_token_address,
@@ -154,15 +154,62 @@ async function testBatchedSplit() {
 }
 
 async function getTokenById(){
-    const [signer,minter] = await ethers.getSigners();
+    const [signer, minter] = await ethers.getSigners();
     const native = new ethers.Contract(
         native_token_address,
         abi,
         signer
     );
     console.log("signerAddress", minter.address);
-    let response = await native.getToken('0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B', "4385598658768795221101503380093200974804168076317207794219303818609721418979")
-    console.log("response", response);
+
+    let tokens = [
+        '10905053622205438689739027999115239912597380720811595399288006884145536738357',
+        '10519509999971084793225904706957460494464595230186142022875960696832366960974',
+        '10694312173746923066453951994784672039742994060051175911165582260494482344266',
+        '10370119094176972306172511240775284172383198153810103985037890508173601839935',
+        '10049302483018309625939913161922941530481695941028893449516103421063183339747',
+        '10153449980621794834163425791546919823573562666316006167153574672104660859273',
+        '10626152131601749046586119710884659090126679340587751025913694974121461310607',
+        '11160844704918862802166424862513886897069707870833504412559916051139162663752',
+        '10409712064253944818049590490462302516761126880291184107402043857187515119515',
+        '10079709895952366494606168140825840392494515171910722042296575614636148121033',
+        '10831027374570781184293989827384556639356664690744767266127336883817831331228',
+        '10369142022574585260067544463592989127236967895998189725124588655875427400407',
+    ];
+
+    const results = {
+        success: [],
+        failed: []
+    };
+
+    console.log(`开始处理 ${tokens.length} 个 tokenId...`);
+
+    // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
+    for (const tokenId of tokens) {
+        try {
+            let response = await native.getToken(accounts.Minter, tokenId);
+            console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
+            results.success.push({ tokenId, response });
+        } catch (error) {
+            console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
+            results.failed.push({ tokenId, error: error.message });
+        }
+    }
+
+    // 输出汇总结果
+    console.log(`\n=== 查询结果汇总 ===`);
+    console.log(`总查询数: ${tokens.length}`);
+    console.log(`成功数: ${results.success.length}`);
+    console.log(`失败数: ${results.failed.length}`);
+
+    if (results.failed.length > 0) {
+        console.log(`\n失败的 tokenId 列表:`);
+        results.failed.forEach(item => {
+            console.log(`- ${item.tokenId}: ${item.error}`);
+        });
+    }
+
+    return results;
 }
 async function testSplit(requestId,fromAddress) {
     const [signer,minter] = await ethers.getSigners();
@@ -228,7 +275,7 @@ async function testTransfer() {
         minter
     );
 
-    let tx = await native.transfer('3240122696165267122125630750990396030503503895201738639543917722614805737645',  "hello word");
+    let tx = await native.transfer('18106704663288068145491098640877218307881382666044997452210139370058196822164',  "hello word");
     console.log(tx);
     console.log("wait for response of tx");
     let rc = await tx.wait();
@@ -433,7 +480,7 @@ async function testBatchedSplitForPerformance() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const requestIds = [];
-        let count = 150;
+        let count = 10;
         // 调用5次generateBatchSplitToken
         for (let i = 0; i < count; i++) {
             console.log(`Generating batch split token request ${i + 1}/ ${count} ...`);
@@ -451,27 +498,27 @@ async function testBatchedSplitForPerformance() {
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
-                {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
+                // {address: accounts.To1,amount: 1,comment:"1"},
             ];
 
             const splitRequest = {
@@ -605,37 +652,38 @@ async function testTransferConcurrent(tokenIds) {
 
 async function testTransfers() {
     const tokenIds = [
-        '1959638575550990603320548750781691395032427107305952096002298799845415140525',
-        '8962815611116123569610421009364173946262796802819620336139590999795083329913',
-        '21866601158687426373179398453393658086397047655792553425064046538505616897707',
-        '14843313671378035743446088870588153531594818848011361150837369189521373956943',
-        '2373861657360026689896294442169029271610896378061725307365638434424158556533',
-        '18919140638282579923933478153861055104765893530973370482959480708177277253296',
-        '11023446684178911882316150860878885011138918037692984505928866666803741898304',
-        '15144217353832658690604150561327639919863975952673566260034014910963899607467',
-        '13704401578236207559314982550539508056957987819927280923469053232215817115071',
-        '7628953566750631722381128650397781208247395195368718079551418542046388076232',
-        '3876877179757234547002860863912097261435928869442332322614684336741995474822',
-        '12548863085420229163763492203305369316117212986684178431731691584147406092174',
-        '1053683940063761641171888137324607349177529231632068787377011960444577197324',
-        '8805325156418013850186169514347393576057448937293326417051025387064156725955',
-        '18092067383437205026149342538690327532043532150669035635650698225884599547407',
-        '13502864120574229960520802400865357072600021234202953073787942728254712945449',
-        '17140478961380858998307426358212306428639344482390389365962562121420983386759',
-        '11705963622057369580625327992118494635482961326166607598188108028986738922233',
-        '16010429620173833918508823732547949929721243898636874530296023478564807597745',
-        '3859868357652196277317340304061771849258042891761020180735788680577937243371',
-        '19450892471605054657087860657316113413524922841742285057700833790499341321759',
-        '12018721373316406290752153658341151698520267298137281451358569296817933738336',
-        '7056568821158080402947299942524297504137250232867873304076689692122530737716',
-        '8016247909526787537174479097796479950570602822722989289001802089209640565795',
-        '14967660985379114534527249564474006636733614414951246739882880582583955099336',
-        '557914357004437658977419154319122846067387511674974799839579155755575321986',
-        '11529309480424318153958479800963969892212232177571686613426207406088702384219',
-        '20467417085197104215371503493571265087079892088679792261539306387120702607242',
-        '4385598658768795221101503380093200974804168076317207794219303818609721418979',
-        '373292785665268722327308623597187901202723023011143006276633832026027851028',
-
+        '21350816825480577333141102120676617053892918441217241735953636696052225604375',
+        '4745825129654455032533893703129013900838866663897749003790969366622225598696',
+        '4813758263750543897772908020868249422492544893242163825995221290684106585767',
+        '1226065539496860957012371379434010808803929799981691598316000429159181173492',
+        '19241688198201817139466250174312269619573416830753679624985134508191332435751',
+        '18303189489378600709369794734046902056800461188619302791850036922550150695695',
+        '11376603406969987994582448024978395895883496303040409735964054880922168086550',
+        '4577034225750352476284376114102530759659148015175975113907495156153569465365',
+        '382208582573851191750333969595702288511528832018399544311062737036594789073',
+        '2099141328528561932815230735254825034243259767144625223224507787895681804372',
+        '6765183097521258569749176203934599806249915004849796168619628136294551431684',
+        '20975217844942381523008801639275926150709580778786950205460677401753135047715',
+        '16195130313734831413197689085594292754701406959025720686415536681837000044974',
+        '11899904674513530641999193099590286829170473664126950290822085893964130617830',
+        '580080289417679181866750317500749540002016614505851324175754180058293111001',
+        '13324288387494057539210253170602870494169483443290919264559412102499369362299',
+        '6082787084695025130873721250894138865282112602603541182562785385375040320485',
+        '21634802919871595002497460583209229323130211618160950069964286829701377610820',
+        '5030737550036475852667977049689451404420328009711175012256158406741133178911',
+        '15352932513620528122818409692311753170859107757063343892112773417154124122522',
+        '17803955944033799079977556941435479609067427510370017405716844179673132886793',
+        '14058927110418143128769323945319125712493202165024893402123577402377247828340',
+        '9235632335549489185795684871309005884374993005023174404482207471850911722377',
+        '19018572432885808700479466607464789786095032217397218415733033309376327290725',
+        '13169235270394674967967356147996729358630710743703213408059796834535438576508',
+        '3649013354636959114797365611512927539353615524673245184847463475472984936463',
+        '25342494523186899607679148003025520256189761236345968614173598065820586134',
+        '12634220879709230996888934510167986728091466394802157082717092405607461507849',
+        '6249549122952658068206951966599875951877857989267272936492449458187787067834',
+        '18106704663288068145491098640877218307881382666044997452210139370058196822164',
+        '16504503646013263974057035039306845053225822633496134565750064600654175543383',
+        '16190066770929703405485847154146855859244319864590340513141240523322959740776',
     ];
     testTransferConcurrent(tokenIds).then(results => {
         console.log('所有transfer操作执行完成');
@@ -644,14 +692,19 @@ async function testTransfers() {
         console.error('并发transfer操作失败:', error);
     });
 }
+async function testNonce() {
+    const [signer, minter] = await ethers.getSigners();
+    let nonce = await minter.getNonce();
+    console.log("nonce", nonce);
+}
 // testSetMintAllowed().then();
-testMint().then();
+// testMint().then();
 // testMintSequential().then();
 // testBatchedSplit().then();
-// getTokenById().then();
+getTokenById().then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
 // testTransfer().then();
-
+// testNonce().then();
 // testGetSplitToken().then()
 // testBatched().then()
 // testBatchedSplitForPerformance().then()
