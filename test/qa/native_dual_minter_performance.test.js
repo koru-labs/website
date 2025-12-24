@@ -536,7 +536,7 @@ describe('Native Token Basic Split And Mint Tests', function () {
     });
 });
 
-describe('Native Token Pre-signing and HTTP Submission Test', function () {
+describe.only('Native Token Pre-signing and HTTP Submission Test', function () {
     let client, owner;
     let nativeOwner;
 
@@ -577,7 +577,7 @@ describe('Native Token Pre-signing and HTTP Submission Test', function () {
                 client,
                 { minter1: MINTERS.minter1 },
                 2,  // Mint 10 tokens
-                50   // Each token amount
+                100   // Each token amount
             );
 
             console.log('\n✅ Minter1 minting completed');
