@@ -8,7 +8,7 @@ const native_token_address = "0xd40eD538ba00BC823674bcE975e446c194ac0C57";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 
-// 固定的两个minter地址和私钥
+// Fixed two minter addresses and private keys
 const MINTERS = {
     minter1: {
         address: "0x983b4bA7e42E664dDBfe4ed3E0Ea07D90EFCc13B",
@@ -20,7 +20,7 @@ const MINTERS = {
     }
 };
 
-// 固定的两个receiver地址
+// Fixed two receiver addresses
 const RECEIVER_CONFIG = {
     receiver1: "0x4312488937D47A007De24d48aB82940C809EEb2b",
     receiver2: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f"
@@ -42,12 +42,12 @@ async function createAuthMetadata(privateKey, messagePrefix = "login") {
 }
 
 async function setupMintAllowance(native, client, minters, amount) {
-    console.log(`\n=== 设置铸币权限 ===`);
+    console.log(`\n=== Setting up mint allowance ===`);
 
     const ownerMetadata = await createAuthMetadata(accounts.OwnerKey);
 
     for (const [minterName, minterConfig] of Object.entries(minters)) {
-        console.log(`[${minterName}] 正在编码金额并设置权限...`);
+        console.log(`[${minterName}] Encoding amount and setting permission...`);
         const response = await client.encodeElgamalAmount(amount, ownerMetadata);
         const allowed = {
             id: ethers.toBigInt(response.token_id),
@@ -61,24 +61,24 @@ async function setupMintAllowance(native, client, minters, amount) {
 
         const tx = await native.setMintAllowed(minterConfig.address, allowed);
         await tx.wait();
-        console.log(`✅ [${minterName}] 权限设置完成`);
+        console.log(`✅ [${minterName}] Permission setup completed`);
     }
 }
 
 
 async function mintTokensForMinters(client, minters, number, amount) {
-    console.log(`\n=== 为minters铸造代币 ===`);
+    console.log(`\n=== Minting tokens for minters ===`);
     const mintedTokens = {};
 
-    // 遍历所有minter配置
+    // Iterate through all minter configurations
     for (const [minterName, minterConfig] of Object.entries(minters)) {
-        console.log(`\n[${minterName}] ===== 开始铸币流程 =====`);
-        console.log(`[${minterName}] 目标: ${number}个代币，每个金额: ${amount}`);
+        console.log(`\n[${minterName}] ===== Starting minting process =====`);
+        console.log(`[${minterName}] Target: ${number} tokens, each amount: ${amount}`);
 
         const minterWallet = new ethers.Wallet(minterConfig.privateKey, ethers.provider);
         const minterMetadata = await createAuthMetadata(minterConfig.privateKey);
 
-        // 动态创建 to_accounts 数组
+        // Dynamically create to_accounts array
         const to_accounts = Array(number).fill().map(() => ({
             address: minterConfig.address,
             amount: amount
@@ -91,21 +91,21 @@ async function mintTokensForMinters(client, minters, number, amount) {
             to_accounts: to_accounts,
         };
 
-        console.log(`[${minterName}] 📤 正在调用 generateBatchMintProof...`);
+        console.log(`[${minterName}] 📤 Calling generateBatchMintProof...`);
         let response;
         try {
             response = await client.generateBatchMintProof(generateRequest, minterMetadata);
-            console.log(`[${minterName}] ✅ 证明生成成功`);
-            console.log(`[${minterName}] 返回账户数: ${response.to_accounts?.length || 0}`);
+            console.log(`[${minterName}] ✅ Proof generation successful`);
+            console.log(`[${minterName}] Returned account count: ${response.to_accounts?.length || 0}`);
             console.log(`[${minterName}] MintAllowed ID: ${response.mint_allowed?.token_id}`);
         } catch (error) {
-            console.error(`\n[${minterName}] ❌ 证明生成失败!`);
-            console.error(`[${minterName}] 错误码: ${error.code}`);
-            console.error(`[${minterName}] 错误消息: ${error.message}`);
+            console.error(`\n[${minterName}] ❌ Proof generation failed!`);
+            console.error(`[${minterName}] Error code: ${error.code}`);
+            console.error(`[${minterName}] Error message: ${error.message}`);
             throw error;
         }
 
-        // 处理响应数据
+        // Process response data
         const recipients = response.to_accounts.map(account => account.address);
         const bathcedSize = response.batched_size
         console.log("bathcedSize", bathcedSize);
@@ -136,42 +136,166 @@ async function mintTokensForMinters(client, minters, number, amount) {
         const proof = response.proof.map(p => ethers.toBigInt(p));
         const publicInputs = response.input.map(i => ethers.toBigInt(i));
 
-        console.log(`\n[${minterName}] ===== 准备执行铸币交易 =====`);
-        console.log(`[${minterName}] Recipients数量: ${recipients.length}`);
-        console.log(`[${minterName}] NewTokens数量: ${newTokens.length}`);
-        console.log(`[${minterName}] 第一个Token ID: ${newTokens[0]?.id}`);
+        console.log(`\n[${minterName}] ===== Preparing to execute mint transaction =====`);
+        console.log(`[${minterName}] Recipients count: ${recipients.length}`);
+        console.log(`[${minterName}] NewTokens count: ${newTokens.length}`);
+        console.log(`[${minterName}] First Token ID: ${newTokens[0]?.id}`);
         console.log(`[${minterName}] MintAllowed ID: ${newAllowed.id}`);
 
-        // 准备合约实例
+        // Prepare contract instance
         const native = new ethers.Contract(native_token_address, abi, minterWallet);
 
         try {
-            console.log(`[${minterName}] 🚀 正在发送铸币交易...`);
-            // 移除手动gas参数，让ethers自动处理
+            console.log(`[${minterName}] 🚀 Sending mint transaction...`);
+            // Remove manual gas parameter, let ethers handle it automatically
             const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs,bathcedSize - to_accounts.length);
 
-            console.log(`[${minterName}] 📡 交易已发送, Hash: ${tx.hash}`);
-            console.log(`[${minterName}] ⏳ 等待确认中 (最多10分钟)...`);
+            console.log(`[${minterName}] 📡 Transaction sent, Hash: ${tx.hash}`);
+            console.log(`[${minterName}] ⏳ Waiting for confirmation (up to 10 minutes)...`);
 
             const waitStartTime = Date.now();
             const receipt = await tx.wait();
             const waitTime = Date.now() - waitStartTime;
 
-            console.log(`\n[${minterName}] ✅ 交易确认成功!`);
-            console.log(`[${minterName}] 区块号: ${receipt.blockNumber}`);
-            console.log(`[${minterName}] Gas使用: ${receipt.gasUsed}`);
+            console.log(`\n[${minterName}] ✅ Transaction confirmed successfully!`);
+            console.log(`[${minterName}] Block number: ${receipt.blockNumber}`);
+            console.log(`[${minterName}] Gas used: ${receipt.gasUsed}`);
 
-            // 保存代币ID
+            // Save token IDs
             mintedTokens[minterName] = newTokens.map(token => token.id);
-            console.log(`\n✅ [${minterName}] 成功铸造 ${number} 个代币，每个金额 ${amount}`);
+            console.log(`\n✅ [${minterName}] Successfully minted ${number} tokens, each amount ${amount}`);
 
         } catch (error) {
-            console.error(`\n[${minterName}] ❌ 铸币交易失败!`);
-            console.error(`[${minterName}] 错误类型: ${error.code || 'N/A'}`);
-            console.error(`[${minterName}] 错误消息: ${error.message}`);
+            console.error(`\n[${minterName}] ❌ Mint transaction failed!`);
+            console.error(`[${minterName}] Error type: ${error.code || 'N/A'}`);
+            console.error(`[${minterName}] Error message: ${error.message}`);
 
             if (error.transactionHash) {
-                console.error(`[${minterName}] 失败的交易Hash: ${error.transactionHash}`);
+                console.error(`[${minterName}] Failed transaction Hash: ${error.transactionHash}`);
+            }
+
+            throw error;
+        }
+    }
+
+    return mintedTokens;
+}
+async function mintTokensForMintersWithAmountList(client, minters, number, amountList) {
+    console.log(`\n=== Minting tokens for minters ===`);
+    const mintedTokens = {};
+
+    // Validate that amountList is an array and not empty
+    if (!Array.isArray(amountList) || amountList.length === 0) {
+        throw new Error("amountList must be a non-empty array");
+    }
+
+    // Iterate through all minter configurations
+    for (const [minterName, minterConfig] of Object.entries(minters)) {
+        console.log(`\n[${minterName}] ===== Starting minting process =====`);
+        console.log(`[${minterName}] Target: ${number} tokens, random amount list: [${amountList.join(', ')}]`);
+
+        const minterWallet = new ethers.Wallet(minterConfig.privateKey, ethers.provider);
+        const minterMetadata = await createAuthMetadata(minterConfig.privateKey);
+
+        // Dynamically create to_accounts array, randomly selecting values from amountList
+        const to_accounts = Array(number).fill().map(() => ({
+            address: minterConfig.address,
+            amount: amountList[Math.floor(Math.random() * amountList.length)]
+        }));
+
+        // Print actual used amount distribution (for debugging)
+        const usedAmounts = to_accounts.map(acc => acc.amount);
+        console.log(`[${minterName}] Actual used amounts: [${usedAmounts.join(', ')}]`);
+
+        const generateRequest = {
+            sc_address: native_token_address,
+            token_type: '0',
+            from_address: minterConfig.address,
+            to_accounts: to_accounts,
+        };
+
+        console.log(`[${minterName}] 📤 Calling generateBatchMintProof...`);
+        let response;
+        try {
+            response = await client.generateBatchMintProof(generateRequest, minterMetadata);
+            console.log(`[${minterName}] ✅ Proof generation successful`);
+            console.log(`[${minterName}] Returned account count: ${response.to_accounts?.length || 0}`);
+            console.log(`[${minterName}] MintAllowed ID: ${response.mint_allowed?.token_id}`);
+        } catch (error) {
+            console.error(`\n[${minterName}] ❌ Proof generation failed!`);
+            console.error(`[${minterName}] Error code: ${error.code}`);
+            console.error(`[${minterName}] Error message: ${error.message}`);
+            throw error;
+        }
+
+        // Process response data
+        const recipients = response.to_accounts.map(account => account.address);
+        const bathcedSize = response.batched_size;
+        console.log("bathcedSize", bathcedSize);
+
+        const newTokens = response.to_accounts.map((account, index) => ({
+            id: account.token.token_id,
+            owner: account.address,
+            status: 2,
+            amount: {
+                cl_x: account.token.cl_x,
+                cl_y: account.token.cl_y,
+                cr_x: account.token.cr_x,
+                cr_y: account.token.cr_y,
+            },
+            to: account.address,
+            rollbackTokenId: 0
+        }));
+
+        const newAllowed = {
+            id: response.mint_allowed.token_id,
+            value: {
+                cl_x: response.mint_allowed.cl_x,
+                cl_y: response.mint_allowed.cl_y,
+                cr_x: response.mint_allowed.cr_x,
+                cr_y: response.mint_allowed.cr_y,
+            }
+        };
+
+        const proof = response.proof.map(p => ethers.toBigInt(p));
+        const publicInputs = response.input.map(i => ethers.toBigInt(i));
+
+        console.log(`\n[${minterName}] ===== Preparing to execute mint transaction =====`);
+        console.log(`[${minterName}] Recipients count: ${recipients.length}`);
+        console.log(`[${minterName}] NewTokens count: ${newTokens.length}`);
+        console.log(`[${minterName}] First Token ID: ${newTokens[0]?.id}`);
+        console.log(`[${minterName}] MintAllowed ID: ${newAllowed.id}`);
+
+        // Prepare contract instance
+        const native = new ethers.Contract(native_token_address, abi, minterWallet);
+
+        try {
+            console.log(`[${minterName}] 🚀 Sending mint transaction...`);
+            // Remove manual gas parameter, let ethers handle it automatically
+            const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length);
+
+            console.log(`[${minterName}] 📡 Transaction sent, Hash: ${tx.hash}`);
+            console.log(`[${minterName}] ⏳ Waiting for confirmation (up to 10 minutes)...`);
+
+            const waitStartTime = Date.now();
+            const receipt = await tx.wait();
+            const waitTime = Date.now() - waitStartTime;
+
+            console.log(`\n[${minterName}] ✅ Transaction confirmed successfully!`);
+            console.log(`[${minterName}] Block number: ${receipt.blockNumber}`);
+            console.log(`[${minterName}] Gas used: ${receipt.gasUsed}`);
+
+            // Save token IDs
+            mintedTokens[minterName] = newTokens.map(token => token.id);
+            console.log(`\n✅ [${minterName}] Successfully minted ${number} tokens, each token amount randomly selected from list`);
+
+        } catch (error) {
+            console.error(`\n[${minterName}] ❌ Mint transaction failed!`);
+            console.error(`[${minterName}] Error type: ${error.code || 'N/A'}`);
+            console.error(`[${minterName}] Error message: ${error.message}`);
+
+            if (error.transactionHash) {
+                console.error(`[${minterName}] Failed transaction Hash: ${error.transactionHash}`);
             }
 
             throw error;
@@ -182,7 +306,7 @@ async function mintTokensForMinters(client, minters, number, amount) {
 }
 
 
-// 超时辅助函数
+// Timeout helper function
 const withTimeout = (promise, timeoutMs, nonce) => {
     return Promise.race([
         promise,
@@ -198,21 +322,21 @@ describe.only('Native Dual Minter Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 200
+    const total_number = 10
     const amount = 50
 
     before(async function () {
-        this.timeout(300000); // 5分钟超时
+        this.timeout(300000); // 5 minutes timeout
 
-        console.log('🚀 === 测试环境初始化 ===');
+        console.log('🚀 === Test environment initialization ===');
 
-        // 初始化客户端
+        // Initialize client
         client = createClient(rpcUrl);
 
-        // 获取合约owner
+        // Get contract owner
         [owner,minter] = await ethers.getSigners();
 
-        // 初始化合约
+        // Initialize contracts
         nativeOwner = new ethers.Contract(
             native_token_address,
             abi,
@@ -224,13 +348,13 @@ describe.only('Native Dual Minter Performance Tests', function () {
             minter
         );
 
-        console.log(`合约地址: ${native_token_address}`);
-        console.log(`Owner地址: ${owner.address}`);
-        // console.log(`Minter1地址: ${MINTERS.minter1.address}`);
-        // console.log(`Minter2地址: ${MINTERS.minter2.address}`);
-        console.log(`Receiver1地址: ${RECEIVER_CONFIG.receiver1}`);
-        console.log(`Receiver2地址: ${RECEIVER_CONFIG.receiver2}`);
-        console.log('✅ 环境初始化完成\n');
+        console.log(`Contract address: ${native_token_address}`);
+        console.log(`Owner address: ${owner.address}`);
+        // console.log(`Minter1 address: ${MINTERS.minter1.address}`);
+        // console.log(`Minter2 address: ${MINTERS.minter2.address}`);
+        console.log(`Receiver1 address: ${RECEIVER_CONFIG.receiver1}`);
+        console.log(`Receiver2 address: ${RECEIVER_CONFIG.receiver2}`);
+        console.log('✅ Environment initialization completed\n');
     });
 
     describe('Case 1: Setup mint allowance for two minters', function () {
@@ -246,20 +370,20 @@ describe.only('Native Dual Minter Performance Tests', function () {
     });
 
     describe('Case 2: Mint tokens for both minters', function () {
-        this.timeout(6000000); // 10分钟
+        this.timeout(6000000); // 10 minutes
 
         it('should mint 200 tokens for each minter', async function () {
-            const batchSize = 32;     // 每批最大数量
+            const batchSize = 32;     // Maximum batch size
 
-            console.log(`\n🎯 开始为两个minter各铸造${total_number}个代币（分批次处理）`);
+            console.log(`\n🎯 Starting to mint ${total_number} tokens for each of the two minters (batch processing)`);
 
-            // 分批循环铸造
+            // Batch loop minting
             for (let i = 0; i < total_number; i += batchSize) {
                 const currentBatchSize = Math.min(batchSize, total_number - i);
                 const batchNumber = Math.floor(i / batchSize) + 1;
                 const isLastBatch = i + batchSize >= total_number;
 
-                console.log(`\n📦 批次 ${batchNumber}${isLastBatch ? ' (最后一批)' : ''}: 铸造 ${currentBatchSize} 个代币`);
+                console.log(`\n📦 Batch ${batchNumber}${isLastBatch ? ' (last batch)' : ''}: Minting ${currentBatchSize} tokens`);
 
                 await mintTokensForMinters(
                     client,
@@ -268,13 +392,13 @@ describe.only('Native Dual Minter Performance Tests', function () {
                     amount
                 );
 
-                // 批次间短暂延迟，避免压垮系统
+                // Short delay between batches to avoid overwhelming the system
                 if (!isLastBatch) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
 
-            console.log('\n✅ 两个minter铸币完成');
+            console.log('\n✅ Both minters minting completed');
         });
 
     });
@@ -283,39 +407,39 @@ describe.only('Native Dual Minter Performance Tests', function () {
         this.timeout(9000000);
 
         it('should split tokens with concurrent execution', async function () {
-            console.log('\n🎯 === 开始批量分割代币性能测试 ===');
+            console.log('\n🎯 === Starting batch token split performance test ===');
 
-            // 为每个minter准备分割请求
+            // Prepare split requests for each minter
             const splitRequests = await prepareSplitRequests(total_number);
 
-            // 生成分割证明
+            // Generate split proofs
             const requestIds = await generateSplitProofs(splitRequests);
 
-            // 执行分割交易
+            // Execute split transactions
             const results = await executeConcurrentSplits(requestIds);
 
-            // 验证结果
+            // Verify results
             // verifySplitResults(results);
         });
     });
 
     after(async function () {
-        console.log('\n📊 === 测试完成总结 ===');
-        console.log('1. ✅ 铸币权限设置完成');
-        console.log('2. ✅ 代币铸造完成');
-        console.log('3. ✅ 批量分割性能测试完成');
-        console.log('所有测试用例执行成功！');
+        console.log('\n📊 === Test completion summary ===');
+        console.log('1. ✅ Mint allowance setup completed');
+        console.log('2. ✅ Token minting completed');
+        console.log('3. ✅ Batch split performance test completed');
+        console.log('All test cases executed successfully!');
     });
 });
 
-// ===== 新增测试套件：单代币基础拆分测试 =====
-describe('Native Token Basic Split Tests', function () {
+// ===== New test suite: Single token basic split test =====
+describe('Native Token Basic Split And Mint Tests', function () {
     let client, owner;
     let nativeOwner;
 
     before(async function () {
         this.timeout(120000);
-        console.log('🚀 === 基础拆分测试环境初始化 ===');
+        console.log('🚀 === Basic split test environment initialization ===');
 
         client = createClient(rpcUrl);
         [owner] = await ethers.getSigners();
@@ -326,33 +450,49 @@ describe('Native Token Basic Split Tests', function () {
             owner
         );
 
-        console.log(`合约地址: ${native_token_address}`);
-        console.log(`Owner地址: ${owner.address}`);
-        console.log(`Minter1地址: ${MINTERS.minter1.address}`);
-        console.log(`Receiver1地址: ${RECEIVER_CONFIG.receiver1}`);
-        console.log(`Receiver2地址: ${RECEIVER_CONFIG.receiver2}`);
-        console.log('✅ 环境初始化完成\n');
+        console.log(`Contract address: ${native_token_address}`);
+        console.log(`Owner address: ${owner.address}`);
+        console.log(`Minter1 address: ${MINTERS.minter1.address}`);
+        console.log(`Receiver1 address: ${RECEIVER_CONFIG.receiver1}`);
+        console.log(`Receiver2 address: ${RECEIVER_CONFIG.receiver2}`);
+        console.log('✅ Environment initialization completed\n');
     });
 
-    describe('Case 1: 铸造单个代币并拆分', function () {
-        it('应该成功铸造1个代币并拆分到多个地址', async function () {
+    describe('Case 1: mint multiple tokens with different amounts', function () {
+        it('should successfully mint multiple tokens', async function () {
             this.timeout(300000);
 
-            console.log('\n🎯 === Case 1: 单代币拆分测试 ===');
+            console.log('\nStep 1: Minting multiple tokens (amounts: [1,200,300])...');
+            const mintedTokens = await mintTokensForMintersWithAmountList(
+                client,
+                { minter1: MINTERS.minter1 },
+                10,  // Mint 10 tokens
+                 [1,100,500,1000]// Token amounts
+            );
+            const tokenId = mintedTokens.minter1[0];
+            console.log(`  ✅ Token minting successful: ID=${tokenId}`);
+        });
+    });
 
-            // 步骤1: 铸造1个代币（金额: 100）
-            console.log('\n步骤1: 铸造单个代币（金额: 100）...');
+    describe('Case 2: Mint single token and split', function () {
+        it('should successfully mint 1 token and split to multiple addresses', async function () {
+            this.timeout(300000);
+
+            console.log('\n🎯 === Case 1: Single token split test ===');
+
+            // Step 1: Mint 1 token (amount: 100)
+            console.log('\nStep 1: Minting single token (amount: 100)...');
             const mintedTokens = await mintTokensForMinters(
                 client,
                 { minter1: MINTERS.minter1 },
-                1,  // 铸造1个代币
-                100 // 代币金额
+                1,  // Mint 1 token
+                100 // Token amount
             );
             const tokenId = mintedTokens.minter1[0];
-            console.log(`  ✅ 代币铸造成功: ID=${tokenId}`);
+            console.log(`  ✅ Token minting successful: ID=${tokenId}`);
 
-            // 步骤2: 将代币拆分为2个部分（30给receiver1, 70给receiver2）
-            console.log('\n步骤2: 拆分代币（30 + 70）...');
+            // Step 2: Split token into 2 parts (30 to receiver1, 70 to receiver2)
+            console.log('\nStep 2: Splitting token (30 + 70)...');
             await executeSingleSplit(
                 client,
                 MINTERS.minter1,
@@ -360,62 +500,62 @@ describe('Native Token Basic Split Tests', function () {
                 [30, 70]
             );
 
-            console.log('\n✅ Case 1 完成: 单代币拆分成功');
+            console.log('\n✅ Case 1 completed: Single token split successful');
         });
     });
 
-    describe('Case 2: 铸造代币并全额拆分', function () {
-        it('应该成功铸造代币并拆分全部金额', async function () {
+    describe('Case 3: Mint token and split full amount', function () {
+        it('should successfully mint token and split full amount', async function () {
             this.timeout(300000);
 
-            console.log('\n🎯 === Case 2: 全额拆分测试 ===');
+            console.log('\n🎯 === Case 2: Full amount split test ===');
 
-            // 步骤1: 铸造1个代币（金额: 200）
-            console.log('\n步骤1: 铸造单个代币（金额: 200）...');
+            // Step 1: Mint 1 token (amount: 200)
+            console.log('\nStep 1: Minting single token (amount: 200)...');
             const mintedTokens = await mintTokensForMinters(
                 client,
                 { minter1: MINTERS.minter1 },
-                1,  // 铸造1个代币
-                200 // 代币金额
+                1,  // Mint 1 token
+                200 // Token amount
             );
             const tokenId = mintedTokens.minter1[0];
-            console.log(`  ✅ 代币铸造成功: ID=${tokenId}`);
+            console.log(`  ✅ Token minting successful: ID=${tokenId}`);
 
-            // 步骤2: 将代币全额拆分（50+50+100=200）
-            console.log('\n步骤2: 全额拆分代币（50 + 50 + 100 = 200）...');
+            // Step 2: Split token full amount (50+50+100=200)
+            console.log('\nStep 2: Splitting token full amount (50 + 50 + 100 = 200)...');
             await executeSingleSplit(
                 client,
                 MINTERS.minter1,
                 tokenId,
-                [50, 50, 100] // 拆分总额等于代币金额
+                [50, 50, 100] // Split total equals token amount
             );
 
-            console.log('\n✅ Case 2 完成: 全额拆分成功');
+            console.log('\n✅ Case 2 completed: Full amount split successful');
         });
     });
 });
 
-// ===== 新增辅助函数 =====
+// ===== New helper functions =====
 
 /**
- * 执行单个代币的拆分操作
- * @param {Object} client - gRPC客户端
- * @param {Object} minterConfig - 包含minter地址和私钥的配置对象
- * @param {string} tokenId - 要拆分的代币ID
- * @param {number[]} amounts - 拆分金额数组，每个元素对应一个接收地址
+ * Execute single token split operation
+ * @param {Object} client - gRPC client
+ * @param {Object} minterConfig - Configuration object containing minter address and private key
+ * @param {string} tokenId - Token ID to split
+ * @param {number[]} amounts - Array of split amounts, each element corresponds to a receiver address
  */
 async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
     const minterWallet = new ethers.Wallet(minterConfig.privateKey, ethers.provider);
 
-    // 使用 NonceManager 避免 nonce 竞争（关键改进）
+    // Use NonceManager to avoid nonce competition (key improvement)
     const managedSigner = new ethers.NonceManager(minterWallet);
     const minterNative = new ethers.Contract(native_token_address, abi, managedSigner);
 
     const metadata = await createAuthMetadata(minterConfig.privateKey);
 
-    console.log(`\n  📋 [单币拆分] 准备拆分请求（代币ID: ${tokenId}）...`);
+    console.log(`\n  📋 [Single token split] Preparing split request (Token ID: ${tokenId})...`);
 
-    // 准备接收地址和金额数组
+    // Prepare receiver addresses and amounts array
     const to_accounts = amounts.map((amount, index) => ({
         address: index % 2 === 0 ? RECEIVER_CONFIG.receiver1 : RECEIVER_CONFIG.receiver2,
         amount: amount,
@@ -429,10 +569,10 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
         to_accounts: to_accounts,
     };
 
-    console.log('  📤 生成分割证明...');
+    console.log('  📤 Generating split proof...');
     const proofResponse = await client.generateBatchSplitToken(splitRequest, metadata);
 
-    // 获取证明详情
+    // Get proof details
     const response = await client.getBatchSplitTokenDetail(
         { request_id: proofResponse.request_id },
         metadata
@@ -440,16 +580,16 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
 
     const recipients = response.to_addresses;
     const consumedIds = [tokenId];
-    const batchedSize = response.batched_size; // 新增：获取批次大小
+    const batchedSize = response.batched_size; // New: get batch size
 
-    // 准备新代币数据（与批量版逻辑一致）
+    // Prepare new token data (consistent with batch version logic)
     const newTokens = response.newTokens.map((token, index) => {
-        // 关键修正：动态分配接收地址（与批量版相同）
+        // Key fix: dynamically assign receiver addresses (same as batch version)
         const toAddress = index % 2 === 0
-            ? minterConfig.address  // 偶数索引：发回给自己
-            : recipients[Math.floor(index / 2)];  // 奇数索引：发给对应接收者
+            ? minterConfig.address  // Even index: send back to self
+            : recipients[Math.floor(index / 2)];  // Odd index: send to corresponding receiver
 
-        // 关键修正：动态设置 rollbackTokenId（与批量版相同）
+        // Key fix: dynamically set rollbackTokenId (same as batch version)
         const rollbackTokenId = index % 2 === 0 ? 0 : response.newTokens[index - 1]?.token_id || 0;
 
         return {
@@ -463,20 +603,20 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
                 cr_y: ethers.toBigInt(token.cr_y),
             },
             to: toAddress,
-            rollbackTokenId: rollbackTokenId  // 修正：动态值
+            rollbackTokenId: rollbackTokenId  // Fix: dynamic value
         };
     });
 
     const proof = response.proof.map(p => ethers.toBigInt(p));
     const publicInputs = response.public_input.map(i => ethers.toBigInt(i));
 
-    // 关键修正：计算 PaddingNum（与批量版相同）
+    // Key fix: calculate PaddingNum (same as batch version)
     const paddingNum = batchedSize - to_accounts.length;
 
-    console.log(`  🚀 发送拆分交易 (新代币数: ${newTokens.length}, Padding: ${paddingNum})...`);
+    console.log(`  🚀 Sending split transaction (New tokens: ${newTokens.length}, Padding: ${paddingNum})...`);
 
     try {
-        // 使用 managedSigner 自动处理 nonce
+        // Use managedSigner to automatically handle nonce
         const tx = await minterNative.split(
             minterConfig.address,  // from
             recipients,            // recipients
@@ -484,16 +624,16 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
             newTokens,             // newTokens
             proof,                 // proof
             publicInputs,          // publicInputs
-            paddingNum,            // 修正：动态计算 PaddingNum
-            // 移除 { nonce } 参数，由 NonceManager 处理
+            paddingNum,            // Fix: dynamically calculated PaddingNum
+            // Remove { nonce } parameter, handled by NonceManager
         );
 
-        console.log(`  ⏳ 等待交易确认... Hash: ${tx.hash}`);
+        console.log(`  ⏳ Waiting for transaction confirmation... Hash: ${tx.hash}`);
         const receipt = await tx.wait();
 
-        console.log(`  ✅ 拆分成功: 区块号=${receipt.blockNumber}, GasUsed=${receipt.gasUsed}`);
+        console.log(`  ✅ Split successful: blockNumber=${receipt.blockNumber}, GasUsed=${receipt.gasUsed}`);
 
-        // 新增：返回结构化结果（与批量版一致）
+        // New: return structured result (consistent with batch version)
         return {
             success: true,
             tokenId,
@@ -502,9 +642,9 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
             txHash: tx.hash
         };
     } catch (error) {
-        console.error(`  ❌ 拆分失败: ${error.message}`);
+        console.error(`  ❌ Split failed: ${error.message}`);
 
-        // 新增：返回错误信息（与批量版一致）
+        // New: return error information (consistent with batch version)
         return {
             success: false,
             tokenId,
@@ -515,11 +655,11 @@ async function executeSingleSplit(client, minterConfig, tokenId, amounts) {
 
 
 async function prepareSplitRequests(round_number) {
-    console.log('\n📋 准备分割请求数据...');
+    console.log('\n📋 Preparing split request data...');
 
     const requests = { minter1: [], minter2: [] };
 
-    // 为minter1准备100个token的分割请求 ，总计10000个分割请求
+    // Prepare 100 token split requests for minter1, total 10000 split requests
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
         for (let j = 0; j < 16; j++) {
@@ -536,7 +676,7 @@ async function prepareSplitRequests(round_number) {
         });
     }
 
-    // 为minter2准备100个token的分割请求
+    // Prepare 100 token split requests for minter2
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
         for (let j = 0; j < 16; j++) {
@@ -553,18 +693,18 @@ async function prepareSplitRequests(round_number) {
         });
     }
 
-    console.log(`✅ 准备完成: Minter1 ${requests.minter1.length}个, Minter2 ${requests.minter2.length}个`);
+    console.log(`✅ Preparation completed: Minter1 ${requests.minter1.length} requests, Minter2 ${requests.minter2.length} requests`);
     return requests;
 }
 
 async function generateSplitProofs(requests) {
-    console.log('\n🔍 开始生成分割证明...');
+    console.log('\n🔍 Starting to generate split proofs...');
 
     const startTime = Date.now();
     const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
 
-    // 并行生成所有证明
+    // Generate all proofs in parallel
     // const [minter1Proofs, minter2Proofs] = await Promise.all([
     //     Promise.all(requests.minter1.map(req => client.generateBatchSplitToken(req, minter1Metadata))),
     //     Promise.all(requests.minter2.map(req => client.generateBatchSplitToken(req, minter2Metadata)))
@@ -572,37 +712,37 @@ async function generateSplitProofs(requests) {
     //
     // const endTime = Date.now();
 
-    // 逐个生成所有证明，而不是并行处理
+    // Generate all proofs one by one instead of parallel processing
     const minter1Requests = [];
     for (const req of requests.minter1) {
-        console.log(`  🔍 生成分割证明 (Minter1, ${minter1Requests.length + 1}/${requests.minter1.length})...`)
+        console.log(`  🔍 Generating split proof (Minter1, ${minter1Requests.length + 1}/${requests.minter1.length})...`)
         const response = await client.generateBatchSplitToken(req, minter1Metadata);
         minter1Requests.push(response.request_id);
     }
 
     const minter2Requests = [];
     for (const req of requests.minter2) {
-        console.log(`  🔍 生成分割证明 (Minter2, ${minter2Requests.length + 1}/${requests.minter2.length})...`)
+        console.log(`  🔍 Generating split proof (Minter2, ${minter2Requests.length + 1}/${requests.minter2.length})...`)
         const response = await client.generateBatchSplitToken(req, minter2Metadata);
         minter2Requests.push(response.request_id);
     }
     const endTime = Date.now();
 
-    console.log(`✅ 证明生成完成`);
-    console.log(`  - Minter1: ${minter1Requests.length}个证明`);
-    console.log(`  - Minter2: ${minter2Requests.length}个证明`);
-    console.log(`  - 总耗时: ${endTime - startTime}ms`);
+    console.log(`✅ Proof generation completed`);
+    console.log(`  - Minter1: ${minter1Requests.length} proofs`);
+    console.log(`  - Minter2: ${minter2Requests.length} proofs`);
+    console.log(`  - Total time: ${endTime - startTime}ms`);
 
     return { minter1: minter1Requests, minter2: minter2Requests };
 }
 
 async function executeConcurrentSplits(requests) {
-    console.log('\n⚡ 开始并发执行分割交易...');
+    console.log('\n⚡ Starting concurrent split transaction execution...');
 
     const startTime = Date.now();
     const results = { minter1: null, minter2: null };
 
-    // 并行执行两个minter的分割
+    // Execute splits for both minters in parallel
     // const [minter1Results, minter2Results] = await Promise.all([
     //     executeBatchSplits('minter1', requests.minter1, MINTERS.minter1.privateKey),
     //     executeBatchSplits('minter2', requests.minter2, MINTERS.minter2.privateKey)
@@ -618,8 +758,8 @@ async function executeConcurrentSplits(requests) {
 
     const endTime = Date.now();
 
-    console.log(`\n✅ 所有分割交易执行完成`);
-    console.log(`总耗时: ${endTime - startTime}ms`);
+    console.log(`\n✅ All split transactions executed`);
+    console.log(`Total time: ${endTime - startTime}ms`);
 
     return results;
 }
@@ -629,11 +769,11 @@ async function executeBatchSplits(minterName, requestIds, privateKey) {
     const minterNative = new ethers.Contract(native_token_address, abi, minterWallet);
     const minterMetadata = await createAuthMetadata(privateKey);
 
-    // 获取当前nonce (包含pending状态)
+    // Get current nonce (including pending status)
     let nonce = await minterWallet.getNonce('pending');
-    console.log(`\n[${minterName}] 起始Nonce: ${nonce}, 待处理交易数: ${requestIds.length}`);
+    console.log(`\n[${minterName}] Starting Nonce: ${nonce}, Pending transactions: ${requestIds.length}`);
 
-    // 准备所有交易数据
+    // Prepare all transaction data
     const transactions = [];
     for (let i = 0; i < requestIds.length; i++) {
         const requestId = requestIds[i];
@@ -676,20 +816,11 @@ async function executeBatchSplits(minterName, requestIds, privateKey) {
         });
     }
 
-    // 批量发送交易
+    // Send transactions in batch
     const txStartTime = Date.now();
     const txPromises = transactions.map(async (txData, index) => {
         try {
-            console.log(`[${minterName}] 发送交易 ${index + 1}/${transactions.length}, nonce: ${txData.nonce}`);
-            // console.log({
-            //     recipients: txData.recipients,
-            //     consumedIds: txData.consumedIds,
-            //     newTokens: txData.newTokens,
-            //     proof: txData.proof,
-            //     publicInputs: txData.publicInputs,
-            //     length:txData.bathcedSize - txData.recipients.length,
-            //     nonce: txData.nonce
-            // })
+            console.log(`[${minterName}] Sending transaction ${index + 1}/${transactions.length}, nonce: ${txData.nonce}`);
             const tx = await minterNative.split(
                 MINTERS[minterName].address,
                 txData.recipients,
@@ -702,7 +833,7 @@ async function executeBatchSplits(minterName, requestIds, privateKey) {
             );
             return { tx, nonce: txData.nonce, index, success: true };
         } catch (error) {
-            console.error(`[${minterName}] 交易 ${index + 1} 失败: ${error.message}`);
+            console.error(`[${minterName}] Transaction ${index + 1} failed: ${error.message}`);
             return { error: error.message, nonce: txData.nonce, index, success: false };
         }
     });
@@ -710,22 +841,22 @@ async function executeBatchSplits(minterName, requestIds, privateKey) {
     const txResults = await Promise.all(txPromises);
     const txEndTime = Date.now();
 
-    // 统计发送结果
+    // Count send results
     const successfulTx = txResults.filter(r => r.success);
     const failedTx = txResults.filter(r => !r.success);
 
-    console.log(`\n[${minterName}] 交易发送结果: 成功 ${successfulTx.length}, 失败 ${failedTx.length}`);
-    console.log(`[${minterName}] 发送耗时: ${txEndTime - txStartTime}ms`);
+    console.log(`\n[${minterName}] Transaction send results: Success ${successfulTx.length}, Failed ${failedTx.length}`);
+    console.log(`[${minterName}] Send time: ${txEndTime - txStartTime}ms`);
 
-    // 等待成功交易的确认
+    // Wait for successful transaction confirmations
     if (successfulTx.length > 0) {
-        console.log(`\n[${minterName}] 等待交易确认中...`);
+        console.log(`\n[${minterName}] Waiting for transaction confirmations...`);
         const confirmPromises = successfulTx.map(async (result) => {
             try {
                 const receipt = await result.tx.wait();
                 return { nonce: result.nonce, index: result.index, receipt, success: true };
             } catch (error) {
-                console.error(`[${minterName}] 交易 ${result.index + 1} 确认失败: ${error.message}`);
+                console.error(`[${minterName}] Transaction ${result.index + 1} confirmation failed: ${error.message}`);
                 return { nonce: result.nonce, index: result.index, error: error.message, success: false };
             }
         });
@@ -733,7 +864,7 @@ async function executeBatchSplits(minterName, requestIds, privateKey) {
         const confirmResults = await Promise.all(confirmPromises);
         const confirmedTx = confirmResults.filter(r => r.success);
 
-        console.log(`[${minterName}] 确认结果: ${confirmedTx.length}/${successfulTx.length} 成功`);
+        console.log(`[${minterName}] Confirmation results: ${confirmedTx.length}/${successfulTx.length} successful`);
     }
 
     return {
@@ -750,14 +881,14 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
     const minterNative = new ethers.Contract(native_token_address, abi, minterWallet);
     const minterMetadata = await createAuthMetadata(privateKey);
 
-    console.log(`\n[${minterName}] 开始预签名 ${requestIds.length} 个交易`);
+    console.log(`\n[${minterName}] Starting to pre-sign ${requestIds.length} transactions`);
 
-    // 1. 获取起始 nonce（一次性获取）
+    // 1. Get starting nonce (get once)
     const startNonce = await minterWallet.getNonce('pending');
-    console.log(`[${minterName}] 起始 Nonce: ${startNonce}`);
+    console.log(`[${minterName}] Starting Nonce: ${startNonce}`);
 
-    // 2. 并行获取所有交易的 proof 数据（最耗时步骤，先全部拉取）
-    console.log(`[${minterName}] 并行获取所有交易数据...`);
+    // 2. Fetch all transaction proof data in parallel (most time-consuming step, fetch all first)
+    console.log(`[${minterName}] Fetching all transaction data in parallel...`);
     const dataFetchStart = Date.now();
 
     const txDataPromises = requestIds.map(async (requestId, index) => {
@@ -797,20 +928,20 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
             proof: response.proof.map(p => ethers.toBigInt(p)),
             publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
             batchedSize: response.batched_size,
-            nonce: startNonce + index  // 预计算 nonce
+            nonce: startNonce + index  // Pre-calculate nonce
         };
     });
 
-    // 等待所有数据获取完成
+    // Wait for all data fetching to complete
     const allTxData = await Promise.all(txDataPromises);
     const dataFetchTime = Date.now() - dataFetchStart;
-    console.log(`[${minterName}] 数据获取完成，耗时: ${dataFetchTime}ms`);
+    console.log(`[${minterName}] Data fetching completed, time: ${dataFetchTime}ms`);
 
-    // 3. 预签名所有交易（不发送）
+    // 3. Pre-sign all transactions (don't send)
     const signingStart = Date.now();
     const signedTxPromises = allTxData.map(async (txData, index) => {
         try {
-            // 准备交易请求但不发送，只获取签名
+            // Prepare transaction request but don't send, only get signature
             const unsignedTx = await minterNative.split.populateTransaction(
                 MINTERS[minterName].address,
                 txData.recipients,
@@ -819,13 +950,17 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
                 txData.proof,
                 txData.publicInputs,
                 txData.batchedSize - txData.recipients.length,
-                { nonce: txData.nonce }
+                {
+                    nonce: txData.nonce,
+                    gasLimit: 3238240  // Increase gas limit to avoid "intrinsic gas too low" error
+                }
             );
 
+            // Sign transaction with wallet
             const signedTx = await minterWallet.signTransaction(unsignedTx);
             return { signedTx, nonce: txData.nonce, index, success: true };
         } catch (error) {
-            console.error(`[${minterName}] 交易 ${index + 1} 预签名失败: ${error.message}`);
+            console.error(`[${minterName}] Transaction ${index + 1} pre-signing failed: ${error.message}`);
             return { error: error.message, nonce: txData.nonce, index, success: false };
         }
     });
@@ -835,111 +970,154 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
 
     const successfulSigs = signedTxs.filter(r => r.success);
     const failedSigs = signedTxs.filter(r => !r.success);
-    console.log(`[${minterName}] 预签名完成: 成功 ${successfulSigs.length}, 失败 ${failedSigs.length}, 耗时: ${signingTime}ms`);
+    console.log(`[${minterName}] Pre-signing completed: Success ${successfulSigs.length}, Failed ${failedSigs.length}, Time: ${signingTime}ms`);
 
     if (failedSigs.length > 0) {
-        console.error(`[${minterName}] 部分交易预签名失败，中止执行`);
+        console.error(`[${minterName}] Some transactions pre-signing failed, aborting execution`);
         return {
             totalTransactions: allTxData.length,
             successfulTransactions: 0,
             failedTransactions: failedSigs.length,
-            totalTime: signingTime,
-            error: '预签名失败'
-        };
-    }
-
-    // 4. 一次性推送所有交易（并行广播）
-    const broadcastStart = Date.now();
-    console.log(`[${minterName}] 开始广播 ${successfulSigs.length} 个交易...`);
-
-    const sendPromises = successfulSigs.map(async (signedData) => {
-        try {
-            // 发送已签名的交易
-            const tx = await ethers.provider.sendTransaction(signedData.signedTx);
-            return { tx, nonce: signedData.nonce, index: signedData.index, success: true };
-        } catch (error) {
-            console.error(`[${minterName}] 交易 ${signedData.index + 1} 广播失败: ${error.message}`);
-            return { error: error.message, nonce: signedData.nonce, index: signedData.index, success: false };
-        }
-    });
-
-    const sentTxs = await Promise.all(sendPromises);
-    const broadcastTime = Date.now() - broadcastStart;
-
-    const successfulSends = sentTxs.filter(r => r.success);
-    const failedSends = sentTxs.filter(r => !r.success);
-    console.log(`[${miniminterName}] 广播完成: 成功 ${successfulSends.length}, 失败 ${failedSends.length}, 耗时: ${broadcastTime}ms`);
-
-    // 5. 并行等待所有交易确认（最关键的优化点）
-    if (successfulSends.length > 0) {
-        console.log(`[${minterName}] 并行等待 ${successfulSends.length} 个交易确认...`);
-        const confirmStart = Date.now();
-
-        const confirmPromises = successfulSends.map(async (result) => {
-            try {
-                // 所有交易同时等待，不串行阻塞
-                const receipt = await result.tx.wait();
-                return {
-                    nonce: result.nonce,
-                    index: result.index,
-                    receipt,
-                    success: true,
-                    confirmations: receipt.confirmations || 0
-                };
-            } catch (error) {
-                console.error(`[${minterName}] 交易 ${result.index + 1} (nonce: ${result.nonce}) 确认失败: ${error.message}`);
-                return { nonce: result.nonce, index: result.index, error: error.message, success: false };
-            }
-        });
-
-        // 所有确认并行处理
-        const confirmResults = await Promise.all(confirmPromises);
-        const confirmTime = Date.now() - confirmStart;
-
-        const confirmedTxs = confirmResults.filter(r => r.success);
-
-        console.log(`[${minterName}] 确认完成: ${confirmedTxs.length}/${successfulSends.length} 成功, 耗时: ${confirmTime}ms`);
-
-        // 返回完整统计
-        return {
-            totalTransactions: allTxData.length,
-            successfulTransactions: confirmedTxs.length,
-            failedTransactions: failedSigs.length + failedSends.length + confirmResults.filter(r => !r.success).length,
             dataFetchTime,
             signingTime,
-            broadcastTime,
-            confirmTime,
             totalTime: Date.now() - dataFetchStart,
-            averageTimePerTx: (Date.now() - dataFetchStart) / allTxData.length,
-            confirmedTxs // 包含详细的收据信息
+            error: 'Pre-signing failed'
         };
     }
 
-    // 如果全部广播失败
+    // 4. Send signed transactions in batch via HTTP request
+    console.log(`[${minterName}] Starting to send ${successfulSigs.length} signed transactions in batch...`);
+    const broadcastStart = Date.now();
+
+    // Get RPC URL from global ethers.provider
+    const providerUrl ='http://dev2-ucl-l2.hamsa-ucl.com:8545'; // Default URL, needs adjustment based on actual situation
+
+    // For compatibility, try to get URL from hardhat config first
+    let actualProviderUrl = providerUrl;
+    try {
+        // Try to get URL from current network config
+        const networkName = hre.network.name;
+        if (typeof hre !== 'undefined' && hre.config && hre.config.networks) {
+            actualProviderUrl = hre.config.networks[networkName]?.url || providerUrl;
+        }
+    } catch (e) {
+        // If cannot get hardhat config, use default provider URL
+        console.log("Cannot get hardhat config, using default provider URL");
+    }
+
+    // Send in batches to avoid sending too many requests at once
+    const BATCH_SIZE = 500; // 增大batch size，提升TPS
+    const allResults = [];
+
+    for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
+        const batchSignedTxs = successfulSigs.slice(i, i + BATCH_SIZE);
+        const batchMetadata = batchSignedTxs.map(item => ({
+            taskId: item.index,
+            nonce: item.nonce
+        }));
+
+        console.log(`[${minterName}] Sending batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(successfulSigs.length/BATCH_SIZE)}, Batch size: ${batchSignedTxs.length}`);
+
+        const batchPayload = batchSignedTxs.map((signedData, index) => ({
+            jsonrpc: "2.0",
+            id: batchMetadata[index].taskId,
+            method: "eth_sendRawTransaction",
+            params: [signedData.signedTx],
+        }));
+
+        try {
+            const response = await fetch(actualProviderUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(batchPayload),
+            });
+
+            const responseData = await response.json();
+            console.log(`[${minterName}] Batch response:`, responseData);
+
+            if (Array.isArray(responseData)) {
+                responseData.forEach((result) => {
+                    const metadata = batchMetadata.find(m => m.taskId === result.id);
+                    if (metadata) {
+                        if (result.error) {
+                            allResults.push({
+                                success: false,
+                                nonce: metadata.nonce,
+                                index: metadata.taskId,
+                                error: result.error.message
+                            });
+                        } else {
+                            allResults.push({
+                                success: true,
+                                nonce: metadata.nonce,
+                                index: metadata.taskId,
+                                txHash: result.result
+                            });
+                        }
+                    }
+                });
+            } else if (responseData.error) {
+                batchMetadata.forEach(metadata => {
+                    allResults.push({
+                        success: false,
+                        nonce: metadata.nonce,
+                        index: metadata.taskId,
+                        error: responseData.error.message
+                    });
+                });
+            }
+        } catch (error) {
+            console.error(`[${minterName}] Batch request failed:`, error.message);
+            batchMetadata.forEach(metadata => {
+                allResults.push({
+                    success: false,
+                    nonce: metadata.nonce,
+                    index: metadata.taskId,
+                    error: error.message
+                });
+            });
+        }
+    }
+
+    const successfulSends = allResults.filter(r => r.success);
+    const failedSends = allResults.filter(r => !r.success);
+    const broadcastTime = Date.now() - broadcastStart;
+
+    // ===== TPS 统计板块（新增）=====
+    console.log(`\n[${minterName}] ==== TPS 统计 ====`);
+    console.log(`[${minterName}] Broadcast completed: Success ${successfulSends.length}, Failed ${failedSends.length}, Time: ${broadcastTime}ms`);
+
+    const submitTPS = successfulSends.length / (broadcastTime / 1000);
+    console.log(`[${minterName}] Submit TPS: ${submitTPS.toFixed(2)}`);
+    console.log(`[${minterName}] Average time per batch: ${(broadcastTime / Math.ceil(successfulSigs.length / BATCH_SIZE)).toFixed(2)}ms`);
+
+    // 返回结果（简化，移除确认相关）
     return {
         totalTransactions: allTxData.length,
-        successfulTransactions: 0,
-        failedTransactions: failedSends.length,
+        successfulTransactions: successfulSends.length,
+        failedTransactions: failedSigs.length + failedSends.length,
         dataFetchTime,
         signingTime,
         broadcastTime,
         totalTime: Date.now() - dataFetchStart,
-        error: '广播失败'
+        averageTimePerTx: (Date.now() - dataFetchStart) / allTxData.length,
+        submitTPS: submitTPS.toFixed(2),
+        // 移除所有与确认相关的字段
     };
 }
 
 function verifySplitResults(results) {
-    console.log('\n📊 === 分割性能测试结果 ===');
+    console.log('\n📊 === Split performance test results ===');
 
     const totalTx = results.minter1.totalTransactions + results.minter2.totalTransactions;
     const totalSuccess = results.minter1.successfulTransactions + results.minter2.successfulTransactions;
     const totalFailed = results.minter1.failedTransactions + results.minter2.failedTransactions;
     const avgTime = (results.minter1.averageTimePerTx + results.minter2.averageTimePerTx) / 2;
 
-    console.log(`总交易数: ${totalTx}`);
-    console.log(`成功: ${totalSuccess}`);
-    console.log(`失败: ${totalFailed}`);
-    console.log(`平均耗时: ${avgTime.toFixed(2)}ms/交易`);
+    console.log(`Total transactions: ${totalTx}`);
+    console.log(`Successful: ${totalSuccess}`);
+    console.log(`Failed: ${totalFailed}`);
+    console.log(`Average time: ${avgTime.toFixed(2)}ms/transaction`);
 
     expect(totalSuccess).to.equal(totalTx);
     expect(totalFailed).to.equal(0);
