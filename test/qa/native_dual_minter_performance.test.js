@@ -395,7 +395,7 @@ describe.only('Native Dual Minter Performance Tests', function () {
 
                 // Short delay between batches to avoid overwhelming the system
                 if (!isLastBatch) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
 
