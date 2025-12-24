@@ -319,12 +319,12 @@ const withTimeout = (promise, timeoutMs, nonce) => {
     ]);
 };
 
-describe('Native Dual Minter Performance Tests', function () {
+describe.only('Native Dual Minter Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
     const total_number = 200
-    const amount = 50
+    const amount = 100
 
     before(async function () {
         this.timeout(300000); // 5 minutes timeout
@@ -536,7 +536,7 @@ describe('Native Token Basic Split And Mint Tests', function () {
     });
 });
 
-describe.only('Native Token Pre-signing and HTTP Submission Test', function () {
+describe('Native Token Pre-signing and HTTP Submission Test', function () {
     let client, owner;
     let nativeOwner;
 
