@@ -374,7 +374,7 @@ describe.only('Native Dual Minter Performance Tests', function () {
         this.timeout(6000000); // 10 minutes
 
         it(`should mint ${total_number} tokens for each minter`, async function () {
-            const batchSize = 32;     // Maximum batch size
+            const batchSize = 128;     // Maximum batch size
 
             console.log(`\n🎯 Starting to mint ${total_number} tokens for each of the two minters (batch processing)`);
 
@@ -736,7 +736,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter1, total 10000 split requests
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 16; j++) {
+        for (let j = 0; j < 64; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m1-t${i}-s${j}-r2` }
@@ -753,7 +753,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter2
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 16; j++) {
+        for (let j = 0; j < 64; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
@@ -1083,7 +1083,7 @@ async function executeBatchSplitsSigned2(minterName, requestIds, privateKey) {
     // 4. 批量发送
     const broadcastStart = Date.now();
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
-    const BATCH_SIZE = 64;
+    const BATCH_SIZE = 16;
     const allResults = [];
 
     for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
