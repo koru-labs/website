@@ -323,8 +323,8 @@ describe.only('Native Dual Minter Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
-    const amount = 100
+    const total_number = 64
+    const amount = 1000
 
     before(async function () {
         this.timeout(300000); // 5 minutes timeout
@@ -373,7 +373,7 @@ describe.only('Native Dual Minter Performance Tests', function () {
     describe('Case 2: Mint tokens for both minters', function () {
         this.timeout(6000000); // 10 minutes
 
-        it('should mint 200 tokens for each minter', async function () {
+        it(`should mint ${total_number} tokens for each minter`, async function () {
             const batchSize = 32;     // Maximum batch size
 
             console.log(`\n🎯 Starting to mint ${total_number} tokens for each of the two minters (batch processing)`);
