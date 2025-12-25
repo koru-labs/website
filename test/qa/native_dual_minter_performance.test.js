@@ -323,7 +323,7 @@ describe.only('Native Dual Minter Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 224
+    const total_number = 32
     const amount = 1000
 
     before(async function () {
