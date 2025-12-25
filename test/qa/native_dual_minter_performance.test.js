@@ -1083,7 +1083,7 @@ async function executeBatchSplitsSigned2(minterName, requestIds, privateKey) {
     // 4. 批量发送
     const broadcastStart = Date.now();
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
-    const BATCH_SIZE = 128;
+    const BATCH_SIZE = 64;
     const allResults = [];
 
     for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
