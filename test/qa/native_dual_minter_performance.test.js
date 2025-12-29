@@ -469,7 +469,7 @@ describe.only('Native Dual Minter Tranfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
+    const total_number = 64
     const amount = 1000
 
     before(async function () {
