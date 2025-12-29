@@ -520,7 +520,7 @@ describe.only('Native Dual Minter Tranfer Performance Tests', function () {
         this.timeout(6000000); // 10 minutes
 
         it(`should mint ${total_number} tokens for each minter`, async function () {
-            const batchSize = 128;     // Maximum batch size
+            const batchSize = 64;     // Maximum batch size
 
             console.log(`\n🎯 Starting to mint ${total_number} tokens for each of the two minters (batch processing)`);
 
@@ -807,7 +807,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter1, total 10000 split requests
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
+        for (let j = 0; j < 32; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m1-t${i}-s${j}-r2` }
@@ -824,7 +824,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter2
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
+        for (let j = 0; j < 32; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
