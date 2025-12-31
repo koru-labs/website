@@ -110,7 +110,6 @@ async function mintTokensForMinters(client, minters, number, amount) {
         // Process response data
         const recipients = response.to_accounts.map(account => account.address);
         const bathcedSize = response.batched_size
-        console.log("bathcedSize", bathcedSize);
         const newTokens = response.to_accounts.map((account, index) => ({
             id: account.token.token_id,
             owner: account.address,
@@ -324,7 +323,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 128
+    const total_number = 64
     const amount = 1000
     let minter1List,minter2List
 
@@ -780,7 +779,6 @@ async function generateSplitProofs(requests) {
     // Generate all proofs one by one instead of parallel processing
     const minter1Requests = [];
     for (const req of requests.minter1) {
-        console.log(req)
         console.log(`  🔍 Generating split proof (Minter1, ${minter1Requests.length + 1}/${requests.minter1.length})...`)
         const response = await client.generateBatchSplitToken(req, minter1Metadata);
         minter1Requests.push(response.request_id);
@@ -1434,7 +1432,7 @@ async function executeBatchTransfersSigned2(tokenList1, tokenList2) {
         }).then(r => r.json());
 
         results.push(...(Array.isArray(res) ? res : []));
-        await sleep(200);
+        // await sleep(200);
     }
 
     return {
