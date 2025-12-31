@@ -423,7 +423,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
 
             minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
             minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey)
-            await sleep(5000)
+            await sleep(120000)
         });
     });
 
