@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
+const native_token_address = "0x95abCa2D96047f91978E0F8cad91e0822f966cbd";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -376,7 +376,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
         this.timeout(6000000); // 10 minutes
 
         it(`should mint ${total_number} tokens for each minter`, async function () {
-            const batchSize = 128;     // Maximum batch size
+            const batchSize = 32;     // Maximum batch size
 
             console.log(`\n🎯 Starting to mint ${total_number} tokens for each of the two minters (batch processing)`);
 
