@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x2065aeB20705f8ff647CeCa6090e748eCdD71771";
+const native_token_address = "0xA449FA6835cb17B39d6f26378a95472bE22811D4";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -420,8 +420,8 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
             // Execute split transactions
             const results = await executeConcurrentSplits(requestIds);
 
-            const tokenList = await extractRecipientTokenIds(requestIds)
-            console.log(tokenList)
+            const minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
+            console.log(minter1List)
 
         });
     });
@@ -982,8 +982,8 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
  * @param {string} privateKey - Minter 私钥（用于身份验证）
  * @returns {Promise<Object>} 包含提取结果的对象
  */
-async function extractRecipientTokenIds(requestIds) {
-    const minterMetadata = await createAuthMetadata(privateKey);
+async function extractRecipientTokenIds(minterName,requestIds,minterPrivateKey) {
+    const minterMetadata = await createAuthMetadata(minterPrivateKey);
 
     const allTokenIds = await Promise.all(
         requestIds.map(requestId =>
