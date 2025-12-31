@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0xA449FA6835cb17B39d6f26378a95472bE22811D4";
+const native_token_address = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -324,7 +324,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 64
+    const total_number = 256
     const amount = 1000
     let minter1List,minter2List
 
@@ -423,7 +423,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
 
             minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
             minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey)
-            await sleep(120000)
+            await sleep(60000)
         });
     });
 
@@ -669,7 +669,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter1, total 10000 split requests
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
+        for (let j = 0; j < 16; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m1-t${i}-s${j}-r2` }
@@ -686,7 +686,7 @@ async function prepareSplitRequests(round_number) {
     // Prepare 100 token split requests for minter2
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
+        for (let j = 0; j < 16; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
