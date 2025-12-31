@@ -1416,7 +1416,7 @@ async function executeBatchTransfersSigned2(tokenList1, tokenList2) {
     }
 
     // 批量发送：每批2000个，间隔0.2秒
-    const BATCH_SIZE = 4000;
+    const BATCH_SIZE = 5000;
     const results = [];
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
