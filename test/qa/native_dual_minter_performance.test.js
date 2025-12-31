@@ -1449,77 +1449,77 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// async function executeSingleSplitSequential(minterName, requestId, privateKey) {
-//     const minterWallet = new ethers.Wallet(privateKey, ethers.provider);
-//     const derivedAddress = minterWallet.address;
-//     const configAddress = MINTERS[minterName].address;
-//
-//     if (derivedAddress.toLowerCase() !== configAddress.toLowerCase()) {
-//         throw new Error(`[${minterName}] 私钥与配置地址不匹配！`);
-//     }
-//
-//     const minterNative = new ethers.Contract(native_token_address, abi, minterWallet);
-//     const minterMetadata = await createAuthMetadata(privateKey);
-//
-//     try {
-//         // 获取split详情
-//         const response = await client.getBatchSplitTokenDetail(
-//             { request_id: requestId },
-//             minterMetadata
-//         );
-//
-//         const recipients = response.to_addresses;
-//         const consumedIds = response.consumedIds.map(ids => ids.token_id);
-//
-//         const newTokens = response.newTokens.map((account, idx) => ({
-//             id: account.token_id,
-//             owner: derivedAddress,
-//             status: 2,
-//             amount: {
-//                 cl_x: ethers.toBigInt(account.cl_x),
-//                 cl_y: ethers.toBigInt(account.cl_y),
-//                 cr_x: ethers.toBigInt(account.cr_x),
-//                 cr_y: ethers.toBigInt(account.cr_y)
-//             },
-//             to: idx % 2 === 0 ? derivedAddress : recipients[Math.floor(idx / 2)],
-//             rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
-//         }));
-//
-//         const proof = response.proof.map(p => ethers.toBigInt(p));
-//         const publicInputs = response.public_input.map(i => ethers.toBigInt(i));
-//         const paddingNum = response.batched_size - recipients.length;
-//
-//         // 执行split交易
-//         const tx = await minterNative.split(
-//             derivedAddress,  // from
-//             recipients,      // recipients
-//             consumedIds,     // consumedIds
-//             newTokens,       // newTokens
-//             proof,           // proof
-//             publicInputs,    // publicInputs
-//             paddingNum       // paddingNum
-//         );
-//
-//         console.log(`   📡 Split transaction sent, Hash: ${tx.hash}`);
-//
-//         // 等待交易确认
-//         const receipt = await tx.wait();
-//
-//         console.log(`   ✅ Split transaction confirmed, Block: ${receipt.blockNumber}, Gas: ${receipt.gasUsed}`);
-//
-//         return {
-//             success: true,
-//             txHash: tx.hash,
-//             blockNumber: receipt.blockNumber
-//         };
-//     } catch (error) {
-//         console.error(`   ❌ Split operation failed: ${error.message}`);
-//         return {
-//             success: false,
-//             error: error.message
-//         };
-//     }
-// }
+async function executeSingleSplitSequential(minterName, requestId, privateKey) {
+    const minterWallet = new ethers.Wallet(privateKey, ethers.provider);
+    const derivedAddress = minterWallet.address;
+    const configAddress = MINTERS[minterName].address;
+
+    if (derivedAddress.toLowerCase() !== configAddress.toLowerCase()) {
+        throw new Error(`[${minterName}] 私钥与配置地址不匹配！`);
+    }
+
+    const minterNative = new ethers.Contract(native_token_address, abi, minterWallet);
+    const minterMetadata = await createAuthMetadata(privateKey);
+
+    try {
+        // 获取split详情
+        const response = await client.getBatchSplitTokenDetail(
+            { request_id: requestId },
+            minterMetadata
+        );
+
+        const recipients = response.to_addresses;
+        const consumedIds = response.consumedIds.map(ids => ids.token_id);
+
+        const newTokens = response.newTokens.map((account, idx) => ({
+            id: account.token_id,
+            owner: derivedAddress,
+            status: 2,
+            amount: {
+                cl_x: ethers.toBigInt(account.cl_x),
+                cl_y: ethers.toBigInt(account.cl_y),
+                cr_x: ethers.toBigInt(account.cr_x),
+                cr_y: ethers.toBigInt(account.cr_y)
+            },
+            to: idx % 2 === 0 ? derivedAddress : recipients[Math.floor(idx / 2)],
+            rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+        }));
+
+        const proof = response.proof.map(p => ethers.toBigInt(p));
+        const publicInputs = response.public_input.map(i => ethers.toBigInt(i));
+        const paddingNum = response.batched_size - recipients.length;
+
+        // 执行split交易
+        const tx = await minterNative.split(
+            derivedAddress,  // from
+            recipients,      // recipients
+            consumedIds,     // consumedIds
+            newTokens,       // newTokens
+            proof,           // proof
+            publicInputs,    // publicInputs
+            paddingNum       // paddingNum
+        );
+
+        console.log(`   📡 Split transaction sent, Hash: ${tx.hash}`);
+
+        // 等待交易确认
+        const receipt = await tx.wait();
+
+        console.log(`   ✅ Split transaction confirmed, Block: ${receipt.blockNumber}, Gas: ${receipt.gasUsed}`);
+
+        return {
+            success: true,
+            txHash: tx.hash,
+            blockNumber: receipt.blockNumber
+        };
+    } catch (error) {
+        console.error(`   ❌ Split operation failed: ${error.message}`);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
 
 
 
