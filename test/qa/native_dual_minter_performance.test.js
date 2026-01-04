@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0xc35F5826875DC62fc5c51B9EE778836fac406e7b";
+const native_token_address = "0x593B88fcbc02C960B70E8EEE468D0d6Ee7C6e64D";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -454,9 +454,11 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
  */
 async function prepareSplitRequests(round_number) {
     const requests = { minter1: [], minter2: [] };
+    console.log(`[Minter1] Preparing ${round_number} split requests`)
 
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
+        console.log(`[Minter1] Processing token ${i + 1}/${round_number}`)
         for (let j = 0; j < 64; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
@@ -470,8 +472,9 @@ async function prepareSplitRequests(round_number) {
             to_accounts
         });
     }
-
+    console.log(`[Minter2] Preparing ${round_number} split requests`)
     for (let i = 0; i < round_number; i++) {
+        console.log(`[Minter2] Processing token ${i + 1}/${round_number}`)
         const to_accounts = [];
         for (let j = 0; j < 64; j++) {
             to_accounts.push(
