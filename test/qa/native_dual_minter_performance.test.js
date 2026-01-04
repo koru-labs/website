@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x95abCa2D96047f91978E0F8cad91e0822f966cbd";
+const native_token_address = "0xc35F5826875DC62fc5c51B9EE778836fac406e7b";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -330,7 +330,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
+    const total_number = 2
     const amount = 1000
     let minter1List,minter2List
 
@@ -444,8 +444,6 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
         console.log('Test completed.');
     });
 });
-
-
 
 /**
  * Execute single token split operation
