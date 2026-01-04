@@ -493,13 +493,13 @@ async function prepareSplitRequests(round_number) {
 async function generateSplitProofs(requests) {
     const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
-
     const minter1Requests = [];
+    console.log(`[Minter1] Generating ${requests.minter1.length} split proofs`)
     for (const req of requests.minter1) {
         const response = await client.generateBatchSplitToken(req, minter1Metadata);
         minter1Requests.push(response.request_id);
     }
-
+    console.log(`[Minter2] Generating ${requests.minter2.length} split proofs`)
     const minter2Requests = [];
     for (const req of requests.minter2) {
         const response = await client.generateBatchSplitToken(req, minter2Metadata);
