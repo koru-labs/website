@@ -458,7 +458,6 @@ async function prepareSplitRequests(round_number) {
 
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        console.log(`[Minter1] Processing token ${i + 1}/${round_number}`)
         for (let j = 0; j < 64; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
@@ -474,7 +473,6 @@ async function prepareSplitRequests(round_number) {
     }
     console.log(`[Minter2] Preparing ${round_number} split requests`)
     for (let i = 0; i < round_number; i++) {
-        console.log(`[Minter2] Processing token ${i + 1}/${round_number}`)
         const to_accounts = [];
         for (let j = 0; j < 64; j++) {
             to_accounts.push(
