@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x95abCa2D96047f91978E0F8cad91e0822f966cbd";
+const native_token_address = "0xA449FA6835cb17B39d6f26378a95472bE22811D4";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -787,7 +787,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     }
 
     // 批量发送：每批2000个，间隔0.2秒
-    const BATCH_SIZE = 5000;
+    const BATCH_SIZE = 4000;
     const results = [];
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
