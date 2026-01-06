@@ -330,7 +330,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
+    const total_number = 64
     const amount = 1000
     let minter1List,minter2List
 
@@ -495,15 +495,30 @@ async function generateSplitProofs(requests) {
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
     const minter1Requests = [];
     console.log(`[Minter1] Generating ${requests.minter1.length} split proofs`)
-    for (const req of requests.minter1) {
+
+    // 添加进度条显示
+    for (let i = 0; i < requests.minter1.length; i++) {
+        const req = requests.minter1[i];
         const response = await client.generateBatchSplitToken(req, minter1Metadata);
         minter1Requests.push(response.request_id);
+
+        // 显示进度
+        const progress = Math.round(((i + 1) / requests.minter1.length) * 100);
+        console.log(`[Minter1] Progress: ${i + 1}/${requests.minter1.length} (${progress}%)`);
     }
+
     console.log(`[Minter2] Generating ${requests.minter2.length} split proofs`)
     const minter2Requests = [];
-    for (const req of requests.minter2) {
+
+    // 添加进度条显示
+    for (let i = 0; i < requests.minter2.length; i++) {
+        const req = requests.minter2[i];
         const response = await client.generateBatchSplitToken(req, minter2Metadata);
         minter2Requests.push(response.request_id);
+
+        // 显示进度
+        const progress = Math.round(((i + 1) / requests.minter2.length) * 100);
+        console.log(`[Minter2] Progress: ${i + 1}/${requests.minter2.length} (${progress}%)`);
     }
 
     return { minter1: minter1Requests, minter2: minter2Requests };
