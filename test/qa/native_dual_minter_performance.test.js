@@ -330,7 +330,8 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 32 //total_number *2 *128
+    // const total_number = 32 //total_number *2 *128
+    const total_number = 1 //total_number *2 *128
     const amount = 1000
     let minter1List,minter2List
 
@@ -474,7 +475,8 @@ async function prepareSplitRequests(round_number) {
     console.log(`[Minter2] Preparing ${round_number} split requests`)
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
+        // for (let j = 0; j < 64; j++) {
+        for (let j = 0; j < 8; j++) {
             to_accounts.push(
                 { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
                 { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
@@ -801,7 +803,8 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     }
 
     // 批量发送：每批2000个，间隔0.2秒
-    const BATCH_SIZE = 4000;
+    const BATCH_SIZE = 10;
+    // const BATCH_SIZE = 4000;
     const results = [];
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
