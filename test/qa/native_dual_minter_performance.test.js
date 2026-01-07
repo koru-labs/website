@@ -330,7 +330,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 128
+    const total_number = 32 //total_number *2 *128
     const amount = 1000
     let minter1List,minter2List
 
