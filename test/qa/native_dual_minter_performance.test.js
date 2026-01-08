@@ -864,7 +864,7 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
                 const batchStart = i;
                 const batchEnd = Math.min(i + INNER_BATCH_SIZE, successfulSigs.length);
                 const innerBatch = successfulSigs.slice(batchStart, batchEnd);
-                const innerMetadata = batchMetadata.slice(batchStart, batchEnd);
+                const batchMetadataForBatch = batchMetadata.slice(batchStart, batchEnd);
 
                 const batchPayloadForBatch = innerBatch.map((signedData, index) => ({
                     jsonrpc: "2.0",
