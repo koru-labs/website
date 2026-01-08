@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x4dA51d6A39687ffCf9f5fc163C102aE8b23a123d";
+const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -244,11 +244,11 @@ const withTimeout = (promise, timeoutMs, nonce) => {
     ]);
 };
 
-describe('Native Dual Minter Split Performance Tests', function () {
+describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 2
+    const total_number = 256
     const amount = 1000
     let minter1List,minter2List
 
@@ -445,7 +445,7 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
     });
 });
 
-describe.only('Native Dual Minter Mint TPS Benchmark', function () {
+describe('Native Dual Minter Mint TPS Benchmark', function () {
     this.timeout(6000000);
 
     const batchSize = 128;
@@ -453,8 +453,6 @@ describe.only('Native Dual Minter Mint TPS Benchmark', function () {
     const provider = new ethers.JsonRpcProvider(RPC);
     let client, owner,minter;
     let nativeOwner,nativeMinter;
-    let mintedTokens = {};
-    const total_number = 2 //total_number *2 *128
 
     before(async function () {
         this.timeout(300000);
@@ -517,7 +515,7 @@ describe.only('Native Dual Minter Mint TPS Benchmark', function () {
             let currentNonce = await provider.getTransactionCount(wallet.address);
 
             // 每个minter签名256个mint交易
-            const numTransactions = 256;
+            const numTransactions = 2;
             const mintBatchSize = 128;
 
             for (let i = 0; i < numTransactions; i++) {
@@ -599,7 +597,7 @@ describe.only('Native Dual Minter Mint TPS Benchmark', function () {
         // 使用HTTP一次性推送所有预签名交易
         console.log(`Sending ${allSignedTxs.length} signed transactions via HTTP...`);
 
-        const BATCH_SIZE_PUSH = 2000; // 每批推送的交易数量
+        const BATCH_SIZE_PUSH = 5000; // 每批推送的交易数量
         const BATCH_DELAY = 10; // 批次间延迟（毫秒）
 
         for (let i = 0; i < allSignedTxs.length; i += BATCH_SIZE_PUSH) {
@@ -859,8 +857,8 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
         }));
 
         try {
-            const INNER_BATCH_SIZE = 2000;
-            const BATCH_DELAY = 200;
+            const INNER_BATCH_SIZE = 5000;
+            const BATCH_DELAY = 0;
 
             for (let i = 0; i < successfulSigs.length; i += INNER_BATCH_SIZE) {
                 const batchStart = i;
