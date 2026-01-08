@@ -326,11 +326,11 @@ describe('Native Dual Minter Split Performance Tests', function () {
         console.log('Test completed.');
     });
 });
-describe.only('Native Dual Minter Transfer Performance Tests', function () {
+describe('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 32 //total_number *2 *128
+    const total_number = 2 //total_number *2 *128
     const amount = 1000
     let minter1List,minter2List
 
@@ -444,6 +444,216 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
         console.log('Test completed.');
     });
 });
+
+describe.only('Native Dual Minter Mint TPS Benchmark', function () {
+    this.timeout(6000000);
+
+    const batchSize = 128;
+    const amount = 2;
+    const provider = new ethers.JsonRpcProvider(RPC);
+    let client, owner,minter;
+    let nativeOwner,nativeMinter;
+    let mintedTokens = {};
+    const total_number = 2 //total_number *2 *128
+
+    before(async function () {
+        this.timeout(300000);
+
+        client = createClient(rpcUrl);
+        [owner,minter] = await ethers.getSigners();
+
+        nativeOwner = new ethers.Contract(
+            native_token_address,
+            abi,
+            owner
+        );
+        nativeMinter = new ethers.Contract(
+            native_token_address,
+            abi,
+            minter
+        );
+    });
+
+    it('should set mint allowance for minter1', async function () {
+        this.timeout(120000);
+        await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
+    });
+
+    it('should set mint allowance for minter2', async function () {
+        this.timeout(120000);
+        await setupMintAllowance(nativeOwner, client, { minter2: MINTERS.minter2 }, 100000000);
+    });
+
+    async function sendSignedRawTx(rawTx) {
+        const res = await fetch(RPC, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "eth_sendRawTransaction",
+                params: [rawTx],
+                id: Date.now()
+            })
+        });
+
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.result;
+    }
+
+    it(`should benchmark mint TPS with batchSize=${batchSize}`, async function () {
+        const start = Date.now();
+        let totalTx = 0;
+
+        // 准备所有minter的预签名交易
+        const allSignedTxs = [];
+
+        for (const [minterName, minterConfig] of Object.entries(MINTERS)) {
+            console.log(`\n[${minterName}] ==== Preparing Mint TPS Test with Pre-signing ====`);
+            const wallet = new ethers.Wallet(minterConfig.privateKey, provider);
+            const minterMetadata = await createAuthMetadata(minterConfig.privateKey);
+
+            // 获取初始nonce
+            let currentNonce = await provider.getTransactionCount(wallet.address);
+
+            // 每个minter签名256个mint交易
+            const numTransactions = 256;
+            const mintBatchSize = 128;
+
+            for (let i = 0; i < numTransactions; i++) {
+                const to_accounts = Array(mintBatchSize).fill().map(() => ({
+                    address: minterConfig.address,
+                    amount
+                }));
+
+                const generateRequest = {
+                    sc_address: native_token_address,
+                    token_type: '0',
+                    from_address: minterConfig.address,
+                    to_accounts
+                };
+
+                const response = await client.generateBatchMintProof(generateRequest, minterMetadata);
+
+                const recipients = response.to_accounts.map(acc => acc.address);
+                const batchedSize = response.batched_size;
+
+                const newTokens = response.to_accounts.map(acc => ({
+                    id: acc.token.token_id,
+                    owner: acc.address,
+                    status: 2,
+                    amount: {
+                        cl_x: acc.token.cl_x,
+                        cl_y: acc.token.cl_y,
+                        cr_x: acc.token.cr_x,
+                        cr_y: acc.token.cr_y
+                    },
+                    to: acc.address,
+                    rollbackTokenId: 0
+                }));
+
+                const newAllowed = {
+                    id: response.mint_allowed.token_id,
+                    value: {
+                        cl_x: response.mint_allowed.cl_x,
+                        cl_y: response.mint_allowed.cl_y,
+                        cr_x: response.mint_allowed.cr_x,
+                        cr_y: response.mint_allowed.cr_y
+                    }
+                };
+
+                const proof = response.proof.map(p => ethers.toBigInt(p));
+                const publicInputs = response.input.map(i => ethers.toBigInt(i));
+                const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
+
+                const contract = new ethers.Contract(native_token_address, abi, wallet);
+                const unsignedTx = await contract.mint.populateTransaction(
+                    recipients,
+                    newTokens,
+                    newAllowed,
+                    proof,
+                    publicInputs,
+                    padding,
+                    {
+                        nonce: currentNonce,
+                        gasLimit: 450436*10,
+                        gasPrice: 0
+                    }
+                );
+                unsignedTx.type = 0;
+                const signedTx = await wallet.signTransaction(unsignedTx);
+
+                allSignedTxs.push({
+                    signedTx: signedTx,
+                    minterName: minterName,
+                    index: i
+                });
+
+                console.log(`[${minterName}] Transaction ${i+1}/${numTransactions} pre-signed with nonce ${currentNonce}`);
+
+                // 递增nonce
+                currentNonce++;
+            }
+        }
+
+        // 使用HTTP一次性推送所有预签名交易
+        console.log(`Sending ${allSignedTxs.length} signed transactions via HTTP...`);
+
+        const BATCH_SIZE_PUSH = 2000; // 每批推送的交易数量
+        const BATCH_DELAY = 10; // 批次间延迟（毫秒）
+
+        for (let i = 0; i < allSignedTxs.length; i += BATCH_SIZE_PUSH) {
+            const batch = allSignedTxs.slice(i, i + BATCH_SIZE_PUSH);
+
+            const batchPayload = batch.map((signedData, index) => ({
+                jsonrpc: "2.0",
+                id: Date.now() + index,
+                method: "eth_sendRawTransaction",
+                params: [signedData.signedTx]
+            }));
+
+            try {
+                const response = await fetch(RPC, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(batchPayload)
+                });
+
+                const responseData = await response.json();
+
+                if (Array.isArray(responseData)) {
+                    for (const result of responseData) {
+                        if (!result.error) {
+                            totalTx++;
+                        } else {
+                            console.error(`Transaction failed: ${result.error.message}`);
+                        }
+                    }
+                } else {
+                    console.error(`Unexpected response format: ${JSON.stringify(responseData)}`);
+                }
+            } catch (error) {
+                console.error(`Batch request failed: ${error.message}`);
+            }
+
+            // 批次间延迟
+            if (i + BATCH_SIZE_PUSH < allSignedTxs.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+            }
+        }
+
+        const duration = (Date.now() - start) / 1000;
+        const tps = (totalTx / duration).toFixed(2);
+
+        console.log(`\n========= MINT TPS RESULT =========`);
+        console.log(`Total Mint TX: ${totalTx}`);
+        console.log(`Total Time: ${duration}s`);
+        console.log(`TPS: ${tps}`);
+        console.log(`===================================\n`);
+    });
+});
+
+
 
 /**
  * Execute single token split operation
