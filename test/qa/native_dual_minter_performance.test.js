@@ -307,7 +307,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
 
     });
 
-    describe.skip('Case 3: Split tokens with performance test', function () {
+    describe('Case 3: Split tokens with performance test', function () {
         this.timeout(9000000);
 
         it('should split tokens with concurrent execution', async function () {
