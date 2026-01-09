@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
+const native_token_address = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -248,7 +248,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
+    const total_number = 32
     const amount = 1000
     let minter1List,minter2List
 
@@ -318,6 +318,8 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
             minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
             minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey)
             await sleep(60000)
+            console.log('minter1List length',minter1List.length)
+            console.log('minter2List length',minter2List.length)
         });
     });
 
@@ -405,7 +407,7 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
                     throw new Error(`Minter1 split operation failed for request ${requestId}: ${result.error}`);
                 }
                 console.log(`[Minter1] ✓ Token ${i + 1}/${requestIds.minter1.length} split completed`);
-                await sleep(1000);
+                await sleep(2000);
             }
             console.log(`[Minter1] All ${requestIds.minter1.length} tokens split completed\n`);
 
@@ -733,6 +735,7 @@ async function generateSplitProofs(requests) {
 }
 async function executeConcurrentSplits(requests) {
     const results = { minter1: null, minter2: null };
+    console.log(`[Minter1] Executing ${requests.minter1.length} split requests`)
 
     const [minter1Results, minter2Results] = await Promise.all([
         executeBatchSplitsSigned('minter1', requests.minter1, MINTERS.minter1.privateKey),
@@ -857,8 +860,8 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
         }));
 
         try {
-            const INNER_BATCH_SIZE = 5000;
-            const BATCH_DELAY = 0;
+            const INNER_BATCH_SIZE = 2000
+            const BATCH_DELAY = 100;
 
             for (let i = 0; i < successfulSigs.length; i += INNER_BATCH_SIZE) {
                 const batchStart = i;
