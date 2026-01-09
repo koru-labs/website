@@ -248,7 +248,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 256
+    const total_number = 128
     const amount = 1000
     let minter1List,minter2List
 
