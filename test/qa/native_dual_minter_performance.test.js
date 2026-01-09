@@ -248,7 +248,7 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner,minter;
     let nativeOwner,nativeMinter;
     let mintedTokens = {};
-    const total_number = 64
+    const total_number = 128
     const amount = 1000
     let minter1List,minter2List
 
@@ -845,7 +845,7 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
     }
 
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
-    const BATCH_SIZE = 64;  // 减少批次大小以避免HTTP错误
+    const BATCH_SIZE = 32;  // 减少批次大小以避免HTTP错误
     const allResults = [];
 
     for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
