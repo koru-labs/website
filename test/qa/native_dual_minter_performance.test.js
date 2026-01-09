@@ -845,7 +845,7 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
     }
 
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
-    const BATCH_SIZE = 32;
+    const BATCH_SIZE = 64;
     const allResults = [];
 
     for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
