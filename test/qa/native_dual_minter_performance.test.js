@@ -845,7 +845,7 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
     }
 
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
-    const BATCH_SIZE = 64;
+    const BATCH_SIZE = 64;  // 减少批次大小以避免HTTP错误
     const allResults = [];
 
     for (let i = 0; i < successfulSigs.length; i += BATCH_SIZE) {
@@ -859,51 +859,37 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
             params: [signedData.signedTx]
         }));
 
+        // 打印HTTP请求大小信息
+        const payloadString = JSON.stringify(batchPayload);
+        const payloadSize = new Blob([payloadString]).size;
+        const payloadSizeMB = (payloadSize / (1024 * 1024)).toFixed(2);
+        console.log(`[${minterName}] Batch ${Math.floor(i/BATCH_SIZE)+1}/${Math.ceil(successfulSigs.length/BATCH_SIZE)} - HTTP请求大小: ${payloadSizeMB} MB, 交易数量: ${batch.length}`);
+
         try {
-            const INNER_BATCH_SIZE = 2000
-            const BATCH_DELAY = 100;
+            const response = await fetch(providerUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(batchPayload)
+            });
 
-            for (let i = 0; i < successfulSigs.length; i += INNER_BATCH_SIZE) {
-                const batchStart = i;
-                const batchEnd = Math.min(i + INNER_BATCH_SIZE, successfulSigs.length);
-                const innerBatch = successfulSigs.slice(batchStart, batchEnd);
-                const batchMetadataForBatch = batchMetadata.slice(batchStart, batchEnd);
+            const responseData = await response.json();
 
-                const batchPayloadForBatch = innerBatch.map((signedData, index) => ({
-                    jsonrpc: "2.0",
-                    id: batchMetadataForBatch[index].taskId,
-                    method: "eth_sendRawTransaction",
-                    params: [signedData.signedTx]
-                }));
+            if (Array.isArray(responseData)) {
+                for (const result of responseData) {
+                    const metadata = batchMetadata.find(m => m.taskId === result.id);
 
-                const response = await fetch(providerUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(batchPayloadForBatch)
-                });
-
-                const responseData = await response.json();
-
-                if (Array.isArray(responseData)) {
-                    for (const result of responseData) {
-                        const metadata = batchMetadata.find(m => m.taskId === result.id);
-
-                        allResults.push({
-                            success: !result.error,
-                            tokenId: metadata.tokenId,
-                            nonce: metadata.nonce,
-                            minterName: metadata.minterName,
-                            index: metadata.taskId,
-                            txHash: result.result,
-                            error: result.error?.message
-                        });
-                    }
-                }
-
-                if (batchEnd < successfulSigs.length) {
-                    await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+                    allResults.push({
+                        success: !result.error,
+                        tokenId: metadata?.tokenId,
+                        nonce: metadata?.nonce,
+                        minterName: metadata?.minterName,
+                        index: metadata?.taskId,
+                        txHash: result.result,
+                        error: result.error?.message
+                    });
                 }
             }
+
         } catch (error) {
             console.error(`Batch request failed: ${error.message}`);
             batchMetadata.forEach(metadata => allResults.push({
@@ -914,6 +900,11 @@ async function executeBatchSplitsSigned(minterName, requestIds, privateKey) {
                 index: metadata.taskId,
                 error: error.message
             }));
+        }
+        
+        // 在批次之间添加延迟以避免节点过载
+        if (i + BATCH_SIZE < successfulSigs.length) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms延迟
         }
     }
 
