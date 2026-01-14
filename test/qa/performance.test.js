@@ -211,16 +211,16 @@ describe("Performance Test with created 10 minters", function () {
     //     }]
 
     const minter1 = ethers.Wallet.createRandom();
-    const minter2 = ethers.Wallet.createRandom();
-    const minter3 = ethers.Wallet.createRandom();
-
-    const minter4 = ethers.Wallet.createRandom();
-    const minter5 = ethers.Wallet.createRandom();
-    const minter6 = ethers.Wallet.createRandom();
-    const minter7 = ethers.Wallet.createRandom();
-    const minter8 = ethers.Wallet.createRandom();
-    const minter9 = ethers.Wallet.createRandom();
-    const minter10 = ethers.Wallet.createRandom();
+    // const minter2 = ethers.Wallet.createRandom();
+    // const minter3 = ethers.Wallet.createRandom();
+    //
+    // const minter4 = ethers.Wallet.createRandom();
+    // const minter5 = ethers.Wallet.createRandom();
+    // const minter6 = ethers.Wallet.createRandom();
+    // const minter7 = ethers.Wallet.createRandom();
+    // const minter8 = ethers.Wallet.createRandom();
+    // const minter9 = ethers.Wallet.createRandom();
+    // const minter10 = ethers.Wallet.createRandom();
 
     const minters = [
         // {
@@ -231,42 +231,42 @@ describe("Performance Test with created 10 minters", function () {
             address: minter1.address,
             wallet: new ethers.Wallet(minter1.privateKey, l1Provider),
         },
-        {
-            address: minter2.address,
-            wallet: new ethers.Wallet(minter2.privateKey, l1Provider)
-        },
-        {
-            address: minter3.address,
-            wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
-        },
-        {
-            address: minter4.address,
-            wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
-        },
-        {
-            address: minter5.address ,
-            wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
-        },
-        {
-            address: minter6.address,
-            wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
-        },
-        {
-            address: minter7.address,
-            wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
-        },
-        {
-            address: minter8.address,
-            wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
-        },
-        {
-            address: minter9.address,
-            wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
-        },
-        {
-            address: minter10.address,
-            wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
-        }
+        // {
+        //     address: minter2.address,
+        //     wallet: new ethers.Wallet(minter2.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter3.address,
+        //     wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter4.address,
+        //     wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter5.address ,
+        //     wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter6.address,
+        //     wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter7.address,
+        //     wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter8.address,
+        //     wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter9.address,
+        //     wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
+        // },
+        // {
+        //     address: minter10.address,
+        //     wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
+        // }
     ]
 
     it('Registe ', async () => {
