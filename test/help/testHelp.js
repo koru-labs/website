@@ -1,13 +1,15 @@
-const {ethers} = require("hardhat")
+const { ethers } = require("hardhat")
 const { expect } = require("chai");
 const hardhatConfig = require("../../hardhat.config");
 const grpc = require('@grpc/grpc-js');
-const {getEnvironmentConfig, getImage9EnvironmentData} = require("../../script/deploy_help");
+const { getEnvironmentConfig, getImage9EnvironmentData } = require("../../script/deploy_help");
 // const config = require('./../../deployments/image9.json');
 const config = getImage9EnvironmentData();
+const deployed = config;
+
 const accounts = require('./../../deployments/account.json');
-const {createClient} = require('../qa/token_grpc')
-const axios   = require('axios');
+const { createClient } = require('../qa/token_grpc')
+const axios = require('axios');
 const configuration = getEnvironmentConfig();
 
 
@@ -25,7 +27,7 @@ if (!node3Institution) {
 
 const key = node3Institution.privateKey
 
-async function sendHttpRPC(httpUrl,endpoint, body, headers) {
+async function sendHttpRPC(httpUrl, endpoint, body, headers) {
     const url = `${httpUrl}${endpoint}`;
     try {
         console.log('[HTTP] ➜', url);
@@ -40,7 +42,7 @@ async function sendHttpRPC(httpUrl,endpoint, body, headers) {
 async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, minterWallet);
     const newToken = {
-        id : ethers.toBigInt(proofResult.token.token_id),
+        id: ethers.toBigInt(proofResult.token.token_id),
         owner: proofResult.to_address,
         status: 2,
         amount: {
@@ -55,14 +57,14 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
     }
 
     const mintAllowed = {
-        id : ethers.toBigInt(proofResult.mint_allowed.token_id),
+        id: ethers.toBigInt(proofResult.mint_allowed.token_id),
         cl_x: ethers.toBigInt(proofResult.mint_allowed.cl_x),
         cl_y: ethers.toBigInt(proofResult.mint_allowed.cl_y),
         cr_x: ethers.toBigInt(proofResult.mint_allowed.cr_x),
         cr_y: ethers.toBigInt(proofResult.mint_allowed.cr_y)
     };
     const supplyAmount = {
-        id : ethers.toBigInt(proofResult.supply_amount.token_id),
+        id: ethers.toBigInt(proofResult.supply_amount.token_id),
         cl_x: ethers.toBigInt(proofResult.supply_amount.cl_x),
         cl_y: ethers.toBigInt(proofResult.supply_amount.cl_y),
         cr_x: ethers.toBigInt(proofResult.supply_amount.cr_x),
@@ -71,7 +73,7 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
     const proof = proofResult.proof.map(p => ethers.toBigInt(p));
     const input = proofResult.input.map(i => ethers.toBigInt(i));
     // console.log(newToken,mintAllowed,supplyAmount)
-    const tx = await contract.privateMint(proofResult.to_address,newToken,mintAllowed,supplyAmount,proof,input);
+    const tx = await contract.privateMint(proofResult.to_address, newToken, mintAllowed, supplyAmount, proof, input);
     let receipt = await tx.wait();
     await sleep(1000)
     return receipt;
@@ -81,7 +83,7 @@ async function callPrivateMint(scAddress, proofResult, minterWallet) {
 async function callPrivateTransfer(wallet, scAddress, tokenId) {
     const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
     // const contract = await ethers.getContractAt("PrivateUSDC", scAddress, wallet);
-    console.log("contract address is :",contract.target)
+    console.log("contract address is :", contract.target)
     const tx = await contract.privateTransfers([tokenId]);
     let receipt = await tx.wait();
     console.log("Result:", receipt);
@@ -108,7 +110,7 @@ async function callPrivateBurn2(scAddress, tokenId, minterWallet) {
 }
 
 
-async function callPrivateApprove(scAddress, proofResult, ownerWallet){
+async function callPrivateApprove(scAddress, proofResult, ownerWallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, ownerWallet);
 
     const consumedTokens = convertParentTokenIds(proofResult.parentTokenId);
@@ -129,15 +131,15 @@ async function callPrivateApprove(scAddress, proofResult, ownerWallet){
 
     const proofData = Buffer.from(proofResult.proof, "hex");
 
-    const tx = await contract.privateApprove(consumedTokens,proofResult.to_address,transferAmount,remainingAmount,proofData);
+    const tx = await contract.privateApprove(consumedTokens, proofResult.to_address, transferAmount, remainingAmount, proofData);
     let receipt = await tx.wait();
     return receipt
 }
 
 
-async function callPrivateTransferFrom(wallet, scAddress, from,to, tokenId) {
+async function callPrivateTransferFrom(wallet, scAddress, from, to, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    const tx = await contract.privateTransferFroms([tokenId],from,to);
+    const tx = await contract.privateTransferFroms([tokenId], from, to);
     let receipt = await tx.wait();
     return receipt;
 }
@@ -163,7 +165,7 @@ async function callPrivateBurns(scAddress, wallet, tokenIds) {
     return receipt;
 }
 
-async function getAddressBalance(grpcClient, scAddress, address,meta) {
+async function getAddressBalance(grpcClient, scAddress, address, meta) {
     let result = await grpcClient.getAccountBalance(scAddress, address, meta)
     // console.log(result)
     // let decodeAmount = await grpcClient.decodeElgamalAmount(balance)
@@ -180,16 +182,16 @@ async function getAddressBalance2(grpcClient, scAddress, account) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
     let amount = await contract.privateBalanceOf(account)
 
-    let balance=  {
+    let balance = {
         cl_x: convertBigInt2Hex(amount[0]),
         cl_y: convertBigInt2Hex(amount[1]),
         cr_x: convertBigInt2Hex(amount[2]),
         cr_y: convertBigInt2Hex(amount[3])
     }
-    let result = await grpcClient.getAccountBalance(scAddress, account,metadata)
+    let result = await grpcClient.getAccountBalance(scAddress, account, metadata)
     let decodeAmount = { balance: '0' }
     if (balance.cl_x != '0') {
-        decodeAmount = await grpcClient.decodeElgamalAmount(balance,metadata)
+        decodeAmount = await grpcClient.decodeElgamalAmount(balance, metadata)
     }
 
     console.log("===================================================================");
@@ -208,17 +210,17 @@ async function getAddressBalance2(grpcClient, scAddress, account) {
     return result
 }
 
-async function getTotalSupplyNode3(grpcClient, scAddress,metadata,wallet) {
+async function getTotalSupplyNode3(grpcClient, scAddress, metadata, wallet) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
     let amount = await contract.privateTotalSupply()
     let balance = {
-            cl_x: convertBigInt2Hex(amount[0]),
-            cl_y: convertBigInt2Hex(amount[1]),
-            cr_x: convertBigInt2Hex(amount[2]),
-            cr_y: convertBigInt2Hex(amount[3])
-        }
+        cl_x: convertBigInt2Hex(amount[0]),
+        cl_y: convertBigInt2Hex(amount[1]),
+        cr_x: convertBigInt2Hex(amount[2]),
+        cr_y: convertBigInt2Hex(amount[3])
+    }
     console.log(balance)
-    let result = await grpcClient.decodeElgamalAmount(balance,metadata)
+    let result = await grpcClient.decodeElgamalAmount(balance, metadata)
     console.log(result)
     return Number(result.balance)
 }
@@ -230,21 +232,21 @@ async function getPublicTotalSupply(scAddress) {
     return amount[0]
 }
 
-async function getSplitTokenList(grpcClient,owner, scAddress,metadata){
+async function getSplitTokenList(grpcClient, owner, scAddress, metadata) {
     const grpcResult = await grpcClient.getSplitTokenList(owner, scAddress, metadata);
     return grpcResult;
 }
 
-async function getApproveTokenList(grpcClient,ownerAddress, scAddress,spenderAddress,metadata){
-    console.log({ownerAddress, scAddress,spenderAddress})
+async function getApproveTokenList(grpcClient, ownerAddress, scAddress, spenderAddress, metadata) {
+    console.log({ ownerAddress, scAddress, spenderAddress })
     // const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,spenderAddress, metadata);
-    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress,"", metadata);
+    const grpcResult = await grpcClient.getApproveTokenList(ownerAddress, scAddress, "", metadata);
     return grpcResult;
 }
 
-async function isAllowanceExists(scAddress,owner,spender,tokenId) {
+async function isAllowanceExists(scAddress, owner, spender, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress)
-    const result = await contract.isAllowanceExists(owner,spender,tokenId)
+    const result = await contract.isAllowanceExists(owner, spender, tokenId)
     return result
 }
 
@@ -311,28 +313,27 @@ async function callPrivateCancel(scAddress, wallet, tokenId) {
     return receipt;
 }
 
-async function callPrivateRevoke(scAddress, wallet,spenderAddress, tokenId) {
+async function callPrivateRevoke(scAddress, wallet, spenderAddress, tokenId) {
     const contract = await ethers.getContractAt("PrivateERCToken", scAddress, wallet);
-    let tx = await contract.privateRevokeApproval(spenderAddress,tokenId)
+    let tx = await contract.privateRevokeApproval(spenderAddress, tokenId)
     let receipt = await tx.wait();
     return receipt;
 }
 
-async function registerUser(privateKey,client,userAddress,role) {
+async function registerUser(privateKey, client, userAddress, role) {
     const metadata = await createAuthMetadata(privateKey);
     const request = {
         account_address: userAddress,
         account_roles: role,//minter,admin,normal
+        first_name: "jh",
+        last_name: "test",
+        email: "jhtest@hamsapay.com",
+        phone_number: "234-56789",
     };
 
     try {
         const response = await client.registerAccount(request, metadata);
-        // console.log("registerAccount response:", response);
-        // const actionRequest = {
-        //     account_address: userAddress,
-        // };
-        // const actionResponse = await client.getAccount(actionRequest, metadata);
-        // console.log("user status:", actionResponse);
+        console.log("registerAccount response:", response);
         await sleep(3000)
         if (response.status !== "ASYNC_ACTION_STATUS_FAIL") {
             const actionRequest = {
@@ -349,7 +350,7 @@ async function registerUser(privateKey,client,userAddress,role) {
     }
 }
 
-async function updateAccountStatus(privateKey,client,userAddress,status) {
+async function updateAccountStatus(privateKey, client, userAddress, status) {
     try {
         const metadata = await createAuthMetadata(privateKey);
 
@@ -380,7 +381,7 @@ async function updateAccountStatus(privateKey,client,userAddress,status) {
     }
 }
 
-async function updateAccount(privateKey,client,actionRequest) {
+async function updateAccount(privateKey, client, actionRequest) {
     try {
         const metadata = await createAuthMetadata(privateKey);
         const actionResponse = await client.updateAccount(actionRequest, metadata);
@@ -394,7 +395,7 @@ async function updateAccount(privateKey,client,actionRequest) {
     }
 }
 
-async function getAccount(privateKey,client,userAddress) {
+async function getAccount(privateKey, client, userAddress) {
     try {
         const metadata = await createAuthMetadata(privateKey);
         const actionRequest = {
@@ -411,24 +412,24 @@ async function getAccount(privateKey,client,userAddress) {
 
 async function isBlackList(userAddress) {
     const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, onwerWallet);
     let tx = await contract.isBlacklisted(userAddress);
     return tx;
 }
 
 async function addToBlackList(userAddress) {
     const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, onwerWallet);
     await contract.blacklist(userAddress)
 }
 
 async function removeFromBlackList(userAddress) {
     const onwerWallet = new ethers.Wallet('555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787', l1Provider);
-    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken,onwerWallet);
+    const contract = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, onwerWallet);
     await contract.unBlacklist(userAddress)
 }
 
-async function getEvents(eventName){
+async function getEvents(eventName) {
     try {
         const event_address = config.contracts.PrivateERCToken;
         const l1Bridge = await ethers.getContractAt("PrivateUSDC", event_address);
@@ -444,10 +445,10 @@ async function getEvents(eventName){
             const toBlock = Math.min(fromBlock + batchSize - 1, endBlock);
 
             console.log(`Fetching events  from block ${fromBlock} to ${toBlock}...`);
-            console.log("eventName:",eventName)
+            console.log("eventName:", eventName)
             // 获取指定事件名称的事件
             const events = await l1Bridge.queryFilter(eventName, fromBlock, toBlock);
-            console.log("events:",events)
+            console.log("events:", events)
             if (events.length === 0) {
                 console.log(`No events found from block ${fromBlock} to ${toBlock}`);
             }
@@ -461,7 +462,7 @@ async function getEvents(eventName){
         console.error('Error fetching events:', err);
     }
 }
-async function getHamsaEvents(){
+async function getHamsaEvents() {
     try {
         const event_address = config.contracts.HamsaL2Event;
         const l1Bridge = await ethers.getContractAt("HamsaL2Event", event_address);
@@ -504,7 +505,7 @@ async function registerConfigureMinter(address) {
     }
     console.log("Configure minter allowed amount...")
     const minters = [
-        {account: address, name: "Minter"},
+        { account: address, name: "Minter" },
     ];
     const l1CustomNetwork = {
         name: "BESU",
@@ -517,13 +518,13 @@ async function registerConfigureMinter(address) {
     // const key = hardhatConfig.networks.ucl_L2.accounts[0];
     const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
     let ownerWallet = new ethers.Wallet(key, l1Provider);
-    const privateUSDC = await ethers.getContractAt("PrivateUSDC",config.contracts.PrivateERCToken, ownerWallet);
+    const privateUSDC = await ethers.getContractAt("PrivateUSDC", config.contracts.PrivateERCToken, ownerWallet);
     try {
         for (const minter of minters) {
             await privateUSDC.configurePrivacyMinter(minter.account, minterAllowedAmount);
             console.log(`Minter allowed amount configured successfully for ${minter.name} (${minter.account})`)
             const Institution = await ethers.getContractAt("InstitutionUserRegistry", config.contracts.InstUserProxy, ownerWallet);
-            console.log("manager: ",await Institution.getUserManager(address))
+            console.log("manager: ", await Institution.getUserManager(address))
 
         }
     } catch (error) {
@@ -567,7 +568,7 @@ async function getUserManager(address) {
     console.log("user registration ", inst1);
 }
 
-async function setMinterAllowed(client,minterAddress) {
+async function setMinterAllowed(client, minterAddress) {
     console.log("Configuring minter allowed amount...");
     const PrivateUSDCFactory = await ethers.getContractFactory("PrivateUSDC", {
         libraries: {
@@ -607,7 +608,7 @@ function assertEventsContain(events, expectedEventNames) {
     });
 }
 
-async function getMinterAllowed(grpcClient,meta) {
+async function getMinterAllowed(grpcClient, meta) {
     const Request = {
         sc_address: config.contracts.PrivateERCToken,
         address: accounts.Minter
@@ -617,7 +618,7 @@ async function getMinterAllowed(grpcClient,meta) {
 }
 
 
-module.exports =  {
+module.exports = {
     callPrivateMint,
     callPrivateTransfer,
     callPrivateTransfers,
@@ -627,7 +628,6 @@ module.exports =  {
     callPrivateBurns,
     callPrivateBurn,
     getAddressBalance,
-    getAddressBalance2,
     getPublicBalance,
     getTotalSupplyNode3,
     getPublicTotalSupply,
