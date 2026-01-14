@@ -27,7 +27,8 @@ const RECEIVER_CONFIG = {
     receiver2: "0x57829d5E80730D06B1364A2b05342F44bFB70E8f"
 };
 
-const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"burn\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
     const wallet = new ethers.Wallet(privateKey);
@@ -133,7 +134,7 @@ async function mintTokensForMinters(client, minters, number, amount) {
         const native = new ethers.Contract(native_token_address, abi, minterWallet);
 
         try {
-            const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs,bathcedSize - to_accounts.length);
+            const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length);
             const receipt = await tx.wait();
 
             // Save token IDs
@@ -245,18 +246,18 @@ const withTimeout = (promise, timeoutMs, nonce) => {
 };
 
 describe('Native Dual Minter Split Performance Tests', function () {
-    let client, owner,minter;
-    let nativeOwner,nativeMinter;
+    let client, owner, minter;
+    let nativeOwner, nativeMinter;
     let mintedTokens = {};
     const total_number = 128
     const amount = 1000
-    let minter1List,minter2List
+    let minter1List, minter2List
 
     before(async function () {
         this.timeout(300000);
 
         client = createClient(rpcUrl);
-        [owner,minter] = await ethers.getSigners();
+        [owner, minter] = await ethers.getSigners();
 
         nativeOwner = new ethers.Contract(
             native_token_address,
@@ -311,15 +312,15 @@ describe('Native Dual Minter Split Performance Tests', function () {
         this.timeout(9000000);
 
         it('should split tokens with concurrent execution', async function () {
-            const splitRequests = await prepareSplitRequests(total_number);
+            const splitRequests = await prepareSplitRequests(total_number, 'transfer');
             const requestIds = await generateSplitProofs(splitRequests);
             const results = await executeConcurrentSplits(requestIds);
 
             minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
             minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey)
             await sleep(60000)
-            console.log('minter1List length',minter1List.length)
-            console.log('minter2List length',minter2List.length)
+            console.log('minter1List length', minter1List.length)
+            console.log('minter2List length', minter2List.length)
         });
     });
 
@@ -328,19 +329,19 @@ describe('Native Dual Minter Split Performance Tests', function () {
         console.log('Test completed.');
     });
 });
-describe.only('Native Dual Minter Transfer Performance Tests', function () {
-    let client, owner,minter;
-    let nativeOwner,nativeMinter;
+describe('Native Dual Minter Transfer Performance Tests', function () {
+    let client, owner, minter;
+    let nativeOwner, nativeMinter;
     let mintedTokens = {};
     const total_number = 256 //total_number *2 *128
     const amount = 1000
-    let minter1List,minter2List
+    let minter1List, minter2List
 
     before(async function () {
         this.timeout(300000);
 
         client = createClient(rpcUrl);
-        [owner,minter] = await ethers.getSigners();
+        [owner, minter] = await ethers.getSigners();
 
         nativeOwner = new ethers.Contract(
             native_token_address,
@@ -395,7 +396,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
         this.timeout(9000000);
 
         it('should split tokens with sequential execution to ensure success', async function () {
-            const splitRequests = await prepareSplitRequests(total_number);
+            const splitRequests = await prepareSplitRequests(total_number, 'transfer');
             const requestIds = await generateSplitProofs(splitRequests);
 
             console.log(`\n[Minter1] Starting split operations for ${requestIds.minter1.length} tokens`);
@@ -437,7 +438,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     describe('Case 4: Excute Transfers TPS', function () {
         this.timeout(6000000);
         it('should execute transfers with TPS', async function () {
-            await executeBatchTransfersSigned(minter1List,minter2List);
+            await executeBatchTransfersSigned(minter1List, minter2List);
         });
     });
 
@@ -453,14 +454,14 @@ describe('Native Dual Minter Mint TPS Benchmark', function () {
     const batchSize = 128;
     const amount = 2;
     const provider = new ethers.JsonRpcProvider(RPC);
-    let client, owner,minter;
-    let nativeOwner,nativeMinter;
+    let client, owner, minter;
+    let nativeOwner, nativeMinter;
 
     before(async function () {
         this.timeout(300000);
 
         client = createClient(rpcUrl);
-        [owner,minter] = await ethers.getSigners();
+        [owner, minter] = await ethers.getSigners();
 
         nativeOwner = new ethers.Contract(
             native_token_address,
@@ -576,7 +577,7 @@ describe('Native Dual Minter Mint TPS Benchmark', function () {
                     padding,
                     {
                         nonce: currentNonce,
-                        gasLimit: 450436*10,
+                        gasLimit: 450436 * 10,
                         gasPrice: 0
                     }
                 );
@@ -589,7 +590,7 @@ describe('Native Dual Minter Mint TPS Benchmark', function () {
                     index: i
                 });
 
-                console.log(`[${minterName}] Transaction ${i+1}/${numTransactions} pre-signed with nonce ${currentNonce}`);
+                console.log(`[${minterName}] Transaction ${i + 1}/${numTransactions} pre-signed with nonce ${currentNonce}`);
 
                 // 递增nonce
                 currentNonce++;
@@ -653,6 +654,124 @@ describe('Native Dual Minter Mint TPS Benchmark', function () {
     });
 });
 
+describe.only('Native Dual Minter Burn Performance Tests', function () {
+    let client, owner, minter;
+    let nativeOwner, nativeMinter;
+    let mintedTokens = {};
+    const total_number = 256 //total_number *2 *128
+    const amount = 1000
+    let minter1List, minter2List
+
+    before(async function () {
+        this.timeout(300000);
+
+        client = createClient(rpcUrl);
+        [owner, minter] = await ethers.getSigners();
+
+        nativeOwner = new ethers.Contract(
+            native_token_address,
+            abi,
+            owner
+        );
+        nativeMinter = new ethers.Contract(
+            native_token_address,
+            abi,
+            minter
+        );
+    });
+
+    describe('Case 1: Setup mint allowance for two minters', function () {
+        it('should set mint allowance for minter1', async function () {
+            this.timeout(120000);
+            await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
+        });
+
+        it('should set mint allowance for minter2', async function () {
+            this.timeout(120000);
+            await setupMintAllowance(nativeOwner, client, { minter2: MINTERS.minter2 }, 100000000);
+        });
+    });
+
+    describe('Case 2: Mint tokens for both minters', function () {
+        this.timeout(6000000); // 10 minutes
+
+        it(`should mint ${total_number} tokens for each minter`, async function () {
+            const batchSize = 128;
+
+            for (let i = 0; i < total_number; i += batchSize) {
+                const currentBatchSize = Math.min(batchSize, total_number - i);
+                const isLastBatch = i + batchSize >= total_number;
+
+                await mintTokensForMinters(
+                    client,
+                    MINTERS,
+                    currentBatchSize,
+                    amount
+                );
+
+                if (!isLastBatch) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            }
+        });
+
+    });
+
+    describe('Case 3: Split tokens', function () {
+        this.timeout(9000000);
+
+        it('should split tokens with sequential execution to ensure success', async function () {
+            const splitRequests = await prepareSplitRequests(total_number, 'burn');
+            const requestIds = await generateSplitProofs(splitRequests);
+
+            console.log(`\n[Minter1] Starting split operations for ${requestIds.minter1.length} tokens`);
+            for (let i = 0; i < requestIds.minter1.length; i++) {
+                const requestId = requestIds.minter1[i];
+                console.log(`[Minter1] Processing token ${i + 1}/${requestIds.minter1.length} - RequestId: ${requestId}`);
+                const result = await executeSingleSplitSequential('minter1', requestId, MINTERS.minter1.privateKey);
+                if (!result.success) {
+                    throw new Error(`Minter1 split operation failed for request ${requestId}: ${result.error}`);
+                }
+                console.log(`[Minter1] ✓ Token ${i + 1}/${requestIds.minter1.length} split completed`);
+                await sleep(2000);
+            }
+            console.log(`[Minter1] All ${requestIds.minter1.length} tokens split completed\n`);
+
+            console.log(`\n[Minter2] Starting split operations for ${requestIds.minter2.length} tokens`);
+            for (let i = 0; i < requestIds.minter2.length; i++) {
+                const requestId = requestIds.minter2[i];
+                console.log(`[Minter2] Processing token ${i + 1}/${requestIds.minter2.length} - RequestId: ${requestId}`);
+                const result = await executeSingleSplitSequential('minter2', requestId, MINTERS.minter2.privateKey);
+                if (!result.success) {
+                    throw new Error(`Minter2 split operation failed for request ${requestId}: ${result.error}`);
+                }
+                console.log(`[Minter2] ✓ Token ${i + 1}/${requestIds.minter2.length} split completed`);
+                await sleep(1000);
+            }
+            console.log(`[Minter2] All ${requestIds.minter2.length} tokens split completed\n`);
+
+            minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey);
+            minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey);
+
+            if (minter1List.length === 0 || minter2List.length === 0) {
+                throw new Error(`Token extraction failed: Minter1 has ${minter1List.length} tokens, Minter2 has ${minter2List.length} tokens`);
+            }
+            await sleep(60000);
+        });
+    });
+
+    describe('Case 4: Excute Burn TPS', function () {
+        this.timeout(6000000);
+        it('should execute burns with TPS', async function () {
+            await executeBatchBurnsSigned(minter1List, minter2List);
+        });
+    });
+
+    after(async function () {
+        // Test completed
+        console.log('Test completed.');
+    });
+});
 
 
 /**
@@ -662,17 +781,24 @@ describe('Native Dual Minter Mint TPS Benchmark', function () {
  * @param {string} tokenId - Token ID to split
  * @param {number[]} amounts - Array of split amounts, each element corresponds to a receiver address
  */
-async function prepareSplitRequests(round_number) {
+async function prepareSplitRequests(round_number, testType = 'transfer') {
     const requests = { minter1: [], minter2: [] };
-    console.log(`[Minter1] Preparing ${round_number} split requests`)
+    console.log(`[Minter1] Preparing ${round_number} split requests for ${testType}`)
 
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
         for (let j = 0; j < 64; j++) {
-            to_accounts.push(
-                { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
-                { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m1-t${i}-s${j}-r2` }
-            );
+            if (testType === 'burn') {
+                to_accounts.push(
+                    { address: MINTERS.minter1.address, amount: 1, comment: "burn" },
+                    { address: MINTERS.minter1.address, amount: 2, comment: "burn" }
+                );
+            } else {
+                to_accounts.push(
+                    { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m1-t${i}-s${j}-r1` },
+                    { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m1-t${i}-s${j}-r2` }
+                );
+            }
         }
         requests.minter1.push({
             sc_address: native_token_address,
@@ -681,14 +807,21 @@ async function prepareSplitRequests(round_number) {
             to_accounts
         });
     }
-    console.log(`[Minter2] Preparing ${round_number} split requests`)
+    console.log(`[Minter2] Preparing ${round_number} split requests for ${testType}`)
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
         for (let j = 0; j < 64; j++) {
-            to_accounts.push(
-                { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
-                { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
-            );
+            if (testType === 'burn') {
+                to_accounts.push(
+                    { address: MINTERS.minter2.address, amount: 1, comment: "burn" },
+                    { address: MINTERS.minter2.address, amount: 2, comment: "burn" }
+                );
+            } else {
+                to_accounts.push(
+                    { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `m2-t${i}-s${j}-r1` },
+                    { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `m2-t${i}-s${j}-r2` }
+                );
+            }
         }
         requests.minter2.push({
             sc_address: native_token_address,
@@ -700,6 +833,8 @@ async function prepareSplitRequests(round_number) {
 
     return requests;
 }
+
+
 async function generateSplitProofs(requests) {
     const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
@@ -739,21 +874,21 @@ async function executeConcurrentSplits(requests) {
     console.log(`[Minter2] Executing ${requests.minter2.length} split requests`);
 
     const startTime = Date.now();
-    
+
     // 获取两个minter的钱包实例
     const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, ethers.provider);
     const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, ethers.provider);
-    
+
     const minter1Native = new ethers.Contract(native_token_address, abi, minter1Wallet);
     const minter2Native = new ethers.Contract(native_token_address, abi, minter2Wallet);
-    
+
     const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
-    
+
     // 获取起始nonce
     const minter1StartNonce = await minter1Wallet.getNonce('pending');
     const minter2StartNonce = await minter2Wallet.getNonce('pending');
-    
+
     // 准备两个minter的所有交易数据
     const minter1TxData = await Promise.all(
         requests.minter1.map(async (requestId, index) => {
@@ -761,7 +896,7 @@ async function executeConcurrentSplits(requests) {
                 { request_id: requestId },
                 minter1Metadata
             );
-            
+
             return {
                 recipients: response.to_addresses,
                 consumptionData: response.consumedIds.map(ids => ids.token_id),
@@ -785,14 +920,14 @@ async function executeConcurrentSplits(requests) {
             };
         })
     );
-    
+
     const minter2TxData = await Promise.all(
         requests.minter2.map(async (requestId, index) => {
             const response = await client.getBatchSplitTokenDetail(
                 { request_id: requestId },
                 minter2Metadata
             );
-            
+
             return {
                 recipients: response.to_addresses,
                 consumptionData: response.consumedIds.map(ids => ids.token_id),
@@ -816,7 +951,7 @@ async function executeConcurrentSplits(requests) {
             };
         })
     );
-    
+
     // 预签名两个minter的交易
     const [minter1SignedTxs, minter2SignedTxs] = await Promise.all([
         Promise.all(
@@ -832,7 +967,7 @@ async function executeConcurrentSplits(requests) {
                         txData.batchedSize - txData.recipients.length,
                         {
                             nonce: txData.nonce,
-                            gasLimit: 450436*10,
+                            gasLimit: 450436 * 10,
                             gasPrice: 0
                         }
                     );
@@ -840,7 +975,7 @@ async function executeConcurrentSplits(requests) {
                     unsignedTx.from = minter1Wallet.address;
                     unsignedTx.type = 0;
                     const signedTx = await minter1Wallet.signTransaction(unsignedTx);
-                    
+
                     return { signedTx, nonce: txData.nonce, success: true, minterName: 'minter1' };
                 } catch (error) {
                     console.error(`[Minter1] Transaction ${index} presign failed: ${error.message}`);
@@ -861,7 +996,7 @@ async function executeConcurrentSplits(requests) {
                         txData.batchedSize - txData.recipients.length,
                         {
                             nonce: txData.nonce,
-                            gasLimit: 450436*10,
+                            gasLimit: 450436 * 10,
                             gasPrice: 0
                         }
                     );
@@ -869,7 +1004,7 @@ async function executeConcurrentSplits(requests) {
                     unsignedTx.from = minter2Wallet.address;
                     unsignedTx.type = 0;
                     const signedTx = await minter2Wallet.signTransaction(unsignedTx);
-                    
+
                     return { signedTx, nonce: txData.nonce, success: true, minterName: 'minter2' };
                 } catch (error) {
                     console.error(`[Minter2] Transaction ${index} presign failed: ${error.message}`);
@@ -878,11 +1013,11 @@ async function executeConcurrentSplits(requests) {
             })
         )
     ]);
-    
+
     // 统计预签名结果
     const minter1SuccessfulSigs = minter1SignedTxs.filter(r => r.success);
     const minter2SuccessfulSigs = minter2SignedTxs.filter(r => r.success);
-    
+
     if (minter1SignedTxs.some(r => !r.success) || minter2SignedTxs.some(r => !r.success)) {
         return {
             minter1: {
@@ -899,11 +1034,11 @@ async function executeConcurrentSplits(requests) {
             }
         };
     }
-    
+
     // 现在将两个minter的已签名交易合并，然后一起发送
     // 这样可以让两个minter的交易请求在底层更紧密地交织
     const allSignedTxs = [];
-    
+
     // 交替添加两个minter的交易以实现更好的交织效果
     const maxLength = Math.max(minter1SuccessfulSigs.length, minter2SuccessfulSigs.length);
     for (let i = 0; i < maxLength; i++) {
@@ -914,7 +1049,7 @@ async function executeConcurrentSplits(requests) {
             allSignedTxs.push(minter2SuccessfulSigs[i]);
         }
     }
-    
+
     // 发送所有交易请求
     const providerUrl = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
     const BATCH_SIZE = 128;
@@ -922,10 +1057,10 @@ async function executeConcurrentSplits(requests) {
 
     for (let i = 0; i < allSignedTxs.length; i += BATCH_SIZE) {
         const batch = allSignedTxs.slice(i, i + BATCH_SIZE);
-        const batchMetadata = batch.map((signedData, idx) => ({ 
-            minterName: signedData.minterName, 
-            taskId: i + idx, 
-            nonce: signedData.nonce 
+        const batchMetadata = batch.map((signedData, idx) => ({
+            minterName: signedData.minterName,
+            taskId: i + idx,
+            nonce: signedData.nonce
         }));
 
         const batchPayload = batch.map((signedData, index) => ({
@@ -969,7 +1104,7 @@ async function executeConcurrentSplits(requests) {
                 error: error.message
             }));
         }
-        
+
         if (i + BATCH_SIZE < allSignedTxs.length) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -991,7 +1126,7 @@ async function executeConcurrentSplits(requests) {
             failedTransactions: minter2TxData.length - minter2Successful
         }
     };
-    
+
     const endTime = Date.now();
     console.log(`✅ All split transactions executed for both minters in ${endTime - startTime}ms`);
     console.log(`📊 Minter1: ${results.minter1.successfulTransactions}/${results.minter1.totalTransactions} successful`);
@@ -1007,7 +1142,7 @@ async function executeConcurrentSplits(requests) {
  * @param {string} privateKey - Minter 私钥（用于身份验证）
  * @returns {Promise<Object>} 包含提取结果的对象
  */
-async function extractRecipientTokenIds(minterName,requestIds,minterPrivateKey) {
+async function extractRecipientTokenIds(minterName, requestIds, minterPrivateKey) {
     const minterMetadata = await createAuthMetadata(minterPrivateKey);
 
     const allTokenIds = await Promise.all(
@@ -1025,7 +1160,7 @@ async function extractRecipientTokenIds(minterName,requestIds,minterPrivateKey) 
 
     return allTokenIds.flat();
 }
-async function mintTokensForMinter(client,CONFIG, minterConfig, tokenCount, amount) {
+async function mintTokensForMinter(client, CONFIG, minterConfig, tokenCount, amount) {
     const mintedTokens = [];
 
     for (let i = 0; i < tokenCount; i += CONFIG.mintBatchSize) {
@@ -1111,6 +1246,74 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
         failed: results.filter(r => r.error).length
     };
 }
+
+async function executeBatchBurnsSigned(tokenList1, tokenList2) {
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const allSignedTxs = [];
+    console.log(tokenList1)
+    console.log(tokenList2)
+    const processMinter = async (name, list) => {
+        if (!list?.length) return;
+        const cfg = MINTERS[name];
+        if (!cfg) return;
+
+        const wallet = new ethers.Wallet(cfg.privateKey, ethers.provider);
+        const baseNonce = await wallet.getNonce('pending');
+        const txs = await Promise.all(list.map(async (t, i) => {
+            let tokenId;
+            try {
+                tokenId = t.tokenId || t;
+                const contract = new ethers.Contract(native_token_address, abi, wallet);
+                const tx = await contract.burn.populateTransaction(tokenId, {
+                    nonce: baseNonce + i, gasLimit: 3000000, gasPrice: 0
+                });
+                tx.from = wallet.address;
+                tx.type = 0;
+                return { signedTx: await wallet.signTransaction(tx), tokenId, success: true };
+            } catch (e) {
+                return { tokenId, success: false, error: e.message };
+            }
+        }));
+        allSignedTxs.push(...txs);
+    };
+
+    await processMinter('minter1', tokenList1);
+    await processMinter('minter2', tokenList2);
+
+    const signed = allSignedTxs.filter(r => r.success);
+    const failed = allSignedTxs.filter(r => !r.success);
+
+    if (failed.length) {
+        return { total: allSignedTxs.length, success: signed.length, failed: failed.length, error: '预签名失败' };
+    }
+
+    // 批量发送：每批2000个，间隔0.2秒
+    const BATCH_SIZE = 4000;
+    const results = [];
+
+    for (let i = 0; i < signed.length; i += BATCH_SIZE) {
+        const batch = signed.slice(i, i + BATCH_SIZE);
+        const payload = batch.map((item, idx) => ({
+            jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
+        }));
+
+        const res = await fetch(RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(r => r.json());
+
+        results.push(...(Array.isArray(res) ? res : []));
+        // await sleep(200);
+    }
+
+    return {
+        total: allSignedTxs.length,
+        success: results.filter(r => !r.error).length,
+        failed: results.filter(r => r.error).length
+    };
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
