@@ -6,8 +6,9 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 const {parseEventsFromReceipt} = require("../sun/native_token_event_test");
 
-const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-const native_token_address = "0x455413b11d8e2cddd1443990349221590684a5f0";
+const abi = "[\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\"name\":\"tokenId\",\t\t\t\t\"type\":\"uint256\"\t\t\t}\t\t],\t\t\"name\":\"burn\",\t\t\"outputs\":[\t\t\t{\t\t\t\t\"internalType\":\"bool\",\t\t\t\t\"name\":\"\",\t\t\t\t\"type\":\"bool\"\t\t\t}\t\t],\t\t\"stateMutability\":\"nonpayable\",\t\t\"type\":\"function\"\t},\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"address\",\t\t\t\t\"name\":\"owner\",\t\t\t\t\"type\":\"address\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\"name\":\"tokenId\",\t\t\t\t\"type\":\"uint256\"\t\t\t}\t\t],\t\t\"name\":\"getToken\",\t\t\"outputs\":[\t\t\t{\t\t\t\t\"components\":[\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"id\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"owner\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"enum TokenModel.TokenStatus\",\t\t\t\t\t\t\"name\":\"status\",\t\t\t\t\t\t\"type\":\"uint8\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"components\":[\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t}\t\t\t\t\t\t],\t\t\t\t\t\t\"internalType\":\"struct TokenModel.ElGamal\",\t\t\t\t\t\t\"name\":\"amount\",\t\t\t\t\t\t\"type\":\"tuple\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"to\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"rollbackTokenId\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t}\t\t\t\t],\t\t\t\t\"internalType\":\"struct TokenModel.TokenEntity\",\t\t\t\t\"name\":\"\",\t\t\t\t\"type\":\"tuple\"\t\t\t}\t\t],\t\t\"stateMutability\":\"view\",\t\t\"type\":\"function\"\t},\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"address[]\",\t\t\t\t\"name\":\"recipients\",\t\t\t\t\"type\":\"address[]\"\t\t\t},\t\t\t{\t\t\t\t\"components\":[\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"id\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"owner\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"enum TokenModel.TokenStatus\",\t\t\t\t\t\t\"name\":\"status\",\t\t\t\t\t\t\"type\":\"uint8\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"components\":[\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t}\t\t\t\t\t\t],\t\t\t\t\t\t\"internalType\":\"struct TokenModel.ElGamal\",\t\t\t\t\t\t\"name\":\"amount\",\t\t\t\t\t\t\"type\":\"tuple\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"to\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"rollbackTokenId\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t}\t\t\t\t],\t\t\t\t\"internalType\":\"struct TokenModel.TokenEntity[]\",\t\t\t\t\"name\":\"tokens\",\t\t\t\t\"type\":\"tuple[]\"\t\t\t},\t\t\t{\t\t\t\t\"components\":[\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"id\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"components\":[\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t}\t\t\t\t\t\t],\t\t\t\t\t\t\"internalType\":\"struct TokenModel.ElGamal\",\t\t\t\t\t\t\"name\":\"value\",\t\t\t\t\t\t\"type\":\"tuple\"\t\t\t\t\t}\t\t\t\t],\t\t\t\t\"internalType\":\"struct TokenModel.ElGamalToken\",\t\t\t\t\"name\":\"newAllowed\",\t\t\t\t\"type\":\"tuple\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256[8]\",\t\t\t\t\"name\":\"proof\",\t\t\t\t\"type\":\"uint256[8]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256[]\",\t\t\t\t\"name\":\"publicInputs\",\t\t\t\t\"type\":\"uint256[]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\"name\":\"paddingNum\",\t\t\t\t\"type\":\"uint256\"\t\t\t}\t\t],\t\t\"name\":\"mint\",\t\t\"outputs\":[\t\t\t{\t\t\t\t\"internalType\":\"bool\",\t\t\t\t\"name\":\"\",\t\t\t\t\"type\":\"bool\"\t\t\t}\t\t],\t\t\"stateMutability\":\"nonpayable\",\t\t\"type\":\"function\"\t},\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"address\",\t\t\t\t\"name\":\"minter\",\t\t\t\t\"type\":\"address\"\t\t\t},\t\t\t{\t\t\t\t\"components\":[\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"id\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"components\":[\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t}\t\t\t\t\t\t],\t\t\t\t\t\t\"internalType\":\"struct TokenModel.ElGamal\",\t\t\t\t\t\t\"name\":\"value\",\t\t\t\t\t\t\"type\":\"tuple\"\t\t\t\t\t}\t\t\t\t],\t\t\t\t\"internalType\":\"struct TokenModel.ElGamalToken\",\t\t\t\t\"name\":\"allowed\",\t\t\t\t\"type\":\"tuple\"\t\t\t}\t\t],\t\t\"name\":\"setMintAllowed\",\t\t\"outputs\":[],\t\t\"stateMutability\":\"nonpayable\",\t\t\"type\":\"function\"\t},\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"address\",\t\t\t\t\"name\":\"from\",\t\t\t\t\"type\":\"address\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"address[]\",\t\t\t\t\"name\":\"recipients\",\t\t\t\t\"type\":\"address[]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256[]\",\t\t\t\t\"name\":\"consumedIds\",\t\t\t\t\"type\":\"uint256[]\"\t\t\t},\t\t\t{\t\t\t\t\"components\":[\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"id\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"owner\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"enum TokenModel.TokenStatus\",\t\t\t\t\t\t\"name\":\"status\",\t\t\t\t\t\t\"type\":\"uint8\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"components\":[\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cl_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_x\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t},\t\t\t\t\t\t\t{\t\t\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\t\t\"name\":\"cr_y\",\t\t\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t\t\t}\t\t\t\t\t\t],\t\t\t\t\t\t\"internalType\":\"struct TokenModel.ElGamal\",\t\t\t\t\t\t\"name\":\"amount\",\t\t\t\t\t\t\"type\":\"tuple\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"address\",\t\t\t\t\t\t\"name\":\"to\",\t\t\t\t\t\t\"type\":\"address\"\t\t\t\t\t},\t\t\t\t\t{\t\t\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\t\t\"name\":\"rollbackTokenId\",\t\t\t\t\t\t\"type\":\"uint256\"\t\t\t\t\t}\t\t\t\t],\t\t\t\t\"internalType\":\"struct TokenModel.TokenEntity[]\",\t\t\t\t\"name\":\"newTokens\",\t\t\t\t\"type\":\"tuple[]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256[8]\",\t\t\t\t\"name\":\"proof\",\t\t\t\t\"type\":\"uint256[8]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256[]\",\t\t\t\t\"name\":\"publicInputs\",\t\t\t\t\"type\":\"uint256[]\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\"name\":\"paddingNum\",\t\t\t\t\"type\":\"uint256\"\t\t\t}\t\t],\t\t\"name\":\"split\",\t\t\"outputs\":[\t\t\t{\t\t\t\t\"internalType\":\"bool\",\t\t\t\t\"name\":\"\",\t\t\t\t\"type\":\"bool\"\t\t\t}\t\t],\t\t\"stateMutability\":\"nonpayable\",\t\t\"type\":\"function\"\t},\t{\t\t\"inputs\":[\t\t\t{\t\t\t\t\"internalType\":\"uint256\",\t\t\t\t\"name\":\"tokenId\",\t\t\t\t\"type\":\"uint256\"\t\t\t},\t\t\t{\t\t\t\t\"internalType\":\"string\",\t\t\t\t\"name\":\"memo\",\t\t\t\t\"type\":\"string\"\t\t\t}\t\t],\t\t\"name\":\"transfer\",\t\t\"outputs\":[\t\t\t{\t\t\t\t\"internalType\":\"bool\",\t\t\t\t\"name\":\"\",\t\t\t\t\"type\":\"bool\"\t\t\t}\t\t],\t\t\"stateMutability\":\"nonpayable\",\t\t\"type\":\"function\"\t}]"
+// const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const native_token_address = "0x4dA51d6A39687ffCf9f5fc163C102aE8b23a123d";
 
 const fromAddress = accounts.Minter;
 // const rpcUrl = "localhost:50051";
@@ -128,9 +129,11 @@ async function testBatchedSplit() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const to_accounts = [
-            {address: accounts.To1,amount: 1,comment:"1"},
-            {address: accounts.To1,amount: 1,comment:"1"},
-            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: '',amount: 2,comment:"2"},
+            {address: '',amount: 3,comment:"3"},
+            {address: '',amount: 4,comment:"4"},
+            {address: '',amount: 5,comment:"5"},
+            {address: '',amount: 6,comment:"6"},
             {address: accounts.To1,amount: 1,comment:"1"},
         ]
         const splitRequest = {
@@ -163,18 +166,13 @@ async function getTokenById(){
     console.log("signerAddress", minter.address);
 
     let tokens = [
-        '10905053622205438689739027999115239912597380720811595399288006884145536738357',
-        '10519509999971084793225904706957460494464595230186142022875960696832366960974',
-        '10694312173746923066453951994784672039742994060051175911165582260494482344266',
-        '10370119094176972306172511240775284172383198153810103985037890508173601839935',
-        '10049302483018309625939913161922941530481695941028893449516103421063183339747',
-        '10153449980621794834163425791546919823573562666316006167153574672104660859273',
-        '10626152131601749046586119710884659090126679340587751025913694974121461310607',
-        '11160844704918862802166424862513886897069707870833504412559916051139162663752',
-        '10409712064253944818049590490462302516761126880291184107402043857187515119515',
-        '10079709895952366494606168140825840392494515171910722042296575614636148121033',
-        '10831027374570781184293989827384556639356664690744767266127336883817831331228',
-        '10369142022574585260067544463592989127236967895998189725124588655875427400407',
+        '21874367850472603830956612634266321865299967403352196894717301333950456834520',
+        '20733447670283116854222731307658614787174484515533733901945797665000281170445',
+        '21671927841327136299433019576064568660278992560971219347022721725025834658470',
+        '4904156794874586464313960803265303601803513072388566612635605847929169684818',
+        '15131217639310241158890917003046250575696970682251825214522635411799644211992',
+        '9733246618418561057679183834346330468973958076110242868293415697404861033890',
+
     ];
 
     const results = {
@@ -189,6 +187,7 @@ async function getTokenById(){
         try {
             let response = await native.getToken(accounts.Minter, tokenId);
             console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
+            console.log(response)
             results.success.push({ tokenId, response });
         } catch (error) {
             console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
@@ -275,11 +274,29 @@ async function testTransfer() {
         minter
     );
 
-    let tx = await native.transfer('18106704663288068145491098640877218307881382666044997452210139370058196822164',  "hello word");
+    let tx = await native.transfer('14835377400954059016902638591674512473253826824605355655988147055811208088773',  "hello word");
     console.log(tx);
     console.log("wait for response of tx");
     let rc = await tx.wait();
     console.log(rc);
+    await parseEventsFromReceipt(rc);
+}
+
+async function testBurn(id) {
+    const [signer, minter] = await ethers.getSigners();
+
+    const native = new ethers.Contract(
+        native_token_address,
+        abi,
+        minter
+    );
+
+    let tx = await native.burn(id);
+    console.log(tx);
+    console.log("wait for response of tx");
+    let rc = await tx.wait();
+    console.log(rc);
+    await parseEventsFromReceipt(rc);
 }
 
 async function testSetMintAllowed() {
@@ -343,11 +360,14 @@ async function testBatchSplitPerformance(requestIds, fromAddress) {
         response.consumedIds.forEach((ids) => {
             consumedIds.push(ids.token_id);
         });
-
+        const nonFromAddressTokenIds = [];
         const newTokens = [];
         response.newTokens.forEach((account, index) => {
             const toAddress = index % 2 === 0 ? fromAddress : recipients[(index - 1) / 2];
             const rollbackTokenId = index % 2 === 0 ? 0 : response.newTokens[index+1].token_id;
+            if (toAddress !== fromAddress) {
+                nonFromAddressTokenIds.push(account.token_id);
+            }
             newTokens.push({
                 id: account.token_id,
                 owner: fromAddress,
@@ -362,6 +382,7 @@ async function testBatchSplitPerformance(requestIds, fromAddress) {
                 rollbackTokenId: rollbackTokenId
             });
         });
+        console.log(`Non-fromAddress Token IDs: ${nonFromAddressTokenIds}`);
 
         const proof = response.proof.map(p => ethers.toBigInt(p));
         const publicInputs = response.public_input.map(p => ethers.toBigInt(p));
@@ -480,7 +501,7 @@ async function testBatchedSplitForPerformance() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const requestIds = [];
-        let count = 10;
+        let count = 96;
         // 调用5次generateBatchSplitToken
         for (let i = 0; i < count; i++) {
             console.log(`Generating batch split token request ${i + 1}/ ${count} ...`);
@@ -498,27 +519,27 @@ async function testBatchedSplitForPerformance() {
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
             ];
 
             const splitRequest = {
@@ -652,38 +673,9 @@ async function testTransferConcurrent(tokenIds) {
 
 async function testTransfers() {
     const tokenIds = [
-        '21350816825480577333141102120676617053892918441217241735953636696052225604375',
-        '4745825129654455032533893703129013900838866663897749003790969366622225598696',
-        '4813758263750543897772908020868249422492544893242163825995221290684106585767',
-        '1226065539496860957012371379434010808803929799981691598316000429159181173492',
-        '19241688198201817139466250174312269619573416830753679624985134508191332435751',
-        '18303189489378600709369794734046902056800461188619302791850036922550150695695',
-        '11376603406969987994582448024978395895883496303040409735964054880922168086550',
-        '4577034225750352476284376114102530759659148015175975113907495156153569465365',
-        '382208582573851191750333969595702288511528832018399544311062737036594789073',
-        '2099141328528561932815230735254825034243259767144625223224507787895681804372',
-        '6765183097521258569749176203934599806249915004849796168619628136294551431684',
-        '20975217844942381523008801639275926150709580778786950205460677401753135047715',
-        '16195130313734831413197689085594292754701406959025720686415536681837000044974',
-        '11899904674513530641999193099590286829170473664126950290822085893964130617830',
-        '580080289417679181866750317500749540002016614505851324175754180058293111001',
-        '13324288387494057539210253170602870494169483443290919264559412102499369362299',
-        '6082787084695025130873721250894138865282112602603541182562785385375040320485',
-        '21634802919871595002497460583209229323130211618160950069964286829701377610820',
-        '5030737550036475852667977049689451404420328009711175012256158406741133178911',
-        '15352932513620528122818409692311753170859107757063343892112773417154124122522',
-        '17803955944033799079977556941435479609067427510370017405716844179673132886793',
-        '14058927110418143128769323945319125712493202165024893402123577402377247828340',
-        '9235632335549489185795684871309005884374993005023174404482207471850911722377',
-        '19018572432885808700479466607464789786095032217397218415733033309376327290725',
-        '13169235270394674967967356147996729358630710743703213408059796834535438576508',
-        '3649013354636959114797365611512927539353615524673245184847463475472984936463',
-        '25342494523186899607679148003025520256189761236345968614173598065820586134',
-        '12634220879709230996888934510167986728091466394802157082717092405607461507849',
-        '6249549122952658068206951966599875951877857989267272936492449458187787067834',
-        '18106704663288068145491098640877218307881382666044997452210139370058196822164',
-        '16504503646013263974057035039306845053225822633496134565750064600654175543383',
-        '16190066770929703405485847154146855859244319864590340513141240523322959740776',
+        '17616547779506773998158437204466826408622186966294046724164720563283054134132',
+        '19873986372674885729533599370127161902014949228513941673449919386997669538077',
+        '16146513216898211499997041569663017611957840008026136146461014599817870660196',
     ];
     testTransferConcurrent(tokenIds).then(results => {
         console.log('所有transfer操作执行完成');
@@ -701,7 +693,8 @@ async function testNonce() {
 // testMint().then();
 // testMintSequential().then();
 // testBatchedSplit().then();
-getTokenById().then();
+testBurn('16614054352643310873897746527375656187281471852502765764326770479228319182453').then();
+// getTokenById().then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
 // testTransfer().then();
 // testNonce().then();
