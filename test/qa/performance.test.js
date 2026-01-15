@@ -296,6 +296,7 @@ describe("Performance Test with created 10 minters", function () {
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(client, minters[i].address)
+            await sleep(10000)
         }
         await sleep(30000)
     });
