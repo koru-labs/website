@@ -1,3 +1,11 @@
+// run step
+// 1, registe with fixed minter
+// 2, set minter allowed
+// 3, minter
+// 4, split
+// 5, transfer
+
+
 const { expect } = require("chai");
 const { ethers, network } = require('hardhat');
 const hardhatConfig = require('../../hardhat.config');
@@ -198,76 +206,56 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
 describe("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 10;
+    const TOTAL_SIZE = 300;
     const BATCH_SIZE = 1000;
-    // const minters = [
-    //     // {
-    //     //     address: accounts.Minter,
-    //     //     wallet: new ethers.Wallet(accounts.MinterKey, l1Provider),
-    //     // }
-    //     {
-    //         address: minterWallet.address,
-    //         wallet: minterWallet,
-    //     }]
 
-    const minter1 = ethers.Wallet.createRandom();
-    const minter2 = ethers.Wallet.createRandom();
-    const minter3 = ethers.Wallet.createRandom();
-
-    const minter4 = ethers.Wallet.createRandom();
-    const minter5 = ethers.Wallet.createRandom();
-    const minter6 = ethers.Wallet.createRandom();
-    const minter7 = ethers.Wallet.createRandom();
-    const minter8 = ethers.Wallet.createRandom();
-    const minter9 = ethers.Wallet.createRandom();
-    const minter10 = ethers.Wallet.createRandom();
-
-    const minters = [
-        // {
-        //     address: accounts.Minter,
-        //     wallet: new ethers.Wallet(accounts.MinterKey, l1Provider),
-        // }
+    const FIXED_MINTERS = [
         {
-            address: minter1.address,
-            wallet: new ethers.Wallet(minter1.privateKey, l1Provider),
+            address: '0xd2c9a29f7b38aA809bf10aEAC542dE296cdA32ba',
+            privateKey: '0x163d2ca80793877390a743b6ef922bbce8ed49111324b18b463bc0a4d8a2a270'
         },
         {
-            address: minter2.address,
-            wallet: new ethers.Wallet(minter2.privateKey, l1Provider)
+            address: '0xD1dB5e2668199C239ee0208A0471785684050104',
+            privateKey: '0xb2b5f63a19da027ca36d97c93dd092b0047442de809f996eb9691173d65b5178'
         },
         {
-            address: minter3.address,
-            wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
+            address: '0xDD140e6E3417C9CB791b31D9D51210DD3d37abcC',
+            privateKey: '0x11345d8e8c30ae8e89fb88f68109bdc54990e811d607bd62fde7ba4001bf3505'
         },
         {
-            address: minter4.address,
-            wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
+            address: '0x0e41592A01AA1Df1949477DD680D4c363c6876bF',
+            privateKey: '0x5b38a3831fd1054e958570dac511879f8bdc49f7121200112cfd7af45620a6b7'
         },
         {
-            address: minter5.address ,
-            wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
+            address: '0x9fc5D5b92b304cf40f317992aB9BbF1919e6A24F',
+            privateKey: '0x65826bde58b6ebe5db2ee360a0e0b7b596d183d99cbe09a89ca2a42e72086e2d'
         },
         {
-            address: minter6.address,
-            wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
+            address: '0x63930B907E936dB9DB1Ff692f09197cee258593B',
+            privateKey: '0xed6f4429816453681477ed10cc0fe427c99521eae07ac3479a9a2a6a562bd4b6'
         },
         {
-            address: minter7.address,
-            wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
+            address: '0x3f89e8c1B1C1D7A82A1142B7Dbc4ED31c19375B7',
+            privateKey: '0x53e7258742813fe8795c123a90bc7f56c53578b6c48e32288f4bf06530ef3223'
         },
         {
-            address: minter8.address,
-            wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
+            address: '0x7B559724491516Ed95AC4864Cc0B2c257dd7dBCD',
+            privateKey: '0xd2cfa0cc758c493f79685a3a55efb243955394ec6aaa80b2401a9cb0d5895257'
         },
         {
-            address: minter9.address,
-            wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
+            address: '0x7Ea48DaaDE9e19F3e54C572DCBc54Cdd184d62df',
+            privateKey: '0x3f2f3a15af3520d700432d49b7ba61226fb42d94cee683334f38966370c890b8'
         },
         {
-            address: minter10.address,
-            wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
+            address: '0xE691F7Bd82f268acd18fFeC9fEd86C3283230eC9',
+            privateKey: '0x1545d7e5a6e76b2100d16320f0531b446615fa4057718abd7c4e534424ed5966'
         }
-    ]
+    ];
+
+    const minters = FIXED_MINTERS.map(m => ({
+        address: m.address,
+        wallet: new ethers.Wallet(m.privateKey, l1Provider)
+    }));
 
     it('Registe ', async () => {
         for (let i = 0; i < minters.length; i++) {
@@ -296,13 +284,10 @@ describe("Performance Test with created 10 minters", function () {
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(client, minters[i].address)
-            await sleep(10000)
         }
-        await sleep(30000)
     });
     it('Mint', async () => {
-        const amount = TOTAL_SIZE/10 + 100;
-        // const amount = 200;
+        const amount = 1000;
         for (let i = 0; i < minters.length; i++) {
             for (let j = 0; j < 10; j++) {
                 console.log(`mintBy ${minters[i].address} ${j + 1} 轮开始`)
@@ -313,7 +298,7 @@ describe("Performance Test with created 10 minters", function () {
         }
     });
 
-    it("Split Operations", async function () {
+    it.only("Split Operations", async function () {
         // await getTokenBalanceByAdmin(accounts.Minter)
         console.log("开始发生成分割代币请求...");
         const startTime = Date.now();
@@ -401,7 +386,7 @@ describe("Performance Test with created 10 minters", function () {
     // it.skip('TPS PrivateTransfer Test ： Submit with Minter Parallelization and Batching', async () => {
     //     // ... code removed for clarity
     // });
-    it('TPS PrivateTransfers Test ：Sign First and send batched callPrivateTransfers', async () => {
+    it.only('TPS PrivateTransfers Test ：Sign First and send batched callPrivateTransfers', async () => {
         const TOKENS_PER_CALL = 100; // 每个minter每次调用包含的最大token数
         const BATCH_SIZE = 500;     // 批量发送的RPC请求大小
         const startTestTime = Date.now();
