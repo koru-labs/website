@@ -72,6 +72,6 @@ async function checkBalance(){
     console.log("balance:", balance);
 }
 
-// deploySimpleToken().then();
+deploySimpleToken().then();
 // checkBalance().then();
-batchTransfer().then();
+// batchTransfer().then();
