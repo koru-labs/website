@@ -198,7 +198,7 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
 describe("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 300;
+    const TOTAL_SIZE = 10;
     const BATCH_SIZE = 1000;
     // const minters = [
     //     // {
@@ -211,16 +211,16 @@ describe("Performance Test with created 10 minters", function () {
     //     }]
 
     const minter1 = ethers.Wallet.createRandom();
-    // const minter2 = ethers.Wallet.createRandom();
-    // const minter3 = ethers.Wallet.createRandom();
-    //
-    // const minter4 = ethers.Wallet.createRandom();
-    // const minter5 = ethers.Wallet.createRandom();
-    // const minter6 = ethers.Wallet.createRandom();
-    // const minter7 = ethers.Wallet.createRandom();
-    // const minter8 = ethers.Wallet.createRandom();
-    // const minter9 = ethers.Wallet.createRandom();
-    // const minter10 = ethers.Wallet.createRandom();
+    const minter2 = ethers.Wallet.createRandom();
+    const minter3 = ethers.Wallet.createRandom();
+
+    const minter4 = ethers.Wallet.createRandom();
+    const minter5 = ethers.Wallet.createRandom();
+    const minter6 = ethers.Wallet.createRandom();
+    const minter7 = ethers.Wallet.createRandom();
+    const minter8 = ethers.Wallet.createRandom();
+    const minter9 = ethers.Wallet.createRandom();
+    const minter10 = ethers.Wallet.createRandom();
 
     const minters = [
         // {
@@ -231,73 +231,81 @@ describe("Performance Test with created 10 minters", function () {
             address: minter1.address,
             wallet: new ethers.Wallet(minter1.privateKey, l1Provider),
         },
-        // {
-        //     address: minter2.address,
-        //     wallet: new ethers.Wallet(minter2.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter3.address,
-        //     wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter4.address,
-        //     wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter5.address ,
-        //     wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter6.address,
-        //     wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter7.address,
-        //     wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter8.address,
-        //     wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter9.address,
-        //     wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
-        // },
-        // {
-        //     address: minter10.address,
-        //     wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
-        // }
+        {
+            address: minter2.address,
+            wallet: new ethers.Wallet(minter2.privateKey, l1Provider)
+        },
+        {
+            address: minter3.address,
+            wallet: new ethers.Wallet(minter3.privateKey, l1Provider)
+        },
+        {
+            address: minter4.address,
+            wallet: new ethers.Wallet(minter4.privateKey, l1Provider)
+        },
+        {
+            address: minter5.address ,
+            wallet: new ethers.Wallet(minter5.privateKey, l1Provider)
+        },
+        {
+            address: minter6.address,
+            wallet: new ethers.Wallet(minter6.privateKey, l1Provider)
+        },
+        {
+            address: minter7.address,
+            wallet: new ethers.Wallet(minter7.privateKey, l1Provider)
+        },
+        {
+            address: minter8.address,
+            wallet: new ethers.Wallet(minter8.privateKey, l1Provider)
+        },
+        {
+            address: minter9.address,
+            wallet: new ethers.Wallet(minter9.privateKey, l1Provider)
+        },
+        {
+            address: minter10.address,
+            wallet: new ethers.Wallet(minter10.privateKey, l1Provider)
+        }
     ]
 
     it('Registe ', async () => {
         for (let i = 0; i < minters.length; i++) {
             await registerUser(adminPrivateKey, client, minters[i].address, "normal");
-            await sleep(30000);
-            let response = await getAccount(adminPrivateKey, client, minters[i].address);
+
+            // 轮询查询直到account_status等于ACCOUNT_STATUS_ACTIVE
+            let response;
+            let accountActive = false;
+            while (!accountActive) {
+                response = await getAccount(adminPrivateKey, client, minters[i].address);
+                if (response.account_status === "ACCOUNT_STATUS_ACTIVE") {
+                    accountActive = true;
+                } else {
+                    console.log(`等待账户 ${minters[i].address} 状态变为 ACTIVE，当前状态: ${response.account_status}`);
+                    await sleep(5000); // 等待5秒后再次查询
+                }
+            }
+
             expect(response.account_status).equal("ACCOUNT_STATUS_ACTIVE");
             expect(response.account_roles).equal("normal");
         }
-    });
+    })
 
     it('Set allowance', async () => {
         for (let i = 0; i < minters.length; i++) {
             console.log(`第${i} 个 minter set allowance开始,${minters[i].address}`)
             await allowBanksInTokenSmartContract(minters[i].address)
             await setMinterAllowed(client, minters[i].address)
-            await sleep(10000)
-
-            // const minterMeta = await createAuthMetadata(minters[i].wallet.privateKey)
-            // console.log(await getMinterAllowed(client, minterMeta))
         }
+        await sleep(30000)
     });
     it('Mint', async () => {
-        // const amount = TOTAL_SIZE/10 + 100;
-        const amount = 200;
+        const amount = TOTAL_SIZE/10 + 100;
+        // const amount = 200;
         for (let i = 0; i < minters.length; i++) {
             for (let j = 0; j < 10; j++) {
                 console.log(`mintBy ${minters[i].address} ${j + 1} 轮开始`)
                 await mintBy(minters[i].address, amount, minters[i].wallet)
-                await sleep(2000)
                 console.log(`第${j + 1}轮mint完成`)
                 console.log(await getTokenBalanceByAdmin(minters[i].address))
             }
