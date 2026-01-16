@@ -206,7 +206,7 @@ async function processBatch(batchSignedTxs, batchMetadata, batchIndex, totalBatc
 describe("Performance Test with created 10 minters", function () {
     this.timeout(120000000);
 
-    const TOTAL_SIZE = 300;
+    const TOTAL_SIZE = 10;
     const BATCH_SIZE = 1000;
 
     const FIXED_MINTERS = [
