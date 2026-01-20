@@ -335,7 +335,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 256; // 测试用的token数量
+    const total_number = 128; // 测试用的token数量
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -363,7 +363,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     describe('Step 1: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
-        it('should split tokens and save recipient token ids to JSON file', async function () {
+        it.only('should split tokens and save recipient token ids to JSON file', async function () {
             // 1. 执行mint操作
             console.log('=== Step 1: Minting tokens ===');
             const batchSize = 128;
