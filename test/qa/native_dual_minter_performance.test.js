@@ -331,11 +331,11 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // 新的测试用例：将split后的token id保存到json文件，然后读取执行transfer
-describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 2; // 测试用的token数量
+    const total_number = 256; // 测试用的token数量
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -360,18 +360,29 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         );
     });
 
-    describe('Step 1: Split tokens and save to JSON file', function () {
+    describe.only('Step 1: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
             // 1. 执行mint操作
             console.log('=== Step 1: Minting tokens ===');
-            await mintTokensForMinters(
-                client,
-                MINTERS,
-                total_number,
-                amount
-            );
+            const batchSize = 128;
+
+            for (let i = 0; i < total_number; i += batchSize) {
+                const currentBatchSize = Math.min(batchSize, total_number - i);
+                const isLastBatch = i + batchSize >= total_number;
+
+                await mintTokensForMinters(
+                    client,
+                    MINTERS,
+                    currentBatchSize,
+                    amount
+                );
+
+                if (!isLastBatch) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            }
             
             // 2. 准备split请求
             console.log('=== Step 2: Preparing split requests ===');
@@ -410,7 +421,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         });
     });
 
-    describe('Step 2: Read from JSON file and execute transfers', function () {
+    describe.skip('Step 2: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
@@ -1174,7 +1185,14 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
         }));
 
+        // 计算请求大小
+        const requestPayloadString = JSON.stringify(payload);
+        const requestSizeInBytes = Buffer.byteLength(requestPayloadString, 'utf8');
+        const requestSizeInMB = requestSizeInBytes / (1024 * 1024); // 转换为MB
+
         console.log(`开始推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，包含 ${batch.length} 笔交易，时间: ${new Date().toISOString()}`);
+        console.log(`请求大小: ${requestSizeInMB.toFixed(2)} MB`);
+
         const startTime = Date.now();
 
         const res = await fetch(RPC, {
@@ -1196,6 +1214,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
         failed: results.filter(r => r.error).length
     };
 }
+
 async function executeBatchBurnsSigned(tokenList1, tokenList2) {
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     const allSignedTxs = [];
