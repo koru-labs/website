@@ -360,7 +360,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         );
     });
 
-    describe.only('Step 1: Split tokens and save to JSON file', function () {
+    describe('Step 1: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
