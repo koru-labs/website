@@ -360,9 +360,21 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             minter
         );
     });
+    describe('Step 1: Setup mint allowance for two minters', function () {
+        it('should set mint allowance for minter1', async function () {
+            this.timeout(120000);
+            await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
+        });
 
-    describe.only('Step 1: Split tokens and save to JSON file', function () {
+        it('should set mint allowance for minter2', async function () {
+            this.timeout(120000);
+            await setupMintAllowance(nativeOwner, client, { minter2: MINTERS.minter2 }, 100000000);
+        });
+    });
+
+    describe('Step 2: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
+
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
             // 1. 执行mint操作
@@ -422,7 +434,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         });
     });
 
-    describe.only('Step 2: Read from JSON file and execute transfers', function () {
+    describe('Step 3: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
