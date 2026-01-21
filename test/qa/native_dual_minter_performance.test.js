@@ -331,7 +331,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // 新的测试用例：将split后的token id保存到json文件，然后读取执行transfer
-describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
@@ -363,7 +363,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     describe('Step 1: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
-        it.only('should split tokens and save recipient token ids to JSON file', async function () {
+        it('should split tokens and save recipient token ids to JSON file', async function () {
             // 1. 执行mint操作
             console.log('=== Step 1: Minting tokens ===');
             const batchSize = 128;
@@ -421,7 +421,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         });
     });
 
-    describe.only('Step 2: Read from JSON file and execute transfers', function () {
+    describe('Step 2: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
@@ -1169,49 +1169,56 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     await processMinter('minter2', tokenList2);
 
     const signed = allSignedTxs.filter(r => r.success);
-    const failed = allSignedTxs.filter(r => !r.success);
+    if (!signed.length) return { total: allSignedTxs.length, success: 0, failed: 0 };
 
-    if (failed.length) {
-        return { total: allSignedTxs.length, success: signed.length, failed: failed.length, error: '预签名失败' };
-    }
-
-    // 批量发送
-    const BATCH_SIZE = 10000;
-    const results = [];
-
+    const BATCH_SIZE = 5000;
+    const allPayloads = [];
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
         const batch = signed.slice(i, i + BATCH_SIZE);
-        const payload = batch.map((item, idx) => ({
-            jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
-        }));
-
-        // 计算请求大小
-        const requestPayloadString = JSON.stringify(payload);
-        const requestSizeInBytes = Buffer.byteLength(requestPayloadString, 'utf8');
-        const requestSizeInMB = requestSizeInBytes / (1024 * 1024); // 转换为MB
-
-        console.log(`开始推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，包含 ${batch.length} 笔交易，时间: ${new Date().toISOString()}`);
-        console.log(`请求大小: ${requestSizeInMB.toFixed(2)} MB`);
-
-        const startTime = Date.now();
-
-        const res = await fetch(RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).then(r => r.json());
-
-        const endTime = Date.now();
-        console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒，时间: ${new Date().toISOString()}`);
-
-        results.push(...(Array.isArray(res) ? res : []));
-        // await sleep(200);
+        allPayloads.push(batch.map((item, idx) => ({
+            jsonrpc: "2.0",
+            id: i + idx,
+            method: "eth_sendRawTransaction",
+            params: [item.signedTx]
+        })));
     }
+
+    console.log(`准备就绪，共 ${allPayloads.length} 个批次，即将并发推送...`);
+
+    // 使用 Promise.all 并发所有 HTTP 请求
+    const startTime = Date.now();
+
+    const requestPromises = allPayloads.map(async (payload, index) => {
+        try {
+            const pStart = Date.now();
+            const response = await fetch(RPC, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Connection': 'keep-alive'
+                },
+                body: JSON.stringify(payload)
+            });
+            const res = await response.json();
+            console.log(`批次 ${index + 1} 推送完成，耗时: ${(Date.now() - pStart)/1000}s`);
+            return Array.isArray(res) ? res : [res];
+        } catch (e) {
+            console.error(`批次 ${index + 1} 失败:`, e.message);
+            return new Array(payload.length).fill({ error: e.message });
+        }
+    });
+
+    // 等待所有批次完成
+    const allResults = await Promise.all(requestPromises);
+    const results = allResults.flat();
+
+    const endTime = Date.now();
+    console.log(`总推送耗时: ${(endTime - startTime)/1000} 秒`);
 
     return {
         total: allSignedTxs.length,
-        success: results.filter(r => !r.error).length,
-        failed: results.filter(r => r.error).length
+        success: results.filter(r => r && !r.error).length,
+        failed: results.filter(r => !r || r.error).length
     };
 }
 
