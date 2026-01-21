@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
+const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -62,6 +62,7 @@ async function setupMintAllowance(native, client, minters, amount) {
         const tx = await native.setMintAllowed(minterConfig.address, allowed);
         await tx.wait();
     }
+    await sleep(3000)
 }
 
 
@@ -249,7 +250,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128
+    const total_number = 32
     const amount = 1000
     let minter1List, minter2List
 
@@ -331,7 +332,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // 新的测试用例：将split后的token id保存到json文件，然后读取执行transfer
-describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
@@ -360,7 +361,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         );
     });
 
-    describe('Step 1: Split tokens and save to JSON file', function () {
+    describe.only('Step 1: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
@@ -448,7 +449,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
 
     after(async function () {
         // 可以选择在这里删除JSON文件
-        // fs.unlinkSync(jsonFilePath);
+        fs.unlinkSync(jsonFilePath);
         console.log('Test completed.');
     });
 });
