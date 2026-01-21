@@ -421,7 +421,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         });
     });
 
-    describe('Step 2: Read from JSON file and execute transfers', function () {
+    describe.only('Step 2: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
@@ -452,7 +452,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         console.log('Test completed.');
     });
 });
-describe.only('Native Dual Minter Transfer Performance Tests', function () {
+describe('Native Dual Minter Transfer Performance Tests', function () {
     this.timeout(12000000)
     let client, owner, minter;
     let nativeOwner, nativeMinter;
