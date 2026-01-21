@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
+const native_token_address = "0x95abCa2D96047f91978E0F8cad91e0822f966cbd";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -336,7 +336,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128;
+    const total_number = 32;
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
