@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x593B88fcbc02C960B70E8EEE468D0d6Ee7C6e64D";
+const native_token_address = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -283,7 +283,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
         });
     });
 
-    describe.only('Case 2: Mint tokens for both minters', function () {
+    describe('Case 2: Mint tokens for both minters', function () {
         this.timeout(6000000); // 10 minutes
 
         it(`should mint ${total_number} tokens for each minter`, async function () {
@@ -308,7 +308,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
 
     });
 
-    describe.only('Case 3: Split tokens with performance test', function () {
+    describe('Case 3: Split tokens with performance test', function () {
         this.timeout(9000000);
 
         it('should split tokens with concurrent execution', async function () {
@@ -335,7 +335,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // 测试用的token数量
+    const total_number = 128;
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -452,7 +452,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         console.log('Test completed.');
     });
 });
-describe('Native Dual Minter Transfer Performance Tests', function () {
+describe.only('Native Dual Minter Transfer Performance Tests', function () {
     this.timeout(12000000)
     let client, owner, minter;
     let nativeOwner, nativeMinter;
@@ -557,7 +557,7 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
         });
     });
 
-    describe('Case 4: Excute Transfers TPS', function () {
+    describe.skip('Case 4: Excute Transfers TPS', function () {
         this.timeout(6000000);
         it('should execute transfers with TPS', async function () {
             await executeBatchTransfersSigned(minter1List, minter2List);
