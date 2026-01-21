@@ -1202,6 +1202,9 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
 
     const requestPromises = allPayloads.map(async (payload, index) => {
         try {
+            // 添加 0.5 秒延迟
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const pStart = Date.now();
             const response = await fetch(RPC, {
                 method: 'POST',
