@@ -336,7 +336,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 32;
+    const total_number = 128;
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
