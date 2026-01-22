@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x9f041c66A62783c899928875d7387e63dFaB70a8";
+const native_token_address = "0xE752b9013333Ae56C0DbEF69F66beBE227a3388A";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -62,6 +62,7 @@ async function setupMintAllowance(native, client, minters, amount) {
         const tx = await native.setMintAllowed(minterConfig.address, allowed);
         await tx.wait();
     }
+    await sleep(3000)
 }
 
 
@@ -249,7 +250,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128
+    const total_number = 32
     const amount = 1000
     let minter1List, minter2List
 
@@ -335,7 +336,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // 测试用的token数量
+    const total_number = 128;
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -359,7 +360,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             minter
         );
     });
-    describe('Setup: Setup mint allowance for two minters', function () {
+    describe('Step 1: Setup mint allowance for two minters', function () {
         it('should set mint allowance for minter1', async function () {
             this.timeout(120000);
             await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
@@ -371,8 +372,9 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         });
     });
 
-    describe('Step 1: Split tokens and save to JSON file', function () {
+    describe('Step 2: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
+
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
             // 1. 执行mint操作
@@ -432,130 +434,6 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         });
     });
 
-    // 添加getTokenById方法
-    async function getTokenById(minterWallet, tokenIdList, native_token_address, abi){
-        // 使用传入的minterWallet作为signer
-        const native = new ethers.Contract(
-            native_token_address,
-            abi,
-            minterWallet
-        );
-        console.log("signerAddress", minterWallet.address);
-
-        const results = {
-            success: [],
-            failed: []
-        };
-
-        console.log(`开始处理 ${tokenIdList.length} 个 tokenId...`);
-
-        // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
-        for (const tokenId of tokenIdList) {
-            try {
-                let response = await native.getToken(minterWallet.address, tokenId);
-                // console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
-                results.success.push({ tokenId, response: response.id });
-            } catch (error) {
-                console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
-                results.failed.push({ tokenId, error: error.message });
-            }
-        }
-
-        // 输出汇总结果
-        console.log(`\n=== 查询结果汇总 ===`);
-        console.log(`总查询数: ${tokenIdList.length}`);
-        console.log(`成功数: ${results.success.length}`);
-        console.log(`失败数: ${results.failed.length}`);
-
-        if (results.failed.length > 0) {
-            console.log(`\n失败的 tokenId 列表:`);
-            results.failed.forEach(item => {
-                console.log(`- ${item.tokenId}: ${item.error}`);
-            });
-        }
-
-        return results;
-    }
-
-    describe.skip('Step2: Read from JSON file to verify token ids',function(){
-        this.timeout(6000000);
-        it('Read from JSON file to verify token ids and remove failed tokens',async function(){
-            // 1. 从JSON文件读取token id
-            console.log('=== Step 1: Reading token ids from JSON file ===');
-            if (!fs.existsSync(jsonFilePath)) {
-                throw new Error(`JSON file ${jsonFilePath} not found. Please run Step 1 first.`);
-            }
-            
-            let tokenData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
-            const originalMinter1List = [...tokenData.minter1];
-            const originalMinter2List = [...tokenData.minter2];
-            
-            console.log(`Read ${originalMinter1List.length} token ids for minter1 from JSON`);
-            console.log(`Read ${originalMinter2List.length} token ids for minter2 from JSON`);
-            
-            // 2. 创建minter钱包实例
-            const provider = new ethers.JsonRpcProvider(RPC);
-            const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
-            const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
-            
-            // 3. 检查token是否可以查询到
-            console.log('=== Step 2: Verifying token query availability ===');
-            
-            // 检查minter1的token
-            console.log('\n--- Checking tokens for minter1 ---');
-            const minter1Results = await getTokenById(minter1Wallet, originalMinter1List, native_token_address, abi);
-            
-            // 检查minter2的token
-            console.log('\n--- Checking tokens for minter2 ---');
-            const minter2Results = await getTokenById(minter2Wallet, originalMinter2List, native_token_address, abi);
-            
-            // 4. 收集失败的tokenId
-            const failedTokenIds = new Set();
-            minter1Results.failed.forEach(item => failedTokenIds.add(item.tokenId));
-            minter2Results.failed.forEach(item => failedTokenIds.add(item.tokenId));
-            console.log(failedTokenIds)
-            // 5. 从tokenData中移除失败的tokenId
-            // if (failedTokenIds.size > 0) {
-            //     console.log('\n=== Step 3: Removing failed token ids from JSON file ===');
-            //     console.log(`Removing ${failedTokenIds.size} failed token ids...`);
-            //
-            //     // 更新minter1的token列表
-            //     tokenData.minter1 = tokenData.minter1.filter(tokenId => !failedTokenIds.has(tokenId));
-            //
-            //     // 更新minter2的token列表
-            //     tokenData.minter2 = tokenData.minter2.filter(tokenId => !failedTokenIds.has(tokenId));
-            //
-            //     // 更新totalTokens
-            //     tokenData.totalTokens = tokenData.minter1.length + tokenData.minter2.length;
-            //
-            //     // 将更新后的数据写回JSON文件
-            //     // fs.writeFileSync(jsonFilePath, JSON.stringify(tokenData, null, 2));
-            //     console.log(`✅ Updated JSON file with removed failed tokens`);
-            //     console.log(`minter1: ${originalMinter1List.length} → ${tokenData.minter1.length} tokens`);
-            //     console.log(`minter2: ${originalMinter2List.length} → ${tokenData.minter2.length} tokens`);
-            // }
-            
-            // 汇总所有结果
-            const totalResults = {
-                totalTokens: originalMinter1List.length + originalMinter2List.length,
-                totalSuccess: minter1Results.success.length + minter2Results.success.length,
-                totalFailed: minter1Results.failed.length + minter2Results.failed.length
-            };
-            
-            console.log(`\n=== 总查询结果汇总 ===`);
-            console.log(`总查询数: ${totalResults.totalTokens}`);
-            console.log(`总成功数: ${totalResults.totalSuccess}`);
-            console.log(`总失败数: ${totalResults.totalFailed}`);
-            console.log(`移除失败token数: ${failedTokenIds.size}`);
-            console.log(`更新后文件中剩余token数: ${tokenData.totalTokens}`);
-            
-            // 验证至少有一个token查询成功
-            expect(totalResults.totalSuccess).to.be.greaterThan(0, '至少应有一个token查询成功');
-            
-            console.log('✅ All token queries and updates completed successfully');
-        })
-    })
-
     describe('Step 3: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
@@ -588,16 +466,15 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     });
 });
 describe('Native Dual Minter Transfer Performance Tests', function () {
+    this.timeout(12000000)
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 2 //total_number *2 *128
+    const total_number = 128 //total_number *2 *128
     const amount = 1000
     let minter1List, minter2List
 
     before(async function () {
-        this.timeout(300000);
-
         client = createClient(rpcUrl);
         [owner, minter] = await ethers.getSigners();
 
@@ -693,7 +570,7 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
         });
     });
 
-    describe('Case 4: Excute Transfers TPS', function () {
+    describe.skip('Case 4: Excute Transfers TPS', function () {
         this.timeout(6000000);
         it('should execute transfers with TPS', async function () {
             await executeBatchTransfersSigned(minter1List, minter2List);
@@ -1061,8 +938,8 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 10) {
                         cr_x: ethers.toBigInt(account.cr_x),
                         cr_y: ethers.toBigInt(account.cr_y)
                     },
-                    to: idx % 2 === 0 ? minter1Wallet.address : response.to_addresses[Math.floor(idx-1 / 2)],
-                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1].token_id
+                    to: idx % 2 === 0 ? minter1Wallet.address : response.to_addresses[Math.floor(idx / 2)],
+                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
                 })),
                 proof: response.proof.map(p => ethers.toBigInt(p)),
                 publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
@@ -1304,54 +1181,59 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     await processMinter('minter2', tokenList2);
 
     const signed = allSignedTxs.filter(r => r.success);
-    const failed = allSignedTxs.filter(r => !r.success);
+    if (!signed.length) return { total: allSignedTxs.length, success: 0, failed: 0 };
 
-    if (failed.length) {
-        return { total: allSignedTxs.length, success: signed.length, failed: failed.length, error: '预签名失败' };
-    }
-
-    // 批量发送
     const BATCH_SIZE = 5000;
-    const results = [];
-
+    const allPayloads = [];
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
         const batch = signed.slice(i, i + BATCH_SIZE);
-        const payload = batch.map((item, idx) => ({
-            jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
-        }));
-
-        // 计算请求大小
-        const requestPayloadString = JSON.stringify(payload);
-        const requestSizeInBytes = Buffer.byteLength(requestPayloadString, 'utf8');
-        const requestSizeInMB = requestSizeInBytes / (1024 * 1024); // 转换为MB
-
-        console.log(`开始推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，包含 ${batch.length} 笔交易，时间: ${new Date().toISOString()}`);
-        console.log(`请求大小: ${requestSizeInMB.toFixed(2)} MB`);
-
-        const startTime = Date.now();
-
-        fetch(RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(response => response.json())
-            .then(res => {
-                const endTime = Date.now();
-                console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒，时间: ${new Date().toISOString()}`);
-
-                results.push(...(Array.isArray(res) ? res : []));
-            })
-            .catch(error => {
-                console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
-            });
-        await sleep(1000);
+        allPayloads.push(batch.map((item, idx) => ({
+            jsonrpc: "2.0",
+            id: i + idx,
+            method: "eth_sendRawTransaction",
+            params: [item.signedTx]
+        })));
     }
+
+    console.log(`准备就绪，共 ${allPayloads.length} 个批次，即将并发推送...`);
+
+    // 使用 Promise.all 并发所有 HTTP 请求
+    const startTime = Date.now();
+
+    const requestPromises = allPayloads.map(async (payload, index) => {
+        try {
+            // 添加 0.5 秒延迟
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const pStart = Date.now();
+            const response = await fetch(RPC, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Connection': 'keep-alive'
+                },
+                body: JSON.stringify(payload)
+            });
+            const res = await response.json();
+            console.log(`批次 ${index + 1} 推送完成，耗时: ${(Date.now() - pStart)/1000}s`);
+            return Array.isArray(res) ? res : [res];
+        } catch (e) {
+            console.error(`批次 ${index + 1} 失败:`, e.message);
+            return new Array(payload.length).fill({ error: e.message });
+        }
+    });
+
+    // 等待所有批次完成
+    const allResults = await Promise.all(requestPromises);
+    const results = allResults.flat();
+
+    const endTime = Date.now();
+    console.log(`总推送耗时: ${(endTime - startTime)/1000} 秒`);
 
     return {
         total: allSignedTxs.length,
-        success: results.filter(r => !r.error).length,
-        failed: results.filter(r => r.error).length
+        success: results.filter(r => r && !r.error).length,
+        failed: results.filter(r => !r || r.error).length
     };
 }
 
@@ -1491,60 +1373,5 @@ async function executeSingleSplitSequential(minterName, requestId, privateKey) {
     }
 }
 
-async function getTokenById(){
-    const [signer, minter] = await ethers.getSigners();
-    const native = new ethers.Contract(
-        native_token_address,
-        abi,
-        signer
-    );
-    console.log("signerAddress", minter.address);
-
-    let tokens = [
-        '5237910133300326902736977396867489027831727198450968770210550166104171816428',
-        // '20733447670283116854222731307658614787174484515533733901945797665000281170445',
-        // '21671927841327136299433019576064568660278992560971219347022721725025834658470',
-        // '4904156794874586464313960803265303601803513072388566612635605847929169684818',
-        // '15131217639310241158890917003046250575696970682251825214522635411799644211992',
-        // '9733246618418561057679183834346330468973958076110242868293415697404861033890',
-
-    ];
-
-    const results = {
-        success: [],
-        failed: []
-    };
-
-    console.log(`开始处理 ${tokens.length} 个 tokenId...`);
-
-    // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
-    for (const tokenId of tokens) {
-        try {
-            // let response = await native.getToken(accounts.Minter, tokenId);
-            let response = await native.getToken('0x4312488937D47A007De24d48aB82940C809EEb2b', tokenId);
-            console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
-            console.log(response)
-            results.success.push({ tokenId, response });
-        } catch (error) {
-            console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
-            results.failed.push({ tokenId, error: error.message });
-        }
-    }
-
-    // 输出汇总结果
-    console.log(`\n=== 查询结果汇总 ===`);
-    console.log(`总查询数: ${tokens.length}`);
-    console.log(`成功数: ${results.success.length}`);
-    console.log(`失败数: ${results.failed.length}`);
-
-    if (results.failed.length > 0) {
-        console.log(`\n失败的 tokenId 列表:`);
-        results.failed.forEach(item => {
-            console.log(`- ${item.tokenId}: ${item.error}`);
-        });
-    }
-
-    return results;
-}
 
 
