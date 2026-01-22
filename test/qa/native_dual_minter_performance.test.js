@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x68939E9C4C4B1A626F7B9c081A9A891002dB6116";
+const native_token_address = "0x9f041c66A62783c899928875d7387e63dFaB70a8";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -331,11 +331,11 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // 新的测试用例：将split后的token id保存到json文件，然后读取执行transfer
-describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 16; // 测试用的token数量
+    const total_number = 128; // 测试用的token数量
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -477,7 +477,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
         return results;
     }
 
-    describe.only('Step2: Read from JSON file to verify token ids',function(){
+    describe.skip('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it('Read from JSON file to verify token ids and remove failed tokens',async function(){
             // 1. 从JSON文件读取token id
@@ -1061,8 +1061,8 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 10) {
                         cr_x: ethers.toBigInt(account.cr_x),
                         cr_y: ethers.toBigInt(account.cr_y)
                     },
-                    to: idx % 2 === 0 ? minter1Wallet.address : response.to_addresses[Math.floor(idx / 2)],
-                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+                    to: idx % 2 === 0 ? minter1Wallet.address : response.to_addresses[Math.floor(idx-1 / 2)],
+                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1].token_id
                 })),
                 proof: response.proof.map(p => ethers.toBigInt(p)),
                 publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
