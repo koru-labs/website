@@ -529,7 +529,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         })
     })
 
-    describe.skip('Step 3: Read from JSON file and execute transfers', function () {
+    describe.only('Step 3: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
