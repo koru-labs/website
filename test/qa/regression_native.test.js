@@ -374,8 +374,8 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
-                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx - 1]?.token_id || 0
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[(index - 1) / 2],
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -530,7 +530,7 @@ describe("Regression Native Token Tests", function () {
                 },
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx - 1]?.token_id || 0
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id || 0
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -650,7 +650,7 @@ describe("Regression Native Token Tests", function () {
                 },
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx - 1]?.token_id || 0
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id || 0
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -732,7 +732,7 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? originalOwner : splitRecipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx - 1]?.token_id || 0
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id || 0
             }));
 
             const splitProof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -825,7 +825,7 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? originalOwner : burnSplitRecipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : burnDetailResponse.newTokens[idx - 1]?.token_id || 0
+                rollbackTokenId: idx % 2 === 0 ? 0 : burnDetailResponse.newTokens[idx + 1]?.token_id || 0
             }));
 
             const burnSplitProof = burnDetailResponse.proof.map(p => ethers.toBigInt(p));
