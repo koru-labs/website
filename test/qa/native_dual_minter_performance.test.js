@@ -335,7 +335,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 64; // 测试用的token数量
+    const total_number = 128; // 测试用的token数量
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -1324,7 +1324,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             .catch(error => {
                 console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
             });
-        await sleep(1000);
+        await sleep(500);
     }
 
     return {
