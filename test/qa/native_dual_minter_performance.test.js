@@ -1290,7 +1290,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     }
 
     // 批量发送
-    const BATCH_SIZE = 5000;
+    const BATCH_SIZE = 10000;
     const results = [];
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
@@ -1308,23 +1308,38 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
         console.log(`请求大小: ${requestSizeInMB.toFixed(2)} MB`);
 
         const startTime = Date.now();
-
-        fetch(RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(response => response.json())
-            .then(res => {
-                const endTime = Date.now();
-                console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒，时间: ${new Date().toISOString()}`);
-
-                results.push(...(Array.isArray(res) ? res : []));
-            })
-            .catch(error => {
-                console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
+        try {
+            const response = await fetch(RPC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
-        await sleep(500);
+            const res = await response.json();
+            const endTime = Date.now();
+            console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒，时间: ${new Date().toISOString()}`);
+
+            results.push(...(Array.isArray(res) ? res : []));
+        } catch (error) {
+            console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
+        }
+        // await sleep(500);
+
+        // fetch(RPC, {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(payload)
+        // })
+        //     .then(response => response.json())
+        //     .then(res => {
+        //         const endTime = Date.now();
+        //         console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒，时间: ${new Date().toISOString()}`);
+        //
+        //         results.push(...(Array.isArray(res) ? res : []));
+        //     })
+        //     .catch(error => {
+        //         console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
+        //     });
+        // await sleep(500);
     }
 
     return {
