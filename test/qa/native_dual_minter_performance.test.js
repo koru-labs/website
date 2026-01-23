@@ -998,7 +998,7 @@ async function generateSplitProofs(requests) {
  * @param {number} [batchSize=20] - 每批次发送的交易数量，默认为20
  * @returns {Object} 执行结果统计
  */
-async function executeBatchedConcurrentSplits(requests, batchSize = 10) {
+async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
     console.log(`\n⚡ Starting truly concurrent split transaction execution for both minters...`);
     console.log(`[Minter1] Executing ${requests.minter1.length} split requests`);
     console.log(`[Minter2] Executing ${requests.minter2.length} split requests`);
