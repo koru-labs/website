@@ -1290,7 +1290,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     }
 
     // 批量发送
-    const BATCH_SIZE = 10000;
+    const BATCH_SIZE = 16384;
     const results = [];
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
