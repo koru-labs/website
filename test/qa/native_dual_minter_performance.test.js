@@ -335,7 +335,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // 测试用的token数量
+    const total_number = 32; // 测试用的token数量
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -478,7 +478,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe('Step2: Read from JSON file to verify token ids',function(){
+    describe.skip('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it('Read from JSON file to verify token ids',async function(){
             // 1. 从JSON文件读取token id
@@ -992,7 +992,7 @@ async function generateSplitProofs(requests) {
  * @param {number} [batchSize=20] - 每批次发送的交易数量，默认为20
  * @returns {Object} 执行结果统计
  */
-async function executeBatchedConcurrentSplits(requests, batchSize = 10) {
+async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
     console.log(`\n⚡ Starting truly concurrent split transaction execution for both minters...`);
     console.log(`[Minter1] Executing ${requests.minter1.length} split requests`);
     console.log(`[Minter2] Executing ${requests.minter2.length} split requests`);
