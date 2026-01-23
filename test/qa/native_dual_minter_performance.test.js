@@ -451,7 +451,8 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         console.log(`开始处理 ${tokenIdList.length} 个 tokenId...`);
 
         // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
-        for (const tokenId of tokenIdList) {
+        for (let i = 0; i < tokenIdList.length; i++) {
+            const tokenId = tokenIdList[i];
             try {
                 let response = await native.getToken(minterWallet.address, tokenId);
                 console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
@@ -460,6 +461,11 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
                 console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
                 results.failed.push({ tokenId, error: error.message });
             }
+
+            // 显示进度
+            const progress = Math.round(((i + 1) / tokenIdList.length) * 100);
+            const progressBar = '█'.repeat(Math.floor(progress / 2)) + '░'.repeat(50 - Math.floor(progress / 2));
+            console.log(`\r进度: [${progressBar}] ${i + 1}/${tokenIdList.length} (${progress}%)`);
         }
 
         // 输出汇总结果
@@ -478,7 +484,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe.skip('Step2: Read from JSON file to verify token ids',function(){
+    describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it('Read from JSON file to verify token ids',async function(){
             // 1. 从JSON文件读取token id
@@ -992,7 +998,7 @@ async function generateSplitProofs(requests) {
  * @param {number} [batchSize=20] - 每批次发送的交易数量，默认为20
  * @returns {Object} 执行结果统计
  */
-async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
+async function executeBatchedConcurrentSplits(requests, batchSize = 10) {
     console.log(`\n⚡ Starting truly concurrent split transaction execution for both minters...`);
     console.log(`[Minter1] Executing ${requests.minter1.length} split requests`);
     console.log(`[Minter2] Executing ${requests.minter2.length} split requests`);
