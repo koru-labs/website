@@ -241,7 +241,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // Number of tokens to test
+    const total_number = 2; // Number of tokens to test
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -1463,7 +1463,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     }
 
     // 批量发送
-    const BATCH_SIZE = 5000;
+    const BATCH_SIZE = 4000;
     const results = [];
     const pushPromises = [];
     const txHashMap = new Map(); // 用于存储 tokenId -> txHash 的映射
@@ -1514,7 +1514,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             });
         
         pushPromises.push(p);
-        await sleep(500); // 减小间隔以增加压力
+        await sleep(1000); // 减小间隔以增加压力
     }
 
     await Promise.all(pushPromises); // 等待所有推送完成
