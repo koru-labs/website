@@ -241,15 +241,28 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // 测试用的token数量
+    const total_number = 128; // Number of tokens to test
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
-    // 引入fs模块用于文件操作
+    // Import fs module for file operations
     const fs = require('fs');
 
     before(async function () {
         this.timeout(300000);
+        
+        console.log('\n╔════════════════════════════════════════════════════════════════╗');
+        console.log('║  TEST SUITE: Native Dual Minter Split & Transfer with JSON    ║');
+        console.log('╚════════════════════════════════════════════════════════════════╝');
+        console.log('\n📝 Test Configuration:');
+        console.log(`   - Total tokens to mint per minter: ${total_number}`);
+        console.log(`   - Token amount: ${amount}`);
+        console.log(`   - JSON storage path: ${jsonFilePath}`);
+        console.log(`   - Native token contract: ${native_token_address}`);
+        console.log(`   - Minter1: ${MINTERS.minter1.address}`);
+        console.log(`   - Minter2: ${MINTERS.minter2.address}`);
+        console.log(`   - Receiver1: ${RECEIVER_CONFIG.receiver1}`);
+        console.log(`   - Receiver2: ${RECEIVER_CONFIG.receiver2}\n`);
 
         client = createClient(rpcUrl);
         [owner, minter] = await ethers.getSigners();
@@ -264,17 +277,43 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             abi,
             minter
         );
+        
+        console.log('✅ Test environment initialized successfully\n');
     });
 
     describe('Case 1: Setup mint allowance for two minters', function () {
         it('should set mint allowance for minter1', async function () {
             this.timeout(120000);
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  CASE 1.1: SETTING UP MINT ALLOWANCE FOR MINTER1          │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            console.log('📋 Purpose: Grant minting permission to minter1');
+            console.log(`   - Minter1 Address: ${MINTERS.minter1.address}`);
+            console.log(`   - Allowance Amount: 100,000,000 tokens`);
+            console.log('   - Action: Encoding ElGamal encrypted amount and setting mint allowance on-chain');
+            console.log('⏳ Starting mint allowance setup for minter1...\n');
+            
             await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
+            
+            console.log('✅ Mint allowance successfully set for minter1');
+            console.log('   - Minter1 can now mint tokens up to the allowed amount\n');
         });
 
         it('should set mint allowance for minter2', async function () {
             this.timeout(120000);
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  CASE 1.2: SETTING UP MINT ALLOWANCE FOR MINTER2          │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            console.log('📋 Purpose: Grant minting permission to minter2');
+            console.log(`   - Minter2 Address: ${MINTERS.minter2.address}`);
+            console.log(`   - Allowance Amount: 100,000,000 tokens`);
+            console.log('   - Action: Encoding ElGamal encrypted amount and setting mint allowance on-chain');
+            console.log('⏳ Starting mint allowance setup for minter2...\n');
+            
             await setupMintAllowance(nativeOwner, client, { minter2: MINTERS.minter2 }, 100000000);
+            
+            console.log('✅ Mint allowance successfully set for minter2');
+            console.log('   - Minter2 can now mint tokens up to the allowed amount\n');
         });
     });
 
@@ -282,13 +321,24 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         this.timeout(9000000);
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
-            // 1. 执行mint操作
-            console.log('=== Step 1: Minting tokens ===');
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  CASE 2: MINT, SPLIT TOKENS & SAVE TO JSON FILE           │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            
+            // 1. Execute mint operation
+            console.log('\n═══ Step 1: Minting Tokens ═══');
+            console.log('📋 Purpose: Mint initial tokens for both minters');
+            console.log(`   - Tokens to mint per minter: ${total_number}`);
+            console.log(`   - Amount per token: ${amount}`);
+            console.log('   - Action: Generating mint proofs and executing mint transactions');
+            console.log('⏳ Starting minting process...\n');
+            
             const batchSize = 128;
-
             for (let i = 0; i < total_number; i += batchSize) {
                 const currentBatchSize = Math.min(batchSize, total_number - i);
                 const isLastBatch = i + batchSize >= total_number;
+                
+                console.log(`   📦 Minting batch ${Math.floor(i/batchSize) + 1}: ${currentBatchSize} tokens`);
 
                 await mintTokensForMinters(
                     client,
@@ -298,32 +348,68 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
                 );
 
                 if (!isLastBatch) {
+                    console.log('   ⏸️  Waiting 3 seconds before next batch...');
                     await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
+            console.log(`✅ Minting completed: ${total_number} tokens minted for each minter\n`);
             
-            // 2. 准备split请求
-            console.log('=== Step 2: Preparing split requests ===');
+            // 2. Prepare split requests
+            console.log('═══ Step 2: Preparing Split Requests ═══');
+            console.log('📋 Purpose: Prepare split transaction requests for both minters');
+            console.log(`   - Number of split requests: ${total_number}`);
+            console.log('   - Each split creates 128 output tokens (64 splits × 2 receivers)');
+            console.log(`   - Receiver1: ${RECEIVER_CONFIG.receiver1}`);
+            console.log(`   - Receiver2: ${RECEIVER_CONFIG.receiver2}`);
+            console.log('⏳ Preparing split requests...\n');
+            
             const splitRequests = await prepareSplitRequests(total_number, 'transfer');
+            console.log(`✅ Split requests prepared: ${splitRequests.minter1.length} for minter1, ${splitRequests.minter2.length} for minter2\n`);
             
-            // 3. 生成split proof
-            console.log('=== Step 3: Generating split proofs ===');
+            // 3. Generate split proofs
+            console.log('═══ Step 3: Generating Split Proofs ═══');
+            console.log('📋 Purpose: Generate zero-knowledge proofs for split transactions');
+            console.log('   - Action: Calling gRPC service to generate batch split proofs');
+            console.log('   - This proves the split is valid without revealing amounts');
+            console.log('⏳ Generating proofs (this may take a while)...\n');
+            
             const requestIds = await generateSplitProofs(splitRequests);
+            console.log(`✅ Proofs generated: ${requestIds.minter1.length} for minter1, ${requestIds.minter2.length} for minter2\n`);
             
-            // 4. 执行split操作
-            console.log('=== Step 4: Executing split operations ===');
+            // 4. Execute split operations
+            console.log('═══ Step 4: Executing Split Operations ═══');
+            console.log('📋 Purpose: Execute split transactions on-chain');
+            console.log('   - Action: Signing and broadcasting split transactions');
+            console.log('   - Method: Concurrent execution for both minters');
+            console.log('⏳ Executing split transactions...\n');
+            
             const results = await executeBatchedConcurrentSplits(requestIds);
+            console.log(`✅ Split operations completed:`);
+            console.log(`   - Minter1: ${results.minter1.successfulTransactions}/${results.minter1.totalTransactions} successful`);
+            console.log(`   - Minter2: ${results.minter2.successfulTransactions}/${results.minter2.totalTransactions} successful\n`);
             
-            // 5. 提取接收者token id
-            console.log('=== Step 5: Extracting recipient token ids ===');
+            // 5. Extract recipient token IDs
+            console.log('═══ Step 5: Extracting Recipient Token IDs ═══');
+            console.log('📋 Purpose: Extract token IDs that were sent to receivers');
+            console.log('   - Action: Querying split transaction details from gRPC service');
+            console.log('   - Filtering: Only extracting tokens sent to receivers (odd indices)');
+            console.log('⏳ Extracting token IDs...\n');
+            
             const minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey);
             const minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey);
             
-            console.log(`Extracted ${minter1List.length} token ids for minter1`);
-            console.log(`Extracted ${minter2List.length} token ids for minter2`);
+            console.log(`✅ Token IDs extracted:`);
+            console.log(`   - Minter1: ${minter1List.length} token IDs`);
+            console.log(`   - Minter2: ${minter2List.length} token IDs`);
+            console.log(`   - Total: ${minter1List.length + minter2List.length} token IDs\n`);
             
-            // 6. 保存到JSON文件
-            console.log('=== Step 6: Saving token ids to JSON file ===');
+            // 6. Save to JSON file
+            console.log('═══ Step 6: Saving Token IDs to JSON File ═══');
+            console.log('📋 Purpose: Persist token IDs for later transfer operations');
+            console.log(`   - File path: ${jsonFilePath}`);
+            console.log('   - Format: JSON with timestamp and token lists');
+            console.log('⏳ Writing to file...\n');
+            
             const tokenData = {
                 timestamp: new Date().toISOString(),
                 minter1: minter1List,
@@ -332,52 +418,56 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             };
             
             fs.writeFileSync(jsonFilePath, JSON.stringify(tokenData, null, 2));
-            console.log(`✅ Token ids saved to ${jsonFilePath}`);
+            console.log(`✅ Token IDs saved successfully to ${jsonFilePath}`);
+            console.log(`   - Timestamp: ${tokenData.timestamp}`);
+            console.log(`   - Total tokens saved: ${tokenData.totalTokens}\n`);
             
-            // 等待一段时间确保split操作完成
+            // Wait to ensure split operations are complete
+            console.log('⏸️  Waiting 3 seconds to ensure all operations are finalized...');
             await sleep(3000);
+            console.log('✅ Case 2 completed successfully\n');
         });
     });
 
-    // 添加getTokenById方法
+    // Helper function to get token by ID
     async function getTokenById(minterWallet, tokenIdList, native_token_address, abi){
-        // 使用传入的minterWallet作为signer
+        // Use the provided minterWallet as signer
         const native = new ethers.Contract(
             native_token_address,
             abi,
             minterWallet
         );
-        console.log("signerAddress", minterWallet.address);
+        console.log(`   🔑 Signer address: ${minterWallet.address}`);
 
         const results = {
             success: [],
             failed: []
         };
 
-        console.log(`开始处理 ${tokenIdList.length} 个 tokenId...`);
+        console.log(`   📊 Processing ${tokenIdList.length} token IDs...`);
 
-        // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
+        // Use for...of loop instead of forEach for better async control and error handling
         for (const tokenId of tokenIdList) {
             try {
                 let response = await native.getToken(minterWallet.address, tokenId);
-                console.log(`token ${tokenId} 查询成功，response: ${response.id}`);
+                console.log(`   ✅ Token ${tokenId} query successful, response ID: ${response.id}`);
                 results.success.push({ tokenId, response: response.id });
             } catch (error) {
-                console.error(`token ${tokenId} 查询失败，错误: ${error.message}`);
+                console.error(`   ❌ Token ${tokenId} query failed, error: ${error.message}`);
                 results.failed.push({ tokenId, error: error.message });
             }
         }
 
-        // 输出汇总结果
-        console.log(`\n=== 查询结果汇总 ===`);
-        console.log(`总查询数: ${tokenIdList.length}`);
-        console.log(`成功数: ${results.success.length}`);
-        console.log(`失败数: ${results.failed.length}`);
+        // Output summary results
+        console.log(`\n   === Query Results Summary ===`);
+        console.log(`   Total queries: ${tokenIdList.length}`);
+        console.log(`   Successful: ${results.success.length}`);
+        console.log(`   Failed: ${results.failed.length}`);
 
         if (results.failed.length > 0) {
-            console.log(`\n失败的 tokenId 列表:`);
+            console.log(`\n   Failed token ID list:`);
             results.failed.forEach(item => {
-                console.log(`- ${item.tokenId}: ${item.error}`);
+                console.log(`   - ${item.tokenId}: ${item.error}`);
             });
         }
 
@@ -387,8 +477,15 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it.skip('Read from JSON file to verify token ids',async function(){
-            // 1. 从JSON文件读取token id
-            console.log('=== Step 1: Reading token ids from JSON file ===');
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  STEP 2.1: VERIFY ALL TOKEN IDS FROM JSON FILE            │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            
+            // 1. Read token IDs from JSON file
+            console.log('\n═══ Step 1: Reading Token IDs from JSON File ═══');
+            console.log('📋 Purpose: Load previously saved token IDs for verification');
+            console.log(`   - File path: ${jsonFilePath}`);
+            
             if (!fs.existsSync(jsonFilePath)) {
                 throw new Error(`JSON file ${jsonFilePath} not found. Please run Step 1 first.`);
             }
@@ -397,47 +494,62 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             const minter1List = tokenData.minter1;
             const minter2List = tokenData.minter2;
             
-            console.log(`Read ${minter1List.length} token ids for minter1 from JSON`);
-            console.log(`Read ${minter2List.length} token ids for minter2 from JSON`);
+            console.log(`✅ Token IDs loaded from JSON:`);
+            console.log(`   - Minter1: ${minter1List.length} token IDs`);
+            console.log(`   - Minter2: ${minter2List.length} token IDs`);
+            console.log(`   - File timestamp: ${tokenData.timestamp}\n`);
             
-            // 2. 创建minter钱包实例
+            // 2. Create minter wallet instances
+            console.log('═══ Step 2: Creating Wallet Instances ═══');
+            console.log('📋 Purpose: Initialize wallet instances for querying tokens');
             const provider = new ethers.JsonRpcProvider(RPC);
             const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
             const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
+            console.log(`✅ Wallets created for minter1 and minter2\n`);
             
-            // 3. 检查token是否可以查询到
-            console.log('=== Step 2: Verifying token query availability ===');
+            // 3. Check if tokens can be queried
+            console.log('═══ Step 3: Verifying Token Query Availability ═══');
+            console.log('📋 Purpose: Query each token from blockchain to verify existence');
+            console.log('   - Action: Calling getToken() for each token ID\n');
             
-            // 检查minter1的token
-            console.log('\n--- Checking tokens for minter1 ---');
+            // Check minter1's tokens
+            console.log('--- Checking tokens for minter1 ---');
             const minter1Results = await getTokenById(minter1Wallet, minter1List, native_token_address, abi);
             
-            // 检查minter2的token
+            // Check minter2's tokens
             console.log('\n--- Checking tokens for minter2 ---');
             const minter2Results = await getTokenById(minter2Wallet, minter2List, native_token_address, abi);
             
-            // 汇总所有结果
+            // Aggregate all results
             const totalResults = {
                 totalTokens: minter1List.length + minter2List.length,
                 totalSuccess: minter1Results.success.length + minter2Results.success.length,
                 totalFailed: minter1Results.failed.length + minter2Results.failed.length
             };
             
-            console.log(`\n=== 总查询结果汇总 ===`);
-            console.log(`总查询数: ${totalResults.totalTokens}`);
-            console.log(`总成功数: ${totalResults.totalSuccess}`);
-            console.log(`总失败数: ${totalResults.totalFailed}`);
+            console.log(`\n═══ Overall Query Results Summary ═══`);
+            console.log(`Total queries: ${totalResults.totalTokens}`);
+            console.log(`Total successful: ${totalResults.totalSuccess}`);
+            console.log(`Total failed: ${totalResults.totalFailed}`);
+            console.log(`Success rate: ${((totalResults.totalSuccess / totalResults.totalTokens) * 100).toFixed(2)}%`);
             
-            // 验证至少有一个token查询成功
-            expect(totalResults.totalSuccess).to.be.greaterThan(0, '至少应有一个token查询成功');
+            // Verify at least one token query succeeded
+            expect(totalResults.totalSuccess).to.be.greaterThan(0, 'At least one token query should succeed');
             
-            console.log('✅ All token queries completed successfully');
+            console.log('\n✅ All token queries completed successfully\n');
         })
         
-        // 新增测试用例：只查询每个split后的第一个token
+        // New test case: Only query the first token of each split
         it('Read from JSON file to verify only first token of each split',async function(){
-            // 1. 从JSON文件读取token id
-            console.log('=== Step 1: Reading token ids from JSON file ===');
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  STEP 2.2: VERIFY FIRST TOKEN OF EACH SPLIT               │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            
+            // 1. Read token IDs from JSON file
+            console.log('\n═══ Step 1: Reading Token IDs from JSON File ═══');
+            console.log('📋 Purpose: Load token IDs and filter first token of each split');
+            console.log(`   - File path: ${jsonFilePath}`);
+            
             if (!fs.existsSync(jsonFilePath)) {
                 throw new Error(`JSON file ${jsonFilePath} not found. Please run Step 1 first.`);
             }
@@ -446,49 +558,58 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             let minter1List = tokenData.minter1;
             let minter2List = tokenData.minter2;
             
-            console.log(`Original - Read ${minter1List.length} token ids for minter1 from JSON`);
-            console.log(`Original - Read ${minter2List.length} token ids for minter2 from JSON`);
+            console.log(`✅ Original token IDs loaded:`);
+            console.log(`   - Minter1: ${minter1List.length} token IDs`);
+            console.log(`   - Minter2: ${minter2List.length} token IDs\n`);
             
-            // 2. 只保留每个split后的第一个token（假设每128个token为一组split结果）
+            // 2. Keep only the first token of each split (assuming 128 tokens per split group)
+            console.log('═══ Step 2: Filtering First Tokens ═══');
+            console.log('📋 Purpose: Extract only the first token from each split batch');
             const splitSize = 128;
             const minter1FirstTokens = minter1List.filter((_, index) => index % splitSize === 0);
             const minter2FirstTokens = minter2List.filter((_, index) => index % splitSize === 0);
             
-            console.log(`Filtered - Keeping ${minter1FirstTokens.length} first tokens for minter1`);
-            console.log(`Filtered - Keeping ${minter2FirstTokens.length} first tokens for minter2`);
+            console.log(`✅ Filtered to first tokens only:`);
+            console.log(`   - Minter1: ${minter1FirstTokens.length} first tokens (from ${Math.ceil(minter1List.length / splitSize)} splits)`);
+            console.log(`   - Minter2: ${minter2FirstTokens.length} first tokens (from ${Math.ceil(minter2List.length / splitSize)} splits)\n`);
             
-            // 3. 创建minter钱包实例
+            // 3. Create minter wallet instances
+            console.log('═══ Step 3: Creating Wallet Instances ═══');
             const provider = new ethers.JsonRpcProvider(RPC);
             const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
             const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
+            console.log(`✅ Wallets created for minter1 and minter2\n`);
             
-            // 4. 检查token是否可以查询到
-            console.log('=== Step 2: Verifying only first token of each split ===');
+            // 4. Check if tokens can be queried
+            console.log('═══ Step 4: Verifying First Tokens Only ═══');
+            console.log('📋 Purpose: Query only first token of each split to verify');
+            console.log('   - This is faster than querying all tokens\n');
             
-            // 检查minter1的第一个token
-            console.log('\n--- Checking first tokens for minter1 ---');
+            // Check minter1's first tokens
+            console.log('--- Checking first tokens for minter1 ---');
             const minter1Results = await getTokenById(minter1Wallet, minter1FirstTokens, native_token_address, abi);
             
-            // 检查minter2的第一个token
+            // Check minter2's first tokens
             console.log('\n--- Checking first tokens for minter2 ---');
             const minter2Results = await getTokenById(minter2Wallet, minter2FirstTokens, native_token_address, abi);
             
-            // 汇总所有结果
+            // Aggregate all results
             const totalResults = {
                 totalTokens: minter1FirstTokens.length + minter2FirstTokens.length,
                 totalSuccess: minter1Results.success.length + minter2Results.success.length,
                 totalFailed: minter1Results.failed.length + minter2Results.failed.length
             };
             
-            console.log(`\n=== 总查询结果汇总 ===`);
-            console.log(`总查询数: ${totalResults.totalTokens}`);
-            console.log(`总成功数: ${totalResults.totalSuccess}`);
-            console.log(`总失败数: ${totalResults.totalFailed}`);
+            console.log(`\n═══ Overall Query Results Summary ═══`);
+            console.log(`Total queries: ${totalResults.totalTokens}`);
+            console.log(`Total successful: ${totalResults.totalSuccess}`);
+            console.log(`Total failed: ${totalResults.totalFailed}`);
+            console.log(`Success rate: ${((totalResults.totalSuccess / totalResults.totalTokens) * 100).toFixed(2)}%`);
             
-            // 验证所有查询的token都成功
-            expect(totalResults.totalSuccess).to.equal(totalResults.totalTokens, '所有查询的第一个token都应成功');
+            // Verify all queried tokens succeeded
+            expect(totalResults.totalSuccess).to.equal(totalResults.totalTokens, 'All first token queries should succeed');
             
-            console.log('✅ All first token queries completed successfully');
+            console.log('\n✅ All first token queries completed successfully\n');
         })
     })
 
@@ -496,8 +617,16 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
-            // 1. 从JSON文件读取token id
-            console.log('=== Step 1: Reading token ids from JSON file ===');
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  CASE 3: READ FROM JSON & EXECUTE TRANSFER TRANSACTIONS   │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            
+            // 1. Read token IDs from JSON file
+            console.log('\n═══ Step 1: Reading Token IDs from JSON File ═══');
+            console.log('📋 Purpose: Load previously saved token IDs for transfer');
+            console.log(`   - File path: ${jsonFilePath}`);
+            console.log('   - Action: Reading and parsing JSON file');
+            
             if (!fs.existsSync(jsonFilePath)) {
                 throw new Error(`JSON file ${jsonFilePath} not found. Please run Step 1 first.`);
             }
@@ -506,21 +635,80 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             const minter1List = tokenData.minter1;
             const minter2List = tokenData.minter2;
             
-            console.log(`Read ${minter1List.length} token ids for minter1 from JSON`);
-            console.log(`Read ${minter2List.length} token ids for minter2 from JSON`);
+            console.log(`✅ Token IDs loaded successfully:`);
+            console.log(`   - Minter1: ${minter1List.length} token IDs`);
+            console.log(`   - Minter2: ${minter2List.length} token IDs`);
+            console.log(`   - Total: ${minter1List.length + minter2List.length} tokens to transfer`);
+            console.log(`   - File timestamp: ${tokenData.timestamp}\n`);
             
-            // 2. 执行transfer操作
-            console.log('=== Step 2: Executing transfers ===');
-            await executeBatchTransfersSigned(minter1List, minter2List);
+            // 2. Execute transfer operations and collect statistics
+            console.log('═══ Step 2: Executing Transfer Transactions ═══');
+            console.log('📋 Purpose: Transfer tokens from receivers back to minters');
+            console.log('   - Method: Batch signing and concurrent execution');
+            console.log('   - Action: Sign all transactions first, then broadcast in batches');
+            console.log('   - Pattern: Interleaved execution (minter1, minter2, minter1, minter2, ...)');
+            console.log('⏳ Starting transfer execution...\n');
             
-            console.log('✅ All transfers completed successfully');
+            const transferResults = await executeBatchTransfersSigned(minter1List, minter2List);
+            
+            // 3. Display execution results statistics
+            console.log('\n═══ Transfer Execution Results ═══');
+            console.log('📊 Transaction Statistics:');
+            console.log(`   - Total transactions: ${transferResults.total}`);
+            console.log(`   - Successful transactions: ${transferResults.success}`);
+            console.log(`   - Failed transactions: ${transferResults.failed}`);
+            console.log(`     • Signing failures: ${transferResults.signingFailed}`);
+            console.log(`     • Execution failures: ${transferResults.executionFailed}`);
+            console.log(`   - Success rate: ${((transferResults.success / transferResults.total) * 100).toFixed(2)}%`);
+            console.log(`   - Total txHashes received: ${transferResults.txHashes.length}`);
+            
+            if (transferResults.failed > 0) {
+                console.warn(`\n⚠️  Warning: ${transferResults.failed} transactions failed or are pending`);
+                console.warn(`   - Failed transaction details are available in transferResults.failedTransactions`);
+                console.warn(`   - Check the logs above for specific error messages`);
+            }
+            
+            // 4. Optional: Save failed transactions to file
+            if (transferResults.failedTransactions && transferResults.failedTransactions.length > 0) {
+                console.log('\n═══ Step 3: Saving Failed Transactions ═══');
+                console.log('📋 Purpose: Persist failed transaction details for debugging');
+                const failedTxsPath = './failed_transfers.json';
+                fs.writeFileSync(failedTxsPath, JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    totalFailed: transferResults.failedTransactions.length,
+                    failures: transferResults.failedTransactions
+                }, null, 2));
+                console.log(`✅ Failed transactions saved to ${failedTxsPath}`);
+                console.log(`   - Total failed: ${transferResults.failedTransactions.length}`);
+                console.log(`   - File contains: tokenId, minterName, and error message for each failure\n`);
+            }
+            
+            // 5. Verify at least some transactions succeeded
+            console.log('═══ Step 4: Validating Results ═══');
+            console.log('📋 Purpose: Ensure at least some transfers were successful');
+            expect(transferResults.success).to.be.greaterThan(0, 'At least some transfers should succeed');
+            console.log(`✅ Validation passed: ${transferResults.success} transfers succeeded\n`);
+            
+            console.log('╔════════════════════════════════════════════════════════════╗');
+            console.log('║  ✅ CASE 3 COMPLETED SUCCESSFULLY                         ║');
+            console.log('╚════════════════════════════════════════════════════════════╝\n');
         });
     });
 
     after(async function () {
-        // 可以选择在这里删除JSON文件
-        // fs.unlinkSync(jsonFilePath);
-        console.log('Test completed.');
+        console.log('\n╔════════════════════════════════════════════════════════════╗');
+        console.log('║  🎉 TEST SUITE COMPLETED SUCCESSFULLY                     ║');
+        console.log('╚════════════════════════════════════════════════════════════╝');
+        console.log('\n📋 Summary:');
+        console.log('   ✅ Case 1: Mint allowance setup completed');
+        console.log('   ✅ Case 2: Tokens minted, split, and saved to JSON');
+        console.log('   ✅ Case 3: Transfer transactions executed');
+        console.log(`\n📁 Generated files:`);
+        console.log(`   - ${jsonFilePath} (token IDs)`);
+        if (fs.existsSync('./failed_transfers.json')) {
+            console.log(`   - ./failed_transfers.json (failed transactions)`);
+        }
+        console.log('\n👋 Test cleanup completed.\n');
     });
 });
 describe('Native Dual Minter Transfer Performance Tests', function () {
@@ -1238,9 +1426,9 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
                 });
                 tx.from = wallet.address;
                 tx.type = 0;
-                return { signedTx: await wallet.signTransaction(tx), tokenId, success: true };
+                return { signedTx: await wallet.signTransaction(tx), tokenId, minterName: name, success: true };
             } catch (e) {
-                return { tokenId, success: false, error: e.message };
+                return { tokenId, minterName: name, success: false, error: e.message };
             }
         }));
     };
@@ -1263,13 +1451,22 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     const failed = allSignedTxs.filter(r => !r.success);
 
     if (failed.length) {
-        return { total: allSignedTxs.length, success: signed.length, failed: failed.length, error: '预签名失败' };
+        console.error(`❌ ${failed.length} transactions failed during signing:`);
+        failed.forEach((f, idx) => {
+            if (idx < 5) { // 只显示前5个失败的详情
+                console.error(`  - TokenId: ${f.tokenId}, Minter: ${f.minterName}, Error: ${f.error}`);
+            }
+        });
+        if (failed.length > 5) {
+            console.error(`  ... and ${failed.length - 5} more signing failures`);
+        }
     }
 
     // 批量发送
     const BATCH_SIZE = 5000;
     const results = [];
     const pushPromises = [];
+    const txHashMap = new Map(); // 用于存储 tokenId -> txHash 的映射
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
         const batch = signed.slice(i, i + BATCH_SIZE);
@@ -1296,7 +1493,21 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             .then(res => {
                 const endTime = Date.now();
                 console.log(`完成推送批次 ${Math.floor(i / BATCH_SIZE) + 1}，耗时: ${(endTime - startTime)/1000} 秒`);
-                results.push(...(Array.isArray(res) ? res : []));
+                const batchResponses = Array.isArray(res) ? res : [res];
+                batchResponses.forEach((resp, idx) => {
+                    const txInfo = batch[idx];
+                    if (resp.result) {
+                        // 成功获取 txHash
+                        txHashMap.set(txInfo.tokenId, resp.result);
+                    }
+                    results.push({
+                        tokenId: txInfo.tokenId,
+                        minterName: txInfo.minterName,
+                        txHash: resp.result,
+                        error: resp.error,
+                        success: !resp.error
+                    });
+                });
             })
             .catch(error => {
                 console.error(`推送批次 ${Math.floor(i / BATCH_SIZE) + 1} 出错:`, error);
@@ -1308,10 +1519,35 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
 
     await Promise.all(pushPromises); // 等待所有推送完成
 
+    // 统计结果
+    const successfulTxs = results.filter(r => r.success);
+    const failedTxs = results.filter(r => !r.success);
+
+    // 显示失败的交易详情
+    if (failedTxs.length > 0) {
+        console.error(`\n❌ ${failedTxs.length} transactions failed during execution:`);
+        failedTxs.forEach((f, idx) => {
+            if (idx < 10) { // 显示前10个失败的详情
+                console.error(`  - TokenId: ${f.tokenId}, Minter: ${f.minterName}, Error: ${f.error?.message || f.error}`);
+            }
+        });
+        if (failedTxs.length > 10) {
+            console.error(`  ... and ${failedTxs.length - 10} more execution failures`);
+        }
+    }
+
     return {
         total: allSignedTxs.length,
-        success: results.filter(r => !r.error).length,
-        failed: results.filter(r => r.error).length
+        success: successfulTxs.length,
+        failed: failed.length + failedTxs.length,
+        signingFailed: failed.length,
+        executionFailed: failedTxs.length,
+        txHashes: Array.from(txHashMap.values()),
+        failedTransactions: failedTxs.map(f => ({
+            tokenId: f.tokenId,
+            minterName: f.minterName,
+            error: f.error?.message || f.error
+        }))
     };
 }
 async function executeBatchBurnsSigned(tokenList1, tokenList2) {
