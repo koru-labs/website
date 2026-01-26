@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0xA449FA6835cb17B39d6f26378a95472bE22811D4";
+const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -278,7 +278,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         });
     });
 
-    describe('Step 1: Split tokens and save to JSON file', function () {
+    describe('Case 2: Split tokens and save to JSON file', function () {
         this.timeout(9000000);
 
         it('should split tokens and save recipient token ids to JSON file', async function () {
@@ -384,7 +384,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe.skip('Step2: Read from JSON file to verify token ids',function(){
+    describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it('Read from JSON file to verify token ids',async function(){
             // 1. 从JSON文件读取token id
@@ -435,7 +435,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         })
     })
 
-    describe('Step 3: Read from JSON file and execute transfers', function () {
+    describe('Case 3: Read from JSON file and execute transfers', function () {
         this.timeout(6000000);
         
         it('should read token ids from JSON file and execute transfers', async function () {
