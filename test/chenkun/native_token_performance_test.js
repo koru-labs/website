@@ -850,7 +850,7 @@ async function testBatchedSplitForPerformance() {
         console.log("Collected requestIds:", requestIds);
 
         // 调用性能测试函数，传递所有request_id
-        // await testBatchSplitPerformance(requestIds, accounts.Minter);
+        await testBatchSplitPerformance(requestIds, accounts.Minter);
 
         return requestIds;
 
@@ -1084,7 +1084,7 @@ testMint().then();
 // testMintSequential().then();
 let tokens = []
 
-// testBatchedSplit().then();
+testBatchedSplit().then();
 // getTokenById(tokens).then();
 
 // testBurn('16614054352643310873897746527375656187281471852502765764326770479228319182453').then();
