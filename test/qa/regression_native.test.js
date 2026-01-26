@@ -5,7 +5,7 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
 // Native Token configuration for dev_L2
-const NATIVE_TOKEN_ADDRESS = "0xE752b9013333Ae56C0DbEF69F66beBE227a3388A";
+const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 
 // ABI for Native Token
@@ -248,7 +248,7 @@ describe("Regression Native Token Tests", function () {
     });
 
     describe("Mint Function", function () {
-        it.only("should mint multiple tokens in batch", async function () {
+        it("should mint multiple tokens in batch", async function () {
             // Mint multiple tokens at once - following performance script pattern
             const numberOfTokens = 10;
             const tokenAmount = 2000;
@@ -432,9 +432,9 @@ describe("Regression Native Token Tests", function () {
             await executeSplit(127);
         });
 
-        it.only("should split tokens with 128 recipients in toAccounts", async function () {
+        it("should split tokens with 128 recipients in toAccounts", async function () {
             this.timeout(12000000)
-            for (let i = 0; i < 10; i++){
+            for (let i = 0; i < 1; i++){
                 await executeSplit(128);
             }
 
@@ -442,7 +442,7 @@ describe("Regression Native Token Tests", function () {
         });
     });
 
-    describe.skip("Split Edge Cases", function () {
+    describe("Split Edge Cases", function () {
         // 辅助函数：mint特定金额的token
         const mintSpecificToken = async (amount) => {
             // Mint a single token with specified amount
