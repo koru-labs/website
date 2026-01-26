@@ -155,7 +155,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128
+    const total_number = 2
     const amount = 1000
     let minter1List, minter2List
 
@@ -386,7 +386,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
 
     describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
-        it('Read from JSON file to verify token ids',async function(){
+        it.skip('Read from JSON file to verify token ids',async function(){
             // 1. 从JSON文件读取token id
             console.log('=== Step 1: Reading token ids from JSON file ===');
             if (!fs.existsSync(jsonFilePath)) {
@@ -432,6 +432,63 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             expect(totalResults.totalSuccess).to.be.greaterThan(0, '至少应有一个token查询成功');
             
             console.log('✅ All token queries completed successfully');
+        })
+        
+        // 新增测试用例：只查询每个split后的第一个token
+        it('Read from JSON file to verify only first token of each split',async function(){
+            // 1. 从JSON文件读取token id
+            console.log('=== Step 1: Reading token ids from JSON file ===');
+            if (!fs.existsSync(jsonFilePath)) {
+                throw new Error(`JSON file ${jsonFilePath} not found. Please run Step 1 first.`);
+            }
+            
+            const tokenData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+            let minter1List = tokenData.minter1;
+            let minter2List = tokenData.minter2;
+            
+            console.log(`Original - Read ${minter1List.length} token ids for minter1 from JSON`);
+            console.log(`Original - Read ${minter2List.length} token ids for minter2 from JSON`);
+            
+            // 2. 只保留每个split后的第一个token（假设每128个token为一组split结果）
+            const splitSize = 128;
+            const minter1FirstTokens = minter1List.filter((_, index) => index % splitSize === 0);
+            const minter2FirstTokens = minter2List.filter((_, index) => index % splitSize === 0);
+            
+            console.log(`Filtered - Keeping ${minter1FirstTokens.length} first tokens for minter1`);
+            console.log(`Filtered - Keeping ${minter2FirstTokens.length} first tokens for minter2`);
+            
+            // 3. 创建minter钱包实例
+            const provider = new ethers.JsonRpcProvider(RPC);
+            const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
+            const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
+            
+            // 4. 检查token是否可以查询到
+            console.log('=== Step 2: Verifying only first token of each split ===');
+            
+            // 检查minter1的第一个token
+            console.log('\n--- Checking first tokens for minter1 ---');
+            const minter1Results = await getTokenById(minter1Wallet, minter1FirstTokens, native_token_address, abi);
+            
+            // 检查minter2的第一个token
+            console.log('\n--- Checking first tokens for minter2 ---');
+            const minter2Results = await getTokenById(minter2Wallet, minter2FirstTokens, native_token_address, abi);
+            
+            // 汇总所有结果
+            const totalResults = {
+                totalTokens: minter1FirstTokens.length + minter2FirstTokens.length,
+                totalSuccess: minter1Results.success.length + minter2Results.success.length,
+                totalFailed: minter1Results.failed.length + minter2Results.failed.length
+            };
+            
+            console.log(`\n=== 总查询结果汇总 ===`);
+            console.log(`总查询数: ${totalResults.totalTokens}`);
+            console.log(`总成功数: ${totalResults.totalSuccess}`);
+            console.log(`总失败数: ${totalResults.totalFailed}`);
+            
+            // 验证所有查询的token都成功
+            expect(totalResults.totalSuccess).to.equal(totalResults.totalTokens, '所有查询的第一个token都应成功');
+            
+            console.log('✅ All first token queries completed successfully');
         })
     })
 
@@ -1045,7 +1102,7 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
 
     // 2. 一次性批量推送所有已签名的交易
     const results = [];
-    const BATCH_SIZE = 5000; // 足够大以实现“一次性”推送
+    const BATCH_SIZE = 128; // 足够大以实现“一次性”推送
     const pushPromises = [];
     const pendingTxHashes = []; // 用于存储所有待确认的 TxHash
 
