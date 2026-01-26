@@ -1514,7 +1514,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             });
         
         pushPromises.push(p);
-        await sleep(1000); // 减小间隔以增加压力
+        await sleep(500); // 减小间隔以增加压力
     }
 
     await Promise.all(pushPromises); // 等待所有推送完成
