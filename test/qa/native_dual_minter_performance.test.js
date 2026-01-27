@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x1613f8c4E39bD0db8F3A74cB1BF0cc94253b9672";
+const native_token_address = "0x0b75c49c1CB0A11f8ffa018770c104d7FfD4c4d6";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -247,6 +247,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     
     // Import fs module for file operations
     const fs = require('fs');
+    let startTime;
 
     before(async function () {
         this.timeout(300000);
@@ -451,7 +452,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         for (const tokenId of tokenIdList) {
             try {
                 let response = await native.getToken(minterWallet.address, tokenId);
-                console.log(`   ✅ Token ${tokenId} query successful, response ID: ${response.id}`);
+                // console.log(`   ✅ Token ${tokenId} query successful, response ID: ${response.id}`);
                 results.success.push({ tokenId, response: response.id });
             } catch (error) {
                 console.error(`   ❌ Token ${tokenId} query failed, error: ${error.message}`);
@@ -709,9 +710,15 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         if (fs.existsSync('./failed_transfers.json')) {
             console.log(`   - ./failed_transfers.json (failed transactions)`);
         }
+        // 计算并显示总执行时间
+        const endTime = new Date();
+        const durationMs = endTime - startTime;
+        const durationMinutes = (durationMs / (1000 * 60)).toFixed(2);
+        console.log(`\n⏱️  Execution Time: ${durationMinutes} minutes (${durationMs} ms)`);
         console.log('\n👋 Test cleanup completed.\n');
     });
 });
+
 describe('Native Dual Minter Transfer Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
@@ -830,99 +837,6 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
         console.log('Test completed.');
     });
 });
-
-describe('Native Dual Minter Transfer Performance Tests with batch split', function () {
-    let client, owner, minter;
-    let nativeOwner, nativeMinter;
-    let mintedTokens = {};
-    const total_number = 64 //total_number *2 *128
-    const amount = 1000
-    let minter1List, minter2List
-
-    before(async function () {
-        this.timeout(300000);
-
-        client = createClient(rpcUrl);
-        [owner, minter] = await ethers.getSigners();
-
-        nativeOwner = new ethers.Contract(
-            native_token_address,
-            abi,
-            owner
-        );
-        nativeMinter = new ethers.Contract(
-            native_token_address,
-            abi,
-            minter
-        );
-    });
-
-    describe('Case 1: Setup mint allowance for two minters', function () {
-        it('should set mint allowance for minter1', async function () {
-            this.timeout(120000);
-            await setupMintAllowance(nativeOwner, client, { minter1: MINTERS.minter1 }, 100000000);
-        });
-
-        it('should set mint allowance for minter2', async function () {
-            this.timeout(120000);
-            await setupMintAllowance(nativeOwner, client, { minter2: MINTERS.minter2 }, 100000000);
-        });
-    });
-
-    describe('Case 2: Mint tokens for both minters', function () {
-        this.timeout(6000000); // 10 minutes
-
-        it(`should mint ${total_number} tokens for each minter`, async function () {
-            const batchSize = 128;
-
-            for (let i = 0; i < total_number; i += batchSize) {
-                const currentBatchSize = Math.min(batchSize, total_number - i);
-                const isLastBatch = i + batchSize >= total_number;
-
-                await mintTokensForMinters(
-                    client,
-                    MINTERS,
-                    currentBatchSize,
-                    amount
-                );
-
-                if (!isLastBatch) {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            }
-        });
-
-    });
-
-    describe('Case 3: Split tokens with batch', function () {
-        this.timeout(9000000);
-
-        it('should split tokens with concurrent execution', async function () {
-            const splitRequests = await prepareSplitRequests(total_number, 'transfer');
-            const requestIds = await generateSplitProofs(splitRequests);
-            const results = await executeBatchedConcurrentSplits(requestIds);
-
-            minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey)
-            minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey)
-            await sleep(3000)
-            console.log('minter1List length', minter1List.length)
-            console.log('minter2List length', minter2List.length)
-        });
-    });
-
-    describe('Case 4: Excute Transfers TPS', function () {
-        this.timeout(6000000);
-        it('should execute transfers with TPS', async function () {
-            await executeBatchTransfersSigned(minter1List, minter2List);
-        });
-    });
-
-    after(async function () {
-        // Test completed
-        console.log('Test completed.');
-    });
-});
-
 
 describe('Native Dual Minter Burn Performance Tests', function () {
     let client, owner, minter;
