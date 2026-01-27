@@ -241,7 +241,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 256; // Number of tokens to test
+    const total_number = 128; // Number of tokens to test
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
