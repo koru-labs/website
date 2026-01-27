@@ -426,6 +426,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             console.log('⏸️  Waiting 3 seconds to ensure all operations are finalized...');
             await sleep(3000);
             console.log('✅ Case 2 completed successfully\n');
+
         });
     });
 
@@ -474,7 +475,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe('Step2: Read from JSON file to verify token ids',function(){
+    describe.skip('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it.skip('Read from JSON file to verify token ids',async function(){
             console.log('\n┌────────────────────────────────────────────────────────────┐');
