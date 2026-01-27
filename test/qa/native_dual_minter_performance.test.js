@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
+const native_token_address = "0x593B88fcbc02C960B70E8EEE468D0d6Ee7C6e64D";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -1514,7 +1514,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             });
         
         pushPromises.push(p);
-        await sleep(500); // 减小间隔以增加压力
+        await sleep(1000); // 减小间隔以增加压力
     }
 
     await Promise.all(pushPromises); // 等待所有推送完成
