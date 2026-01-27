@@ -417,8 +417,8 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
                 minter2: minter2List,
                 totalTokens: minter1List.length + minter2List.length
             };
-            
-            fs.writeFileSync(jsonFilePath, JSON.stringify(tokenData, null, 2));
+            const fs = require('fs').promises;
+            await fs.writeFile(jsonFilePath, JSON.stringify(tokenData, null, 2), 'utf8');
             console.log(`✅ Token IDs saved successfully to ${jsonFilePath}`);
             console.log(`   - Timestamp: ${tokenData.timestamp}`);
             console.log(`   - Total tokens saved: ${tokenData.totalTokens}\n`);
