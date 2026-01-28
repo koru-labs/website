@@ -353,6 +353,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
                     await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
+            await sleep(5000);
             console.log(`✅ Minting completed: ${total_number} tokens minted for each minter\n`);
 
             // 2. Prepare split requests
