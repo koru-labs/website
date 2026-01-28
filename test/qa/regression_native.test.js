@@ -1336,7 +1336,7 @@ describe("Regression Native Token Tests", function () {
 
             // Step 1: Mint tokens for split operations
             console.log("═══ Step 1: Minting tokens for split operations ═══");
-            const numberOfSplits = 32;
+            const numberOfSplits = 64;
             const tokensPerSplit = 128;
             const tokenAmount = 10000;
             
