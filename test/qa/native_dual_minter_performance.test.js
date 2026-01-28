@@ -715,6 +715,17 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         const durationMs = endTime - startTime;
         const durationMinutes = (durationMs / (1000 * 60)).toFixed(2);
         console.log(`\n⏱️  Execution Time: ${durationMinutes} minutes (${durationMs} ms)`);
+
+        // 删除生成的JSON文件
+        try {
+            if (fs.existsSync(jsonFilePath)) {
+                fs.unlinkSync(jsonFilePath);
+                console.log(`\n🗑️  Split JSON file deleted: ${jsonFilePath}`);
+            }
+        } catch (deleteError) {
+            console.log(`⚠️  Error deleting split JSON file:`, deleteError.message);
+        }
+
         console.log('\n👋 Test cleanup completed.\n');
     });
 });
