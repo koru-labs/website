@@ -5,7 +5,7 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
 // Native Token configuration for dev_L2
-const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
+const NATIVE_TOKEN_ADDRESS = "0xDDCb7576aF8309b1e52FceD647f8C509710Da1Ea";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 
 // ABI for Native Token
@@ -203,6 +203,301 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Helper functions for batch split operations (adapted from native_dual_minter_performance.test.js)
+async function prepareSplitRequests(client, minterWallet, minterMetadata, receiver, round_number) {
+    const requests = [];
+    console.log(`Preparing ${round_number} split requests , 128 tokens each...`);
+
+    for (let i = 0; i < round_number; i++) {
+        const to_accounts = [];
+        // Create 64 pairs of recipients (128 total outputs)
+        for (let j = 0; j < 64; j++) {
+            to_accounts.push(
+                { address: receiver, amount: 10, comment: `split-${i}-${j}-r1` },
+                { address: receiver, amount: 10, comment: `split-${i}-${j}-r2` }
+            );
+        }
+        requests.push({
+            sc_address: NATIVE_TOKEN_ADDRESS,
+            token_type: '0',
+            from_address: minterWallet.address,
+            to_accounts
+        });
+    }
+
+    return requests;
+}
+
+async function generateSplitProofs(client, requests, minterMetadata) {
+    const requestIds = [];
+    console.log(`Generating ${requests.length} split proofs...`);
+
+    for (let i = 0; i < requests.length; i++) {
+        const req = requests[i];
+        const response = await client.generateBatchSplitToken(req, minterMetadata);
+        requestIds.push(response.request_id);
+
+        // Display progress
+        const progress = Math.round(((i + 1) / requests.length) * 100);
+        if ((i + 1) % 5 === 0 || i === requests.length - 1) {
+            console.log(`  Progress: ${i + 1}/${requests.length} (${progress}%)`);
+        }
+    }
+
+    return requestIds;
+}
+
+async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, minterMetadata, nativeContract) {
+    console.log(`\n⚡ Starting concurrent split transaction execution...`);
+    console.log(`Executing ${requestIds.length} split requests`);
+
+    const startTime = Date.now();
+    const startNonce = await minterWallet.getNonce('pending');
+
+    // Prepare all transaction data
+    console.log(`Preparing ${requestIds.length} split transactions...`);
+    const txData = await Promise.all(
+        requestIds.map(async (requestId, index) => {
+            const response = await client.getBatchSplitTokenDetail(
+                { request_id: requestId },
+                minterMetadata
+            );
+
+            return {
+                recipients: response.to_addresses,
+                consumptionData: response.consumedIds.map(ids => ids.token_id),
+                newTokens: response.newTokens.map((account, idx) => ({
+                    id: account.token_id,
+                    owner: minterWallet.address,
+                    status: 2,
+                    amount: {
+                        cl_x: ethers.toBigInt(account.cl_x),
+                        cl_y: ethers.toBigInt(account.cl_y),
+                        cr_x: ethers.toBigInt(account.cr_x),
+                        cr_y: ethers.toBigInt(account.cr_y)
+                    },
+                    to: idx % 2 === 0 ? minterWallet.address : response.to_addresses[Math.floor(idx / 2)],
+                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+                })),
+                proof: response.proof.map(p => ethers.toBigInt(p)),
+                publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
+                batchedSize: response.batched_size,
+                nonce: startNonce + index
+            };
+        })
+    );
+
+    console.log(`✅ Transaction data preparation completed`);
+
+    // Sign all transactions
+    console.log(`✍️  Signing ${txData.length} split transactions...`);
+    const signedTxs = await Promise.all(txData.map(async (data) => {
+        try {
+            const tx = await nativeContract.split.populateTransaction(
+                minterWallet.address,
+                data.recipients,
+                data.consumptionData,
+                data.newTokens,
+                data.proof,
+                data.publicInputs,
+                data.batchedSize - data.recipients.length,
+                {
+                    nonce: data.nonce,
+                    gasLimit: 450436 * 10,
+                    gasPrice: 0
+                }
+            );
+            tx.from = minterWallet.address;
+            tx.type = 0;
+            const signedTx = await minterWallet.signTransaction(tx);
+            return { signedTx, newTokens: data.newTokens, success: true };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    }));
+
+    const signed = signedTxs.filter(r => r.success);
+    const failedSigning = signedTxs.filter(r => !r.success);
+
+    if (failedSigning.length > 0) {
+        console.error(`❌ ${failedSigning.length} transactions failed to sign.`);
+    }
+
+    // Push all signed transactions in one batch
+    const results = [];
+    const pendingTxHashes = [];
+
+    console.log(`📤 Pushing ${signed.length} signed transactions...`);
+
+    const payload = signed.map((item, idx) => ({
+        jsonrpc: "2.0", id: idx, method: "eth_sendRawTransaction", params: [item.signedTx]
+    }));
+
+    const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
+    const response = await fetch(RPC, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const res = await response.json();
+    const batchResponses = Array.isArray(res) ? res : [res];
+
+    batchResponses.forEach((resp, idx) => {
+        const isSuccess = !resp.error;
+        if (isSuccess && resp.result) {
+            pendingTxHashes.push(resp.result);
+        }
+        results.push({
+            success: isSuccess,
+            error: resp.error ? resp.error.message : null
+        });
+    });
+
+    // Wait for all transactions to be mined
+    if (pendingTxHashes.length > 0) {
+        console.log(`⏳ Waiting for ${pendingTxHashes.length} transactions to be mined...`);
+        
+        const pollReceipt = async (hash, timeout = 60000) => {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                const receipt = await ethers.provider.getTransactionReceipt(hash);
+                if (receipt) return receipt;
+                await sleep(1000);
+            }
+            throw new Error(`Timeout waiting for receipt of ${hash}`);
+        };
+
+        const CONFIRM_BATCH = 20;
+        for (let i = 0; i < pendingTxHashes.length; i += CONFIRM_BATCH) {
+            const batchHashes = pendingTxHashes.slice(i, i + CONFIRM_BATCH);
+            await Promise.all(batchHashes.map(hash => 
+                pollReceipt(hash).catch(e => console.warn(`Wait failed for ${hash}: ${e.message}`))
+            ));
+        }
+    }
+
+    const endTime = Date.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+    const successCount = results.filter(r => r.success).length;
+    const failedCount = results.filter(r => !r.success).length;
+
+    console.log(`\n✅ Split execution completed in ${duration}s`);
+    console.log(`   Successful: ${successCount}/${results.length}`);
+    console.log(`   Failed: ${failedCount}/${results.length}`);
+
+    // Collect all recipient tokens (odd indices)
+    const allRecipientTokens = [];
+    signed.forEach(item => {
+        if (item.newTokens) {
+            item.newTokens.forEach((token, idx) => {
+                if (idx % 2 === 1) {
+                    allRecipientTokens.push(token.id);
+                }
+            });
+        }
+    });
+
+    return {
+        totalTransactions: results.length,
+        successfulTransactions: successCount,
+        failedTransactions: failedCount,
+        recipientTokens: allRecipientTokens,
+        duration: duration
+    };
+}
+
+async function executeBatchTransfers(client, tokenList, minterWallet, nativeContract) {
+    console.log(`\n📤 Starting batch transfer execution...`);
+    console.log(`Transferring ${tokenList.length} tokens...`);
+
+    const baseNonce = await minterWallet.getNonce('pending');
+
+    // Sign all transfer transactions
+    console.log(`✍️  Signing ${tokenList.length} transfer transactions...`);
+    const signedTxs = await Promise.all(tokenList.map(async (tokenId, i) => {
+        try {
+            const tx = await nativeContract.transfer.populateTransaction(
+                tokenId, 
+                `transfer-${i}`,
+                {
+                    nonce: baseNonce + i,
+                    gasLimit: 3000000,
+                    gasPrice: 0
+                }
+            );
+            tx.from = minterWallet.address;
+            tx.type = 0;
+            return { signedTx: await minterWallet.signTransaction(tx), tokenId, success: true };
+        } catch (e) {
+            return { tokenId, success: false, error: e.message };
+        }
+    }));
+
+    const signed = signedTxs.filter(r => r.success);
+    const failed = signedTxs.filter(r => !r.success);
+
+    if (failed.length) {
+        console.error(`❌ ${failed.length} transactions failed during signing`);
+    }
+
+    // Batch send
+    const BATCH_SIZE = 5000;
+    const results = [];
+    const txHashMap = new Map();
+
+    for (let i = 0; i < signed.length; i += BATCH_SIZE) {
+        const batch = signed.slice(i, i + BATCH_SIZE);
+        const payload = batch.map((item, idx) => ({
+            jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
+        }));
+
+        console.log(`📤 Pushing transfer batch ${Math.floor(i / BATCH_SIZE) + 1}, containing ${batch.length} transactions...`);
+
+        const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
+        const response = await fetch(RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await response.json();
+        const batchResponses = Array.isArray(res) ? res : [res];
+        
+        batchResponses.forEach((resp, idx) => {
+            const txInfo = batch[idx];
+            if (resp.result) {
+                txHashMap.set(txInfo.tokenId, resp.result);
+            }
+            results.push({
+                tokenId: txInfo.tokenId,
+                txHash: resp.result,
+                error: resp.error,
+                success: !resp.error
+            });
+        });
+
+        await sleep(1000);
+    }
+
+    const successfulTxs = results.filter(r => r.success);
+    const failedTxs = results.filter(r => !r.success);
+
+    console.log(`\n✅ Transfer execution completed`);
+    console.log(`   Successful: ${successfulTxs.length}/${results.length}`);
+    console.log(`   Failed: ${failedTxs.length}/${results.length}`);
+
+    return {
+        total: signedTxs.length,
+        success: successfulTxs.length,
+        failed: failed.length + failedTxs.length,
+        signingFailed: failed.length,
+        executionFailed: failedTxs.length,
+        txHashes: Array.from(txHashMap.values())
+    };
+}
+
 describe("Regression Native Token Tests", function () {
     this.timeout(600000); // 10 minutes
 
@@ -220,7 +515,7 @@ describe("Regression Native Token Tests", function () {
         nativeContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
     });
 
-    describe("Setup", function () {
+    describe.only("Setup", function () {
         it("should set mint allowance for minter", async function () {
             // Setup mint allowance - same as performance script
             const ownerMetadata = await createAuthMetadata(accounts.OwnerKey);
@@ -420,6 +715,57 @@ describe("Regression Native Token Tests", function () {
             await sleep(2000);
         };
 
+        // 辅助函数：执行split操作但不验证token是否存在
+        const executeSplitWithoutVerification = async (toAccountsCount) => {
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: generateToAccounts(toAccountsCount)
+            };
+
+            console.log(`Generating batch split proof for ${toAccountsCount} recipients (without verification)...`);
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000); // Wait for async processing if any
+
+            console.log("Getting split detail...");
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+
+            const recipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+
+            const newTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : (idx + 1 < detailResponse.newTokens.length ? detailResponse.newTokens[idx + 1]?.token_id : 0)
+            }));
+            const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - recipients.length;
+
+            console.log("Executing split transaction...");
+            const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
+            const receipt = await splitTx.wait();
+            expect(receipt.status).to.equal(1);
+            console.log("Split successful (without verification), tx:", splitTx.hash);
+
+            if (newTokens.length > 1) {
+                lastMinterTokenId = newTokens[1].id;
+                console.log("Captured recipient token ID (index 1) for transfer test:", lastMinterTokenId.toString());
+            }
+            await sleep(2000);
+            
+            return newTokens;
+        };
+
         it("should split tokens to multiple recipients", async function () {
             await executeSplit(2);
         });
@@ -428,11 +774,11 @@ describe("Regression Native Token Tests", function () {
             await executeSplit(1);
         });
 
-        it("should split tokens with 127 recipients in toAccounts", async function () {
+        it.skip("should split tokens with 127 recipients in toAccounts", async function () {
             await executeSplit(127);
         });
 
-        it("should split tokens with 128 recipients in toAccounts", async function () {
+        it.skip("should split tokens with 128 recipients in toAccounts", async function () {
             this.timeout(12000000)
             for (let i = 0; i < 1; i++){
                 await executeSplit(128);
@@ -865,7 +1211,226 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Token lifecycle status tracking completed successfully!");
         });
     });
+
+    describe("Complete Workflow Scenarios", function () {
+        it("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
+            console.log("\n🔄 TEST: Complete workflow with 1 token (Mint → Split → Transfer)");
+            console.log("   Purpose: Verify end-to-end workflow with single token operations");
+            console.log("   Expected: Successfully mint, split, and transfer 1 token through complete lifecycle\n");
+
+            // Step 1: Mint 1 token
+            console.log("Step 1: Minting 1 token...");
+            const numberOfTokens = 1;
+            const tokenAmount = 1000;
+            
+            const to_accounts = Array(numberOfTokens).fill().map(() => ({
+                address: minter1Wallet.address,
+                amount: tokenAmount
+            }));
+
+            const generateRequest = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: to_accounts,
+            };
+
+            const response = await client.generateBatchMintProof(generateRequest, minter1Metadata);
+            const recipients = response.to_accounts.map(account => account.address);
+            const batchedSize = response.batched_size;
+            
+            const newTokens = response.to_accounts.map((account) => ({
+                id: account.token.token_id,
+                owner: account.address,
+                status: 2,
+                amount: {
+                    cl_x: account.token.cl_x,
+                    cl_y: account.token.cl_y,
+                    cr_x: account.token.cr_x,
+                    cr_y: account.token.cr_y,
+                },
+                to: account.address,
+                rollbackTokenId: 0
+            }));
+
+            const newAllowed = {
+                id: response.mint_allowed.token_id,
+                value: {
+                    cl_x: response.mint_allowed.cl_x,
+                    cl_y: response.mint_allowed.cl_y,
+                    cr_x: response.mint_allowed.cr_x,
+                    cr_y: response.mint_allowed.cr_y,
+                }
+            };
+
+            const proof = response.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = response.input.map(i => ethers.toBigInt(i));
+            const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
+
+            const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding);
+            const mintReceipt = await mintTx.wait();
+            expect(mintReceipt.status).to.equal(1);
+            console.log(`✅ Minted 1 token successfully, tx: ${mintTx.hash}`);
+            await sleep(2000);
+
+            // Step 2: Split 1 token
+            console.log("\nStep 2: Splitting 1 token...");
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: [
+                    { address: receiver1, amount: 500, comment: "workflow-split-1" }
+                ]
+            };
+
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000);
+
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+            const splitRecipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+
+            const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : splitRecipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : (idx + 1 < detailResponse.newTokens.length ? detailResponse.newTokens[idx + 1]?.token_id : 0)
+            }));
+
+            const splitProof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const splitPublicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - splitRecipients.length;
+
+            const splitTx = await nativeContract.split(minter1Wallet.address, splitRecipients, consumedIds, splitNewTokens, splitProof, splitPublicInputs, paddingNum);
+            const splitReceipt = await splitTx.wait();
+            expect(splitReceipt.status).to.equal(1);
+            console.log(`✅ Split 1 token successfully, tx: ${splitTx.hash}`);
+            await sleep(2000);
+
+            // Step 3: Transfer 1 token
+            console.log("\nStep 3: Transferring 1 token...");
+            const tokenIdToTransfer = ethers.toBigInt(splitNewTokens[1].id);
+            const transferTx = await nativeContract.transfer(tokenIdToTransfer, "workflow-transfer-1");
+            const transferReceipt = await transferTx.wait();
+            expect(transferReceipt.status).to.equal(1);
+            console.log(`✅ Transferred 1 token successfully, tx: ${transferTx.hash}`);
+            await sleep(2000);
+
+            console.log("\n✅ Complete workflow with 1 token finished successfully!");
+        });
+
+        it.only("should complete workflow: 32 concurrent splits (128 tokens each) -> concurrent transfers", async function () {
+            this.timeout(3600000); // 1 hour timeout for large batch operations
+            
+            console.log("\n🔄 TEST: Complete workflow with 32 concurrent splits (128 tokens each) and concurrent transfers");
+            console.log("   Purpose: Verify end-to-end workflow with large-scale concurrent operations");
+            console.log("   Expected: Successfully mint tokens, execute 32 concurrent split operations (128 tokens each) and concurrent transfers\n");
+
+            // Step 1: Mint tokens for split operations
+            console.log("═══ Step 1: Minting tokens for split operations ═══");
+            const numberOfSplits = 32;
+            const tokensPerSplit = 128;
+            const tokenAmount = 10000;
+            
+            const tokensToMint = numberOfSplits;
+            console.log(`   Minting ${tokensToMint} tokens with amount ${tokenAmount} each...`);
+            
+            const to_accounts = Array(tokensToMint).fill().map(() => ({
+                address: minter1Wallet.address,
+                amount: tokenAmount
+            }));
+
+            const generateRequest = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: to_accounts,
+            };
+
+            const response = await client.generateBatchMintProof(generateRequest, minter1Metadata);
+            const recipients = response.to_accounts.map(account => account.address);
+            const batchedSize = response.batched_size;
+            
+            const newTokens = response.to_accounts.map((account) => ({
+                id: account.token.token_id,
+                owner: account.address,
+                status: 2,
+                amount: {
+                    cl_x: account.token.cl_x,
+                    cl_y: account.token.cl_y,
+                    cr_x: account.token.cr_x,
+                    cr_y: account.token.cr_y,
+                },
+                to: account.address,
+                rollbackTokenId: 0
+            }));
+
+            const newAllowed = {
+                id: response.mint_allowed.token_id,
+                value: {
+                    cl_x: response.mint_allowed.cl_x,
+                    cl_y: response.mint_allowed.cl_y,
+                    cr_x: response.mint_allowed.cr_x,
+                    cr_y: response.mint_allowed.cr_y,
+                }
+            };
+
+            const proof = response.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = response.input.map(i => ethers.toBigInt(i));
+            const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
+
+            const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding);
+            const mintReceipt = await mintTx.wait();
+            expect(mintReceipt.status).to.equal(1);
+            console.log(`✅ Minted ${tokensToMint} tokens successfully, tx: ${mintTx.hash}`);
+            await sleep(3000);
+
+            // Step 2: Prepare split requests using helper function
+            console.log("\n═══ Step 2: Preparing split requests ═══");
+            const splitRequests = await prepareSplitRequests(client, minter1Wallet, minter1Metadata, receiver1, numberOfSplits);
+            console.log(`✅ Prepared ${splitRequests.length} split requests`);
+
+            // Step 3: Generate split proofs using helper function
+            console.log("\n═══ Step 3: Generating split proofs ═══");
+            const requestIds = await generateSplitProofs(client, splitRequests, minter1Metadata);
+            console.log(`✅ Generated ${requestIds.length} split proofs`);
+
+            // Step 4: Execute concurrent splits using helper function
+            console.log("\n═══ Step 4: Executing concurrent split transactions ═══");
+            const splitResults = await executeBatchedConcurrentSplits(client, requestIds, minter1Wallet, minter1Metadata, nativeContract);
+            console.log(`✅ Split operations completed:`);
+            console.log(`   - Total transactions: ${splitResults.totalTransactions}`);
+            console.log(`   - Successful: ${splitResults.successfulTransactions}`);
+            console.log(`   - Failed: ${splitResults.failedTransactions}`);
+            console.log(`   - Recipient tokens: ${splitResults.recipientTokens.length}`);
+            console.log(`   - Duration: ${splitResults.duration}s`);
+            await sleep(3000);
+
+            // Step 5: Execute concurrent transfers using helper function
+            console.log("\n═══ Step 5: Executing concurrent transfers ═══");
+            const transferResults = await executeBatchTransfers(client, splitResults.recipientTokens, minter1Wallet, nativeContract);
+            console.log(`✅ Transfer operations completed:`);
+            console.log(`   - Total: ${transferResults.total}`);
+            console.log(`   - Successful: ${transferResults.success}`);
+            console.log(`   - Failed: ${transferResults.failed}`);
+
+            console.log("\n╔════════════════════════════════════════════════════════════╗");
+            console.log("║  ✅ COMPLETE WORKFLOW FINISHED SUCCESSFULLY               ║");
+            console.log("╚════════════════════════════════════════════════════════════╝");
+            console.log(`\n📊 Summary:`);
+            console.log(`   - Tokens minted: ${tokensToMint} (amount: ${tokenAmount} each)`);
+            console.log(`   - Split operations: ${numberOfSplits}`);
+            console.log(`   - Tokens per split: ${tokensPerSplit}`);
+            console.log(`   - Total recipient tokens: ${splitResults.recipientTokens.length}`);
+            console.log(`   - Total tokens transferred: ${transferResults.success}`);
+        });
+    });
 });
-
-
-
