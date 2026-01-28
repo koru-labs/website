@@ -241,7 +241,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // Number of tokens to test
+    const total_number = 256; // Number of tokens to test
     const amount = 10000;
     const jsonFilePath = './split_tokens.json';
     
@@ -290,7 +290,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             console.log('└────────────────────────────────────────────────────────────┘');
             console.log('📋 Purpose: Grant minting permission to minter1');
             console.log(`   - Minter1 Address: ${MINTERS.minter1.address}`);
-            console.log(`   - Allowance Amount: 100,000,000 tokens`);
+            console.log(`   - Allowance Amount: 100,000,000`);
             console.log('   - Action: Encoding ElGamal encrypted amount and setting mint allowance on-chain');
             console.log('⏳ Starting mint allowance setup for minter1...\n');
             
@@ -307,7 +307,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
             console.log('└────────────────────────────────────────────────────────────┘');
             console.log('📋 Purpose: Grant minting permission to minter2');
             console.log(`   - Minter2 Address: ${MINTERS.minter2.address}`);
-            console.log(`   - Allowance Amount: 100,000,000 tokens`);
+            console.log(`   - Allowance Amount: 100,000,000`);
             console.log('   - Action: Encoding ElGamal encrypted amount and setting mint allowance on-chain');
             console.log('⏳ Starting mint allowance setup for minter2...\n');
             
@@ -1144,7 +1144,7 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
                         cr_y: ethers.toBigInt(account.cr_y)
                     },
                     to: idx % 2 === 0 ? minter2Wallet.address : response.to_addresses[Math.floor(idx / 2)],
-                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1]?.token_id || 0
                 })),
                 proof: response.proof.map(p => ethers.toBigInt(p)),
                 publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
@@ -1412,7 +1412,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
     if (failed.length) {
         console.error(`❌ ${failed.length} transactions failed during signing:`);
         failed.forEach((f, idx) => {
-            if (idx < 5) { // Only show details of first 5 failures
+            if (idx < 5) { // show details of first 5 failures
                 console.error(`  - TokenId: ${f.tokenId}, Minter: ${f.minterName}, Error: ${f.error}`);
             }
         });
@@ -1629,7 +1629,7 @@ async function executeSingleSplitSequential(minterName, requestId, privateKey) {
                 cr_y: ethers.toBigInt(account.cr_y)
             },
             to: idx % 2 === 0 ? derivedAddress : recipients[Math.floor(idx / 2)],
-            rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+            rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1]?.token_id || 0
         }));
 
         const proof = response.proof.map(p => ethers.toBigInt(p));
