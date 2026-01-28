@@ -1112,7 +1112,8 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
                         cr_y: ethers.toBigInt(account.cr_y)
                     },
                     to: idx % 2 === 0 ? minter1Wallet.address : response.to_addresses[Math.floor(idx / 2)],
-                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+                    // rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx - 1]?.token_id || 0
+                    rollbackTokenId:  idx % 2 === 0 ? 0 : response.newTokens[idx+1].token_id
                 })),
                 proof: response.proof.map(p => ethers.toBigInt(p)),
                 publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
