@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x0b75c49c1CB0A11f8ffa018770c104d7FfD4c4d6";
+const native_token_address = "0xDDCb7576aF8309b1e52FceD647f8C509710Da1Ea";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -241,7 +241,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // Number of tokens to test
+    const total_number = 256; // Number of tokens to test
     const amount = 1000;
     const jsonFilePath = './split_tokens.json';
     
@@ -476,7 +476,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe.skip('Step2: Read from JSON file to verify token ids',function(){
+    describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it.skip('Read from JSON file to verify token ids',async function(){
             console.log('\n┌────────────────────────────────────────────────────────────┐');
