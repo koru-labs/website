@@ -241,7 +241,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 128; // Number of tokens to test
+    const total_number = 256; // Number of tokens to test
     const amount = 10000;
     const jsonFilePath = './split_tokens.json';
     
@@ -477,7 +477,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
         return results;
     }
 
-    describe.skip('Step2: Read from JSON file to verify token ids',function(){
+    describe('Step2: Read from JSON file to verify token ids',function(){
         this.timeout(6000000);
         it.skip('Read from JSON file to verify token ids',async function(){
             console.log('\n┌────────────────────────────────────────────────────────────┐');
