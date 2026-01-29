@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x7634899C18372657baC3eb6198fBC5791e736586";
+const native_token_address = "0x9f041c66A62783c899928875d7387e63dFaB70a8";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -1216,7 +1216,7 @@ async function executeBatchedConcurrentSplits(requests, batchSize = 20) {
         console.error(`❌ ${failedSigning.length} transactions failed to sign.`);
     }
 
-    // 2. Push all signed transactions in one batch (one-time submission)
+    // 2. Push all signed transactions in batch size (one-time submission)
     // const results = [];
     // const BATCH_SIZE = 128; // 足够大以实现“一次性”推送
     // const pushPromises = [];
