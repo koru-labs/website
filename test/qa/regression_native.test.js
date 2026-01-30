@@ -1327,15 +1327,15 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers", async function () {
+        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
-            console.log("\n🔄 TEST: Complete workflow with 32 concurrent splits (128 tokens each) and concurrent transfers");
+            console.log("\n🔄 TEST: Complete workflow with 32 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
             console.log("   Purpose: Verify end-to-end workflow with large-scale concurrent operations");
             console.log("   Expected: Successfully mint tokens, execute 32 concurrent split operations (128 tokens each) and concurrent transfers\n");
 
             // Step 1: Mint tokens for split operations
-            console.log("═══ Step 1: Minting tokens for split operations ═══");
+            console.log("═══ Step 1: Minting 64 tokens for split operations ═══");
             const numberOfSplits = 64;
             const tokensPerSplit = 128;
             const tokenAmount = 10000;
@@ -1394,17 +1394,17 @@ describe("Regression Native Token Tests", function () {
             await sleep(3000);
 
             // Step 2: Prepare split requests using helper function
-            console.log("\n═══ Step 2: Preparing split requests ═══");
+            console.log("\n═══ Step 2: Preparing 64 split requests (128 tokens each) ═══");
             const splitRequests = await prepareSplitRequests(client, minter1Wallet, minter1Metadata, receiver1, numberOfSplits);
             console.log(`✅ Prepared ${splitRequests.length} split requests`);
 
             // Step 3: Generate split proofs using helper function
-            console.log("\n═══ Step 3: Generating split proofs ═══");
+            console.log("\n═══ Step 3: Generating 64 split proofs (128 tokens each) ═══");
             const requestIds = await generateSplitProofs(client, splitRequests, minter1Metadata);
             console.log(`✅ Generated ${requestIds.length} split proofs`);
 
             // Step 4: Execute concurrent splits using helper function
-            console.log("\n═══ Step 4: Executing concurrent split transactions ═══");
+            console.log("\n═══ Step 4: Executing concurrent split transactions (128 tokens each) ═══");
             const splitResults = await executeBatchedConcurrentSplits(client, requestIds, minter1Wallet, minter1Metadata, nativeContract);
             console.log(`✅ Split operations completed:`);
             console.log(`   - Total transactions: ${splitResults.totalTransactions}`);
@@ -1415,7 +1415,7 @@ describe("Regression Native Token Tests", function () {
             await sleep(3000);
 
             // Step 5: Execute concurrent transfers using helper function
-            console.log("\n═══ Step 5: Executing concurrent transfers ═══");
+            console.log("\n═══ Step 5: Executing concurrent transfers (8192 tokens total) ═══");
             const transferResults = await executeBatchTransfers(client, splitResults.recipientTokens, minter1Wallet, nativeContract);
             console.log(`✅ Transfer operations completed:`);
             console.log(`   - Total: ${transferResults.total}`);
