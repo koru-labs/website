@@ -1330,7 +1330,7 @@ describe("Regression Native Token Tests", function () {
         it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
-            console.log("\n🔄 TEST: Complete workflow with 32 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
+            console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
             console.log("   Purpose: Verify end-to-end workflow with large-scale concurrent operations");
             console.log("   Expected: Successfully mint tokens, execute 32 concurrent split operations (128 tokens each) and concurrent transfers\n");
 
@@ -1410,7 +1410,7 @@ describe("Regression Native Token Tests", function () {
             console.log(`   - Total transactions: ${splitResults.totalTransactions}`);
             console.log(`   - Successful: ${splitResults.successfulTransactions}`);
             console.log(`   - Failed: ${splitResults.failedTransactions}`);
-            console.log(`   - Recipient tokens: ${splitResults.recipientTokens.length}`);
+            // console.log(`   - Recipient tokens: ${splitResults.recipientTokens.length}`);
             console.log(`   - Duration: ${splitResults.duration}s`);
             await sleep(3000);
 
@@ -1429,7 +1429,7 @@ describe("Regression Native Token Tests", function () {
             console.log(`   - Tokens minted: ${tokensToMint} (amount: ${tokenAmount} each)`);
             console.log(`   - Split operations: ${numberOfSplits}`);
             console.log(`   - Tokens per split: ${tokensPerSplit}`);
-            console.log(`   - Total recipient tokens: ${splitResults.recipientTokens.length}`);
+            // console.log(`   - Total recipient tokens: ${splitResults.recipientTokens.length}`);
             console.log(`   - Total tokens transferred: ${transferResults.success}`);
         });
     });
