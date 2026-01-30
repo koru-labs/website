@@ -5,7 +5,7 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
 // Native Token configuration for dev_L2
-const NATIVE_TOKEN_ADDRESS = "0xDDCb7576aF8309b1e52FceD647f8C509710Da1Ea";
+const NATIVE_TOKEN_ADDRESS = "0x455413b11D8e2CDDd1443990349221590684A5f0";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 
 // ABI for Native Token
@@ -206,7 +206,7 @@ function sleep(ms) {
 // Helper functions for batch split operations (adapted from native_dual_minter_performance.test.js)
 async function prepareSplitRequests(client, minterWallet, minterMetadata, receiver, round_number) {
     const requests = [];
-    console.log(`Preparing ${round_number} split requests , 128 tokens each...`);
+    console.log(`Preparing ${round_number} split requests , 128 tokens each, 8192 tokens transfer total...`);
 
     for (let i = 0; i < round_number; i++) {
         const to_accounts = [];
@@ -478,7 +478,7 @@ async function executeBatchTransfers(client, tokenList, minterWallet, nativeCont
             });
         });
 
-        await sleep(1000);
+        await sleep(500);
     }
 
     const successfulTxs = results.filter(r => r.success);
@@ -516,13 +516,13 @@ describe("Regression Native Token Tests", function () {
     });
 
     describe.only("Setup", function () {
-        it("should set mint allowance for minter", async function () {
+        it.only("should set mint allowance for minter", async function () {
             // Setup mint allowance - same as performance script
             const ownerMetadata = await createAuthMetadata(accounts.OwnerKey);
             const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
             const ownerNative = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, ownerWallet);
 
-            const allowanceAmount = 10000000;
+            const allowanceAmount = 1000000000;
             const encodeResponse = await client.encodeElgamalAmount(allowanceAmount, ownerMetadata);
             const allowed = {
                 id: ethers.toBigInt(encodeResponse.token_id),
@@ -1327,7 +1327,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it.only("should complete workflow: 32 concurrent splits (128 tokens each) -> concurrent transfers", async function () {
+        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 32 concurrent splits (128 tokens each) and concurrent transfers");
