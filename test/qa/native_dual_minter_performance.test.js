@@ -4,7 +4,7 @@ const { createClient } = require('./token_grpc');
 const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
-const native_token_address = "0x9f041c66A62783c899928875d7387e63dFaB70a8";
+const native_token_address = "0x4dA51d6A39687ffCf9f5fc163C102aE8b23a123d";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -237,7 +237,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // New test case: Save split token IDs to JSON file, then read and execute transfer
-describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
@@ -850,11 +850,10 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
     });
 });
 
-describe('Native Dual Minter Burn Performance Tests', function () {
+describe.only('Native Dual Minter Burn Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
-    let mintedTokens = {};
-    const total_number = 256 //total_number *2 *128
+    const total_number = 128 //total_number *2 *128
     const amount = 1000
     let minter1List, minter2List
 
@@ -1519,19 +1518,19 @@ async function executeBatchBurnsSigned(tokenList1, tokenList2) {
 
         const wallet = new ethers.Wallet(cfg.privateKey, ethers.provider);
         const baseNonce = await wallet.getNonce('pending');
+
         return await Promise.all(list.map(async (t, i) => {
-            let tokenId;
             try {
-                tokenId = t.tokenId || t;
+                const tokenId = t.tokenId || t;
                 const contract = new ethers.Contract(native_token_address, abi, wallet);
                 const tx = await contract.burn.populateTransaction(tokenId, {
                     nonce: baseNonce + i, gasLimit: 3000000, gasPrice: 0
                 });
                 tx.from = wallet.address;
                 tx.type = 0;
-                return { signedTx: await wallet.signTransaction(tx), tokenId, success: true };
+                return { signedTx: await wallet.signTransaction(tx), tokenId, minterName: name, success: true };
             } catch (e) {
-                return { tokenId, success: false, error: e.message };
+                return { tokenId, minterName: name, success: false, error: e.message };
             }
         }));
     };
@@ -1554,13 +1553,22 @@ async function executeBatchBurnsSigned(tokenList1, tokenList2) {
     const failed = allSignedTxs.filter(r => !r.success);
 
     if (failed.length) {
-        return { total: allSignedTxs.length, success: signed.length, failed: failed.length, error: 'Pre-signing failed' };
+        console.error(`❌ ${failed.length} transactions failed during signing:`);
+        failed.forEach((f, idx) => {
+            if (idx < 5) { // show details of first 5 failures
+                console.error(`  - TokenId: ${f.tokenId}, Minter: ${f.minterName}, Error: ${f.error}`);
+            }
+        });
+        if (failed.length > 5) {
+            console.error(`  ... and ${failed.length - 5} more signing failures`);
+        }
     }
 
     // Batch send
-    const BATCH_SIZE = 4000;
+    const BATCH_SIZE = 5000;
     const results = [];
     const pushPromises = [];
+    const txHashMap = new Map(); // Store tokenId -> txHash mapping
 
     for (let i = 0; i < signed.length; i += BATCH_SIZE) {
         const batch = signed.slice(i, i + BATCH_SIZE);
@@ -1568,29 +1576,80 @@ async function executeBatchBurnsSigned(tokenList1, tokenList2) {
             jsonrpc: "2.0", id: i + idx, method: "eth_sendRawTransaction", params: [item.signedTx]
         }));
 
-        console.log(`Starting to push Burn batch ${Math.floor(i / BATCH_SIZE) + 1}, containing ${batch.length} transactions (alternate mode)`);
+        // Calculate request size
+        const requestPayloadString = JSON.stringify(payload);
+        const requestSizeInBytes = Buffer.byteLength(requestPayloadString, 'utf8');
+        const requestSizeInMB = requestSizeInBytes / (1024 * 1024);
+
+        console.log(`Starting to push Burn batch ${Math.floor(i / BATCH_SIZE) + 1}, containing ${batch.length} transactions (alternate mode), time: ${new Date().toISOString()}`);
+        console.log(`Request size: ${requestSizeInMB.toFixed(2)} MB`);
+
+        const startTime = Date.now();
 
         const p = fetch(RPC, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-            .then(r => r.json())
+            .then(response => response.json())
             .then(res => {
-                results.push(...(Array.isArray(res) ? res : []));
+                const endTime = Date.now();
+                console.log(`Completed pushing Burn batch ${Math.floor(i / BATCH_SIZE) + 1}, time taken: ${(endTime - startTime)/1000} seconds`);
+                const batchResponses = Array.isArray(res) ? res : [res];
+                batchResponses.forEach((resp, idx) => {
+                    const txInfo = batch[idx];
+                    if (resp.result) {
+                        // Successfully obtained txHash
+                        txHashMap.set(txInfo.tokenId, resp.result);
+                    }
+                    results.push({
+                        tokenId: txInfo.tokenId,
+                        minterName: txInfo.minterName,
+                        txHash: resp.result,
+                        error: resp.error,
+                        success: !resp.error
+                    });
+                });
             })
-            .catch(err => console.error("Burn push failed:", err));
+            .catch(error => {
+                console.error(`Error pushing Burn batch ${Math.floor(i / BATCH_SIZE) + 1}:`, error);
+            });
         
         pushPromises.push(p);
-        await sleep(200);
+        await sleep(1000); // Reduce interval to increase pressure
     }
 
-    await Promise.all(pushPromises);
+    await Promise.all(pushPromises); // Wait for all pushes to complete
+
+    // Collect statistics
+    const successfulTxs = results.filter(r => r.success);
+    const failedTxs = results.filter(r => !r.success);
+
+    // Display failed transaction details
+    if (failedTxs.length > 0) {
+        console.error(`\n❌ ${failedTxs.length} transactions failed during execution:`);
+        failedTxs.forEach((f, idx) => {
+            if (idx < 10) { // Show details of first 10 failures
+                console.error(`  - TokenId: ${f.tokenId}, Minter: ${f.minterName}, Error: ${f.error?.message || f.error}`);
+            }
+        });
+        if (failedTxs.length > 10) {
+            console.error(`  ... and ${failedTxs.length - 10} more execution failures`);
+        }
+    }
 
     return {
         total: allSignedTxs.length,
-        success: results.filter(r => !r.error).length,
-        failed: results.filter(r => r.error).length
+        success: successfulTxs.length,
+        failed: failed.length + failedTxs.length,
+        signingFailed: failed.length,
+        executionFailed: failedTxs.length,
+        txHashes: Array.from(txHashMap.values()),
+        failedTransactions: failedTxs.map(f => ({
+            tokenId: f.tokenId,
+            minterName: f.minterName,
+            error: f.error?.message || f.error
+        }))
     };
 }
 function sleep(ms) {
