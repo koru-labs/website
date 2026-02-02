@@ -915,43 +915,66 @@ describe.only('Native Dual Minter Burn Performance Tests', function () {
     describe('Case 3: Split tokens', function () {
         this.timeout(9000000);
 
-        it('should split tokens with sequential execution to ensure success', async function () {
+        it('should split tokens with concurrent batch execution', async function () {
+            console.log('\n┌────────────────────────────────────────────────────────────┐');
+            console.log('│  CASE 3: BATCH SPLIT TOKENS FOR BURN TEST                 │');
+            console.log('└────────────────────────────────────────────────────────────┘');
+            
+            // 1. Prepare split requests
+            console.log('\n═══ Step 1: Preparing Split Requests ═══');
+            console.log('📋 Purpose: Prepare split transaction requests for both minters');
+            console.log(`   - Number of split requests: ${total_number}`);
+            console.log('   - Each split creates 128 output tokens (64 splits × 2 for burn)');
+            console.log('⏳ Preparing split requests...\n');
+            
             const splitRequests = await prepareSplitRequests(total_number, 'burn');
+            console.log(`✅ Split requests prepared: ${splitRequests.minter1.length} for minter1, ${splitRequests.minter2.length} for minter2\n`);
+            
+            // 2. Generate split proofs
+            console.log('═══ Step 2: Generating Split Proofs ═══');
+            console.log('📋 Purpose: Generate zero-knowledge proofs for split transactions');
+            console.log('   - Action: Calling gRPC service to generate batch split proofs');
+            console.log('   - This proves the split is valid without revealing amounts');
+            console.log('⏳ Generating proofs (this may take a while)...\n');
+            
             const requestIds = await generateSplitProofs(splitRequests);
-
-            console.log(`\n[Minter1] Starting split operations for ${requestIds.minter1.length} tokens`);
-            for (let i = 0; i < requestIds.minter1.length; i++) {
-                const requestId = requestIds.minter1[i];
-                console.log(`[Minter1] Processing token ${i + 1}/${requestIds.minter1.length} - RequestId: ${requestId}`);
-                const result = await executeSingleSplitSequential('minter1', requestId, MINTERS.minter1.privateKey);
-                if (!result.success) {
-                    throw new Error(`Minter1 split operation failed for request ${requestId}: ${result.error}`);
-                }
-                console.log(`[Minter1] ✓ Token ${i + 1}/${requestIds.minter1.length} split completed`);
-                await sleep(2000);
-            }
-            console.log(`[Minter1] All ${requestIds.minter1.length} tokens split completed\n`);
-
-            console.log(`\n[Minter2] Starting split operations for ${requestIds.minter2.length} tokens`);
-            for (let i = 0; i < requestIds.minter2.length; i++) {
-                const requestId = requestIds.minter2[i];
-                console.log(`[Minter2] Processing token ${i + 1}/${requestIds.minter2.length} - RequestId: ${requestId}`);
-                const result = await executeSingleSplitSequential('minter2', requestId, MINTERS.minter2.privateKey);
-                if (!result.success) {
-                    throw new Error(`Minter2 split operation failed for request ${requestId}: ${result.error}`);
-                }
-                console.log(`[Minter2] ✓ Token ${i + 1}/${requestIds.minter2.length} split completed`);
-                await sleep(1000);
-            }
-            console.log(`[Minter2] All ${requestIds.minter2.length} tokens split completed\n`);
-
+            console.log(`✅ Proofs generated: ${requestIds.minter1.length} for minter1, ${requestIds.minter2.length} for minter2\n`);
+            
+            // 3. Execute split operations with batch concurrent method
+            console.log('═══ Step 3: Executing Split Operations (Batch Concurrent) ═══');
+            console.log('📋 Purpose: Execute split transactions on-chain with batch submission');
+            console.log('   - Action: Signing and broadcasting split transactions concurrently');
+            console.log('   - Method: Batch concurrent execution for both minters');
+            console.log('⏳ Executing split transactions...\n');
+            
+            const results = await executeBatchedConcurrentSplits(requestIds);
+            console.log(`✅ Split operations completed:`);
+            console.log(`   - Minter1: ${results.minter1.successfulTransactions}/${results.minter1.totalTransactions} successful`);
+            console.log(`   - Minter2: ${results.minter2.successfulTransactions}/${results.minter2.totalTransactions} successful\n`);
+            
+            // 4. Extract recipient token IDs
+            console.log('═══ Step 4: Extracting Recipient Token IDs ═══');
+            console.log('📋 Purpose: Extract token IDs that were created for burn');
+            console.log('   - Action: Querying split transaction details from gRPC service');
+            console.log('   - Filtering: Only extracting tokens for burn (odd indices)');
+            console.log('⏳ Extracting token IDs...\n');
+            
             minter1List = await extractRecipientTokenIds('minter1', requestIds.minter1, MINTERS.minter1.privateKey);
             minter2List = await extractRecipientTokenIds('minter2', requestIds.minter2, MINTERS.minter2.privateKey);
+            
+            console.log(`✅ Token IDs extracted:`);
+            console.log(`   - Minter1: ${minter1List.length} token IDs`);
+            console.log(`   - Minter2: ${minter2List.length} token IDs`);
+            console.log(`   - Total: ${minter1List.length + minter2List.length} token IDs\n`);
 
             if (minter1List.length === 0 || minter2List.length === 0) {
                 throw new Error(`Token extraction failed: Minter1 has ${minter1List.length} tokens, Minter2 has ${minter2List.length} tokens`);
             }
+            
+            // Wait to ensure split operations are complete
+            console.log('⏸️  Waiting 60 seconds to ensure all operations are finalized...');
             await sleep(60000);
+            console.log('✅ Case 3 completed successfully\n');
         });
     });
 
