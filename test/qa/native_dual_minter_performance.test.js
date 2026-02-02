@@ -151,11 +151,11 @@ async function mintTokensForMinters(client, minters, number, amount) {
 
 
 
-describe('Native Dual Minter Split Performance Tests', function () {
+describe.only('Native Dual Minter Split Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 2
+    const total_number = 128
     const amount = 1000
     let minter1List, minter2List
 
@@ -850,7 +850,7 @@ describe('Native Dual Minter Transfer Performance Tests', function () {
     });
 });
 
-describe.only('Native Dual Minter Burn Performance Tests', function () {
+describe('Native Dual Minter Burn Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     const total_number = 128 //total_number *2 *128
