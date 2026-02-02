@@ -1213,7 +1213,7 @@ describe("Regression Native Token Tests", function () {
     });
 
     describe("Complete Workflow Scenarios", function () {
-        it("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
+        it.only("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
             console.log("\n🔄 TEST: Complete workflow with 1 token (Mint → Split → Transfer)");
             console.log("   Purpose: Verify end-to-end workflow with single token operations");
             console.log("   Expected: Successfully mint, split, and transfer 1 token through complete lifecycle\n");
@@ -1327,7 +1327,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
+        it("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
