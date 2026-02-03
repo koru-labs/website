@@ -5,7 +5,7 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
 // Native Token configuration for dev_L2
-const NATIVE_TOKEN_ADDRESS = "0x455413b11D8e2CDDd1443990349221590684A5f0";
+const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 
 // ABI for Native Token
@@ -1213,7 +1213,7 @@ describe("Regression Native Token Tests", function () {
     });
 
     describe("Complete Workflow Scenarios", function () {
-        it.only("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
+        it("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
             console.log("\n🔄 TEST: Complete workflow with 1 token (Mint → Split → Transfer)");
             console.log("   Purpose: Verify end-to-end workflow with single token operations");
             console.log("   Expected: Successfully mint, split, and transfer 1 token through complete lifecycle\n");
@@ -1327,7 +1327,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
+        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
@@ -1431,6 +1431,210 @@ describe("Regression Native Token Tests", function () {
             console.log(`   - Tokens per split: ${tokensPerSplit}`);
             // console.log(`   - Total recipient tokens: ${splitResults.recipientTokens.length}`);
             console.log(`   - Total tokens transferred: ${transferResults.success}`);
+        });
+    });
+
+    describe("Duplicate Operation Tests", function () {
+
+        it("should fail when transferring the same tokenId multiple times", async function () {
+            console.log("\n=== Test: Multiple transfers with same tokenId ===");
+            
+            // Create a new token via split for this test
+            console.log("Creating new token via split for transfer test...");
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: [
+                    { address: receiver1, amount: 10, comment: "transfer" }
+                ]
+            };
+
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000);
+
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+            const recipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+            const newTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+            }));
+
+            const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - recipients.length;
+
+            const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
+            await splitTx.wait();
+            
+            const tokenId = ethers.toBigInt(newTokens[1].id);
+            console.log("Token created via split, ID:", tokenId.toString());
+            await sleep(2000);
+
+            // First transfer should succeed
+            console.log("Attempting first transfer...");
+            const tx1 = await nativeContract.transfer(tokenId, "first-transfer");
+            const receipt1 = await tx1.wait();
+            expect(receipt1.status).to.equal(1);
+            console.log("✅ First transfer successful, tx:", tx1.hash);
+            await sleep(2000);
+
+            // Second transfer with same tokenId should fail
+            console.log("Attempting second transfer with same tokenId...");
+            try {
+                const tx2 = await nativeContract.transfer(tokenId, "second-transfer");
+                await tx2.wait();
+                console.log("❌ Second transfer unexpectedly succeeded");
+                expect.fail("Second transfer should have failed but succeeded");
+            } catch (error) {
+                console.log("✅ Second transfer failed as expected");
+                console.log("   Error:", error.message);
+                expect(error.message).to.exist;
+            }
+        });
+
+        it("should fail when burning the same tokenId multiple times", async function () {
+            console.log("\n=== Test: Multiple burns with same tokenId ===");
+            
+            // First, create a new token for this test
+            console.log("Creating new token for burn test...");
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: [
+                    { address: minter1Wallet.address, amount: 10, comment: "burn-test" }
+                ]
+            };
+
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000);
+
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+            const recipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+            const newTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+            }));
+
+            const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - recipients.length;
+
+            const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
+            await splitTx.wait();
+            
+            const burnTokenId = ethers.toBigInt(newTokens[1].id);
+            console.log("Token created for burn test, ID:", burnTokenId.toString());
+            await sleep(2000);
+
+            // First burn should succeed
+            console.log("Attempting first burn...");
+            const burnTx1 = await nativeContract.burn(burnTokenId);
+            const burnReceipt1 = await burnTx1.wait();
+            expect(burnReceipt1.status).to.equal(1);
+            console.log("✅ First burn successful, tx:", burnTx1.hash);
+            await sleep(2000);
+
+            // Second burn with same tokenId should fail
+            console.log("Attempting second burn with same tokenId...");
+            try {
+                const burnTx2 = await nativeContract.burn(burnTokenId);
+                await burnTx2.wait();
+                console.log("❌ Second burn unexpectedly succeeded");
+                expect.fail("Second burn should have failed but succeeded");
+            } catch (error) {
+                console.log("✅ Second burn failed as expected");
+                console.log("   Error:", error.message);
+                expect(error.message).to.exist;
+            }
+        });
+
+        it("should fail when burning a tokenId that was already transferred", async function () {
+            console.log("\n=== Test: Burn after transfer with same tokenId ===");
+            
+            // First, create a new token for this test
+            console.log("Creating new token for transfer-then-burn test...");
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: [
+                    { address: minter1Wallet.address, amount: 100, comment: "transfer-burn-test" }
+                ]
+            };
+
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000);
+
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+            const recipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+            const newTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+            }));
+
+            const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - recipients.length;
+
+            const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
+            await splitTx.wait();
+            
+            const testTokenId = ethers.toBigInt(newTokens[0].id);
+            console.log("Token created for transfer-burn test, ID:", testTokenId.toString());
+            await sleep(2000);
+
+            // First transfer the token
+            console.log("Attempting transfer...");
+            const transferTx = await nativeContract.transfer(testTokenId, "transfer-before-burn");
+            const transferReceipt = await transferTx.wait();
+            expect(transferReceipt.status).to.equal(1);
+            console.log("✅ Transfer successful, tx:", transferTx.hash);
+            await sleep(2000);
+
+            // Then try to burn the same tokenId - should fail
+            console.log("Attempting burn after transfer with same tokenId...");
+            try {
+                const burnTx = await nativeContract.burn(testTokenId);
+                await burnTx.wait();
+                console.log("❌ Burn after transfer unexpectedly succeeded");
+                expect.fail("Burn after transfer should have failed but succeeded");
+            } catch (error) {
+                console.log("✅ Burn after transfer failed as expected");
+                console.log("   Error:", error.message);
+                expect(error.message).to.exist;
+            }
         });
     });
 });
