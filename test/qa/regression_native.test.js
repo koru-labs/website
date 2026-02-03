@@ -1327,7 +1327,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
+        it("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
@@ -1434,7 +1434,7 @@ describe("Regression Native Token Tests", function () {
         });
     });
 
-    describe("Duplicate Operation Tests", function () {
+    describe.only("Conflict Operation Tests", function () {
 
         it("should fail when transferring the same tokenId multiple times", async function () {
             console.log("\n=== Test: Multiple transfers with same tokenId ===");
@@ -1580,7 +1580,7 @@ describe("Regression Native Token Tests", function () {
                 token_type: '0',
                 from_address: minter1Wallet.address,
                 to_accounts: [
-                    { address: minter1Wallet.address, amount: 100, comment: "transfer-burn-test" }
+                    { address: receiver1, amount: 10, comment: "transfer-burn-test" }
                 ]
             };
 
@@ -1611,7 +1611,7 @@ describe("Regression Native Token Tests", function () {
             const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
             await splitTx.wait();
             
-            const testTokenId = ethers.toBigInt(newTokens[0].id);
+            const testTokenId = ethers.toBigInt(newTokens[1].id);
             console.log("Token created for transfer-burn test, ID:", testTokenId.toString());
             await sleep(2000);
 
