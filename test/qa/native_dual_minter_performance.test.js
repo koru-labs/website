@@ -151,7 +151,7 @@ async function mintTokensForMinters(client, minters, number, amount) {
 
 
 
-describe.only('Native Dual Minter Split Performance Tests', function () {
+describe('Native Dual Minter Split Performance Tests', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
@@ -237,11 +237,11 @@ describe.only('Native Dual Minter Split Performance Tests', function () {
 });
 
 // New test case: Save split token IDs to JSON file, then read and execute transfer
-describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
     let client, owner, minter;
     let nativeOwner, nativeMinter;
     let mintedTokens = {};
-    const total_number = 2; // Number of tokens to test
+    const total_number = 128; // Number of tokens to test
     const amount = 10000;
     const jsonFilePath = './split_tokens.json';
     
