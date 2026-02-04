@@ -1327,7 +1327,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
+        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
@@ -1434,8 +1434,7 @@ describe("Regression Native Token Tests", function () {
         });
     });
 
-    describe.only("Conflict Operation Tests", function () {
-
+    describe("Conflict Operation Tests", function () {
         it("should fail when transferring the same tokenId multiple times", async function () {
             console.log("\n=== Test: Multiple transfers with same tokenId ===");
             
@@ -1502,7 +1501,6 @@ describe("Regression Native Token Tests", function () {
                 expect(error.message).to.exist;
             }
         });
-
         it("should fail when burning the same tokenId multiple times", async function () {
             console.log("\n=== Test: Multiple burns with same tokenId ===");
             
@@ -1569,7 +1567,6 @@ describe("Regression Native Token Tests", function () {
                 expect(error.message).to.exist;
             }
         });
-
         it("should fail when burning a tokenId that was already transferred", async function () {
             console.log("\n=== Test: Burn after transfer with same tokenId ===");
             
