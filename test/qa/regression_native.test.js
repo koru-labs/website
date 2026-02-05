@@ -5,184 +5,12 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 
 // Native Token configuration for dev_L2
-const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
+const NATIVE_TOKEN_ADDRESS = "0x0b75c49c1CB0A11f8ffa018770c104d7FfD4c4d6";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 
 // ABI for Native Token
-const NATIVE_ABI = [
-    {
-        "inputs": [
-            { "internalType": "address[]", "name": "recipients", "type": "address[]" },
-            {
-                "components": [
-                    { "internalType": "uint256", "name": "id", "type": "uint256" },
-                    { "internalType": "address", "name": "owner", "type": "address" },
-                    { "internalType": "uint8", "name": "status", "type": "uint8" },
-                    {
-                        "components": [
-                            { "internalType": "uint256", "name": "cl_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cl_y", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_y", "type": "uint256" }
-                        ],
-                        "internalType": "struct TokenModel.ElGamal",
-                        "name": "amount",
-                        "type": "tuple"
-                    },
-                    { "internalType": "address", "name": "to", "type": "address" },
-                    { "internalType": "uint256", "name": "rollbackTokenId", "type": "uint256" }
-                ],
-                "internalType": "struct TokenModel.TokenEntity[]",
-                "name": "tokens",
-                "type": "tuple[]"
-            },
-            {
-                "components": [
-                    { "internalType": "uint256", "name": "id", "type": "uint256" },
-                    {
-                        "components": [
-                            { "internalType": "uint256", "name": "cl_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cl_y", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_y", "type": "uint256" }
-                        ],
-                        "internalType": "struct TokenModel.ElGamal",
-                        "name": "value",
-                        "type": "tuple"
-                    }
-                ],
-                "internalType": "struct TokenModel.ElGamalToken",
-                "name": "newAllowed",
-                "type": "tuple"
-            },
-            { "internalType": "uint256[8]", "name": "proof", "type": "uint256[8]" },
-            { "internalType": "uint256[]", "name": "publicInputs", "type": "uint256[]" },
-            { "internalType": "uint256", "name": "PaddingNum", "type": "uint256" }
-        ],
-        "name": "mint",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "address", "name": "from", "type": "address" },
-            { "internalType": "address[]", "name": "recipients", "type": "address[]" },
-            { "internalType": "uint256[]", "name": "consumedIds", "type": "uint256[]" },
-            {
-                "components": [
-                    { "internalType": "uint256", "name": "id", "type": "uint256" },
-                    { "internalType": "address", "name": "owner", "type": "address" },
-                    { "internalType": "uint8", "name": "status", "type": "uint8" },
-                    {
-                        "components": [
-                            { "internalType": "uint256", "name": "cl_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cl_y", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_y", "type": "uint256" }
-                        ],
-                        "internalType": "struct TokenModel.ElGamal",
-                        "name": "amount",
-                        "type": "tuple"
-                    },
-                    { "internalType": "address", "name": "to", "type": "address" },
-                    { "internalType": "uint256", "name": "rollbackTokenId", "type": "uint256" }
-                ],
-                "internalType": "struct TokenModel.TokenEntity[]",
-                "name": "newTokens",
-                "type": "tuple[]"
-            },
-            { "internalType": "uint256[8]", "name": "proof", "type": "uint256[8]" },
-            { "internalType": "uint256[]", "name": "publicInputs", "type": "uint256[]" },
-            { "internalType": "uint256", "name": "PaddingNum", "type": "uint256" }
-        ],
-        "name": "split",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
-            { "internalType": "string", "name": "memo", "type": "string" }
-        ],
-        "name": "transfer",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "address", "name": "minter", "type": "address" },
-            {
-                "components": [
-                    { "internalType": "uint256", "name": "id", "type": "uint256" },
-                    {
-                        "components": [
-                            { "internalType": "uint256", "name": "cl_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cl_y", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_y", "type": "uint256" }
-                        ],
-                        "internalType": "struct TokenModel.ElGamal",
-                        "name": "value",
-                        "type": "tuple"
-                    }
-                ],
-                "internalType": "struct TokenModel.ElGamalToken",
-                "name": "allowed",
-                "type": "tuple"
-            }
-        ],
-        "name": "setMintAllowed",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "address", "name": "owner", "type": "address" },
-            { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
-        ],
-        "name": "getToken",
-        "outputs": [
-            {
-                "components": [
-                    { "internalType": "uint256", "name": "id", "type": "uint256" },
-                    { "internalType": "address", "name": "owner", "type": "address" },
-                    { "internalType": "uint8", "name": "status", "type": "uint8" },
-                    {
-                        "components": [
-                            { "internalType": "uint256", "name": "cl_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cl_y", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_x", "type": "uint256" },
-                            { "internalType": "uint256", "name": "cr_y", "type": "uint256" }
-                        ],
-                        "internalType": "struct TokenModel.ElGamal",
-                        "name": "amount",
-                        "type": "tuple"
-                    },
-                    { "internalType": "address", "name": "to", "type": "address" },
-                    { "internalType": "uint256", "name": "rollbackTokenId", "type": "uint256" }
-                ],
-                "internalType": "struct TokenModel.TokenEntity",
-                "name": "",
-                "type": "tuple"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
-        ],
-        "name": "burn",
-        "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
+const NATIVE_ABI =[{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"burn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256[]","name":"tokenIds","type":"uint256[]"}],"name":"checkTokenIds","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"getToken","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"enum TokenModel.TokenStatus","name":"status","type":"uint8"},{"components":[{"internalType":"uint256","name":"cl_x","type":"uint256"},{"internalType":"uint256","name":"cl_y","type":"uint256"},{"internalType":"uint256","name":"cr_x","type":"uint256"},{"internalType":"uint256","name":"cr_y","type":"uint256"}],"internalType":"struct TokenModel.ElGamal","name":"amount","type":"tuple"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"rollbackTokenId","type":"uint256"}],"internalType":"struct TokenModel.TokenEntity","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"recipients","type":"address[]"},{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"enum TokenModel.TokenStatus","name":"status","type":"uint8"},{"components":[{"internalType":"uint256","name":"cl_x","type":"uint256"},{"internalType":"uint256","name":"cl_y","type":"uint256"},{"internalType":"uint256","name":"cr_x","type":"uint256"},{"internalType":"uint256","name":"cr_y","type":"uint256"}],"internalType":"struct TokenModel.ElGamal","name":"amount","type":"tuple"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"rollbackTokenId","type":"uint256"}],"internalType":"struct TokenModel.TokenEntity[]","name":"tokens","type":"tuple[]"},{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"components":[{"internalType":"uint256","name":"cl_x","type":"uint256"},{"internalType":"uint256","name":"cl_y","type":"uint256"},{"internalType":"uint256","name":"cr_x","type":"uint256"},{"internalType":"uint256","name":"cr_y","type":"uint256"}],"internalType":"struct TokenModel.ElGamal","name":"value","type":"tuple"}],"internalType":"struct TokenModel.ElGamalToken","name":"newAllowed","type":"tuple"},{"internalType":"uint256[8]","name":"proof","type":"uint256[8]"},{"internalType":"uint256[]","name":"publicInputs","type":"uint256[]"},{"internalType":"uint256","name":"paddingNum","type":"uint256"}],"name":"mint","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"minter","type":"address"},{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"components":[{"internalType":"uint256","name":"cl_x","type":"uint256"},{"internalType":"uint256","name":"cl_y","type":"uint256"},{"internalType":"uint256","name":"cr_x","type":"uint256"},{"internalType":"uint256","name":"cr_y","type":"uint256"}],"internalType":"struct TokenModel.ElGamal","name":"value","type":"tuple"}],"internalType":"struct TokenModel.ElGamalToken","name":"allowed","type":"tuple"}],"name":"setMintAllowed","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address[]","name":"recipients","type":"address[]"},{"internalType":"uint256[]","name":"consumedIds","type":"uint256[]"},{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"enum TokenModel.TokenStatus","name":"status","type":"uint8"},{"components":[{"internalType":"uint256","name":"cl_x","type":"uint256"},{"internalType":"uint256","name":"cl_y","type":"uint256"},{"internalType":"uint256","name":"cr_x","type":"uint256"},{"internalType":"uint256","name":"cr_y","type":"uint256"}],"internalType":"struct TokenModel.ElGamal","name":"amount","type":"tuple"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"rollbackTokenId","type":"uint256"}],"internalType":"struct TokenModel.TokenEntity[]","name":"newTokens","type":"tuple[]"},{"internalType":"uint256[8]","name":"proof","type":"uint256[8]"},{"internalType":"uint256[]","name":"publicInputs","type":"uint256[]"},{"internalType":"uint256","name":"paddingNum","type":"uint256"}],"name":"split","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"string","name":"memo","type":"string"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
+
 
 // Helper functions
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
@@ -277,7 +105,7 @@ async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, 
                         cr_y: ethers.toBigInt(account.cr_y)
                     },
                     to: idx % 2 === 0 ? minterWallet.address : response.to_addresses[Math.floor(idx / 2)],
-                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1]?.token_id
+                    rollbackTokenId: idx % 2 === 0 ? 0 : response.newTokens[idx + 1].token_id
                 })),
                 proof: response.proof.map(p => ethers.toBigInt(p)),
                 publicInputs: response.public_input.map(i => ethers.toBigInt(i)),
@@ -542,7 +370,7 @@ describe("Regression Native Token Tests", function () {
         });
     });
 
-    describe("Mint Function", function () {
+    describe.only("Mint Function", function () {
         it("should mint multiple tokens in batch", async function () {
             // Mint multiple tokens at once - following performance script pattern
             const numberOfTokens = 10;
@@ -672,7 +500,7 @@ describe("Regression Native Token Tests", function () {
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
                 // 修正rollbackTokenId的逻辑，使其与performance test一致
-                rollbackTokenId: idx % 2 === 0 ? 0 : (idx + 1 < detailResponse.newTokens.length ? detailResponse.newTokens[idx + 1]?.token_id : 0)
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
             }));
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
             const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
@@ -745,7 +573,8 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : (idx + 1 < detailResponse.newTokens.length ? detailResponse.newTokens[idx + 1]?.token_id : 0)
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
+
             }));
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
             const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
@@ -787,7 +616,6 @@ describe("Regression Native Token Tests", function () {
             // await executeSplit(128);
         });
     });
-
     describe("Split Edge Cases", function () {
         // 辅助函数：mint特定金额的token
         const mintSpecificToken = async (amount) => {
@@ -878,7 +706,7 @@ describe("Regression Native Token Tests", function () {
                 },
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -998,7 +826,8 @@ describe("Regression Native Token Tests", function () {
                 },
                 // Follow the logic from performance test for 'to' and 'rollbackTokenId'
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
+
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -1040,178 +869,6 @@ describe("Regression Native Token Tests", function () {
             await sleep(2000)
         });
     });
-    describe("GetToken Query During Token Lifecycle", function () {
-        let testTokenId;
-        let originalOwner;
-
-        it("should track token status through split, transfer, and burn stages", async function () {
-            originalOwner = minter1Wallet.address;
-
-            // Skip mint phase and use existing tokens
-
-            // Phase 1: Split the token and check status
-            console.log("\n=== Phase 1: Split Token Status ===");
-            const splitRequests = {
-                sc_address: NATIVE_TOKEN_ADDRESS,
-                token_type: '0',
-                from_address: originalOwner,
-                to_accounts: [
-                    { address: receiver1, amount: 10, comment: "split-test" }
-                ]
-            };
-
-            console.log("Generating split proof...");
-            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
-            await sleep(2000);
-
-            console.log("Getting split detail...");
-            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
-
-            const splitRecipients = detailResponse.to_addresses;
-            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
-            const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
-                id: account.token_id,
-                owner: originalOwner,
-                status: 2,
-                amount: {
-                    cl_x: ethers.toBigInt(account.cl_x),
-                    cl_y: ethers.toBigInt(account.cl_y),
-                    cr_x: ethers.toBigInt(account.cr_x),
-                    cr_y: ethers.toBigInt(account.cr_y)
-                },
-                to: idx % 2 === 0 ? originalOwner : splitRecipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
-            }));
-
-            const splitProof = detailResponse.proof.map(p => ethers.toBigInt(p));
-            const splitPublicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
-            const paddingNum = detailResponse.batched_size - splitRecipients.length;
-
-            console.log("Executing split transaction...");
-            const splitTx = await nativeContract.split(originalOwner, splitRecipients, consumedIds, splitNewTokens, splitProof, splitPublicInputs, paddingNum);
-            await splitTx.wait();
-
-            // Get the new token ID from split (take the first transfer token)
-            const splitTokenId = ethers.toBigInt(splitNewTokens[1].id);
-            console.log("Split created new token ID:", splitTokenId.toString());
-
-            // Try to get the token with original owner first (split might not change ownership immediately)
-            try {
-                tokenStatus = await nativeContract.getToken(originalOwner, splitTokenId);
-                console.log("  Status after split:");
-                console.log("    - Token ID:", tokenStatus.id.toString());
-                console.log("    - Owner:", tokenStatus.owner);
-                console.log("    - Status code:", tokenStatus.status);
-                expect(tokenStatus.owner).to.equal(originalOwner);
-                expect(tokenStatus.status).to.equal(2);
-            } catch (error) {
-                console.error("  Error getting split token:", error.message);
-                // Try with receiver1 as fallback
-                try {
-                    tokenStatus = await nativeContract.getToken(receiver1, splitTokenId);
-                    console.log("  Status after split (fallback to receiver1):");
-                    console.log("    - Token ID:", tokenStatus.id.toString());
-                    console.log("    - Owner:", tokenStatus.owner);
-                    console.log("    - Status code:", tokenStatus.status);
-                } catch (fallbackError) {
-                    console.error("  Fallback error getting split token:", fallbackError.message);
-                    // Continue with test even if we can't get token status
-                }
-            }
-
-            // Phase 2: Transfer the token and check status
-            console.log("\n=== Phase 2: Transferred Token Status ===");
-
-            console.log("Executing transfer transaction...");
-            // Use direct contract call which handles nonces automatically
-            const transferTx = await nativeContract.transfer(splitTokenId, "lifecycle-test-transfer");
-            const transferReceipt = await transferTx.wait();
-            console.log("  Transfer transaction completed successfully");
-            await sleep(2000);
-
-            // Try to get token status after transfer
-            try {
-                tokenStatus = await nativeContract.getToken(receiver1, splitTokenId);
-                console.log("  Status And owner after transfer:");
-                console.log("    - Token ID:", tokenStatus.id.toString());
-                console.log("    - Owner:", tokenStatus.owner);
-                console.log("    - Status code:", tokenStatus.status);
-                expect(tokenStatus.owner).to.equal(receiver1);
-                expect(tokenStatus.status).to.equal(2);
-            } catch (error) {
-                console.error("  Error getting transferred token status:", error.message);
-            }
-
-            // Phase 3: Split a new token specifically for burning
-            console.log("\n=== Phase 3: Split New Token for Burning ===");
-            const burnSplitRequests = {
-                sc_address: NATIVE_TOKEN_ADDRESS,
-                token_type: '0',
-                from_address: originalOwner,
-                to_accounts: [
-                    { address: originalOwner, amount: 5, comment: "burn-split-test" }
-                ]
-            };
-
-            console.log("Generating split proof for burn test...");
-            const burnSplitProofResponse = await client.generateBatchSplitToken(burnSplitRequests, minter1Metadata);
-            await sleep(2000);
-
-            console.log("Getting split detail for burn test...");
-            const burnDetailResponse = await client.getBatchSplitTokenDetail({ request_id: burnSplitProofResponse.request_id }, minter1Metadata);
-
-            const burnSplitRecipients = burnDetailResponse.to_addresses;
-            const burnConsumedIds = burnDetailResponse.consumedIds.map(ids => ids.token_id);
-            const burnSplitNewTokens = burnDetailResponse.newTokens.map((account, idx) => ({
-                id: account.token_id,
-                owner: originalOwner,
-                status: 2,
-                amount: {
-                    cl_x: ethers.toBigInt(account.cl_x),
-                    cl_y: ethers.toBigInt(account.cl_y),
-                    cr_x: ethers.toBigInt(account.cr_x),
-                    cr_y: ethers.toBigInt(account.cr_y)
-                },
-                to: idx % 2 === 0 ? originalOwner : burnSplitRecipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : burnDetailResponse.newTokens[idx + 1]?.token_id
-            }));
-
-            const burnSplitProof = burnDetailResponse.proof.map(p => ethers.toBigInt(p));
-            const burnSplitPublicInputs = burnDetailResponse.public_input.map(i => ethers.toBigInt(i));
-            const burnSplitPaddingNum = burnDetailResponse.batched_size - burnSplitRecipients.length;
-
-            console.log("Executing split transaction for burn test...");
-            const burnSplitTx = await nativeContract.split(originalOwner, burnSplitRecipients, burnConsumedIds, burnSplitNewTokens, burnSplitProof, burnSplitPublicInputs, burnSplitPaddingNum);
-            await burnSplitTx.wait();
-
-            // Get the new token ID from split for burning
-            const tokenIdForBurn = ethers.toBigInt(burnSplitNewTokens[1].id);
-            console.log("Split created new token ID for burning:", tokenIdForBurn.toString());
-
-            // Phase 4: Burn the newly split token and check status
-            console.log("\n=== Phase 4: Burned Token Status ===");
-
-            console.log("Executing burn transaction...");
-            // Use direct contract call for burn which handles nonces automatically
-            const burnTx = await nativeContract.burn(tokenIdForBurn);
-            await burnTx.wait();
-            console.log("  Burn transaction completed successfully");
-
-            try {
-                tokenStatus = await nativeContract.getToken(originalOwner, tokenIdForBurn);
-                console.log("  Status after burn:");
-                console.log("    - Token ID:", tokenStatus.id.toString());
-                console.log("    - Owner:", tokenStatus.owner);
-                console.log("    - Status code:", tokenStatus.status);
-            } catch (error) {
-                console.log("  Expected error after burn: Token may no longer exist or status changed");
-                console.log("  Error message:", error.message);
-            }
-
-            console.log("\n✅ Token lifecycle status tracking completed successfully!");
-        });
-    });
-
     describe("Complete Workflow Scenarios", function () {
         it("should complete workflow: mint 1 token -> split 1 token -> transfer 1 token", async function () {
             console.log("\n🔄 TEST: Complete workflow with 1 token (Mint → Split → Transfer)");
@@ -1302,7 +959,8 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? minter1Wallet.address : splitRecipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : (idx + 1 < detailResponse.newTokens.length ? detailResponse.newTokens[idx + 1]?.token_id : 0)
+                rollbackTokenId:  idx % 2 === 0 ? 0 : response.newTokens[idx+1].token_id
+
             }));
 
             const splitProof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -1327,7 +985,7 @@ describe("Regression Native Token Tests", function () {
             console.log("\n✅ Complete workflow with 1 token finished successfully!");
         });
 
-        it.only("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
+        it("should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)", async function () {
             this.timeout(3600000); // 1 hour timeout for large batch operations
             
             console.log("\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens");
@@ -1433,7 +1091,6 @@ describe("Regression Native Token Tests", function () {
             console.log(`   - Total tokens transferred: ${transferResults.success}`);
         });
     });
-
     describe("Conflict Operation Tests", function () {
         it("should fail when transferring the same tokenId multiple times", async function () {
             console.log("\n=== Test: Multiple transfers with same tokenId ===");
@@ -1466,7 +1123,7 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -1532,7 +1189,7 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -1598,7 +1255,7 @@ describe("Regression Native Token Tests", function () {
                     cr_y: ethers.toBigInt(account.cr_y)
                 },
                 to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
-                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1]?.token_id
+                rollbackTokenId:  idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
             }));
 
             const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
@@ -1632,6 +1289,222 @@ describe("Regression Native Token Tests", function () {
                 console.log("   Error:", error.message);
                 expect(error.message).to.exist;
             }
+        });
+    });
+    describe.only("Query Functions Tests (getToken and checkTokenIds)", function () {
+        let testTokenIds = [];
+
+        before(async function () {
+            // Create 128 tokens via split for testing query functions (64 recipients = 128 tokens)
+            console.log("Setting up 128 test tokens for query function tests...");
+            const to_accounts = [];
+            // Create 64 recipients, which will produce 128 tokens (64 change + 64 recipient)
+            for (let i = 0; i < 64; i++) {
+                to_accounts.push(
+                    { address: accounts.To1, amount: 10, comment: `query-test-${i}` },
+                    { address: accounts.To2, amount: 20, comment: `query-test-${i}`}
+                );
+            }
+
+            const splitRequests = {
+                sc_address: NATIVE_TOKEN_ADDRESS,
+                token_type: '0',
+                from_address: minter1Wallet.address,
+                to_accounts: to_accounts
+            };
+
+            console.log("Generating split proof for 128 tokens...");
+            const splitProofResponse = await client.generateBatchSplitToken(splitRequests, minter1Metadata);
+            await sleep(2000);
+
+            console.log("Getting split detail...");
+            const detailResponse = await client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minter1Metadata);
+            const recipients = detailResponse.to_addresses;
+            const consumedIds = detailResponse.consumedIds.map(ids => ids.token_id);
+            const newTokens = detailResponse.newTokens.map((account, idx) => ({
+                id: account.token_id,
+                owner: minter1Wallet.address,
+                status: 2,
+                amount: {
+                    cl_x: ethers.toBigInt(account.cl_x),
+                    cl_y: ethers.toBigInt(account.cl_y),
+                    cr_x: ethers.toBigInt(account.cr_x),
+                    cr_y: ethers.toBigInt(account.cr_y)
+                },
+                to: idx % 2 === 0 ? minter1Wallet.address : recipients[Math.floor(idx / 2)],
+                rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx+1].token_id
+            }));
+
+            const proof = detailResponse.proof.map(p => ethers.toBigInt(p));
+            const publicInputs = detailResponse.public_input.map(i => ethers.toBigInt(i));
+            const paddingNum = detailResponse.batched_size - recipients.length;
+
+            console.log("Executing split transaction...");
+            const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
+            await splitTx.wait();
+            
+            // Collect all token IDs (both change tokens and recipient tokens)
+            testTokenIds = newTokens.map(token => ethers.toBigInt(token.id));
+            console.log(`✅ Created ${testTokenIds.length} test tokens`);
+            console.log(`First 5 token IDs: ${testTokenIds.slice(0, 5).map(id => id.toString()).join(', ')}...`);
+            await sleep(2000);
+        });
+
+        it("should query single token using getToken", async function () {
+            console.log("\n=== Test: Query single token with getToken ===");
+            
+            const tokenId = testTokenIds[0];
+            console.log(`Querying token with ID: ${tokenId.toString()}`);
+
+            const tokenInfo = await nativeContract.getToken(minter1Wallet.address, tokenId);
+            
+            console.log("Token information retrieved:");
+            console.log("  - Token ID:", tokenInfo.id.toString());
+            console.log("  - Owner:", tokenInfo.owner);
+            console.log("  - Status:", tokenInfo.status);
+            console.log("  - To:", tokenInfo.to);
+            console.log("  - Rollback Token ID:", tokenInfo.rollbackTokenId.toString());
+            console.log("  - Amount (cl_x):", tokenInfo.amount.cl_x.toString());
+            console.log("  - Amount (cl_y):", tokenInfo.amount.cl_y.toString());
+            console.log("  - Amount (cr_x):", tokenInfo.amount.cr_x.toString());
+            console.log("  - Amount (cr_y):", tokenInfo.amount.cr_y.toString());
+
+            // Verify token information
+            expect(tokenInfo.id).to.equal(tokenId);
+            expect(tokenInfo.owner).to.equal(minter1Wallet.address);
+            expect(tokenInfo.status).to.equal(2); // Status 2 = Active/Valid
+
+            console.log("✅ getToken query successful");
+        });
+
+        it("should return empty array for all valid tokens using checkTokenIds (happy case)", async function () {
+            console.log("\n=== Test: Query 128 valid tokens with checkTokenIds (happy case) ===");
+            
+            console.log(`Querying ${testTokenIds.length} valid token IDs...`);
+            console.log(`First 5 token IDs: ${testTokenIds.slice(0, 5).map(id => id.toString()).join(', ')}...`);
+
+            const invalidTokenIds = await nativeContract.checkTokenIds(minter1Wallet.address, testTokenIds);
+            
+            console.log(`\ncheckTokenIds returned ${invalidTokenIds.length} invalid token IDs`);
+            if (invalidTokenIds.length > 0) {
+                console.log("Invalid token IDs:", invalidTokenIds.map(id => id.toString()).join(', '));
+            }
+
+            // Verify all tokens are valid (checkTokenIds should return empty array)
+            expect(invalidTokenIds.length).to.equal(0);
+
+            console.log("✅ checkTokenIds returned empty array - all 128 tokens are valid");
+        });
+
+        it("should return all non-existent tokenIds using checkTokenIds", async function () {
+            console.log("\n=== Test: Query non-existent tokens with checkTokenIds ===");
+            
+            // Create fake token IDs that don't exist
+            const fakeTokenIds = [
+                ethers.toBigInt("999999999999999999999999999999"),
+                ethers.toBigInt("888888888888888888888888888888"),
+                ethers.toBigInt("777777777777777777777777777777")
+            ];
+
+            console.log("Querying non-existent token IDs:", fakeTokenIds.map(id => id.toString()).join(', '));
+
+            const invalidTokenIds = await nativeContract.checkTokenIds(minter1Wallet.address, fakeTokenIds);
+            
+            console.log(`\ncheckTokenIds returned ${invalidTokenIds.length} invalid token IDs:`);
+            invalidTokenIds.forEach((id, index) => {
+                console.log(`  [${index}] ${id.toString()}`);
+            });
+
+            // Verify all fake tokens are returned as invalid
+            expect(invalidTokenIds.length).to.equal(fakeTokenIds.length);
+            
+            // Verify each returned ID matches the input fake IDs
+            for (let i = 0; i < fakeTokenIds.length; i++) {
+                expect(invalidTokenIds[i]).to.equal(fakeTokenIds[i]);
+            }
+
+            console.log("✅ checkTokenIds correctly returned all non-existent tokens");
+        });
+
+        it("should return only invalid tokenIds from mixed input using checkTokenIds", async function () {
+            console.log("\n=== Test: Query mix of valid and invalid tokens with checkTokenIds ===");
+            
+            // Mix real tokens with fake ones
+            const mixedTokenIds = [
+                testTokenIds[0], // valid
+                ethers.toBigInt("999999999999999999999999999999"), // invalid
+                testTokenIds[1], // valid
+                ethers.toBigInt("888888888888888888888888888888"), // invalid
+                testTokenIds[2], // valid
+                ethers.toBigInt("777777777777777777777777777777") // invalid
+            ];
+
+            const expectedInvalidIds = [
+                ethers.toBigInt("999999999999999999999999999999"),
+                ethers.toBigInt("888888888888888888888888888888"),
+                ethers.toBigInt("777777777777777777777777777777")
+            ];
+
+            console.log(`Querying ${mixedTokenIds.length} mixed token IDs...`);
+            mixedTokenIds.forEach((id, index) => {
+                const isValid = testTokenIds.some(validId => validId.toString() === id.toString());
+                console.log(`  [${index}] ${id.toString()} - ${isValid ? 'VALID' : 'INVALID'}`);
+            });
+
+            const invalidTokenIds = await nativeContract.checkTokenIds(minter1Wallet.address, mixedTokenIds);
+            
+            console.log(`\ncheckTokenIds returned ${invalidTokenIds.length} invalid token IDs:`);
+            invalidTokenIds.forEach((id, index) => {
+                console.log(`  [${index}] ${id.toString()}`);
+            });
+
+            // Verify only invalid tokens are returned
+            expect(invalidTokenIds.length).to.equal(expectedInvalidIds.length);
+
+            // Verify all returned IDs are the fake/invalid ones
+            for (let i = 0; i < expectedInvalidIds.length; i++) {
+                expect(invalidTokenIds[i]).to.equal(expectedInvalidIds[i]);
+            }
+
+            console.log("✅ checkTokenIds correctly returned only invalid tokens from mixed input");
+        });
+
+        it("should query token after transfer using getToken", async function () {
+            console.log("\n=== Test: Query token after transfer with getToken ===");
+            
+            // Use a recipient token (odd index) for transfer, not a change token
+            // In split operation: even indices are change tokens, odd indices are recipient tokens
+            const tokenId = testTokenIds[1]; // Use second token (index 1, which is a recipient token)
+            console.log(`Token ID before transfer: ${tokenId.toString()}`);
+
+            // Query token before transfer
+            const tokenBeforeTransfer = await nativeContract.getToken(minter1Wallet.address, tokenId);
+            console.log("Token status before transfer:", tokenBeforeTransfer.status);
+            console.log("Token 'to' field:", tokenBeforeTransfer.to);
+            expect(tokenBeforeTransfer.status).to.equal(2);
+
+            // Transfer the token
+            console.log("Transferring token...");
+            const transferTx = await nativeContract.transfer(tokenId, "query-after-transfer-test");
+            await transferTx.wait();
+            console.log("✅ Transfer successful, tx:", transferTx.hash);
+            await sleep(2000);
+
+            // Query token after transfer - should now belong to receiver
+            console.log(`Querying token after transfer with receiver address: ${receiver1}`);
+            const tokenAfterTransfer = await nativeContract.getToken(receiver1, tokenId);
+            
+            console.log("Token information after transfer:");
+            console.log("  - Token ID:", tokenAfterTransfer.id.toString());
+            console.log("  - Owner:", tokenAfterTransfer.owner);
+            console.log("  - Status:", tokenAfterTransfer.status);
+
+            // Verify token now belongs to receiver
+            expect(tokenAfterTransfer.id).to.equal(tokenId);
+            expect(tokenAfterTransfer.owner).to.equal(receiver1);
+            expect(tokenAfterTransfer.status).to.equal(2);
+
+            console.log("✅ getToken successfully queried token after transfer");
         });
     });
 });
