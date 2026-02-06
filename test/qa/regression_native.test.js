@@ -35,7 +35,7 @@ describe("Regression Native Token Tests", function () {
     });
 
     describe("Setup", function () {
-        it.only("should set mint allowance for minter", async function () {
+        it("should set mint allowance for minter", async function () {
             // Setup mint allowance using helper function
             const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
             const ownerNative = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, ownerWallet);
