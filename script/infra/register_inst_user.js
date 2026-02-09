@@ -79,7 +79,7 @@ async function registerInstitutionAndUser() {
 
                 //JS call contract to register user
                 // const wallet = new ethers.Wallet(institutions[i].ethPrivateKey, ethers.provider);
-                // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry",     const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS, wallet);
+                // const institutionUserRegistry = await ethers.getContractAt("InstitutionUserRegistry", Fixed_Addresses.ADDRESSES.PROXY_ADDRESS, wallet);
                 // try {
                 //     let regTx = await institutionUserRegistry.registerUser(address);
                 //     await regTx.wait();

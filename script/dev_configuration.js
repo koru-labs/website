@@ -1,9 +1,9 @@
 module.exports = {
     "ADDRESSES": {
         // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-        "HAMSAL2EVENT_IMPLEMENTATION": "0xA8c005cf57D52aBE56FD910A8352b9AE2D27CAEf",
+        "HAMSAL2EVENT_IMPLEMENTATION": "0x8CA2cB0045f6bde5F3E321941855B81849880dbe",
         // Hamsa L2 event proxy address on target network
-        "HAMSAL2EVENT_PROXY": "0x3f79bf69182120146D7a661Dd72d527ca1FcF720",
+        "HAMSAL2EVENT_PROXY": "0xC8cBf813b4e1D4F5563C4DC15AC56f238EEAcB3C",
         // Optional alternate implementation for A/B rollout
         "HAMSAL2EVENT_IMPLEMENTATION_B": "",
         // Percentage of traffic delegated to implementation B (0 - 100)
@@ -13,9 +13,9 @@ module.exports = {
         // L1 blob commitment verification contract address
         "L1_BLOB_COMMITMENT_VERIFY": "0xB802f0099285447E0C4c945c808fEC53dF6dB800",
         // Institution registration contract address
-        "INSTITUTION_REGISTRATION": "0x343cA46ea40c96677BEc4CDA7a9A1a20DAaFB17B",
+        "INSTITUTION_REGISTRATION": "0x1b0854594EdFA67b046290631224dA71aBB2D734",
         // Proxy contract address for institution user operations
-        "PROXY_ADDRESS": "0x1E64309fa00aEC5cAa58616A98111272E2f7856b"
+        "PROXY_ADDRESS": "0x01721A145Dcd8764368DaCC18245D26F17d4F07A"
     },
     // Institution configurations
     institutions: [
@@ -34,11 +34,11 @@ module.exports = {
             email: "node3.admin@example.com",
             phoneNumber: "(555) 555-5555",
             // gRPC endpoint for Node3 RPC services
-            rpcUrl: "dev-node3-rpc.hamsa-ucl.com:50051",
+            rpcUrl: "dev2-node3-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node3
-            nodeUrl: "https://dev-node3-proxy.hamsa-ucl.com:8443",
+            nodeUrl: "https://dev2-node3-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node3 services
-            httpUrl: "http://dev-node3-http.hamsa-ucl.com:8080",
+            httpUrl: "http://dev2-node3-http.hamsa-ucl.com:8080",
             // curve public key coordinates for Node3 institution on L2 network
             publicKey: {
                 x: "14867489045451479287215256054831019265497990299815167173241037631264676460349",
@@ -76,9 +76,9 @@ module.exports = {
             // gRPC endpoint for Node4 RPC services
             rpcUrl: "dev-node4-rpc.hamsa-ucl.com:50051",
             // HTTPS proxy endpoint for Node4
-            nodeUrl: "https://dev-node4-proxy.hamsa-ucl.com:8443",
+            nodeUrl: "https://dev2-node4-proxy.hamsa-ucl.com:8443",
             // HTTP endpoint for Node4 services
-            httpUrl: "http://dev-node4-http.hamsa-ucl.com:8080",
+            httpUrl: "http://dev2-node4-http.hamsa-ucl.com:8080",
             // curve public key coordinates for Node4 institution on L2 network
             publicKey: {
                 x: "8574390421936722920607030428754779428069226223915541137170517779677810934009",
