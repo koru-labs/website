@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "./fq.sol";
 import "./fr.sol";
@@ -268,6 +268,7 @@ library HyperKZGEvaluationArgumentLib {
 
 
 library HyperKZGVerifierTestLib {
+    event DebugUint(uint);
 
     function verify(bytes calldata /*proof*/) external {
         uint ptr = 4 + 0x40;

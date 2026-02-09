@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 /* Performance metrics:
 {{ prove_verify_perf }}
@@ -8,6 +8,7 @@ pragma solidity ^0.8.19;
 //import "../sol/verifier.sol";
 //
 //contract TestCompressedSNARK_{{ name_suffix }} {
+//    event DebugUint(uint);
 //
 //    function testCompressedSNARK_{{ name_suffix }}() public {
 //        ZKProof memory proof;

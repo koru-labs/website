@@ -1,118 +1,83 @@
-# Solidity Compiler Version Downgrade
+# Solidity 版本降级文档
 
-## Issue
+## 背景
 
-**Severity**: CRITICAL  
-**Type**: BUG  
-**Source**: Ethernal audit Q1
+根据 Ethernal 审计报告 Q1，Solidity 编译器版本设置为 0.8.25，高于 polygon-edge EVM 支持的版本。
 
-### Problem
+从 Solidity v0.8.20 开始引入了 `PUSH0` 操作码，但 polygon-edge EVM 尚不支持此操作码。
 
-Solidity compiler version was set to 0.8.25 which is above the version supported by polygon-edge EVM.
+## 修改内容
 
-According to polygon-edge documentation:
+### 1. 版本号修改
 
-> **Solidity v0.8.19 or earlier recommended**
-> 
-> Solidity v0.8.20 introduces new features, including the implementation of `PUSH0` opcode, which is not yet supported in Edge. If you decide to use v0.8.20, ensure that you set your EVM version to "Paris" in the framework you use to deploy your contracts. For now, we recommend using Solidity v0.8.19 or earlier.
+将所有合约文件的 Solidity 版本从 `>=0.8.25` 或 `^0.8.20/0.8.24/0.8.25` 降级到 `^0.8.19`。
 
-## Solution
+修改的文件包括：
+- 所有 `contracts/` 目录下的 `.sol` 文件（共 26 个文件）
+- `hardhat.config.js` 中的编译器版本配置
 
-Downgraded all Solidity contracts from version 0.8.20+ to 0.8.19.
+### 2. 语法兼容性修改
 
-## Changes Made
+由于 Solidity 0.8.25 支持文件级别的事件声明，但 0.8.19 不支持，需要将文件级别的事件声明移到 contract/library 内部：
 
-### Files Modified
+- `contracts/ucl/circle/nova/sol/library.sol`: 将 `event DebugUint(uint);` 移到 `testLibrary` 合约内部
+- `contracts/ucl/circle/nova/sol/hyperkzg.sol`: 在 `HyperKZGVerifierTestLib` 库中添加 `event DebugUint(uint);`
+- `contracts/ucl/circle/nova/test/compressed_snark.t.sol`: 在 `TestCompressedSNARK` 合约中添加 `event DebugUint(uint);`
+- `contracts/ucl/circle/nova/test/generated/*.t.sol`: 在所有生成的测试合约中添加 `event DebugUint(uint);`
+- `contracts/ucl/circle/nova/templates/compressed_snark.t.askama.sol`: 更新模板文件
 
-**Total**: 22 files updated
+### 3. 编译器配置优化
 
-#### Files changed from `>=0.8.25` to `^0.8.19`:
-1. `ucl/circle/nova/test/generated/simple_verifier.sol`
-2. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit56718.t.sol`
-3. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit187790.t.sol`
-4. `ucl/circle/nova/test/generated/merkel_root_strorage.sol`
-5. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit0.t.sol`
-6. `ucl/circle/nova/test/compressed_snark.t.sol`
-7. `ucl/circle/nova/sol/polynomial.sol`
-8. `ucl/circle/nova/sol/transcript.sol`
-9. `ucl/circle/nova/sol/nifs.sol`
-10. `ucl/circle/nova/sol/fq.sol`
-11. `ucl/circle/nova/sol/fr.sol`
-12. `ucl/circle/nova/sol/verifier.sol`
-13. `ucl/circle/nova/sol/library.sol`
-14. `ucl/circle/nova/sol/sumcheck.sol`
-15. `ucl/circle/nova/sol/snark_sm.sol`
-16. `ucl/circle/nova/sol/error.sol`
-17. `ucl/circle/nova/sol/curve.sol`
-18. `ucl/circle/nova/sol/hyperkzg.sol`
-19. `ucl/circle/nova/sol/compressed.sol`
-20. `ucl/circle/nova/sol/r1cs.sol`
-21. `ucl/circle/nova/templates/compressed_snark.t.askama.sol`
+为了解决可能的"堆栈太深"问题，在 `hardhat.config.js` 中：
+- 将 `optimizer.runs` 从 200 增加到 800
+- 保持 `viaIR: true` 启用
 
-#### Files changed from `^0.8.25` to `^0.8.19`:
-22. `ucl/circle/nova/Simple.sol`
+## 已知问题
 
-#### Files changed from `^0.8.20` to `^0.8.19`:
-23. `native/INativeToken.sol`
-24. `test/TokenRegistryTemplate.sol`
+### 堆栈太深（Stack Too Deep）错误
 
-#### Files changed from `^0.8.24` to `^0.8.19`:
-25. `ucl/curves/Lock.sol`
+**问题描述**：
+编译时出现 `YulException: Variable expr_8956_mpos is 1 too deep in the stack` 错误。
 
-## Version Distribution After Changes
+**原因**：
+Solidity 0.8.19 的编译器优化策略与 0.8.25 不同，某些复杂的合约函数可能会超出 EVM 的堆栈深度限制（16个变量）。
 
-```
-106 files: ^0.8.0
- 25 files: ^0.8.19  (newly downgraded)
- 15 files: ^0.8.16
-  2 files: ^0.8.10
-```
+**可能的解决方案**：
+1. 重构出问题的合约函数，减少局部变量数量
+2. 将复杂函数拆分成多个小函数
+3. 使用 struct 来组合多个相关变量
+4. 调整编译器优化参数
 
-## Verification
+**当前状态**：
+需要定位具体是哪个合约文件导致的问题，然后进行针对性重构。
 
-All contracts now use Solidity version 0.8.19 or earlier, which is compatible with polygon-edge EVM.
+## 建议
 
-```bash
-# Verify no files use 0.8.20 or higher
-grep -r "pragma solidity" contracts --include="*.sol" | grep -E "0\.8\.(2[0-9]|[3-9][0-9])"
-# Should return no results
+如果堆栈太深的问题无法通过配置解决，建议：
+1. 使用 Solidity 0.8.20，并在 hardhat.config.js 中设置 `evmVersion: "paris"` 来避免使用 PUSH0 操作码
+2. 这样可以保持较新的编译器特性，同时兼容 polygon-edge EVM
+
+配置示例：
+```javascript
+solidity: {
+    version: '0.8.20',
+    settings: {
+        evmVersion: 'paris',  // 避免使用 PUSH0 操作码
+        optimizer: {
+            enabled: true,
+            runs: 200,
+        },
+        viaIR: true,
+    },
+}
 ```
 
-## Impact
+## 总结
 
-- ✅ All contracts are now compatible with polygon-edge EVM
-- ✅ No `PUSH0` opcode issues
-- ✅ Contracts can be deployed without setting EVM version to "Paris"
+已完成的修改：
+1. ✅ 所有合约文件版本号已更新到 0.8.19
+2. ✅ 文件级别事件声明已移到 contract/library 内部
+3. ✅ 编译器优化参数已调整
 
-## Testing Required
-
-After this change, please:
-
-1. Recompile all contracts
-2. Run full test suite
-3. Verify contract functionality
-4. Test deployment on polygon-edge testnet
-
-## Commands Used
-
-```bash
-# Replace >=0.8.25 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity >=0\.8\.25;/pragma solidity ^0.8.19;/g' {} \;
-
-# Replace ^0.8.25 with ^0.8.19
-sed -i '' 's/pragma solidity ^0\.8\.25;/pragma solidity ^0.8.19;/g' contracts/ucl/circle/nova/Simple.sol
-
-# Replace ^0.8.20 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity \^0\.8\.20;/pragma solidity ^0.8.19;/g' {} \;
-
-# Replace ^0.8.24 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity \^0\.8\.24;/pragma solidity ^0.8.19;/g' {} \;
-```
-
-## Date
-
-2026-02-08
-
-## Status
-
-✅ RESOLVED
+待解决的问题：
+1. ⚠️ 堆栈太深错误需要进一步调查和修复
