@@ -6,12 +6,14 @@ const accounts = require('./../../deployments/account.json');
 const grpc = require("@grpc/grpc-js");
 const {parseEventsFromReceipt} = require("../sun/native_token_event_test");
 
-const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-const native_token_address = "0x455413b11d8e2cddd1443990349221590684a5f0";
+const abi =  "[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"burn\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256[]\",\"name\":\"tokenIds\",\"type\":\"uint256[]\"}],\"name\":\"checkTokenIds\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"paddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"paddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+// const abi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getToken\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"tokens\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"newAllowed\",\"type\":\"tuple\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"minter\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct TokenModel.ElGamalToken\",\"name\":\"allowed\",\"type\":\"tuple\"}],\"name\":\"setMintAllowed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"recipients\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"consumedIds\",\"type\":\"uint256[]\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"enum TokenModel.TokenStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"cl_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cl_y\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cr_y\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.ElGamal\",\"name\":\"amount\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"rollbackTokenId\",\"type\":\"uint256\"}],\"internalType\":\"struct TokenModel.TokenEntity[]\",\"name\":\"newTokens\",\"type\":\"tuple[]\"},{\"internalType\":\"uint256[8]\",\"name\":\"proof\",\"type\":\"uint256[8]\"},{\"internalType\":\"uint256[]\",\"name\":\"publicInputs\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"PaddingNum\",\"type\":\"uint256\"}],\"name\":\"split\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"memo\",\"type\":\"string\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const native_token_address = "0x593b88fcbc02c960b70e8eee468d0d6ee7c6e64d";
 
 const fromAddress = accounts.Minter;
 // const rpcUrl = "localhost:50051";
 const rpcUrl = "dev2-node3-rpc.hamsa-ucl.com:50051";
+// const rpcUrl = "dev2-node1-rpc.hamsa-ucl.com:50051"
 const client = createClient(rpcUrl);
 
 async function createAuthMetadata(privateKey, messagePrefix = "login") {
@@ -38,6 +40,102 @@ async function testMint() {
     const metadata = await createAuthMetadata(accounts.MinterKey);
 
     const to_accounts = [
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
         { address: accounts.Minter,amount: 10000 },
         { address: accounts.Minter,amount: 10000 },
         { address: accounts.Minter,amount: 10000 },
@@ -124,6 +222,110 @@ async function testMint() {
     console.log(rc);
 }
 
+async function testMintWithKafka() {
+    const [signer,minter] = await ethers.getSigners();
+    const native = new ethers.Contract(
+        native_token_address,
+        abi,
+        minter
+    );
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+
+    const to_accounts = [
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+        { address: accounts.Minter,amount: 10000 },
+    ]
+    const generateRequest = {
+        sc_address: native_token_address,
+        token_type: '0',
+        from_address:accounts.Minter,
+        to_accounts: to_accounts,
+    };
+
+    console.log("Starting to generate mint proof...");
+    let response = await client.generateBatchMintProof(generateRequest, metadata);
+    console.log("response", response);
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+    const request = {
+        request_id : response.request_id,
+    }
+    response = await client.getBatchMintProof(request,metadata)
+
+    console.log("response:",response)
+    // 5 recipients
+    const recipients = [];
+    // 5 tokens (TokenEntity[])
+    const newTokens = [];
+    var fromAddress = response.from_address;
+    response.to_accounts.forEach((account, index) => {
+        newTokens.push( {
+            id: account.token.token_id,
+            owner: account.address,
+            status: 2,
+            amount: {
+                cl_x: account.token.cl_x,
+                cl_y: account.token.cl_y,
+                cr_x: account.token.cr_x,
+                cr_y: account.token.cr_y,
+            },
+            to: account.address,
+            rollbackTokenId: 0
+        });
+        recipients.push(account.address);
+    });
+    // newAllowed (ElGamalToken[]) - mint_allowed
+    const newAllowed =
+        {
+            id: response.mint_allowed.token_id,
+            value: {
+                cl_x: response.mint_allowed.cl_x,
+                cl_y: response.mint_allowed.cl_y,
+                cr_x: response.mint_allowed.cr_x,
+                cr_y: response.mint_allowed.cr_y,
+            }
+        };
+    const proof = response.proof.map(p => ethers.toBigInt(p));
+    const publicInputs = response.input.map(i => ethers.toBigInt(i));
+    const bathcedSize = response.batched_size
+    console.log("bathcedSize", bathcedSize);
+    let tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length);
+    console.log(tx);
+    console.log("wait for response of tx");
+    let rc = await tx.wait();
+    console.log(rc);
+}
+
 async function testBatchedSplit() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
@@ -132,6 +334,107 @@ async function testBatchedSplit() {
             {address: accounts.To1,amount: 1,comment:"1"},
             {address: accounts.To1,amount: 1,comment:"1"},
             {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"}, {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},{address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
+            // {address: accounts.To1,amount: 1,comment:"1"},
         ]
         const splitRequest = {
             sc_address:  native_token_address,
@@ -142,18 +445,19 @@ async function testBatchedSplit() {
 
         let response = await client.generateBatchSplitToken(splitRequest, metadata);
         console.log("response", response);
-        // await testSplit(response.request_id, accounts.Minter);
+        // await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+        await testSplit(response.request_id, accounts.Minter);
 
-        await testBatchSplitPerformance([response.request_id], accounts.Minter);
+        // await testBatchSplitPerformance([response.request_id], accounts.Minter);
         return response;
 
     } catch (error) {
-        console.error(`Direct burn test failed: ${error.message}`);
+        console.error(`failed: ${error.message}`);
         throw error;
     }
 }
 
-async function getTokenById(){
+async function getTokenById(tokens){
     const [signer, minter] = await ethers.getSigners();
     const native = new ethers.Contract(
         native_token_address,
@@ -162,20 +466,7 @@ async function getTokenById(){
     );
     console.log("signerAddress", minter.address);
 
-    let tokens = [
-        '10905053622205438689739027999115239912597380720811595399288006884145536738357',
-        '10519509999971084793225904706957460494464595230186142022875960696832366960974',
-        '10694312173746923066453951994784672039742994060051175911165582260494482344266',
-        '10370119094176972306172511240775284172383198153810103985037890508173601839935',
-        '10049302483018309625939913161922941530481695941028893449516103421063183339747',
-        '10153449980621794834163425791546919823573562666316006167153574672104660859273',
-        '10626152131601749046586119710884659090126679340587751025913694974121461310607',
-        '11160844704918862802166424862513886897069707870833504412559916051139162663752',
-        '10409712064253944818049590490462302516761126880291184107402043857187515119515',
-        '10079709895952366494606168140825840392494515171910722042296575614636148121033',
-        '10831027374570781184293989827384556639356664690744767266127336883817831331228',
-        '10369142022574585260067544463592989127236967895998189725124588655875427400407',
-    ];
+
 
     const results = {
         success: [],
@@ -224,10 +515,9 @@ async function testSplit(requestId,fromAddress) {
         request_id: requestId
     };
     let response = await client.getBatchSplitTokenDetail(splitRequest,metadata);
-    console.log("batched Split:", response);
     // Recipients (5 addresses for 5 transfer pairs)
     const recipients = response.to_addresses;
-
+    console.log(recipients)
     // Consumed token IDs
     const consumedIds = [];
     response.consumedIds.forEach((ids) => {
@@ -257,8 +547,7 @@ async function testSplit(requestId,fromAddress) {
 
     const proof = response.proof.map(p => ethers.toBigInt(p));
     const publicInputs = response.public_input.map(i => ethers.toBigInt(i));
-    console.log(fromAddress, recipients, consumedIds, newTokens, proof, publicInputs);
-    let tx = await native.split(fromAddress, recipients, consumedIds, newTokens, proof, publicInputs);
+    let tx = await native.split(fromAddress, recipients, consumedIds, newTokens, proof, publicInputs, response.batched_size- recipients.length );
     console.log(tx);
     console.log("wait for response of tx");
     let rc = await tx.wait();
@@ -275,11 +564,29 @@ async function testTransfer() {
         minter
     );
 
-    let tx = await native.transfer('18106704663288068145491098640877218307881382666044997452210139370058196822164',  "hello word");
+    let tx = await native.transfer('14835377400954059016902638591674512473253826824605355655988147055811208088773',  "hello word");
     console.log(tx);
     console.log("wait for response of tx");
     let rc = await tx.wait();
     console.log(rc);
+    await parseEventsFromReceipt(rc);
+}
+
+async function testBurn(id) {
+    const [signer, minter] = await ethers.getSigners();
+
+    const native = new ethers.Contract(
+        native_token_address,
+        abi,
+        minter
+    );
+
+    let tx = await native.burn(id);
+    console.log(tx);
+    console.log("wait for response of tx");
+    let rc = await tx.wait();
+    console.log(rc);
+    await parseEventsFromReceipt(rc);
 }
 
 async function testSetMintAllowed() {
@@ -343,11 +650,14 @@ async function testBatchSplitPerformance(requestIds, fromAddress) {
         response.consumedIds.forEach((ids) => {
             consumedIds.push(ids.token_id);
         });
-
+        const nonFromAddressTokenIds = [];
         const newTokens = [];
         response.newTokens.forEach((account, index) => {
             const toAddress = index % 2 === 0 ? fromAddress : recipients[(index - 1) / 2];
             const rollbackTokenId = index % 2 === 0 ? 0 : response.newTokens[index+1].token_id;
+            if (toAddress !== fromAddress) {
+                nonFromAddressTokenIds.push(account.token_id);
+            }
             newTokens.push({
                 id: account.token_id,
                 owner: fromAddress,
@@ -362,6 +672,7 @@ async function testBatchSplitPerformance(requestIds, fromAddress) {
                 rollbackTokenId: rollbackTokenId
             });
         });
+        console.log(`Non-fromAddress Token IDs: ${nonFromAddressTokenIds}`);
 
         const proof = response.proof.map(p => ethers.toBigInt(p));
         const publicInputs = response.public_input.map(p => ethers.toBigInt(p));
@@ -480,7 +791,7 @@ async function testBatchedSplitForPerformance() {
     try {
         const metadata = await createAuthMetadata(accounts.MinterKey);
         const requestIds = [];
-        let count = 10;
+        let count = 100;
         // 调用5次generateBatchSplitToken
         for (let i = 0; i < count; i++) {
             console.log(`Generating batch split token request ${i + 1}/ ${count} ...`);
@@ -498,27 +809,27 @@ async function testBatchedSplitForPerformance() {
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
                 {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
-                // {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
+                {address: accounts.To1,amount: 1,comment:"1"},
             ];
 
             const splitRequest = {
@@ -652,38 +963,108 @@ async function testTransferConcurrent(tokenIds) {
 
 async function testTransfers() {
     const tokenIds = [
-        '21350816825480577333141102120676617053892918441217241735953636696052225604375',
-        '4745825129654455032533893703129013900838866663897749003790969366622225598696',
-        '4813758263750543897772908020868249422492544893242163825995221290684106585767',
-        '1226065539496860957012371379434010808803929799981691598316000429159181173492',
-        '19241688198201817139466250174312269619573416830753679624985134508191332435751',
-        '18303189489378600709369794734046902056800461188619302791850036922550150695695',
-        '11376603406969987994582448024978395895883496303040409735964054880922168086550',
-        '4577034225750352476284376114102530759659148015175975113907495156153569465365',
-        '382208582573851191750333969595702288511528832018399544311062737036594789073',
-        '2099141328528561932815230735254825034243259767144625223224507787895681804372',
-        '6765183097521258569749176203934599806249915004849796168619628136294551431684',
-        '20975217844942381523008801639275926150709580778786950205460677401753135047715',
-        '16195130313734831413197689085594292754701406959025720686415536681837000044974',
-        '11899904674513530641999193099590286829170473664126950290822085893964130617830',
-        '580080289417679181866750317500749540002016614505851324175754180058293111001',
-        '13324288387494057539210253170602870494169483443290919264559412102499369362299',
-        '6082787084695025130873721250894138865282112602603541182562785385375040320485',
-        '21634802919871595002497460583209229323130211618160950069964286829701377610820',
-        '5030737550036475852667977049689451404420328009711175012256158406741133178911',
-        '15352932513620528122818409692311753170859107757063343892112773417154124122522',
-        '17803955944033799079977556941435479609067427510370017405716844179673132886793',
-        '14058927110418143128769323945319125712493202165024893402123577402377247828340',
-        '9235632335549489185795684871309005884374993005023174404482207471850911722377',
-        '19018572432885808700479466607464789786095032217397218415733033309376327290725',
-        '13169235270394674967967356147996729358630710743703213408059796834535438576508',
-        '3649013354636959114797365611512927539353615524673245184847463475472984936463',
-        '25342494523186899607679148003025520256189761236345968614173598065820586134',
-        '12634220879709230996888934510167986728091466394802157082717092405607461507849',
-        '6249549122952658068206951966599875951877857989267272936492449458187787067834',
-        '18106704663288068145491098640877218307881382666044997452210139370058196822164',
-        '16504503646013263974057035039306845053225822633496134565750064600654175543383',
-        '16190066770929703405485847154146855859244319864590340513141240523322959740776',
+
+        '2226150333906267640667247287935215123021703819356646928333419301329243694079',
+        '17728360774541736502696826801042220223098571201686729771347356973941576995250',
+        '2677881294205540089788918423071004002128171764542944077112960513206824873059',
+        '11116138218985560788862198471595876885463137853872184701902816252395041040026',
+        '6586915871317704875552956328133718036885032896292603764351241648863804590968',
+        '10941524176623364645232152677218579014434285565387001509246724850300310283971',
+        '919288993751966304876302915771984499212293772529299933939590730727871961028',
+        '3218336782177757383722445403693011234832792316165941418005388324893308813389',
+        '1376726355999157790088667798279579151993882115479950845091269026219846289899',
+        '18653758756650786066640561307192625485787186996438574408789431589473641692207',
+        '19338186571558810656802896688133637564732044060944462456137071458984915055118',
+        '5318728787734991252772372465119155882121215837738623963059746261899265812407',
+        '16030651978701986163553242553746300165027068082306417695084201021786294468793',
+        '9144080693288561316747277513450122451299822471948463450650960980208832560405',
+        '17705379536012217515877596095185599485899015732140404680075901940631764735460',
+        '12786238100246315934707724660044819438574084653130732770073286203604502540707',
+        '5331207065253467545882862293373134489245164536001954466670833935477394610318',
+        '12267624573608508927541998576528800447324748805377243714356901919738089405867',
+        '13917356792364782941280729656652189028138234349928807181274139271177088966356',
+        '19966266880473787502233004109590670580613302429799645182544009955822597113800',
+        '4968124151397074190964784705881931764767173880524085488947279433107173092488',
+        '13726161267271816499148811390873863700432178565466875903964527172325108679048',
+        '6921796414394932930207290052615191282636318749053848624572161923148322269835',
+        '1742659010118868971262894246880507494041781204768269479699662423947038218913',
+        '2298048863998733405279408242935981611332706274326348881659211962327227494112',
+        '15575923431041869585122655587085304161544283263915026305038504697884955069158',
+        '11773781544216730158841035134612190481239258039137290202623955553766798086312',
+        '950557757831455932749692889161271625609532984528870382890899441112333589125',
+        '543219964029293367459828623688555257194578349066290027718282554287899203581',
+        '20756319680474439704372980041358837535297489995279126532990285714960354477040',
+        '12783572870573243977426804748497102029977031652906141653054377275541118895373',
+        '7870639924743819859207488718235343038998685438944354589926656490716298768416',
+        '9466959338092325624523265029830653609872309804973594474777553150385555634382',
+        '527438398376269450962111920921677254975641879549572661315989845578784291732',
+        '20987515021468318888884855289794461520457030518763468063849232531274461524409',
+        '18237316550050434809180963054417909326863113973373928495475219694742920684739',
+        '58996023287272971717051810404007609478480926064441905299381787756809622600',
+        '20571472838179798647617438267358457160214844113087227502783105719261808084865',
+        '15066077987508597274221165384673401140109098578716181978738113400901911492069',
+        '10422709033719819704921402694567517087528653749828156094666957794167622340524',
+        '12122396328261745022182263781225513400351168353837012563782130059480558493288',
+        '16326006618152261271183709838367430344654299863292803605676834184033940227165',
+        '21487078559784361998592997351214451608662603627224004109622703010461888191007',
+        '12770061981404672620624154632435817317146000908788466678283463057865096373198',
+        '380471213383984947448520635322845312472774677297451475600318401113754351956',
+        '20203032162473335956078818972162930215598239101474537355963636569574623300001',
+        '6771507997305871205243843974545269435196208827673218805222874761916496685067',
+        '183360156734207064791172625881981884212034102484086673764473369743461975928',
+        '13726775705454487186971546078448139922657006619245131391230325130165911036348',
+        '2536225730871940102571496541803900629543076126053016293540887933473010741046',
+        '19890923840728862490936548481479517401539348607632456764680349359540330361398',
+        '20447890787811605306178517778091531949648271070166088196763971263724369830060',
+        '15001419811545592156670866742206939176474525699080287536036155775722609728461',
+        '20332983818499991748621170489165338942622103327397194686690314825307871269612',
+        '10041305418857231755580567343163460651465838603914041505283803913283654587329',
+        '14896429651205076285132550951213447621551394734837540683964686159956025788630',
+        '10330536819212819746866322532044035424081652133582079745100941060406872262021',
+        '14358280448591765151257170029220657301923450305301488865666376728208847486278',
+        '3593836764664570811257628712110900035042925790012306840810869927138544810991',
+        '14051211998047484239689495770545478066189150536848910143468166658477698152428',
+        '17996925976527775111395163455798945310072953341722360044103387700757319083580',
+        '5904188698385994314445079378885920689849084461454530095286996751997508870138',
+        '4505223148489962679150824821756500078905779300545071815319550579399907016779',
+        '4192394626969913993592311886200676855187807918312002243715478211788107402275',
+        '2442687562019034378626310863724684518765531321028603238549983167569524553991',
+        '19921713185219793954790402708326086640653767433667427397107899820247848336967',
+        '3640410915522050827653817364315529906247496878715451290833435819461372945356',
+        '15457934083229309727005142347372192894552412303867207442015696873516963956376',
+        '17196987422616854285722642839969347102290016521424665342440678771507351748472',
+        '18669806590915424133453878999115397992386569408763572865323302822689202559357',
+        '552046883187643370963190995529415268590209774407248927240999389141167397700',
+        '20672880444274789766225970852992722447388086380656312183617083839884953342730',
+        '5933251095490928284653326730987875929399452027404693413339483964894182438373',
+        '12379518569002248984221943397417770419446536425940395638523972773636176288011',
+        '5598464084295887303745945649869587512461218870692207983050210701886857038396',
+        '21107836907125185182295166673199712790261794782173722753380335088952829089151',
+        '2967868479954782510026684040745037589044786988397156788544896914290344047748',
+        '1371130356588835114845616434070139106698761467633830435431059484070165807343',
+        '12845829492094254669286284559226164974635870158772468053982096866307314856430',
+        '15840767119872736742356471017458158165230392719049549340673110803954909412861',
+        '10117795880199080110490590416712703277455271159068081016223720753009768291138',
+        '16053192714304536404492548993362147784025473280561767268752152922844511624786',
+        '2776976649138470573444566464930308870761546782465120733147602179363067141164',
+        '20398795376789121120921664663233284324883416516310392000299553416490411543520',
+        '4004584441352049660178554808130771759162209025035125440277879459314465245381',
+        '3311179507458326409976173250353585250923726281234247588696309099483056330923',
+        '10671963635780771952533618035566919487614748066218537795792473265819430229562',
+        '2660054255113031898752057294487107457464088519607749782417083033223641546094',
+        '10304900716428441616366579599175256262750764304938163220538539230014233403626',
+        '5338382202362358815765761054165004457141062930254594195429659413945982779088',
+        '7807569441421022621610985951670120913805007927727419088901917835417935511782',
+        '8710783247471337761583907010797853699790969526948074590478041609952195007120',
+        '4890427496218882974564106482078258328665933663169841532420094976103658074099',
+        '15357441545399385885586106473308609829195900229785928756460956712140924591734',
+        '19356453434075134935533252288641792750017430314883333453778734658076335691617',
+        '692595003590537919813508435985489879637171592371081733601732816669120788788',
+        '1516975167356866670091093349774113648654203265243049025678403908705078277501',
+        '16199730005355767974481317602995351851765239096428967648471427520243202686568',
+        '21844697057347751909694966932916491480165174773723153347684592347705728260255',
+        '18767233069506627797013567593665377650364298476027505874654242539080288096009',
+        '9455561132381424197734268564323938249937418363162315582277206724167047940698',
     ];
     testTransferConcurrent(tokenIds).then(results => {
         console.log('所有transfer操作执行完成');
@@ -697,11 +1078,164 @@ async function testNonce() {
     let nonce = await minter.getNonce();
     console.log("nonce", nonce);
 }
+async function checkTokenIds(tokens){
+    const [signer, minter] = await ethers.getSigners();
+    const native = new ethers.Contract(
+        native_token_address,
+        abi,
+        minter
+    );
+    console.log("signerAddress", minter.address);
+
+    console.log(`开始处理 ${tokens.length} 个 tokenId...`);
+
+    // 使用 for...of 循环代替 forEach，以便更好地控制异步操作和错误处理
+    try {
+        let response = await native.checkTokenIds(accounts.To2, tokens);
+        console.log(`response: ${response}`);
+    } catch (error) {
+        console.error(`查询失败，错误: ${error.message}`);
+    }
+}
 // testSetMintAllowed().then();
 // testMint().then();
+// testMintWithKafka().then()
 // testMintSequential().then();
+let tokens = [
+    '6400370614809042583057790561688075685359340463860648967481277063527003702963',
+    '1034838552929540352607689148134170865822116452994407588777467869798061121023',
+    '5407548452656349947892436417174010841506177488796734858525125083039771034285',
+    '11121229557461331624801577674764394437934424608861487306028681321815174569124',
+    '17469837414762960095658908929610855063568645212997522846915324663671551894551',
+    '9962206912903933638727249492552611625566898014135239887120126768005433181973',
+    '6892975287770014326386467515259840120257070522224673560425705872011374673193',
+    '3130043288444943451029378258142032673880894936207307798594239890501394693415',
+    '12119898669877362268511717680853623591006857014547242834737380979036052376041',
+    '20069882142856412696157363928549688517889972632570159076913971017537495502322',
+    '16218773952676595147759728036329909166235516258338102380619888893386111854855',
+    '12825072122274207718795187416461765703582957085254781354521881579212430301159',
+    '7070259964473243839256046883566397224085159672679212320714698143819323911731',
+    '14530742211616023874756295529897686666375891146479526883820132657667259975916',
+    '19451076725352107106343283413184855936966149301969603341415965434237274201401',
+    '9985561525379142389904158608525525122606263839943866330385368544998531562024',
+    '9741561225212736407095299036042276564814639825445556722010233974754615437488',
+    '21391579637594897610711645646991246508494077389604586354131571072182092564123',
+    '18577067118473892288564095177880086926316651499772027489740400284613723449591',
+    '19629814762433537299304561317451117590147092185244731849575232153204578760677',
+    '20638020613553774968678621858196650547162550082720825209357287949430063358070',
+    '21257637902697147319295138607029950389106130131563654248969536019804403466934',
+    '16103218790440841027438598116084633021852527370078520850085516054103776494949',
+    '21762786421846781577252992063636181492561137686838484872006163628956388568285',
+    '19708165759836097488019276316560739664662878261177060372537020625144724515706',
+    '4062503252390977714309157553870714549196829489031937290956167602525936271747',
+    '12709361669070455371173012967715111161820329660091633359376260284394094294043',
+    '13694058559444251077159059994077874522275346204853365491264033694088400372116',
+    '2323629182216818162651182521444684323706803707994232808171475575415869108441',
+    '14780933093347846035130057204639015028020611906831818759781876653479236330985',
+    '5426127951359827124521461977613280744067474645239717360887883264963199468640',
+    '13455504612559903659394393050207356204274279912515824586524842566956763388135',
+    '1048354083525363274550214334896013481586231680337049918598501408540067411490',
+    '20359376187940965262170307450000246311081547517659403522039601431093375293805',
+    '1413334796347719145910948424356323160357711193596330504936709527447549835619',
+    '21150771134782127013839650095170813420532250982039212134920043416647812676626',
+    '3162165432942116744985911056715833317675936109399098608092655717047110556280',
+    '10645737948040956265081604844827836822827225464310307022035674910345581051378',
+    '13542248143969998733256322624465459610166822329346927482058895874861658001899',
+    '1596210822788779061256304452321498794544210531756562939795168895503080580194',
+    '3980010552768650815746476312299232219623918722525189160945279571233186510120',
+    '8713560330188076310585675457676464751463238760458941044649903851403864931632',
+    '2937230800746743561591101695393387056064208625877911154272147271943085671087',
+    '20236114573716637579740158904537070394039930324881373801503550931623867054349',
+    '18137956726493878075350813874411191058015914634072892463918867083225598197855',
+    '9866994171448577844369240615871710149150893808908932179736930992668101566873',
+    '13518579313037353346501977112703145941087836753955845709351961471197297107377',
+    '3694479225261701250585560760257998040180323094807022276476079128718525358832',
+    '10068032434145844056756472107450100977240240918628344824272642820867646286887',
+    '18711329309912166476110122534545997900228358636178983951889166713670987688513',
+    '3907058612509045005023729715790926505083688927938261686951950019160638978627',
+    '20414678946327762164587190903651700868433830076609444491825445977074766598318',
+    '13563913889200057537844148800140346565484490462713283555035070818947214876084',
+    '15463510063116995534789555662358803101308248854967371476597493223517606458497',
+    '11600311951004228770507282472322472027321144494204046293200016264141839405855',
+    '12931565475620268018120839801840777574385725008311846110809888922309242668344',
+    '20299210822922350973159574500201589675713641804694135180280749480170637218116',
+    '8777466366481271602292938489283742583082445219866336836522715132215385065887',
+    '6111602163467572535042885091096236598693235284372745790007823940263168566599',
+    '2191222441320688996246477487271941401311563500961544727808808193466524369110',
+    '5652535256987690955182512578368857611194891592802984063524612150672030008586',
+    '5568814069903867101786015830916725179344070412679521354090021093859982138363',
+    '20683578442003006115611558489334492374446489069610092307623026569986276439988',
+    '14695424480919396392453735832955407211782364002591973967005925774790411424058',
+    '19103793668596291209599344910811056527259050758956229547373783829303917625143',
+    '4388842533334011480909410122850890812288839350781788672815265733762752780890',
+    '21218070435817846022159888508122756990493900012433811958838290054510064408618',
+    '8830371167482889332872485178354827849322481162472754888247048970802723727572',
+    '4971854913408644121447966789422737137931184564899065949157117261554704493001',
+    '2966098290747817544813444637568252210502048470651862706189885299781442494712',
+    '18032531362354173910076321180155980054695911982709317998211883408886333506358',
+    '5534362524283072734013268349822186532344118579286788079241429927100780872387',
+    '19317172224486144553988398833296111925058183794028022166365554389139653021252',
+    '3353329137488921592657308247168239670028106240698466184072198021759339184726',
+    '196444002997910579089030107927013851367959369407744313012015938576956368150',
+    '19787949784661994672250942873942321702451691090892034012735605854533478147330',
+    '1337609775639653362431582240202348760780383107627232634086143521936601734825',
+    '1055361784258484215893664626946259960687010998817444615851478982597480374918',
+    '9140637710938003331652218795127288135160267196060858432099966225468262594370',
+    '20599336603060710844940824747245801066123684018538437453565659253199517734087',
+    '14125485681852741645129908880326802414946993030416224203773000557290070241941',
+    '20734149160312555956016835791470751919837133755075827188187815572061837214758',
+    '3174522904314251840207151440884816828997918012707128079353480969769989194430',
+    '15682345283232734624092748437493857645805733923495338852786835877039783255244',
+    '12678521322923202611706469214925394294851765630264150136861007478612136239363',
+    '728594373269660602300266067619763551827824139034682065866592837661939228076',
+    '737387518303191910267655600208352471768724073705969425183592452289190416029',
+    '14987636425235697573352152737370030526156248517332471398137950049617894183059',
+    '17184362432019542922768744610437366355086733337095679149978234484528788678331',
+    '11093859111811897799938239159924772564225394092159224264885511151957551287918',
+    '18507412323734590389932520881243829763570015201076824965560575623697290608880',
+    '3811674609432441593115906128460344867726045868889444192415956832411354331705',
+    '17564893532247633192457167041055396819570771682063354928994294795760151735122',
+    '15983069097959806420392140599197228066200575449373495025625534114047330316576',
+    '82103340640511696823112347088643020883830105647301069025167669057321830386',
+    '6740580227578985974351646828551056519579211888851599014514242352286824821952',
+    '4884797517560855099183388617612617609409610934803898306652800587685246854263',
+    '14739369324586042639120587404073119952790741171607863875125746957342424554060',
+    '9584980020919014874455209752541169640758121401897143336891942376123772583059',
+    '2394747770303282922660435354845163630165598916845339071643125980288248143095',
+    '1676792788806583838926252150999147963292072026905231724725833066046063898883',
+    '13821272866289804371716761536056278772963013536780404365204884073065594830215',
+    '7414404035257125269028662446413846281179784051000303983731105634485887563376',
+    '20111924275644475557029663680966289458507502150430123928502101836719292694886',
+    '14592581327786727281951649027279678340818116702136862339484797580946374470177',
+    '17174079145333055051448133327638743665134518657125626767513182410096511590378',
+    '17750230807468121523529376808716047688795628390624975466517683901454258472040',
+    '16501901297848243902165956385687507568702520780893677041240244632542869359254',
+    '8189541147002702123684328031895425882127784573173310570303759174594378666210',
+    '6652375254495879251125847289519407636645613069639455570147121414064142247640',
+    '11000819712108253775071056158040561660905377326298032080002452511673925120159',
+    '973569776799839847932503569665954871358894904193558038228623937160221562472',
+    '3263291032021534346256187762172372093076917854409949200751023504544435902276',
+    '4882925963975067004833989352147870480305414062491202912162387239503433228055',
+    '7670690715423169464123598290823119623867207009384275244450203998568107307508',
+    '12085290793482528467688180859089641886428761601722494593960875008757033613926',
+    '18365164105727714299392980119822838985780660767940765933689158415961494722402',
+    '3211124219214634304903935801856483006728253211966279145850373823302009295898',
+    '18903530370508754751310911207949121921212392673517432903951590930682109991884',
+    '1144451559230547869005524012239531835445295854558859078662041497483862451118',
+    '6565933534216767066719352107567832678893068110689562304751816979428495779242',
+    '17943531267270273002779476030311191091696455218864189160364572450344748557653',
+    '6830848233302983918269773624872981298067453789913765896300042774170216470529',
+    '3272134380309664508625490892862270683642761842463718262984200034524322952879',
+    '13660384212419448586236497117333191018806175856158371724785334330660486132718',
+    '13918063787253399236106487248710085659047798888588253121640524215346806364026',
+    '19001133410853232561071080109109493223810063799606040881252396291558839600589',
+    '8076681974856090109242381745139952999397958848719159185250375973744293118113',
+]
+
 // testBatchedSplit().then();
-getTokenById().then();
+// getTokenById(tokens).then();
+checkTokenIds(tokens).then();
+// testBurn('16614054352643310873897746527375656187281471852502765764326770479228319182453').then();
 // testSplit('2e907f3f4092af579be595bb4b04e0ff898c647f1ba2f6aad332556839ed771',accounts.Minter).then()
 // testTransfer().then();
 // testNonce().then();

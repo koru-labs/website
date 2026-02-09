@@ -135,4 +135,6 @@ interface INativeToken {
         address minter,
         TokenModel.ElGamalToken memory allowed
     ) external;
+
+    function burn(uint256 tokenId) external returns (bool);
 }
