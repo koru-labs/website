@@ -224,7 +224,7 @@ module.exports = {
             ],
             chainId: 1337
         },
-        dev_L2_dev: {
+        dev_L2: {
             // url: "http://afd800b6ae2e34ab292e09729ff51e30-364478555.us-west-1.elb.amazonaws.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
             // url: "http://dev2-ucl-l2.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
             url: "http://l2-node1-native.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
