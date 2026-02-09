@@ -3,7 +3,7 @@ const grpc = require("@grpc/grpc-js");
 
 // ==================== 常量配置 ====================
 
-const NATIVE_TOKEN_ADDRESS = "0xDDCb7576aF8309b1e52FceD647f8C509710Da1Ea";
+const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
 
@@ -60,9 +60,13 @@ function sleep(ms) {
  * @param {number} amount - Allowance 数量
  */
 async function setupMintAllowance(nativeContract, client, minterAddress, ownerPrivateKey, amount) {
+    console.log(`    [setupMintAllowance] Creating auth metadata...`);
     const ownerMetadata = await createAuthMetadata(ownerPrivateKey);
     
+    console.log(`    [setupMintAllowance] Calling gRPC encodeElgamalAmount with amount: ${amount}...`);
     const response = await client.encodeElgamalAmount(amount, ownerMetadata);
+    console.log(`    [setupMintAllowance] ✅ Got response from gRPC`);
+    
     const allowed = {
         id: ethers.toBigInt(response.token_id),
         value: {
@@ -73,8 +77,11 @@ async function setupMintAllowance(nativeContract, client, minterAddress, ownerPr
         }
     };
 
+    console.log(`    [setupMintAllowance] Calling contract.setMintAllowed...`);
     const tx = await nativeContract.setMintAllowed(minterAddress, allowed);
+    console.log(`    [setupMintAllowance] Transaction sent: ${tx.hash}, waiting for confirmation...`);
     await tx.wait();
+    console.log(`    [setupMintAllowance] ✅ Transaction confirmed`);
     
     return tx;
 }
