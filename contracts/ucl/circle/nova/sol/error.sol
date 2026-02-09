@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity >=0.8.25;
+pragma solidity ^0.8.19;
 
 enum NovaError {
     ///0 returned if the supplied row or col in (row,col,val) tuple is out of range

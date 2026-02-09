@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity >=0.8.25;
+pragma solidity ^0.8.19;
 
 /* Performance metrics:
 PublicParams::NonTrivialCircuit187790 setup took: 38.948307347 s
