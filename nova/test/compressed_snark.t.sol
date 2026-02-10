@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "../sol/verifier.sol";
 
 contract TestCompressedSNARK {
+    event DebugUint(uint);
+
 //    function testCompressedSNARKNonTrivial() public {
 //        ZKProof memory proof;
 //        proof.data = bytes(

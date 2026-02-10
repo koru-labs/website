@@ -10,11 +10,6 @@ module.exports = {
             optimizer: {
                 enabled: true,
                 runs: 200,
-                details: {
-                    yulDetails: {
-                        optimizerSteps: 'u',
-                    },
-                },
             },
             viaIR: true,
             // evmVersion: "cancun" // Add this line to enable EIP-4844 support

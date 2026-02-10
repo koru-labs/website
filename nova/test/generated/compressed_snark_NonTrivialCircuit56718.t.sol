@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 /* Performance metrics:
 PublicParams::NonTrivialCircuit56718 setup took: 38.770614439 s
@@ -25,6 +25,7 @@ CompressedSNARK::NonTrivialCircuit56718 proof L1 length 14771 bytes
 import "../../sol/verifier.sol";
 
 contract TestCompressedSNARK_NonTrivialCircuit56718 {
+    event DebugUint(uint);
 
     function testCompressedSNARK_NonTrivialCircuit56718() public {
         ZKProof memory proof;

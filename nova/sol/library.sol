@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 /*
     This file gives general functions that spreads in multiple files
 */
@@ -11,8 +11,6 @@ import "./error.sol";
 uint constant BN_N_LIMBS = 4;
 uint constant BN_LIMB_WIDTH = 64;
 uint constant BN_LIMB_WIDTH_MASK = 0xffffffffffffffff; // limb width = 256/BN_N_LIMBS
-
-event DebugUint(uint);
 
 function ilog2(uint x) pure returns (uint y) {
     require(x != 0, "BUGILOG0");
@@ -84,6 +82,7 @@ function powers(Fq s, uint n) pure returns (Fq[] memory result) {
 }
 
 contract testLibrary {
+    event DebugUint(uint);
 
     function run() public pure returns (bool) {
         require(ilog2(8) == 3, "test1");
