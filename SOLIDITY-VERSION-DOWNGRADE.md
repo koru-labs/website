@@ -1,118 +1,125 @@
-# Solidity Compiler Version Downgrade
+# Solidity 版本降级文档
 
-## Issue
+## 背景
 
-**Severity**: CRITICAL  
-**Type**: BUG  
-**Source**: Ethernal audit Q1
+根据 Ethernal 审计报告 Q1，Solidity 编译器版本设置为 0.8.25，高于 polygon-edge EVM 支持的版本。
 
-### Problem
+从 Solidity v0.8.20 开始引入了 `PUSH0` 操作码，但 **ucl-node2 (polygon-edge) EVM 不支持此操作码**（已验证：ucl-node2 的 opcodes.go 中没有 PUSH0 定义）。
 
-Solidity compiler version was set to 0.8.25 which is above the version supported by polygon-edge EVM.
+## 尝试的解决方案
 
-According to polygon-edge documentation:
+### 方案 1: 降级到 Solidity 0.8.19 ❌
+- **结果**: 编译失败
+- **原因**: 堆栈太深错误 (`YulException: Variable expr_8956_mpos is 1 too deep in the stack`)
+- **问题文件**: `PrivateTokenCore.sol` 的 `privateSplitToken` 函数
+- **说明**: 0.8.19 的优化器无法处理复杂函数
 
-> **Solidity v0.8.19 or earlier recommended**
-> 
-> Solidity v0.8.20 introduces new features, including the implementation of `PUSH0` opcode, which is not yet supported in Edge. If you decide to use v0.8.20, ensure that you set your EVM version to "Paris" in the framework you use to deploy your contracts. For now, we recommend using Solidity v0.8.19 or earlier.
+### 方案 2: 使用 Solidity 0.8.20 + evmVersion "paris" ❌
+- **配置**: 
+  ```javascript
+  version: '0.8.20',
+  evmVersion: 'paris',  // 避免使用 PUSH0
+  viaIR: true,
+  optimizer: { enabled: true, runs: 200 }
+  ```
+- **结果**: 编译失败
+- **原因**: 同样的堆栈太深错误
+- **说明**: 即使使用 paris EVM 版本，0.8.20 的优化器仍然无法处理 `privateSplitToken` 函数的复杂度
 
-## Solution
+### 方案 3: 禁用 viaIR ❌
+- **配置**: `viaIR: false`
+- **结果**: 更严重的堆栈太深错误
+- **说明**: 传统优化器比 IR 编译器更差
 
-Downgraded all Solidity contracts from version 0.8.20+ to 0.8.19.
+## 根本原因分析
 
-## Changes Made
+`PrivateTokenCore.sol` 的 `privateSplitToken` 函数过于复杂：
+- 18 个堆栈变量
+- 多个内存操作
+- 复杂的结构体和数组操作
+- EVM 堆栈限制为 16 个槽位
 
-### Files Modified
+**Solidity 0.8.25 的优化器比 0.8.20 更强大**，能够更好地处理堆栈深度问题，这就是为什么原始代码在 0.8.25 下能编译通过。
 
-**Total**: 22 files updated
+## 可行的解决方案
 
-#### Files changed from `>=0.8.25` to `^0.8.19`:
-1. `ucl/circle/nova/test/generated/simple_verifier.sol`
-2. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit56718.t.sol`
-3. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit187790.t.sol`
-4. `ucl/circle/nova/test/generated/merkel_root_strorage.sol`
-5. `ucl/circle/nova/test/generated/compressed_snark_NonTrivialCircuit0.t.sol`
-6. `ucl/circle/nova/test/compressed_snark.t.sol`
-7. `ucl/circle/nova/sol/polynomial.sol`
-8. `ucl/circle/nova/sol/transcript.sol`
-9. `ucl/circle/nova/sol/nifs.sol`
-10. `ucl/circle/nova/sol/fq.sol`
-11. `ucl/circle/nova/sol/fr.sol`
-12. `ucl/circle/nova/sol/verifier.sol`
-13. `ucl/circle/nova/sol/library.sol`
-14. `ucl/circle/nova/sol/sumcheck.sol`
-15. `ucl/circle/nova/sol/snark_sm.sol`
-16. `ucl/circle/nova/sol/error.sol`
-17. `ucl/circle/nova/sol/curve.sol`
-18. `ucl/circle/nova/sol/hyperkzg.sol`
-19. `ucl/circle/nova/sol/compressed.sol`
-20. `ucl/circle/nova/sol/r1cs.sol`
-21. `ucl/circle/nova/templates/compressed_snark.t.askama.sol`
+### 选项 A: 重构合约代码（推荐）✅
+**优点**:
+- 彻底解决堆栈深度问题
+- 可以使用 0.8.20 + paris
+- 兼容 ucl-node2 (polygon-edge)
+- 代码更清晰、更易维护
 
-#### Files changed from `^0.8.25` to `^0.8.19`:
-22. `ucl/circle/nova/Simple.sol`
+**需要做的**:
+1. 将 `privateSplitToken` 函数拆分成多个小函数
+2. 使用 struct 组合相关变量
+3. 减少局部变量数量
 
-#### Files changed from `^0.8.20` to `^0.8.19`:
-23. `native/INativeToken.sol`
-24. `test/TokenRegistryTemplate.sol`
+**示例重构**:
+```solidity
+// 将验证逻辑提取到单独的函数
+function _validateSplitToken(...) internal returns (bool) {
+    // 验证逻辑
+}
 
-#### Files changed from `^0.8.24` to `^0.8.19`:
-25. `ucl/curves/Lock.sol`
+// 将代币处理逻辑提取到单独的函数  
+function _processSplitTokens(...) internal {
+    // 代币处理逻辑
+}
 
-## Version Distribution After Changes
-
-```
-106 files: ^0.8.0
- 25 files: ^0.8.19  (newly downgraded)
- 15 files: ^0.8.16
-  2 files: ^0.8.10
-```
-
-## Verification
-
-All contracts now use Solidity version 0.8.19 or earlier, which is compatible with polygon-edge EVM.
-
-```bash
-# Verify no files use 0.8.20 or higher
-grep -r "pragma solidity" contracts --include="*.sol" | grep -E "0\.8\.(2[0-9]|[3-9][0-9])"
-# Should return no results
+// 主函数变得更简洁
+function privateSplitToken(...) external {
+    _validateSplitToken(...);
+    _processSplitTokens(...);
+}
 ```
 
-## Impact
+### 选项 B: 为 ucl-node2 添加 PUSH0 支持 ⚠️
+**优点**:
+- 可以使用 Solidity 0.8.25
+- 不需要修改合约代码
 
-- ✅ All contracts are now compatible with polygon-edge EVM
-- ✅ No `PUSH0` opcode issues
-- ✅ Contracts can be deployed without setting EVM version to "Paris"
+**缺点**:
+- 需要修改 ucl-node2 (polygon-edge) 源码
+- 需要测试和验证
+- 可能影响现有部署
 
-## Testing Required
+**参考**: ucl-zk-server 已经支持 PUSH0（见 `pkg/state/runtime/fakevm/eips.go`）
 
-After this change, please:
+### 选项 C: 保持使用 0.8.25 并接受风险 ❌
+**不推荐**: 部署的合约将无法在 ucl-node2 上正常运行
 
-1. Recompile all contracts
-2. Run full test suite
-3. Verify contract functionality
-4. Test deployment on polygon-edge testnet
+## 当前状态
 
-## Commands Used
+- ✅ 所有合约文件版本号已更新到 0.8.20
+- ✅ 文件级别事件声明已移到 contract/library 内部（0.8.20 不支持文件级事件）
+- ✅ hardhat.config.js 配置为 0.8.20 + paris
+- ❌ **编译失败**: `PrivateTokenCore.sol` 堆栈太深错误
 
-```bash
-# Replace >=0.8.25 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity >=0\.8\.25;/pragma solidity ^0.8.19;/g' {} \;
+## 建议
 
-# Replace ^0.8.25 with ^0.8.19
-sed -i '' 's/pragma solidity ^0\.8\.25;/pragma solidity ^0.8.19;/g' contracts/ucl/circle/nova/Simple.sol
+**立即行动**: 重构 `PrivateTokenCore.privateSplitToken` 函数以减少堆栈深度
 
-# Replace ^0.8.20 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity \^0\.8\.20;/pragma solidity ^0.8.19;/g' {} \;
+**长期考虑**: 为 ucl-node2 添加 PUSH0 支持，以便将来可以使用更新的 Solidity 版本
 
-# Replace ^0.8.24 with ^0.8.19
-find contracts -name "*.sol" -type f -exec sed -i '' 's/pragma solidity \^0\.8\.24;/pragma solidity ^0.8.19;/g' {} \;
-```
 
-## Date
 
-2026-02-08
 
-## Status
+根据 Solidity 官方文档，文件级别的事件声明是从 Solidity 0.8.22 开始支持的。
 
-✅ RESOLVED
+关键信息：
+Solidity 0.8.22 (2023年10月发布) 引入了文件级别事件定义功能
+Solidity 0.8.20 不支持文件级别事件
+因此，之前将事件从文件级别移到 contract/library 内部的修改必须保留
+版本支持情况：
+❌ Solidity 0.8.19: 不支持文件级别事件
+❌ Solidity 0.8.20: 不支持文件级别事件
+❌ Solidity 0.8.21: 不支持文件级别事件
+✅ Solidity 0.8.22+: 支持文件级别事件
+结论：
+使用 Solidity 0.8.20 + evmVersion "paris" 方案时：
+
+✅ 保留所有之前的语法修改（事件移到 contract 内部）
+✅ 保留 hardhat.config.js 的配置（version: 0.8.20, evmVersion: 'paris'）
+✅ 不需要还原任何代码
+这些修改是必要的，因为 0.8.20 确实不支持文件级别的事件声

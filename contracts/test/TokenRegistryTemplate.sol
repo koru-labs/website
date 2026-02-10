@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 //  Genesis block pre-deployment: Deploy NativeTokenRegistry to address 0x2041
 //  Add to the "alloc" field in genesis.json:
