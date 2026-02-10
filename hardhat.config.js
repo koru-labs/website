@@ -5,7 +5,7 @@ require("@nomicfoundation/hardhat-toolbox");
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
     solidity: {
-        version: '0.8.20',
+        version: '0.8.19',
         settings: {
             evmVersion: 'paris',  // 避免使用 PUSH0 操作码，兼容 polygon-edge
             optimizer: {

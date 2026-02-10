@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 /*
     This file gives general functions that spreads in multiple files
 */

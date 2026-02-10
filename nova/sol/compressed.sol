@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: license.pdf
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "./r1cs.sol";
 import "./nifs.sol";
