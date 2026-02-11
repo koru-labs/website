@@ -15,15 +15,22 @@ interface INativeToken {
         EncryptedAmount value;
     }
 
+    enum TokenStatus {
+        Deleted,    // 0
+        Inactive,   // 1
+        Active,     // 2
+        Locked      // 3
+    }
+
     struct TokenEntity {
         uint256 id;
         address owner;
-        uint8 status;  // 0=inactive, 1=active, 2=frozen
+        TokenStatus status;
         EncryptedAmount amount;
         address to;
         uint256 rollbackTokenId;
     }
-
+    function setMintAllowed(address minter, ElGamalToken calldata allowed) external;
     function transfer(uint256 tokenId, string calldata memo) external returns (bool success);
     function burn(uint256 tokenId) external returns (bool success);
     function getToken(address owner, uint256 tokenId) external view returns (TokenEntity memory entity);
@@ -46,9 +53,6 @@ interface INativeToken {
         uint256[] calldata publicInputs,
         uint256 paddingNum
     ) external returns (bool success);
-
-    function setMintAllowed(address minter, ElGamalToken calldata allowed) external;
-
 }
 
 /// @title NativeTokenTest - Test contract for Native Token integration
