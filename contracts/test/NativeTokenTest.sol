@@ -24,10 +24,19 @@ interface INativeToken {
         uint256 rollbackTokenId;
     }
 
-    function transfer(uint256 tokenId, bytes calldata data) external returns (bool success);
+    function transfer(uint256 tokenId, string calldata memo) external returns (bool success);
     function burn(uint256 tokenId) external returns (bool success);
     function getToken(address owner, uint256 tokenId) external view returns (TokenEntity memory entity);
-    function split(uint256 tokenId, EncryptedAmount[] calldata amounts, bytes calldata proof) external returns (bool success);
+    function checkTokenIds(address owner, uint256[] calldata tokenIds) external view returns (uint256[] memory);
+    function split(
+        address from,
+        address[] calldata recipients,
+        uint256[] calldata consumedIds,
+        TokenEntity[] calldata newTokens,
+        uint256[8] calldata proof,
+        uint256[] calldata publicInputs,
+        uint256 paddingNum
+    ) external returns (bool success);
 
     function mint(
         address[] calldata recipients,
@@ -40,7 +49,6 @@ interface INativeToken {
 
     function setMintAllowed(address minter, ElGamalToken calldata allowed) external;
 
-    function getMintAllowed(address minter) external view returns (ElGamalToken memory allowed);
 }
 
 /// @title NativeTokenTest - Test contract for Native Token integration
