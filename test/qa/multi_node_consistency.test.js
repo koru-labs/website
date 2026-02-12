@@ -96,7 +96,7 @@ describe('Multi Node Consistency Test', function () {
     console.log('✅ All nodes connected\n');
   });
 
-  describe.only('Scenario 1: Mint -> Split -> Transfer to accounts.To1', function () {
+  describe('Scenario 1: Mint -> Split -> Transfer to accounts.To1', function () {
     let mintedTokenId, splitTokenId;
 
     it('Step 1: Set mint allowance for accounts.minter', async function () {
@@ -733,7 +733,7 @@ describe('Multi Node Consistency Test', function () {
       console.log(`\n✅ All 3 token ownership transfers verified successfully`);
     });
   });
-  describe('Scenario 4: Multi-Node Synchronization Test', function () {
+  describe.only('Scenario 4: Multi-Node Synchronization Test', function () {
     let syncTestTokenId, syncTestTxHash, syncTestSplitTokenId;
 
     it('Step 1: Verify initial blockchain sync across all nodes', async function () {
