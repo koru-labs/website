@@ -3,7 +3,7 @@ const grpc = require("@grpc/grpc-js");
 
 // ==================== 常量配置 ====================
 
-const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
+const NATIVE_TOKEN_ADDRESS = "0x78e2F27aA81731861883e06204d65E9397F0DDDE";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 // const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
 const RPC = 'http://l2-node3-native.hamsa-ucl.com:8545';
