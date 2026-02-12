@@ -293,7 +293,7 @@ describe('Multi Node Consistency Test', function () {
       console.log(`   - To1 view: Owner=${to1Result.owner}, To=${to1Result.to}, Status=${to1Result.status}`);
     });
   });
-  describe.only('Scenario 2: Mint -> Split -> Transfer to Node1 Admin', function () {
+  describe('Scenario 2: Mint -> Split -> Transfer to Node1 Admin', function () {
     let mintedTokenId2, splitTokenId2;
 
     it('Step 1: Set mint allowance for accounts.minter', async function () {
@@ -779,34 +779,33 @@ describe('Multi Node Consistency Test', function () {
       console.log('\nStep 3: Verify Transaction Propagation');
       console.log(`Checking if tx ${syncTestTxHash} is visible on all nodes...`);
 
-      const receipts = await Promise.all(
-        allProviders.map(async (provider, idx) => {
-          try {
-            const receipt = await provider.getTransactionReceipt(syncTestTxHash);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ${receipt ? '✅ Found' : '❌ Not found'} (block: ${receipt?.blockNumber || 'N/A'})`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: !!receipt,
-              blockNumber: receipt?.blockNumber,
-              status: receipt?.status,
-            };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: false,
-              error: error.message,
-            };
+      let foundCount = 0;
+
+      for (let i = 0; i < allProviders.length; i++) {
+        const provider = allProviders[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const receipt = await provider.getTransactionReceipt(syncTestTxHash);
+          if (receipt) {
+            console.log(`   ${config.name}: ✅ Found (block: ${receipt.blockNumber})`);
+            foundCount++;
+          } else {
+            console.log(`   ${config.name}: ❌ Not found`);
           }
-        })
-      );
+        } catch (error) {
+          console.log(`   ${config.name}: ❌ Error - ${error.message}`);
+        }
 
-      const foundCount = receipts.filter((r) => r.found).length;
-      console.log(`\n   Transaction found on ${foundCount}/${receipts.length} nodes`);
+        // Small delay between node queries
+        if (i < allProviders.length - 1) {
+          await sleep(1000);
+        }
+      }
 
-      expect(foundCount).to.equal(receipts.length);
+      console.log(`\n   Transaction found on ${foundCount}/${allProviders.length} nodes`);
+
+      expect(foundCount).to.equal(allProviders.length);
       console.log(`✅ Transaction propagated to all nodes`);
     });
 
@@ -863,32 +862,39 @@ describe('Multi Node Consistency Test', function () {
       expect(syncTestTokenId).to.exist;
       console.log(`Verifying token ${syncTestTokenId.toString()} on all nodes...`);
 
-      const tokenStates = await Promise.all(
-        allContracts.map(async (contract, idx) => {
-          try {
-            const token = await contract.getToken(minterWallet.address, syncTestTokenId);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Token found`);
-            console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              success: true,
-              owner: token.owner,
-              status: token.status,
-              to: token.to,
-              id: token.id.toString(),
-            };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              success: false,
-              error: error.message,
-            };
-          }
-        })
-      );
+      const tokenStates = [];
+      for (let i = 0; i < allContracts.length; i++) {
+        const contract = allContracts[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const token = await contract.getToken(minterWallet.address, syncTestTokenId);
+          console.log(`   ${config.name}: ✅ Token found`);
+          console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
+          tokenStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            success: true,
+            owner: token.owner,
+            status: token.status,
+            to: token.to,
+            id: token.id.toString(),
+          });
+        } catch (error) {
+          console.log(`   ${config.name}: ❌ Error - ${error.message}`);
+          tokenStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            success: false,
+            error: error.message,
+          });
+        }
+
+        // Small delay between node queries
+        if (i < allContracts.length - 1) {
+          await sleep(1000);
+        }
+      }
 
       const successStates = tokenStates.filter((s) => s.success);
       console.log(`\n   Token found on ${successStates.length}/${tokenStates.length} nodes`);
@@ -988,34 +994,32 @@ describe('Multi Node Consistency Test', function () {
       console.log('\nStep 7: Verify Split Transaction Propagation');
       console.log(`Checking if split tx ${syncTestTxHash} is visible on all nodes...`);
 
-      const receipts = await Promise.all(
-        allProviders.map(async (provider, idx) => {
-          try {
-            const receipt = await provider.getTransactionReceipt(syncTestTxHash);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ${receipt ? '✅ Found' : '❌ Not found'} (block: ${receipt?.blockNumber || 'N/A'})`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: !!receipt,
-              blockNumber: receipt?.blockNumber,
-              status: receipt?.status,
-            };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: false,
-              error: error.message,
-            };
+      let foundCount = 0;
+      for (let i = 0; i < allProviders.length; i++) {
+        const provider = allProviders[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const receipt = await provider.getTransactionReceipt(syncTestTxHash);
+          if (receipt) {
+            console.log(`   ${config.name}: ✅ Found (block: ${receipt.blockNumber})`);
+            foundCount++;
+          } else {
+            console.log(`   ${config.name}: ❌ Not found`);
           }
-        })
-      );
+        } catch (error) {
+          console.log(`   ${config.name}: ❌ Error - ${error.message}`);
+        }
 
-      const foundCount = receipts.filter((r) => r.found).length;
-      console.log(`\n   Split transaction found on ${foundCount}/${receipts.length} nodes`);
+        // Small delay between node queries
+        if (i < allProviders.length - 1) {
+          await sleep(1000);
+        }
+      }
 
-      expect(foundCount).to.equal(receipts.length);
+      console.log(`\n   Split transaction found on ${foundCount}/${allProviders.length} nodes`);
+
+      expect(foundCount).to.equal(allProviders.length);
       console.log(`✅ Split transaction propagated to all nodes`);
     });
 
@@ -1024,32 +1028,39 @@ describe('Multi Node Consistency Test', function () {
       expect(syncTestSplitTokenId).to.exist;
       console.log(`Verifying split token ${syncTestSplitTokenId.toString()} on all nodes...`);
 
-      const tokenStates = await Promise.all(
-        allContracts.map(async (contract, idx) => {
-          try {
-            const token = await contract.getToken(minterWallet.address, syncTestSplitTokenId);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Split token found`);
-            console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              success: true,
-              owner: token.owner,
-              status: token.status,
-              to: token.to,
-              id: token.id.toString(),
-            };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              success: false,
-              error: error.message,
-            };
-          }
-        })
-      );
+      const tokenStates = [];
+      for (let i = 0; i < allContracts.length; i++) {
+        const contract = allContracts[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const token = await contract.getToken(minterWallet.address, syncTestSplitTokenId);
+          console.log(`   ${config.name}: ✅ Split token found`);
+          console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
+          tokenStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            success: true,
+            owner: token.owner,
+            status: token.status,
+            to: token.to,
+            id: token.id.toString(),
+          });
+        } catch (error) {
+          console.log(`   ${config.name}: ❌ Error - ${error.message}`);
+          tokenStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            success: false,
+            error: error.message,
+          });
+        }
+
+        // Small delay between node queries
+        if (i < allContracts.length - 1) {
+          await sleep(1000);
+        }
+      }
 
       const successStates = tokenStates.filter((s) => s.success);
       console.log(`\n   Split token found on ${successStates.length}/${tokenStates.length} nodes`);
@@ -1077,32 +1088,39 @@ describe('Multi Node Consistency Test', function () {
       expect(syncTestTokenId).to.exist;
       console.log(`Verifying original token ${syncTestTokenId.toString()} is consumed on all nodes...`);
 
-      const consumedStates = await Promise.all(
-        allContracts.map(async (contract, idx) => {
-          try {
-            const token = await contract.getToken(minterWallet.address, syncTestTokenId);
-            // If we can still get the token, check its status
-            const isConsumed = token.status !== 2; // Status 2 is active
-            console.log(`   ${NODE_CONFIGS[idx].name}: Token status = ${token.status} ${isConsumed ? '(consumed)' : '(still active)'}`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: true,
-              consumed: isConsumed,
-              status: token.status,
-            };
-          } catch (error) {
-            // If we can't get the token, it might be consumed or access denied
-            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Token not accessible (likely consumed)`);
-            return {
-              nodeIndex: idx,
-              nodeName: NODE_CONFIGS[idx].name,
-              found: false,
-              consumed: true,
-            };
-          }
-        })
-      );
+      const consumedStates = [];
+      for (let i = 0; i < allContracts.length; i++) {
+        const contract = allContracts[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const token = await contract.getToken(minterWallet.address, syncTestTokenId);
+          // If we can still get the token, check its status
+          const isConsumed = token.status !== 2; // Status 2 is active
+          console.log(`   ${config.name}: Token status = ${token.status} ${isConsumed ? '(consumed)' : '(still active)'}`);
+          consumedStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            found: true,
+            consumed: isConsumed,
+            status: token.status,
+          });
+        } catch (error) {
+          // If we can't get the token, it might be consumed or access denied
+          console.log(`   ${config.name}: ✅ Token not accessible (likely consumed)`);
+          consumedStates.push({
+            nodeIndex: i,
+            nodeName: config.name,
+            found: false,
+            consumed: true,
+          });
+        }
+
+        // Small delay between node queries
+        if (i < allContracts.length - 1) {
+          await sleep(1000);
+        }
+      }
 
       const consumedCount = consumedStates.filter((s) => s.consumed).length;
       console.log(`\n   Original token consumed/inaccessible on ${consumedCount}/${consumedStates.length} nodes`);
@@ -1133,66 +1151,81 @@ describe('Multi Node Consistency Test', function () {
       console.log('   Waiting for state propagation across nodes...');
       await sleep(10000);
 
-      // Verify transaction on all nodes
+      // Verify transaction on all nodes (sequential)
       console.log('\n   Verifying transfer transaction propagation...');
-      const txReceipts = await Promise.all(
-        allProviders.map(async (provider, idx) => {
-          try {
-            const txReceipt = await provider.getTransactionReceipt(syncTestTxHash);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ${txReceipt ? '✅ Transaction found' : '❌ Not found'}`);
-            return { nodeIndex: idx, found: !!txReceipt };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error`);
-            return { nodeIndex: idx, found: false };
+      let txFoundCount = 0;
+      for (let i = 0; i < allProviders.length; i++) {
+        const provider = allProviders[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          const txReceipt = await provider.getTransactionReceipt(syncTestTxHash);
+          if (txReceipt) {
+            console.log(`   ${config.name}: ✅ Transaction found`);
+            txFoundCount++;
+          } else {
+            console.log(`   ${config.name}: ❌ Not found`);
           }
-        })
-      );
+        } catch (error) {
+          console.log(`   ${config.name}: ❌ Error`);
+        }
 
-      const txFoundCount = txReceipts.filter((r) => r.found).length;
-      expect(txFoundCount).to.equal(txReceipts.length);
+        // Small delay between node queries
+        if (i < allProviders.length - 1) {
+          await sleep(1000);
+        }
+      }
+      expect(txFoundCount).to.equal(allProviders.length);
 
-      // Verify new owner can access token on all nodes
+      // Verify new owner can access token on all nodes (sequential)
       console.log('\n   Verifying new owner access on all nodes...');
-      const newOwnerStates = await Promise.all(
-        allContracts.map(async (contract, idx) => {
-          let retries = 3;
-          let result = null;
+      const newOwnerStates = [];
+      for (let i = 0; i < allContracts.length; i++) {
+        const contract = allContracts[i];
+        const config = NODE_CONFIGS[i];
 
-          while (retries > 0) {
-            try {
-              const token = await contract.getToken(targetReceiver, syncTestSplitTokenId);
+        let retries = 3;
+        let result = null;
+
+        while (retries > 0) {
+          try {
+            const token = await contract.getToken(targetReceiver, syncTestSplitTokenId);
+            result = {
+              nodeIndex: i,
+              nodeName: config.name,
+              success: true,
+              owner: token.owner,
+              to: token.to,
+            };
+            break;
+          } catch (error) {
+            retries--;
+            if (retries > 0) {
+              await sleep(3000);
+            } else {
               result = {
-                nodeIndex: idx,
-                nodeName: NODE_CONFIGS[idx].name,
-                success: true,
-                owner: token.owner,
-                to: token.to,
+                nodeIndex: i,
+                nodeName: config.name,
+                success: false,
+                error: error.message,
               };
-              break;
-            } catch (error) {
-              retries--;
-              if (retries > 0) {
-                await sleep(3000);
-              } else {
-                result = {
-                  nodeIndex: idx,
-                  nodeName: NODE_CONFIGS[idx].name,
-                  success: false,
-                  error: error.message,
-                };
-              }
             }
           }
+        }
 
-          if (result.success) {
-            console.log(`   ${result.nodeName}: ✅ New owner verified (Owner: ${result.owner})`);
-          } else {
-            console.log(`   ${result.nodeName}: ❌ Failed to verify new owner`);
-          }
+        if (result.success) {
+          console.log(`   ${result.nodeName}: ✅ New owner verified (Owner: ${result.owner})`);
+        } else {
+          console.log(`   ${result.nodeName}: ❌ Failed to verify new owner`);
+        }
 
-          return result;
-        })
-      );
+        newOwnerStates.push(result);
+
+        // Small delay between node queries
+        if (i < allContracts.length - 1) {
+          await sleep(1000);
+        }
+      }
 
       const verifiedCount = newOwnerStates.filter((s) => s.success).length;
       console.log(`\n   New owner verified on ${verifiedCount}/${newOwnerStates.length} nodes`);
@@ -1205,18 +1238,25 @@ describe('Multi Node Consistency Test', function () {
       console.log('\nStep 11: Verify Old Owner Access Revoked on All Nodes');
       expect(syncTestSplitTokenId).to.exist;
 
-      const oldOwnerStates = await Promise.all(
-        allContracts.map(async (contract, idx) => {
-          try {
-            await contract.getToken(minterWallet.address, syncTestSplitTokenId);
-            console.log(`   ${NODE_CONFIGS[idx].name}: ⚠️  Old owner still has access`);
-            return { nodeIndex: idx, hasAccess: true };
-          } catch (error) {
-            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Old owner access revoked (expected)`);
-            return { nodeIndex: idx, hasAccess: false };
-          }
-        })
-      );
+      const oldOwnerStates = [];
+      for (let i = 0; i < allContracts.length; i++) {
+        const contract = allContracts[i];
+        const config = NODE_CONFIGS[i];
+
+        try {
+          await contract.getToken(minterWallet.address, syncTestSplitTokenId);
+          console.log(`   ${config.name}: ⚠️  Old owner still has access`);
+          oldOwnerStates.push({ nodeIndex: i, hasAccess: true });
+        } catch (error) {
+          console.log(`   ${config.name}: ✅ Old owner access revoked (expected)`);
+          oldOwnerStates.push({ nodeIndex: i, hasAccess: false });
+        }
+
+        // Small delay between node queries
+        if (i < allContracts.length - 1) {
+          await sleep(1000);
+        }
+      }
 
       const revokedCount = oldOwnerStates.filter((s) => !s.hasAccess).length;
       console.log(`\n   Old owner access revoked on ${revokedCount}/${oldOwnerStates.length} nodes`);
