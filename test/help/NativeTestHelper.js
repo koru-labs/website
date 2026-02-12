@@ -72,7 +72,7 @@ async function setupMintAllowance(nativeContract, client, minterAddress, ownerPr
 
     console.log(`    [setupMintAllowance] Calling contract.setMintAllowed...`);
     console.log(`    [setupMintAllowance] Minter : `, minterAddress)
-    const tx = await nativeContract.setMintAllowed(minterAddress, allowed);
+    const tx = await nativeContract.setMintAllowed(minterAddress, allowed, { gasLimit: 100000 });
     console.log(`    [setupMintAllowance] Transaction sent: ${tx.hash}, waiting for confirmation...`);
     await tx.wait();
     console.log(`    [setupMintAllowance] ✅ Transaction confirmed`);

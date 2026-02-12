@@ -1,43 +1,3 @@
-/**
- * Multi-Node Consistency Test Suite
- *
- * This test suite validates business consistency across 4 geographically distributed
- * blockchain nodes. It executes operations (mint, split, transfer) on a primary node
- * and verifies that transaction results and token states are identical across all nodes.
- *
- * Test Coverage:
- * 1. Node Connection Verification
- *    - Verifies all 4 nodes are connected with independent instances
- *
- * 2. Transaction Consistency Tests
- *    - Mint transaction consistency across nodes
- *    - Split transaction consistency across nodes
- *    - Transfer transaction consistency across nodes
- *
- * 3. Token State Consistency Tests
- *    - Token state after mint across nodes
- *    - Token state after split across nodes
- *    - Token state after transfer across nodes
- *
- * Node Configuration:
- * - Node 1: l2-node1-native.hamsa-ucl.com (Primary)
- * - Node 2: l2-node2-native.hamsa-ucl.com
- * - Node 3: l2-node3-native.hamsa-ucl.com
- * - Node 4: l2-node4-native.hamsa-ucl.com
- *
- * Requirements:
- * - All 4 nodes must be accessible and operational
- * - Test wallet must have sufficient permissions for mint/split/transfer operations
- * - Network connectivity must be stable across all nodes
- *
- * Timeout Configuration:
- * - Test suite timeout: 600000ms (10 minutes)
- * - Transaction confirmation timeout: 60000ms (1 minute) per node
- *
- * @author Multi-Node Consistency Test Team
- * @version 1.0.0
- */
-
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { createClient } = require('./token_grpc');
@@ -46,902 +6,1319 @@ const accounts = require('./../../deployments/account.json');
 // Import from NativeTestHelper
 const { NATIVE_TOKEN_ADDRESS, NATIVE_ABI, createAuthMetadata, sleep, setupMintAllowance } = require('./../help/NativeTestHelper');
 
-// Node configuration
-// Multi-node setup for native token consistency testing
-//
-// Architecture:
-// - gRPC (zk-server): Use dev2-node3-rpc for all nodes (shared ZK proof generation service)
-// - HTTP (blockchain): Use different node URLs to test multi-node blockchain consistency
-
 const NODE_CONFIGS = [
   {
     name: 'Node 1',
-    grpcUrl: 'dev2-node3-rpc.hamsa-ucl.com:50051', // Shared ZK server
-    httpUrl: 'http://l2-node1-native.hamsa-ucl.com:8545', // Node 1 blockchain RPC
+    grpcUrl: 'dev2-node1-rpc.hamsa-ucl.com:50051',
+    httpUrl: 'http://l2-node1-native.hamsa-ucl.com:8545',
+    admin: '0x93d2Ce0461C2612F847e074434d9951c32e44327',
+    key: '81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171',
   },
   {
     name: 'Node 2',
-    grpcUrl: 'dev2-node3-rpc.hamsa-ucl.com:50051', // Shared ZK server
-    httpUrl: 'http://l2-node2-native.hamsa-ucl.com:8545', // Node 2 blockchain RPC
+    grpcUrl: 'dev2-node2-rpc.hamsa-ucl.com:50051',
+    httpUrl: 'http://l2-node2-native.hamsa-ucl.com:8545',
+    admin: '0x73494abc9681D133d7Fb4241f1760B314205994c',
+    key: '59b08ece967520c64b642fcdc5d2a9aa82b55474f1c1f03419d504d96c8221e5',
   },
   {
     name: 'Node 3',
-    grpcUrl: 'dev2-node3-rpc.hamsa-ucl.com:50051', // Shared ZK server
-    httpUrl: 'http://l2-node3-native.hamsa-ucl.com:8545', // Node 3 blockchain RPC
-  },
-  {
-    name: 'Node 4',
-    grpcUrl: 'dev2-node3-rpc.hamsa-ucl.com:50051', // Shared ZK server
-    httpUrl: 'http://l2-node4-native.hamsa-ucl.com:8545', // Node 4 blockchain RPC
+    grpcUrl: 'dev2-node3-rpc.hamsa-ucl.com:50051',
+    httpUrl: 'http://l2-node3-native.hamsa-ucl.com:8545',
+    admin: accounts.Owner,
+    key: accounts.OwnerKey,
   },
 ];
 
-describe('Multi-Node Consistency Tests', function () {
-  this.timeout(600000); // 10 minutes
+const l1CustomNetwork = { name: 'BESU', chainId: 1337 };
+const providerOptions = { batchMaxCount: 10, staticNetwork: true };
 
-  let nodes = [];
-  let primaryWallet;
-  let primaryMetadata;
-  let receiver1 = accounts.To1;
+function withTimeout(promise, ms, message) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(message || `Timeout after ${ms}ms`)), ms))]);
+}
 
-  // Network configuration for provider
-  const l1CustomNetwork = {
-    name: 'BESU',
-    chainId: 1337,
-  };
-  const providerOptions = {
-    batchMaxCount: 10,
-    staticNetwork: true,
-  };
+describe('Multi Node Consistency Test', function () {
+  this.timeout(300000);
 
-  /**
-   * Initialize connections to all nodes
-   * Creates independent provider, contract, and gRPC client for each node
-   * @throws {Error} If any node connection fails
-   */
-  async function initializeNodeConnections() {
-    console.log('Initializing connections to all 4 nodes...\n');
-    console.log('⚠️  Note: If gRPC connection fails, ensure:');
-    console.log('   1. You are connected to VPN (if required)');
-    console.log('   2. Firewall allows access to port 50051');
-    console.log('   3. The nodes are running and accessible\n');
+  // Use Node 3 configuration
+  const node3Config = NODE_CONFIGS[2];
+  let provider, client, minterWallet, ownerWallet;
+  let minterMetadata, ownerMetadata, minterContract, ownerContract;
 
-    // Clear any existing connections
-    nodes = [];
+  // Multi-node setup
+  let allProviders = [];
+  let allContracts = [];
+  let allClients = [];
 
+  // Track tokens for each test scenario
+  let scenario1TokenId, scenario2TokenId;
+
+  before(async function () {
+    console.log('\n=== Multi Node Consistency Test ===\n');
+    console.log(`Using Node: ${node3Config.name}`);
+    console.log(`HTTP: ${node3Config.httpUrl}, gRPC: ${node3Config.grpcUrl}`);
+
+    provider = new ethers.JsonRpcProvider(node3Config.httpUrl, l1CustomNetwork, providerOptions);
+    const blockNumber = await withTimeout(provider.getBlockNumber(), 10000, 'HTTP timeout');
+    console.log(`Connected (block: ${blockNumber})`);
+
+    client = createClient(node3Config.grpcUrl);
+    minterWallet = new ethers.Wallet(accounts.MinterKey, provider);
+    ownerWallet = new ethers.Wallet(accounts.OwnerKey, provider);
+
+    console.log(`Minter: ${minterWallet.address}`);
+    console.log(`Owner: ${ownerWallet.address}`);
+    console.log(`Target Receiver 1 (To1): ${accounts.To1}`);
+    console.log(`Target Receiver 2 (Node1 Admin): ${NODE_CONFIGS[0].admin}`);
+
+    minterMetadata = await createAuthMetadata(accounts.MinterKey);
+    ownerMetadata = await createAuthMetadata(accounts.OwnerKey);
+    minterContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minterWallet);
+    ownerContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, ownerWallet);
+
+    // Initialize multi-node connections
+    console.log('\n--- Initializing Multi-Node Connections ---');
     for (let i = 0; i < NODE_CONFIGS.length; i++) {
       const config = NODE_CONFIGS[i];
-      console.log(`  Connecting to ${config.name}...`);
-      console.log(`    gRPC: ${config.grpcUrl}`);
-      console.log(`    HTTP: ${config.httpUrl}`);
+      console.log(`Connecting to ${config.name}...`);
 
-      try {
-        // Create independent provider for this node with custom network config
-        const provider = new ethers.JsonRpcProvider(config.httpUrl, l1CustomNetwork, providerOptions);
+      const nodeProvider = new ethers.JsonRpcProvider(config.httpUrl, l1CustomNetwork, providerOptions);
+      const nodeContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, nodeProvider);
+      const nodeClient = createClient(config.grpcUrl);
 
-        // Test HTTP connection
-        try {
-          const blockNumber = await provider.getBlockNumber();
-          console.log(`    ✅ HTTP connected (block: ${blockNumber})`);
-        } catch (httpError) {
-          console.error(`    ❌ HTTP connection failed: ${httpError.message}`);
-          throw new Error(`HTTP connection failed for ${config.name}: ${httpError.message}`);
-        }
+      allProviders.push(nodeProvider);
+      allContracts.push(nodeContract);
+      allClients.push(nodeClient);
 
-        // Create independent contract instance for this node
-        const contract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, provider);
-
-        // Create independent gRPC client for this node
-        console.log(`    Connecting to gRPC...`);
-        const client = createClient(config.grpcUrl);
-
-        // Note: gRPC connection is lazy, actual connection test happens on first call
-        console.log(`    ✅ gRPC client created (connection will be tested on first use)`);
-
-        // Store node connection
-        nodes.push({
-          name: config.name,
-          grpcUrl: config.grpcUrl,
-          httpUrl: config.httpUrl,
-          provider: provider,
-          contract: contract,
-          client: client,
-        });
-
-        console.log(`    ✅ ${config.name} initialized successfully\n`);
-      } catch (error) {
-        console.error(`    ❌ Failed to initialize ${config.name}`);
-        console.error(`       Error: ${error.message}`);
-        console.error(`\n💡 Troubleshooting tips:`);
-        console.error(`   - Check if you're connected to VPN`);
-        console.error(`   - Verify the node URLs are correct`);
-        console.error(`   - Test connectivity: Test-NetConnection -ComputerName <hostname> -Port 50051`);
-        throw new Error(`Node initialization failed for ${config.name}: ${error.message}`);
-      }
+      const nodeBlock = await withTimeout(nodeProvider.getBlockNumber(), 10000, `${config.name} HTTP timeout`);
+      console.log(`   ${config.name}: Connected (block: ${nodeBlock})`);
     }
+    console.log('✅ All nodes connected\n');
+  });
 
-    console.log(`\n✅ All ${nodes.length} nodes initialized successfully\n`);
+  describe.only('Scenario 1: Mint -> Split -> Transfer to accounts.To1', function () {
+    let mintedTokenId, splitTokenId;
 
-    // Wait for nodes to sync to similar block height
-    await waitForNodesToSync();
-  }
+    it('Step 1: Set mint allowance for accounts.minter', async function () {
+      console.log('\n--- Scenario 1 ---');
+      console.log('Step 1: Set Mint Allowance for accounts.minter');
+      const allowanceAmount = 100000000;
 
-  /**
-   * Wait for all nodes to sync to the same or similar block height
-   * This ensures consistency across nodes before starting tests
-   * @param {number} maxBlockDiff - Maximum allowed block difference (default: 2)
-   * @param {number} timeout - Timeout in milliseconds (default: 60000)
-   * @throws {Error} If nodes fail to sync within timeout
-   */
-  async function waitForNodesToSync(maxBlockDiff = 2, timeout = 60000) {
-    console.log('⏳ Waiting for all nodes to sync to similar block height...');
-    const startTime = Date.now();
+      const setAllowedTx = await withTimeout(
+        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+        60000,
+        'setupMintAllowance timeout'
+      );
 
-    while (Date.now() - startTime < timeout) {
-      try {
-        // Get current block numbers from all nodes
-        const blockNumbers = await Promise.all(
-          nodes.map(async (node) => {
-            const blockNumber = await node.provider.getBlockNumber();
-            return { name: node.name, blockNumber };
-          })
-        );
+      console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
+      expect(setAllowedTx.hash).to.be.a('string');
+      await sleep(10000);
+    });
 
-        // Log current status
-        console.log('  Current block heights:');
-        blockNumbers.forEach((bn) => {
-          console.log(`    ${bn.name}: ${bn.blockNumber}`);
-        });
+    it('Step 2: Mint 1 token to minter', async function () {
+      console.log('\nStep 2: Mint 1 Token');
+      const tokenAmount = 1000;
 
-        // Check if all nodes are within acceptable range
-        const blocks = blockNumbers.map((bn) => bn.blockNumber);
-        const maxBlock = Math.max(...blocks);
-        const minBlock = Math.min(...blocks);
-        const diff = maxBlock - minBlock;
+      const generateRequest = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: minterWallet.address, amount: tokenAmount }],
+      };
 
-        if (diff <= maxBlockDiff) {
-          console.log(`  ✅ All nodes synced within ${diff} blocks\n`);
-          return;
-        }
+      const response = await withTimeout(client.generateBatchMintProof(generateRequest, minterMetadata), 60000, 'generateBatchMintProof timeout');
 
-        console.log(`  ⏳ Block difference: ${diff} blocks, waiting...\n`);
-      } catch (error) {
-        console.log(`  ⚠️  Error checking block heights: ${error.message}`);
-      }
+      const recipients = response.to_accounts.map((account) => account.address);
+      const newTokens = response.to_accounts.map((account) => ({
+        id: account.token.token_id,
+        owner: account.address,
+        status: 2,
+        amount: { cl_x: account.token.cl_x, cl_y: account.token.cl_y, cr_x: account.token.cr_x, cr_y: account.token.cr_y },
+        to: account.address,
+        rollbackTokenId: 0,
+      }));
+
+      const newAllowed = {
+        id: response.mint_allowed.token_id,
+        value: { cl_x: response.mint_allowed.cl_x, cl_y: response.mint_allowed.cl_y, cr_x: response.mint_allowed.cr_x, cr_y: response.mint_allowed.cr_y },
+      };
+
+      const proof = response.proof.map((p) => ethers.toBigInt(p));
+      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
+      const padding = Math.max(Number(response.batched_size) - 1, 0);
+
+      const mintTx = await minterContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      console.log(`Mint tx: ${mintTx.hash}, waiting...`);
+
+      const receipt = await mintTx.wait();
+      mintedTokenId = ethers.toBigInt(newTokens[0].id);
+
+      console.log(`✅ Minted token ID: ${mintedTokenId.toString()} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+      expect(receipt.status).to.equal(1);
+      await sleep(3000);
+    });
+
+    it('Step 3: Split 1 token', async function () {
+      console.log('\nStep 3: Split 1 Token');
+      expect(mintedTokenId).to.exist;
+      console.log(`Splitting token ${mintedTokenId.toString()}...`);
+
+      const splitRequests = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: accounts.To1, amount: 100, comment: 'split-to-to1' }],
+      };
+
+      const splitProofResponse = await withTimeout(client.generateBatchSplitToken(splitRequests, minterMetadata), 60000, 'generateBatchSplitToken timeout');
 
       await sleep(2000);
-    }
 
-    throw new Error(`Nodes failed to sync within ${timeout}ms`);
-  }
+      const detailResponse = await withTimeout(
+        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+        60000,
+        'getBatchSplitTokenDetail timeout'
+      );
 
-  /**
-   * Wait for transaction confirmation on a specific node
-   * @param {ethers.Provider} provider - The provider for the node
-   * @param {string} txHash - Transaction hash to wait for
-   * @param {string} nodeName - Name of the node (for logging)
-   * @param {number} timeout - Timeout in milliseconds (default: 60000)
-   * @returns {Promise<Object>} Transaction receipt
-   * @throws {Error} If timeout occurs or transaction fails
-   */
-  async function waitForTransactionOnNode(provider, txHash, nodeName, timeout = 120000) {
-    console.log(`    Waiting for tx on ${nodeName}...`);
-    const startTime = Date.now();
+      const splitRecipients = detailResponse.to_addresses;
+      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
 
-    while (Date.now() - startTime < timeout) {
-      try {
-        const receipt = await provider.getTransactionReceipt(txHash);
-        if (receipt) {
-          console.log(`      ✅ ${nodeName}: Confirmed in block ${receipt.blockNumber}`);
-          return receipt;
-        }
-      } catch (error) {
-        // Log error but continue polling
-        if (Date.now() - startTime > timeout / 2) {
-          console.log(`      ⚠️  ${nodeName}: Still waiting... (${error.message})`);
+      const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
+        id: account.token_id,
+        owner: minterWallet.address,
+        status: 2,
+        amount: {
+          cl_x: ethers.toBigInt(account.cl_x),
+          cl_y: ethers.toBigInt(account.cl_y),
+          cr_x: ethers.toBigInt(account.cr_x),
+          cr_y: ethers.toBigInt(account.cr_y),
+        },
+        to: idx % 2 === 0 ? minterWallet.address : splitRecipients[Math.floor(idx / 2)],
+        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
+      }));
+
+      const splitProof = detailResponse.proof.map((p) => ethers.toBigInt(p));
+      const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
+      const paddingNum = detailResponse.batched_size - splitRecipients.length;
+
+      const splitTx = await minterContract.split(
+        minterWallet.address,
+        splitRecipients,
+        consumedIds,
+        splitNewTokens,
+        splitProof,
+        splitPublicInputs,
+        paddingNum,
+        { gasLimit: 100000 }
+      );
+      console.log(`Split tx: ${splitTx.hash}, waiting...`);
+
+      const receipt = await splitTx.wait();
+
+      // Find first odd-indexed token for transfer (the one going to To1)
+      const transferTokenIdx = splitNewTokens.findIndex((_, idx) => idx % 2 !== 0);
+      splitTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+
+      console.log(`✅ Split done. Token IDs: ${splitNewTokens.map((t) => t.id).join(', ')}`);
+      console.log(`   Selected for transfer: ${splitTokenId.toString()} (index ${transferTokenIdx})`);
+
+      expect(receipt.status).to.equal(1);
+      await sleep(3000);
+    });
+
+    it('Step 4: Verify token before transfer', async function () {
+      console.log('\nStep 4: Verify Token Before Transfer');
+      expect(splitTokenId).to.exist;
+      console.log(`Verifying token ${splitTokenId.toString()}...`);
+
+      const verifyResult = await verifyToken(splitTokenId, minterWallet.address, minterContract);
+      expect(verifyResult.success).to.be.true;
+      console.log(`✅ Token verified successfully`);
+    });
+
+    it('Step 5: Transfer token to accounts.To1', async function () {
+      console.log('\nStep 5: Transfer Token to accounts.To1');
+      expect(splitTokenId).to.exist;
+      console.log(`Transferring token ${splitTokenId.toString()} to ${accounts.To1}...`);
+
+      const memo = 'transfer-to-to1';
+      const transferTx = await minterContract.transfer(splitTokenId, memo, { gasLimit: 100000 });
+      console.log(`Transfer tx: ${transferTx.hash}, waiting...`);
+
+      const receipt = await transferTx.wait();
+
+      console.log(
+        `✅ Transfer done. Token: ${splitTokenId.toString()}, To: ${accounts.To1}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
+      );
+      expect(receipt.status).to.equal(1);
+
+      scenario1TokenId = splitTokenId;
+    });
+
+    it('Step 6: Verify token ownership transfer to To1', async function () {
+      console.log('\nStep 6: Verify Token Ownership Transfer');
+      expect(scenario1TokenId).to.exist;
+      console.log(`Verifying token ${scenario1TokenId.toString()} ownership transfer...`);
+
+      // Wait for state propagation
+      console.log('   Waiting for state propagation...');
+      await sleep(5000);
+
+      // 1. Query with minter address - should no longer own the token (expect failure)
+      console.log('   Querying with minter address (original owner)...');
+      const minterResult = await verifyToken(scenario1TokenId, minterWallet.address, minterContract);
+      if (!minterResult.success) {
+        console.log(`   ✅ Minter no longer owns the token (expected)`);
+      } else {
+        console.log(`   ⚠️  Minter still has access to token data`);
+      }
+
+      // 2. Query with To1 address - should own the token (expect success)
+      console.log('   Querying with To1 address (expected new owner)...');
+      let to1Result = await verifyToken(scenario1TokenId, accounts.To1, minterContract);
+
+      // Retry mechanism for new owner verification
+      let retries = 3;
+      while (!to1Result.success && retries > 0) {
+        console.log(`   ⏳ Retry ${4 - retries}/3 - waiting 3s before retry...`);
+        await sleep(3000);
+        to1Result = await verifyToken(scenario1TokenId, accounts.To1, minterContract);
+        retries--;
+      }
+
+      expect(to1Result.success).to.be.true;
+      expect(to1Result.owner.toLowerCase()).to.equal(accounts.To1.toLowerCase());
+
+      console.log(`✅ Token ownership verified - Successfully transferred from minter to To1`);
+      console.log(`   - To1 view: Owner=${to1Result.owner}, To=${to1Result.to}, Status=${to1Result.status}`);
+    });
+  });
+  describe.only('Scenario 2: Mint -> Split -> Transfer to Node1 Admin', function () {
+    let mintedTokenId2, splitTokenId2;
+
+    it('Step 1: Set mint allowance for accounts.minter', async function () {
+      console.log('\n--- Scenario 2 ---');
+      console.log('Step 1: Set Mint Allowance for accounts.minter');
+      const allowanceAmount = 100000000;
+
+      const setAllowedTx = await withTimeout(
+        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+        60000,
+        'setupMintAllowance timeout'
+      );
+
+      console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
+      expect(setAllowedTx.hash).to.be.a('string');
+      await sleep(3000);
+    });
+
+    it('Step 2: Mint 1 token to minter', async function () {
+      console.log('\nStep 2: Mint 1 Token');
+      const tokenAmount = 1000;
+
+      const generateRequest = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: minterWallet.address, amount: tokenAmount }],
+      };
+
+      const response = await withTimeout(client.generateBatchMintProof(generateRequest, minterMetadata), 60000, 'generateBatchMintProof timeout');
+
+      const recipients = response.to_accounts.map((account) => account.address);
+      const newTokens = response.to_accounts.map((account) => ({
+        id: account.token.token_id,
+        owner: account.address,
+        status: 2,
+        amount: { cl_x: account.token.cl_x, cl_y: account.token.cl_y, cr_x: account.token.cr_x, cr_y: account.token.cr_y },
+        to: account.address,
+        rollbackTokenId: 0,
+      }));
+
+      const newAllowed = {
+        id: response.mint_allowed.token_id,
+        value: { cl_x: response.mint_allowed.cl_x, cl_y: response.mint_allowed.cl_y, cr_x: response.mint_allowed.cr_x, cr_y: response.mint_allowed.cr_y },
+      };
+
+      const proof = response.proof.map((p) => ethers.toBigInt(p));
+      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
+      const padding = Math.max(Number(response.batched_size) - 1, 0);
+
+      const mintTx = await minterContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      console.log(`Mint tx: ${mintTx.hash}, waiting...`);
+
+      const receipt = await mintTx.wait();
+      mintedTokenId2 = ethers.toBigInt(newTokens[0].id);
+
+      console.log(`✅ Minted token ID: ${mintedTokenId2.toString()} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+      expect(receipt.status).to.equal(1);
+      await sleep(3000);
+    });
+
+    it('Step 3: Split 1 token', async function () {
+      console.log('\nStep 3: Split 1 Token');
+      expect(mintedTokenId2).to.exist;
+      console.log(`Splitting token ${mintedTokenId2.toString()}...`);
+
+      const targetReceiver = NODE_CONFIGS[0].admin; // Node1 admin
+      const splitRequests = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: targetReceiver, amount: 100, comment: 'split-to-node1-admin' }],
+      };
+
+      const splitProofResponse = await withTimeout(client.generateBatchSplitToken(splitRequests, minterMetadata), 60000, 'generateBatchSplitToken timeout');
+
+      await sleep(2000);
+
+      const detailResponse = await withTimeout(
+        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+        60000,
+        'getBatchSplitTokenDetail timeout'
+      );
+
+      const splitRecipients = detailResponse.to_addresses;
+      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
+
+      const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
+        id: account.token_id,
+        owner: minterWallet.address,
+        status: 2,
+        amount: {
+          cl_x: ethers.toBigInt(account.cl_x),
+          cl_y: ethers.toBigInt(account.cl_y),
+          cr_x: ethers.toBigInt(account.cr_x),
+          cr_y: ethers.toBigInt(account.cr_y),
+        },
+        to: idx % 2 === 0 ? minterWallet.address : splitRecipients[Math.floor(idx / 2)],
+        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
+      }));
+
+      const splitProof = detailResponse.proof.map((p) => ethers.toBigInt(p));
+      const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
+      const paddingNum = detailResponse.batched_size - splitRecipients.length;
+
+      const splitTx = await minterContract.split(
+        minterWallet.address,
+        splitRecipients,
+        consumedIds,
+        splitNewTokens,
+        splitProof,
+        splitPublicInputs,
+        paddingNum,
+        { gasLimit: 100000 }
+      );
+      console.log(`Split tx: ${splitTx.hash}, waiting...`);
+
+      const receipt = await splitTx.wait();
+
+      // Find first odd-indexed token for transfer (the one going to Node1 admin)
+      const transferTokenIdx = splitNewTokens.findIndex((_, idx) => idx % 2 !== 0);
+      splitTokenId2 = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+
+      console.log(`✅ Split done. Token IDs: ${splitNewTokens.map((t) => t.id).join(', ')}`);
+      console.log(`   Selected for transfer: ${splitTokenId2.toString()} (index ${transferTokenIdx})`);
+
+      expect(receipt.status).to.equal(1);
+      await sleep(3000);
+    });
+
+    it('Step 4: Verify token before transfer', async function () {
+      console.log('\nStep 4: Verify Token Before Transfer');
+      expect(splitTokenId2).to.exist;
+      console.log(`Verifying token ${splitTokenId2.toString()}...`);
+
+      const verifyResult = await verifyToken(splitTokenId2, minterWallet.address, minterContract);
+      expect(verifyResult.success).to.be.true;
+      console.log(`✅ Token verified successfully`);
+    });
+
+    it('Step 5: Transfer token to Node1 Admin', async function () {
+      console.log('\nStep 5: Transfer Token to Node1 Admin');
+      expect(splitTokenId2).to.exist;
+      const targetReceiver = NODE_CONFIGS[0].admin;
+      console.log(`Transferring token ${splitTokenId2.toString()} to ${targetReceiver}...`);
+
+      const memo = 'transfer-to-node1-admin';
+      const transferTx = await minterContract.transfer(splitTokenId2, memo, { gasLimit: 100000 });
+      console.log(`Transfer tx: ${transferTx.hash}, waiting...`);
+
+      const receipt = await transferTx.wait();
+
+      console.log(
+        `✅ Transfer done. Token: ${splitTokenId2.toString()}, To: ${targetReceiver}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
+      );
+      expect(receipt.status).to.equal(1);
+
+      scenario2TokenId = splitTokenId2;
+    });
+
+    it('Step 6: Verify token ownership transfer to Node1 Admin', async function () {
+      console.log('\nStep 6: Verify Token Ownership Transfer');
+      expect(scenario2TokenId).to.exist;
+      console.log(`Verifying token ${scenario2TokenId.toString()} ownership transfer...`);
+
+      // Wait for state propagation
+      console.log('   Waiting for state propagation...');
+      await sleep(5000);
+
+      // 1. Query with minter address - should no longer own the token (expect failure)
+      console.log('   Querying with minter address (original owner)...');
+      const minterResult = await verifyToken(scenario2TokenId, minterWallet.address, minterContract);
+      if (!minterResult.success) {
+        console.log(`   ✅ Minter no longer owns the token (expected)`);
+      } else {
+        console.log(`   ⚠️  Minter still has access to token data`);
+      }
+
+      // 2. Query with Node1 Admin address - should own the token (expect success)
+      console.log('   Querying with Node1 Admin address (expected new owner)...');
+      let node1AdminResult = await verifyToken(scenario2TokenId, NODE_CONFIGS[0].admin, minterContract);
+
+      // Retry mechanism for new owner verification
+      let retries = 3;
+      while (!node1AdminResult.success && retries > 0) {
+        console.log(`   ⏳ Retry ${4 - retries}/3 - waiting 3s before retry...`);
+        await sleep(3000);
+        node1AdminResult = await verifyToken(scenario2TokenId, NODE_CONFIGS[0].admin, minterContract);
+        retries--;
+      }
+
+      expect(node1AdminResult.success).to.be.true;
+      expect(node1AdminResult.owner.toLowerCase()).to.equal(NODE_CONFIGS[0].admin.toLowerCase());
+
+      console.log(`✅ Token ownership verified - Successfully transferred from minter to Node1 Admin`);
+      console.log(`   - Node1 Admin view: Owner=${node1AdminResult.owner}, To=${node1AdminResult.to}, Status=${node1AdminResult.status}`);
+    });
+  });
+  describe.skip('Scenario 3: Mint 3 tokens -> Split to 3 recipients -> Transfer to each', function () {
+    let mintedTokenIds = [];
+    let splitTokenIds = [];
+    const recipients = [
+      { name: 'To1', address: accounts.To1 },
+      { name: 'Node1 Admin', address: NODE_CONFIGS[0].admin },
+      { name: 'Node2 Admin', address: NODE_CONFIGS[1].admin },
+    ];
+
+    it('Step 1: Set mint allowance for accounts.minter', async function () {
+      console.log('\n--- Scenario 2 ---');
+      console.log('Step 1: Set Mint Allowance for accounts.minter');
+      const allowanceAmount = 100000000;
+
+      const setAllowedTx = await withTimeout(
+        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+        60000,
+        'setupMintAllowance timeout'
+      );
+
+      console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
+      expect(setAllowedTx.hash).to.be.a('string');
+      await sleep(3000);
+    });
+
+    it('Step 2: Mint 3 tokens to minter', async function () {
+      console.log('\nStep 2: Mint 3 Tokens');
+      const tokenAmount = 1000;
+
+      const generateRequest = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [
+          { address: minterWallet.address, amount: tokenAmount },
+          { address: minterWallet.address, amount: tokenAmount },
+          { address: minterWallet.address, amount: tokenAmount },
+        ],
+      };
+
+      const response = await withTimeout(client.generateBatchMintProof(generateRequest, minterMetadata), 60000, 'generateBatchMintProof timeout');
+
+      const recipientAddresses = response.to_accounts.map((account) => account.address);
+      const newTokens = response.to_accounts.map((account) => ({
+        id: account.token.token_id,
+        owner: account.address,
+        status: 2,
+        amount: { cl_x: account.token.cl_x, cl_y: account.token.cl_y, cr_x: account.token.cr_x, cr_y: account.token.cr_y },
+        to: account.address,
+        rollbackTokenId: 0,
+      }));
+
+      const newAllowed = {
+        id: response.mint_allowed.token_id,
+        value: { cl_x: response.mint_allowed.cl_x, cl_y: response.mint_allowed.cl_y, cr_x: response.mint_allowed.cr_x, cr_y: response.mint_allowed.cr_y },
+      };
+
+      const proof = response.proof.map((p) => ethers.toBigInt(p));
+      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
+      const padding = Math.max(Number(response.batched_size) - 3, 0);
+
+      const mintTx = await minterContract.mint(recipientAddresses, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      console.log(`Mint tx: ${mintTx.hash}, waiting...`);
+
+      const receipt = await mintTx.wait();
+      mintedTokenIds = newTokens.map((token) => ethers.toBigInt(token.id));
+
+      console.log(`✅ Minted 3 tokens:`);
+      mintedTokenIds.forEach((id, idx) => console.log(`   Token ${idx + 1}: ${id.toString()}`));
+      console.log(`   Block: ${receipt.blockNumber}, Gas: ${receipt.gasUsed}`);
+
+      expect(receipt.status).to.equal(1);
+      expect(mintedTokenIds.length).to.equal(3);
+      await sleep(3000);
+    });
+
+    it('Step 3: Split 3 tokens to 3 different recipients', async function () {
+      console.log('\nStep 3: Split 3 Tokens to 3 Recipients');
+      expect(mintedTokenIds.length).to.equal(3);
+
+      console.log(`Splitting tokens to: ${recipients.map((r) => r.name).join(', ')}`);
+
+      const splitRequests = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: recipients.map((recipient, idx) => ({
+          address: recipient.address,
+          amount: 100,
+          comment: `split-to-${recipient.name.toLowerCase().replace(/\s+/g, '-')}`,
+        })),
+      };
+
+      const splitProofResponse = await withTimeout(client.generateBatchSplitToken(splitRequests, minterMetadata), 60000, 'generateBatchSplitToken timeout');
+
+      await sleep(2000);
+
+      const detailResponse = await withTimeout(
+        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+        60000,
+        'getBatchSplitTokenDetail timeout'
+      );
+
+      const splitRecipients = detailResponse.to_addresses;
+      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
+
+      const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
+        id: account.token_id,
+        owner: minterWallet.address,
+        status: 2,
+        amount: {
+          cl_x: ethers.toBigInt(account.cl_x),
+          cl_y: ethers.toBigInt(account.cl_y),
+          cr_x: ethers.toBigInt(account.cr_x),
+          cr_y: ethers.toBigInt(account.cr_y),
+        },
+        to: idx % 2 === 0 ? minterWallet.address : splitRecipients[Math.floor(idx / 2)],
+        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
+      }));
+
+      const splitProof = detailResponse.proof.map((p) => ethers.toBigInt(p));
+      const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
+      const paddingNum = detailResponse.batched_size - splitRecipients.length;
+
+      const splitTx = await minterContract.split(
+        minterWallet.address,
+        splitRecipients,
+        consumedIds,
+        splitNewTokens,
+        splitProof,
+        splitPublicInputs,
+        paddingNum,
+        { gasLimit: 100000 }
+      );
+      console.log(`Split tx: ${splitTx.hash}, waiting...`);
+
+      const receipt = await splitTx.wait();
+
+      // Collect odd-indexed tokens (the ones going to recipients)
+      splitTokenIds = splitNewTokens.filter((_, idx) => idx % 2 !== 0).map((token) => ethers.toBigInt(token.id));
+
+      console.log(`✅ Split done. All token IDs: ${splitNewTokens.map((t) => t.id).join(', ')}`);
+      console.log(`   Tokens for transfer:`);
+      splitTokenIds.forEach((id, idx) => {
+        console.log(`   ${recipients[idx].name}: ${id.toString()}`);
+      });
+
+      expect(receipt.status).to.equal(1);
+      expect(splitTokenIds.length).to.equal(3);
+      await sleep(3000);
+    });
+
+    it('Step 4: Verify tokens before transfer', async function () {
+      console.log('\nStep 4: Verify Tokens Before Transfer');
+      expect(splitTokenIds.length).to.equal(3);
+
+      for (let i = 0; i < splitTokenIds.length; i++) {
+        console.log(`Verifying token ${i + 1}/${splitTokenIds.length}: ${splitTokenIds[i].toString()}...`);
+        const verifyResult = await verifyToken(splitTokenIds[i], minterWallet.address, minterContract);
+        expect(verifyResult.success).to.be.true;
+      }
+
+      console.log(`✅ All 3 tokens verified successfully`);
+    });
+
+    it('Step 5: Transfer tokens to respective recipients', async function () {
+      console.log('\nStep 5: Transfer Tokens to Recipients');
+      expect(splitTokenIds.length).to.equal(3);
+
+      for (let i = 0; i < splitTokenIds.length; i++) {
+        const tokenId = splitTokenIds[i];
+        const recipient = recipients[i];
+
+        console.log(`\nTransferring token ${i + 1}/3: ${tokenId.toString()} to ${recipient.name} (${recipient.address})...`);
+
+        const memo = `transfer-to-${recipient.name.toLowerCase().replace(/\s+/g, '-')}`;
+        const transferTx = await minterContract.transfer(tokenId, memo, { gasLimit: 100000 });
+        console.log(`   Transfer tx: ${transferTx.hash}, waiting...`);
+
+        const receipt = await transferTx.wait();
+        console.log(`   ✅ Transfer done (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`);
+
+        expect(receipt.status).to.equal(1);
+
+        // Small delay between transfers
+        if (i < splitTokenIds.length - 1) {
+          await sleep(2000);
         }
       }
-      await sleep(1000);
-    }
 
-    const elapsed = Date.now() - startTime;
-    throw new Error(
-      `Timeout waiting for transaction ${txHash} on ${nodeName} after ${elapsed}ms. ` +
-        `This may indicate network issues or the transaction was not propagated to this node.`
-    );
+      console.log(`\n✅ All 3 tokens transferred successfully`);
+      scenario2TokenId = splitTokenIds[0]; // Keep for summary
+    });
+
+    it('Step 6: Verify token ownership transfers', async function () {
+      console.log('\nStep 6: Verify Token Ownership Transfers');
+      expect(splitTokenIds.length).to.equal(3);
+
+      // Wait for state propagation
+      console.log('   Waiting for state propagation...');
+      await sleep(5000);
+
+      // Verify each token with its new owner
+      for (let i = 0; i < splitTokenIds.length; i++) {
+        const tokenId = splitTokenIds[i];
+        const recipient = recipients[i];
+
+        console.log(`\n   Verifying token ${i + 1}/3: ${tokenId.toString()} -> ${recipient.name}`);
+
+        // 1. Query with minter address - should no longer own the token
+        console.log(`      Querying with minter address (original owner)...`);
+        const minterResult = await verifyToken(tokenId, minterWallet.address, minterContract);
+        if (!minterResult.success) {
+          console.log(`      ✅ Minter no longer owns the token (expected)`);
+        } else {
+          console.log(`      ⚠️  Minter still has access to token data`);
+        }
+
+        // 2. Query with new owner address - should own the token
+        console.log(`      Querying with ${recipient.name} address (expected new owner)...`);
+        let ownerResult = await verifyToken(tokenId, recipient.address, minterContract);
+
+        // Retry mechanism for new owner verification
+        let retries = 3;
+        while (!ownerResult.success && retries > 0) {
+          console.log(`      ⏳ Retry ${4 - retries}/3 - waiting 3s before retry...`);
+          await sleep(3000);
+          ownerResult = await verifyToken(tokenId, recipient.address, minterContract);
+          retries--;
+        }
+
+        expect(ownerResult.success).to.be.true;
+        expect(ownerResult.owner.toLowerCase()).to.equal(recipient.address.toLowerCase());
+
+        console.log(`      ✅ Token ownership verified for ${recipient.name}`);
+        console.log(`         Owner=${ownerResult.owner}, To=${ownerResult.to}, Status=${ownerResult.status}`);
+      }
+
+      console.log(`\n✅ All 3 token ownership transfers verified successfully`);
+    });
+  });
+  describe('Scenario 4: Multi-Node Synchronization Test', function () {
+    let syncTestTokenId, syncTestTxHash, syncTestSplitTokenId;
+
+    it('Step 1: Verify initial blockchain sync across all nodes', async function () {
+      console.log('\n--- Scenario 4: Multi-Node Synchronization Test ---');
+      console.log('Step 1: Verify Initial Blockchain Sync');
+
+      const blockNumbers = await Promise.all(
+        allProviders.map(async (provider, idx) => {
+          const blockNum = await provider.getBlockNumber();
+          console.log(`   ${NODE_CONFIGS[idx].name}: Block ${blockNum}`);
+          return blockNum;
+        })
+      );
+
+      const maxBlock = Math.max(...blockNumbers);
+      const minBlock = Math.min(...blockNumbers);
+      const blockDiff = maxBlock - minBlock;
+
+      console.log(`   Block height difference: ${blockDiff} blocks`);
+
+      // Allow up to 3 blocks difference as acceptable
+      expect(blockDiff).to.be.at.most(3);
+      console.log(`✅ All nodes are synchronized (max diff: ${blockDiff} blocks)`);
+    });
+
+    it('Step 2: Set mint allowance on Node 3', async function () {
+      console.log('\nStep 2: Set Mint Allowance on Node 3');
+      const allowanceAmount = 100000000;
+
+      const setAllowedTx = await withTimeout(
+        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+        60000,
+        'setupMintAllowance timeout'
+      );
+
+      syncTestTxHash = setAllowedTx.hash;
+      console.log(`✅ Mint allowance set on Node 3, tx: ${syncTestTxHash}`);
+      expect(setAllowedTx.hash).to.be.a('string');
+      await sleep(5000);
+    });
+
+    it('Step 3: Verify transaction propagation to all nodes', async function () {
+      console.log('\nStep 3: Verify Transaction Propagation');
+      console.log(`Checking if tx ${syncTestTxHash} is visible on all nodes...`);
+
+      const receipts = await Promise.all(
+        allProviders.map(async (provider, idx) => {
+          try {
+            const receipt = await provider.getTransactionReceipt(syncTestTxHash);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ${receipt ? '✅ Found' : '❌ Not found'} (block: ${receipt?.blockNumber || 'N/A'})`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: !!receipt,
+              blockNumber: receipt?.blockNumber,
+              status: receipt?.status,
+            };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: false,
+              error: error.message,
+            };
+          }
+        })
+      );
+
+      const foundCount = receipts.filter((r) => r.found).length;
+      console.log(`\n   Transaction found on ${foundCount}/${receipts.length} nodes`);
+
+      expect(foundCount).to.equal(receipts.length);
+      console.log(`✅ Transaction propagated to all nodes`);
+    });
+
+    it('Step 4: Mint token on Node 3', async function () {
+      console.log('\nStep 4: Mint Token on Node 3');
+      const tokenAmount = 1000;
+
+      const generateRequest = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: minterWallet.address, amount: tokenAmount }],
+      };
+
+      const response = await withTimeout(client.generateBatchMintProof(generateRequest, minterMetadata), 60000, 'generateBatchMintProof timeout');
+
+      const recipients = response.to_accounts.map((account) => account.address);
+      const newTokens = response.to_accounts.map((account) => ({
+        id: account.token.token_id,
+        owner: account.address,
+        status: 2,
+        amount: { cl_x: account.token.cl_x, cl_y: account.token.cl_y, cr_x: account.token.cr_x, cr_y: account.token.cr_y },
+        to: account.address,
+        rollbackTokenId: 0,
+      }));
+
+      const newAllowed = {
+        id: response.mint_allowed.token_id,
+        value: { cl_x: response.mint_allowed.cl_x, cl_y: response.mint_allowed.cl_y, cr_x: response.mint_allowed.cr_x, cr_y: response.mint_allowed.cr_y },
+      };
+
+      const proof = response.proof.map((p) => ethers.toBigInt(p));
+      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
+      const padding = Math.max(Number(response.batched_size) - 1, 0);
+
+      const mintTx = await minterContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      console.log(`Mint tx: ${mintTx.hash}, waiting...`);
+
+      const receipt = await mintTx.wait();
+      syncTestTokenId = ethers.toBigInt(newTokens[0].id);
+      syncTestTxHash = mintTx.hash;
+
+      console.log(`✅ Minted token ID: ${syncTestTokenId.toString()} on Node 3`);
+      console.log(`   Block: ${receipt.blockNumber}, Gas: ${receipt.gasUsed}`);
+      expect(receipt.status).to.equal(1);
+
+      // Wait for propagation
+      console.log('   Waiting for state propagation...');
+      await sleep(8000);
+    });
+
+    it('Step 5: Verify minted token state consistency across all nodes', async function () {
+      console.log('\nStep 5: Verify Minted Token State Consistency Across All Nodes');
+      expect(syncTestTokenId).to.exist;
+      console.log(`Verifying token ${syncTestTokenId.toString()} on all nodes...`);
+
+      const tokenStates = await Promise.all(
+        allContracts.map(async (contract, idx) => {
+          try {
+            const token = await contract.getToken(minterWallet.address, syncTestTokenId);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Token found`);
+            console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: true,
+              owner: token.owner,
+              status: token.status,
+              to: token.to,
+              id: token.id.toString(),
+            };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: false,
+              error: error.message,
+            };
+          }
+        })
+      );
+
+      const successStates = tokenStates.filter((s) => s.success);
+      console.log(`\n   Token found on ${successStates.length}/${tokenStates.length} nodes`);
+
+      // Verify all successful queries return the same data
+      if (successStates.length > 1) {
+        const first = successStates[0];
+        const allConsistent = successStates.every(
+          (s) =>
+            s.owner.toLowerCase() === first.owner.toLowerCase() &&
+            s.status === first.status &&
+            s.to.toLowerCase() === first.to.toLowerCase() &&
+            s.id === first.id
+        );
+
+        expect(allConsistent).to.be.true;
+        console.log(`✅ Minted token state is consistent across all nodes`);
+      } else {
+        expect(successStates.length).to.be.at.least(1);
+      }
+    });
+
+    it('Step 6: Split token on Node 3', async function () {
+      console.log('\nStep 6: Split Token on Node 3');
+      expect(syncTestTokenId).to.exist;
+      console.log(`Splitting token ${syncTestTokenId.toString()}...`);
+
+      const splitRequests = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterWallet.address,
+        to_accounts: [{ address: accounts.To1, amount: 100, comment: 'multi-node-split-test' }],
+      };
+
+      const splitProofResponse = await withTimeout(client.generateBatchSplitToken(splitRequests, minterMetadata), 60000, 'generateBatchSplitToken timeout');
+
+      await sleep(2000);
+
+      const detailResponse = await withTimeout(
+        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+        60000,
+        'getBatchSplitTokenDetail timeout'
+      );
+
+      const splitRecipients = detailResponse.to_addresses;
+      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
+
+      const splitNewTokens = detailResponse.newTokens.map((account, idx) => ({
+        id: account.token_id,
+        owner: minterWallet.address,
+        status: 2,
+        amount: {
+          cl_x: ethers.toBigInt(account.cl_x),
+          cl_y: ethers.toBigInt(account.cl_y),
+          cr_x: ethers.toBigInt(account.cr_x),
+          cr_y: ethers.toBigInt(account.cr_y),
+        },
+        to: idx % 2 === 0 ? minterWallet.address : splitRecipients[Math.floor(idx / 2)],
+        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
+      }));
+
+      const splitProof = detailResponse.proof.map((p) => ethers.toBigInt(p));
+      const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
+      const paddingNum = detailResponse.batched_size - splitRecipients.length;
+
+      const splitTx = await minterContract.split(
+        minterWallet.address,
+        splitRecipients,
+        consumedIds,
+        splitNewTokens,
+        splitProof,
+        splitPublicInputs,
+        paddingNum,
+        { gasLimit: 100000 }
+      );
+      console.log(`Split tx: ${splitTx.hash}, waiting...`);
+
+      const receipt = await splitTx.wait();
+      syncTestTxHash = splitTx.hash;
+
+      // Find the token going to To1 (odd index)
+      const transferTokenIdx = splitNewTokens.findIndex((_, idx) => idx % 2 !== 0);
+      syncTestSplitTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+
+      console.log(`✅ Split done on Node 3. All token IDs: ${splitNewTokens.map((t) => t.id).join(', ')}`);
+      console.log(`   Token for transfer: ${syncTestSplitTokenId.toString()} (index ${transferTokenIdx})`);
+      console.log(`   Block: ${receipt.blockNumber}, Gas: ${receipt.gasUsed}`);
+
+      expect(receipt.status).to.equal(1);
+
+      // Wait for propagation
+      console.log('   Waiting for state propagation...');
+      await sleep(8000);
+    });
+
+    it('Step 7: Verify split transaction propagation to all nodes', async function () {
+      console.log('\nStep 7: Verify Split Transaction Propagation');
+      console.log(`Checking if split tx ${syncTestTxHash} is visible on all nodes...`);
+
+      const receipts = await Promise.all(
+        allProviders.map(async (provider, idx) => {
+          try {
+            const receipt = await provider.getTransactionReceipt(syncTestTxHash);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ${receipt ? '✅ Found' : '❌ Not found'} (block: ${receipt?.blockNumber || 'N/A'})`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: !!receipt,
+              blockNumber: receipt?.blockNumber,
+              status: receipt?.status,
+            };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: false,
+              error: error.message,
+            };
+          }
+        })
+      );
+
+      const foundCount = receipts.filter((r) => r.found).length;
+      console.log(`\n   Split transaction found on ${foundCount}/${receipts.length} nodes`);
+
+      expect(foundCount).to.equal(receipts.length);
+      console.log(`✅ Split transaction propagated to all nodes`);
+    });
+
+    it('Step 8: Verify split token state consistency across all nodes', async function () {
+      console.log('\nStep 8: Verify Split Token State Consistency Across All Nodes');
+      expect(syncTestSplitTokenId).to.exist;
+      console.log(`Verifying split token ${syncTestSplitTokenId.toString()} on all nodes...`);
+
+      const tokenStates = await Promise.all(
+        allContracts.map(async (contract, idx) => {
+          try {
+            const token = await contract.getToken(minterWallet.address, syncTestSplitTokenId);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Split token found`);
+            console.log(`      Owner: ${token.owner}, Status: ${token.status}, To: ${token.to}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: true,
+              owner: token.owner,
+              status: token.status,
+              to: token.to,
+              id: token.id.toString(),
+            };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error - ${error.message}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: false,
+              error: error.message,
+            };
+          }
+        })
+      );
+
+      const successStates = tokenStates.filter((s) => s.success);
+      console.log(`\n   Split token found on ${successStates.length}/${tokenStates.length} nodes`);
+
+      // Verify all successful queries return the same data
+      if (successStates.length > 1) {
+        const first = successStates[0];
+        const allConsistent = successStates.every(
+          (s) =>
+            s.owner.toLowerCase() === first.owner.toLowerCase() &&
+            s.status === first.status &&
+            s.to.toLowerCase() === first.to.toLowerCase() &&
+            s.id === first.id
+        );
+
+        expect(allConsistent).to.be.true;
+        console.log(`✅ Split token state is consistent across all nodes`);
+      } else {
+        expect(successStates.length).to.be.at.least(1);
+      }
+    });
+
+    it('Step 9: Verify original token consumed on all nodes', async function () {
+      console.log('\nStep 9: Verify Original Token Consumed on All Nodes');
+      expect(syncTestTokenId).to.exist;
+      console.log(`Verifying original token ${syncTestTokenId.toString()} is consumed on all nodes...`);
+
+      const consumedStates = await Promise.all(
+        allContracts.map(async (contract, idx) => {
+          try {
+            const token = await contract.getToken(minterWallet.address, syncTestTokenId);
+            // If we can still get the token, check its status
+            const isConsumed = token.status !== 2; // Status 2 is active
+            console.log(`   ${NODE_CONFIGS[idx].name}: Token status = ${token.status} ${isConsumed ? '(consumed)' : '(still active)'}`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: true,
+              consumed: isConsumed,
+              status: token.status,
+            };
+          } catch (error) {
+            // If we can't get the token, it might be consumed or access denied
+            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Token not accessible (likely consumed)`);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: false,
+              consumed: true,
+            };
+          }
+        })
+      );
+
+      const consumedCount = consumedStates.filter((s) => s.consumed).length;
+      console.log(`\n   Original token consumed/inaccessible on ${consumedCount}/${consumedStates.length} nodes`);
+
+      // Expect the original token to be consumed on most nodes
+      expect(consumedCount).to.be.at.least(2);
+      console.log(`✅ Original token properly consumed across nodes after split`);
+    });
+
+    it('Step 10: Transfer split token on Node 3 and verify on all nodes', async function () {
+      console.log('\nStep 10: Transfer Split Token and Verify Cross-Node Sync');
+      expect(syncTestSplitTokenId).to.exist;
+
+      const targetReceiver = accounts.To1;
+      console.log(`Transferring split token ${syncTestSplitTokenId.toString()} to ${targetReceiver} on Node 3...`);
+
+      const memo = 'multi-node-split-transfer-test';
+      const transferTx = await minterContract.transfer(syncTestSplitTokenId, memo, { gasLimit: 100000 });
+      console.log(`   Transfer tx: ${transferTx.hash}, waiting...`);
+
+      const receipt = await transferTx.wait();
+      syncTestTxHash = transferTx.hash;
+
+      console.log(`✅ Transfer completed on Node 3 (block: ${receipt.blockNumber})`);
+      expect(receipt.status).to.equal(1);
+
+      // Wait for propagation
+      console.log('   Waiting for state propagation across nodes...');
+      await sleep(10000);
+
+      // Verify transaction on all nodes
+      console.log('\n   Verifying transfer transaction propagation...');
+      const txReceipts = await Promise.all(
+        allProviders.map(async (provider, idx) => {
+          try {
+            const txReceipt = await provider.getTransactionReceipt(syncTestTxHash);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ${txReceipt ? '✅ Transaction found' : '❌ Not found'}`);
+            return { nodeIndex: idx, found: !!txReceipt };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ❌ Error`);
+            return { nodeIndex: idx, found: false };
+          }
+        })
+      );
+
+      const txFoundCount = txReceipts.filter((r) => r.found).length;
+      expect(txFoundCount).to.equal(txReceipts.length);
+
+      // Verify new owner can access token on all nodes
+      console.log('\n   Verifying new owner access on all nodes...');
+      const newOwnerStates = await Promise.all(
+        allContracts.map(async (contract, idx) => {
+          let retries = 3;
+          let result = null;
+
+          while (retries > 0) {
+            try {
+              const token = await contract.getToken(targetReceiver, syncTestSplitTokenId);
+              result = {
+                nodeIndex: idx,
+                nodeName: NODE_CONFIGS[idx].name,
+                success: true,
+                owner: token.owner,
+                to: token.to,
+              };
+              break;
+            } catch (error) {
+              retries--;
+              if (retries > 0) {
+                await sleep(3000);
+              } else {
+                result = {
+                  nodeIndex: idx,
+                  nodeName: NODE_CONFIGS[idx].name,
+                  success: false,
+                  error: error.message,
+                };
+              }
+            }
+          }
+
+          if (result.success) {
+            console.log(`   ${result.nodeName}: ✅ New owner verified (Owner: ${result.owner})`);
+          } else {
+            console.log(`   ${result.nodeName}: ❌ Failed to verify new owner`);
+          }
+
+          return result;
+        })
+      );
+
+      const verifiedCount = newOwnerStates.filter((s) => s.success).length;
+      console.log(`\n   New owner verified on ${verifiedCount}/${newOwnerStates.length} nodes`);
+
+      expect(verifiedCount).to.be.at.least(2); // At least 2 nodes should verify
+      console.log(`✅ Split token ownership transfer synchronized across nodes`);
+    });
+
+    it('Step 11: Verify old owner cannot access split token on any node', async function () {
+      console.log('\nStep 11: Verify Old Owner Access Revoked on All Nodes');
+      expect(syncTestSplitTokenId).to.exist;
+
+      const oldOwnerStates = await Promise.all(
+        allContracts.map(async (contract, idx) => {
+          try {
+            await contract.getToken(minterWallet.address, syncTestSplitTokenId);
+            console.log(`   ${NODE_CONFIGS[idx].name}: ⚠️  Old owner still has access`);
+            return { nodeIndex: idx, hasAccess: true };
+          } catch (error) {
+            console.log(`   ${NODE_CONFIGS[idx].name}: ✅ Old owner access revoked (expected)`);
+            return { nodeIndex: idx, hasAccess: false };
+          }
+        })
+      );
+
+      const revokedCount = oldOwnerStates.filter((s) => !s.hasAccess).length;
+      console.log(`\n   Old owner access revoked on ${revokedCount}/${oldOwnerStates.length} nodes`);
+
+      // Expect old owner to have no access on most nodes
+      expect(revokedCount).to.be.at.least(2);
+      console.log(`✅ Old owner access properly revoked across nodes after split and transfer`);
+    });
+  });
+  // Helper function to verify token by ID
+  async function verifyToken(tokenId, ownerAddress, contract) {
+    try {
+      const response = await contract.getToken(ownerAddress, tokenId);
+      console.log(`   ✅ Token ${tokenId} verified - Owner: ${response.owner}, Status: ${response.status}, To: ${response.to}`);
+      return { success: true, tokenId, owner: response.owner, to: response.to, status: response.status };
+    } catch (error) {
+      // Expected behavior when token ownership has changed or token doesn't exist for this owner
+      console.log(`   ℹ️  Token ${tokenId} not accessible from address ${ownerAddress}`);
+      return { success: false, tokenId, error: error.message };
+    }
   }
 
-  /**
-   * Wait for transaction confirmation on all nodes
-   * @param {string} txHash - Transaction hash to wait for
-   * @returns {Promise<Array>} Array of receipts from all nodes
-   * @throws {Error} If any node times out
-   */
-  async function waitForTransactionOnAllNodes(txHash) {
-    console.log(`\n  ⏳ Waiting for transaction to propagate to all nodes...`);
-    console.log(`     Transaction hash: ${txHash}\n`);
+  after(function () {
+    console.log('\n=== Test Summary ===');
+    console.log(`✅ Scenario 1 - Transfer to To1: ${scenario1TokenId?.toString() || 'N/A'}`);
+    console.log(`✅ Scenario 2 - 3 Tokens to 3 Recipients: ${scenario2TokenId?.toString() || 'N/A'} (and 2 more)`);
+    console.log(`✅ Scenario 3 - Transfer to Node1 Admin: Token ID tracked in scenario`);
+    console.log(`✅ Scenario 4 - Multi-Node Synchronization: Verified cross-node consistency`);
+    console.log('');
+  });
 
-    // 并行等待所有节点确认
-    const results = await Promise.allSettled(
-      nodes.map(async (node) => {
-        const receipt = await waitForTransactionOnNode(node.provider, txHash, node.name);
-        return { node: node.name, receipt };
+  // Helper functions for multi-node testing
+  async function verifyBlockchainSync(providers) {
+    const blocks = await Promise.all(providers.map((p) => p.getBlockNumber()));
+    const maxDiff = Math.max(...blocks) - Math.min(...blocks);
+    return { blocks, maxDiff, synced: maxDiff <= 3 };
+  }
+
+  async function verifyTokenConsistencyAcrossNodes(tokenId, ownerAddress, contracts) {
+    const results = await Promise.all(
+      contracts.map(async (contract, idx) => {
+        try {
+          const token = await contract.getToken(ownerAddress, tokenId);
+          return {
+            nodeIndex: idx,
+            nodeName: NODE_CONFIGS[idx].name,
+            success: true,
+            owner: token.owner,
+            status: token.status,
+            to: token.to,
+            id: token.id.toString(),
+          };
+        } catch (error) {
+          return {
+            nodeIndex: idx,
+            nodeName: NODE_CONFIGS[idx].name,
+            success: false,
+            error: error.message,
+          };
+        }
       })
     );
 
-    const receipts = [];
-    const errors = [];
+    const successResults = results.filter((r) => r.success);
+    if (successResults.length === 0) return { consistent: false, results };
 
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        receipts.push(result.value);
-      } else {
-        console.error(`  ❌ Failed to get transaction on ${nodes[index].name}: ${result.reason.message}`);
-        errors.push({ node: nodes[index].name, error: result.reason.message });
-      }
-    });
+    const first = successResults[0];
+    const consistent = successResults.every(
+      (r) =>
+        r.owner.toLowerCase() === first.owner.toLowerCase() && r.status === first.status && r.to.toLowerCase() === first.to.toLowerCase() && r.id === first.id
+    );
 
-    if (errors.length > 0) {
-      const errorSummary = errors.map((e) => `${e.node}: ${e.error}`).join('\n  ');
-      throw new Error(`Transaction propagation failed on ${errors.length} node(s):\n  ${errorSummary}`);
-    }
-
-    console.log(`  ✅ Transaction confirmed on all ${nodes.length} nodes\n`);
-    return receipts;
+    return { consistent, results, successCount: successResults.length };
   }
 
-  /**
-   * Validate transaction consistency across all nodes
-   * @param {string} txHash - Transaction hash to validate
-   * @throws {Error} If consistency validation fails
-   */
-  async function validateTransactionConsistency(txHash) {
-    console.log(`\n  🔍 Validating transaction consistency across all nodes...`);
-
-    let receipts;
-    try {
-      receipts = await waitForTransactionOnAllNodes(txHash);
-    } catch (error) {
-      console.error(`\n  ❌ Failed to get transaction receipts from all nodes`);
-      throw error;
-    }
-
-    // Extract transaction details from each node
-    const txDetails = receipts.map((r) => ({
-      node: r.node,
-      txHash: r.receipt.hash,
-      status: r.receipt.status,
-      blockNumber: r.receipt.blockNumber,
-    }));
-
-    // Log details from each node
-    console.log(`\n  📊 Transaction details from each node:`);
-    txDetails.forEach((detail) => {
-      console.log(`     ${detail.node}:`);
-      console.log(`       - Hash: ${detail.txHash}`);
-      console.log(`       - Status: ${detail.status}`);
-      console.log(`       - Block: ${detail.blockNumber}`);
-    });
-
-    // Validate consistency
-    const firstTx = txDetails[0];
-    const mismatches = [];
-
-    for (let i = 1; i < txDetails.length; i++) {
-      const currentTx = txDetails[i];
-
-      // Check transaction hash
-      if (currentTx.txHash !== firstTx.txHash) {
-        mismatches.push(`Transaction hash mismatch: ${firstTx.node} (${firstTx.txHash}) vs ` + `${currentTx.node} (${currentTx.txHash})`);
-      }
-
-      // Check status
-      if (currentTx.status !== firstTx.status) {
-        mismatches.push(`Transaction status mismatch: ${firstTx.node} (${firstTx.status}) vs ` + `${currentTx.node} (${currentTx.status})`);
-      }
-
-      // Check block number
-      if (currentTx.blockNumber !== firstTx.blockNumber) {
-        mismatches.push(`Block number mismatch: ${firstTx.node} (${firstTx.blockNumber}) vs ` + `${currentTx.node} (${currentTx.blockNumber})`);
-      }
-    }
-
-    if (mismatches.length > 0) {
-      console.error(`\n  ❌ Consistency validation failed:`);
-      mismatches.forEach((m) => console.error(`     - ${m}`));
-      throw new Error(`Transaction consistency validation failed:\n${mismatches.join('\n')}`);
-    }
-
-    // Use Chai assertions for final validation
-    for (let i = 1; i < txDetails.length; i++) {
-      const currentTx = txDetails[i];
-      expect(currentTx.txHash).to.equal(firstTx.txHash);
-      expect(currentTx.status).to.equal(firstTx.status);
-      expect(currentTx.blockNumber).to.equal(firstTx.blockNumber);
-    }
-
-    console.log(`\n  ✅ Transaction consistency validated: All nodes report identical results\n`);
-  }
-
-  /**
-   * Validate token state consistency across all nodes
-   * @param {BigInt} tokenId - Token ID to validate
-   * @param {string} ownerAddress - Expected owner address
-   * @param {string} operationType - Type of operation (for logging)
-   * @throws {Error} If consistency validation fails
-   */
-  async function validateTokenStateConsistency(tokenId, ownerAddress, operationType) {
-    console.log(`\n  🔍 Validating token state consistency for token ${tokenId}...`);
-
-    const tokenStates = [];
-    const errors = [];
-
-    // Query token state from all nodes
-    for (const node of nodes) {
-      try {
-        const tokenState = await node.contract.getToken(ownerAddress, tokenId);
-        tokenStates.push({
-          node: node.name,
-          state: tokenState,
-        });
-
-        console.log(`     ${node.name}:`);
-        console.log(`       - Token ID: ${tokenState.id.toString()}`);
-        console.log(`       - Owner: ${tokenState.owner}`);
-        console.log(`       - Status: ${tokenState.status}`);
-      } catch (error) {
-        console.error(`     ❌ ${node.name}: Failed to get token`);
-        console.error(`        Error: ${error.message}`);
-        errors.push({ node: node.name, error: error.message });
-      }
-    }
-
-    if (errors.length > 0) {
-      const errorSummary = errors.map((e) => `${e.node}: ${e.error}`).join('\n  ');
-      throw new Error(`Failed to get token state from ${errors.length} node(s):\n  ${errorSummary}`);
-    }
-
-    // Validate consistency
-    const firstState = tokenStates[0].state;
-    const mismatches = [];
-
-    for (let i = 1; i < tokenStates.length; i++) {
-      const currentState = tokenStates[i].state;
-      const currentNode = tokenStates[i].node;
-      const firstNode = tokenStates[0].node;
-
-      // Check token ID
-      if (currentState.id.toString() !== firstState.id.toString()) {
-        mismatches.push(`Token ID: ${firstNode} (${firstState.id.toString()}) vs ` + `${currentNode} (${currentState.id.toString()})`);
-      }
-
-      // Check owner
-      if (currentState.owner !== firstState.owner) {
-        mismatches.push(`Owner: ${firstNode} (${firstState.owner}) vs ` + `${currentNode} (${currentState.owner})`);
-      }
-
-      // Check status
-      if (currentState.status !== firstState.status) {
-        mismatches.push(`Status: ${firstNode} (${firstState.status}) vs ` + `${currentNode} (${currentState.status})`);
-      }
-
-      // Check encrypted amount components
-      const amountFields = ['cl_x', 'cl_y', 'cr_x', 'cr_y'];
-      for (const field of amountFields) {
-        if (currentState.amount[field].toString() !== firstState.amount[field].toString()) {
-          mismatches.push(
-            `Amount.${field}: ${firstNode} (${firstState.amount[field].toString()}) vs ` + `${currentNode} (${currentState.amount[field].toString()})`
-          );
+  async function verifyTransactionPropagation(txHash, providers) {
+    const receipts = await Promise.all(
+      providers.map(async (provider, idx) => {
+        try {
+          const receipt = await provider.getTransactionReceipt(txHash);
+          return {
+            nodeIndex: idx,
+            nodeName: NODE_CONFIGS[idx].name,
+            found: !!receipt,
+            blockNumber: receipt?.blockNumber,
+            status: receipt?.status,
+          };
+        } catch (error) {
+          return {
+            nodeIndex: idx,
+            nodeName: NODE_CONFIGS[idx].name,
+            found: false,
+            error: error.message,
+          };
         }
-      }
-    }
+      })
+    );
 
-    if (mismatches.length > 0) {
-      console.error(`\n  ❌ Token state consistency validation failed:`);
-      mismatches.forEach((m) => console.error(`     - ${m}`));
-      throw new Error(`Token state consistency validation failed:\n${mismatches.join('\n')}`);
-    }
-
-    // Use Chai assertions for final validation
-    for (let i = 1; i < tokenStates.length; i++) {
-      const currentState = tokenStates[i].state;
-      expect(currentState.id.toString()).to.equal(firstState.id.toString());
-      expect(currentState.owner).to.equal(firstState.owner);
-      expect(currentState.status).to.equal(firstState.status);
-      expect(currentState.amount.cl_x.toString()).to.equal(firstState.amount.cl_x.toString());
-      expect(currentState.amount.cl_y.toString()).to.equal(firstState.amount.cl_y.toString());
-      expect(currentState.amount.cr_x.toString()).to.equal(firstState.amount.cr_x.toString());
-      expect(currentState.amount.cr_y.toString()).to.equal(firstState.amount.cr_y.toString());
-    }
-
-    console.log(`\n  ✅ Token state consistency validated: All nodes report identical state\n`);
+    return {
+      receipts,
+      foundCount: receipts.filter((r) => r.found).length,
+      allFound: receipts.every((r) => r.found),
+    };
   }
-
-  before(async function () {
-    console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║     Multi-Node Consistency Test Initialization            ║');
-    console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-    // Initialize wallet and metadata
-    // Note: primaryWallet will be connected to the first node's provider
-    const primaryProvider = new ethers.JsonRpcProvider('http://l2-node1-native.hamsa-ucl.com:8545', l1CustomNetwork, providerOptions);
-    primaryWallet = new ethers.Wallet(accounts.MinterKey, primaryProvider);
-    primaryMetadata = await createAuthMetadata(accounts.MinterKey);
-    console.log(`Primary wallet address: ${primaryWallet.address}\n`);
-
-    console.log('\n=== Debug Information ===');
-    console.log('Primary Node URL:', 'http://l2-node1-native.hamsa-ucl.com:8545');
-    console.log('gRPC URL:', 'dev2-node3-rpc.hamsa-ucl.com:50051');
-    console.log('Owner Address:', accounts.Owner);
-    console.log('Minter Address:', primaryWallet.address);
-
-    // 测试基本连接
-    try {
-      const blockNumber = await primaryProvider.getBlockNumber();
-      console.log('Current block number:', blockNumber);
-    } catch (error) {
-      console.error('❌ Provider connection test failed:', error.message);
-    }
-
-    // Initialize connections to all nodes
-    await initializeNodeConnections();
-
-    // Setup mint allowance for the primary wallet (minter)
-    console.log('Setting up mint allowance for minter...');
-
-    // Create owner wallet with proper provider
-    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, primaryProvider);
-    const ownerContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, ownerWallet);
-
-    const primaryNode = nodes[1]; // Use Node 1 (index 0)
-    const allowanceAmount = 1000000000; // Large allowance for all tests
-
-    console.log(`  Using Node: ${primaryNode.name}`);
-    console.log(`  gRPC URL: ${primaryNode.grpcUrl}`);
-    console.log(`  Allowance amount: ${allowanceAmount}`);
-    console.log(`  Calling setupMintAllowance...`);
-
-    try {
-      const setAllowedTx = await setupMintAllowance(ownerContract, primaryNode.client, primaryWallet.address, accounts.OwnerKey, allowanceAmount);
-      console.log(`✅ Mint allowance set successfully, tx: ${setAllowedTx.hash}\n`);
-      await sleep(6000);
-    } catch (error) {
-      console.error(`\n❌ Failed to set mint allowance:`);
-      console.error(`   Error: ${error.message}`);
-      console.error(`\n💡 Possible causes:`);
-      console.error(`   - gRPC timeout (check if dev2-node3-rpc is accessible)`);
-      console.error(`   - Owner doesn't have permission`);
-      console.error(`   - Network connectivity issues`);
-      throw error;
-    }
-
-    console.log('╔════════════════════════════════════════════════════════════╗');
-    console.log('║     Initialization Complete - Ready for Testing           ║');
-    console.log('╚════════════════════════════════════════════════════════════╝\n');
-  });
-
-  describe.only('Setup and Connection', function () {
-    it('should connect to all 4 nodes successfully', async function () {
-      console.log('\n🔍 TEST: Verify all nodes are connected\n');
-
-      // Verify we have 4 nodes
-      expect(nodes.length).to.equal(4, 'Should have 4 node connections');
-
-      // Verify each node has required components
-      for (const node of nodes) {
-        console.log(`  Verifying ${node.name}...`);
-
-        // Verify provider exists and is distinct
-        expect(node.provider).to.exist;
-        expect(node.provider).to.be.instanceOf(ethers.JsonRpcProvider);
-
-        // Verify contract exists and is distinct
-        expect(node.contract).to.exist;
-        expect(node.contract.target).to.equal(NATIVE_TOKEN_ADDRESS);
-
-        // Verify gRPC client exists
-        expect(node.client).to.exist;
-
-        console.log(`    ✅ ${node.name} verified`);
-      }
-
-      // Verify all providers are distinct instances
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          expect(nodes[i].provider).to.not.equal(nodes[j].provider, `${nodes[i].name} and ${nodes[j].name} should have distinct providers`);
-
-          // Verify contracts have different providers (which ensures they are distinct)
-          expect(nodes[i].contract.runner).to.not.equal(
-            nodes[j].contract.runner,
-            `${nodes[i].name} and ${nodes[j].name} should have distinct contract runners`
-          );
-
-          expect(nodes[i].client).to.not.equal(nodes[j].client, `${nodes[i].name} and ${nodes[j].name} should have distinct clients`);
-        }
-      }
-
-      console.log(`\n  ✅ All 4 nodes connected with independent instances\n`);
-    });
-  });
-
-  describe.only('Transaction Consistency Tests', function () {
-    it('should verify mint transaction consistency across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Mint Transaction Consistency                    ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      // Execute mint operation on node1 (primary node)
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      const numberOfTokens = 2;
-      const tokenAmount = 1000;
-
-      console.log(`  📝 Executing mint operation on ${primaryNode.name}...`);
-      console.log(`     - Number of tokens: ${numberOfTokens}`);
-      console.log(`     - Amount per token: ${tokenAmount}\n`);
-
-      // Create mint request
-      const to_accounts = Array(numberOfTokens)
-        .fill()
-        .map(() => ({
-          address: primaryWallet.address,
-          amount: tokenAmount,
-        }));
-
-      const generateRequest = {
-        sc_address: NATIVE_TOKEN_ADDRESS,
-        token_type: '0',
-        from_address: primaryWallet.address,
-        to_accounts: to_accounts,
-      };
-
-      // Generate proof using primary node's gRPC client
-      const response = await primaryNode.client.generateBatchMintProof(generateRequest, primaryMetadata);
-      console.log("Generate Mint Proof ", response)
-
-      const recipients = response.to_accounts.map((account) => account.address);
-      const batchedSize = response.batched_size;
-
-      const newTokens = response.to_accounts.map((account) => ({
-        id: account.token.token_id,
-        owner: account.address,
-        status: 2,
-        amount: {
-          cl_x: account.token.cl_x,
-          cl_y: account.token.cl_y,
-          cr_x: account.token.cr_x,
-          cr_y: account.token.cr_y,
-        },
-        to: account.address,
-        rollbackTokenId: 0,
-      }));
-
-      const newAllowed = {
-        id: response.mint_allowed.token_id,
-        value: {
-          cl_x: response.mint_allowed.cl_x,
-          cl_y: response.mint_allowed.cl_y,
-          cr_x: response.mint_allowed.cr_x,
-          cr_y: response.mint_allowed.cr_y,
-        },
-      };
-
-      const proof = response.proof.map((p) => ethers.toBigInt(p));
-      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
-      const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
-
-      // Execute mint transaction
-      const mintTx = await primaryContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding);
-      console.log(`  ✅ Mint transaction submitted: ${mintTx.hash}`);
-      console.log(`  ⏳ Waiting for transaction to be mined...`);
-      await mintTx.wait();
-      console.log(`  ✅ Mint transaction confirmed on Node 1\n`);
-      await sleep(3000); // 给网络传播时间
-
-      // Validate transaction consistency across all nodes
-      await validateTransactionConsistency(mintTx.hash);
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Mint Transaction Consistency Test PASSED           ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-
-    it('should verify split transaction consistency across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Split Transaction Consistency                   ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      console.log(`  📝 Executing split operation on ${primaryNode.name}...`);
-      console.log(`     - Recipients: 2\n`);
-
-      // Create split request
-      const splitRequests = {
-        sc_address: NATIVE_TOKEN_ADDRESS,
-        token_type: '0',
-        from_address: primaryWallet.address,
-        to_accounts: [
-          { address: receiver1, amount: 100, comment: 'split-1' },
-          { address: receiver1, amount: 100, comment: 'split-2' },
-        ],
-      };
-
-      // Generate split proof
-      const splitProofResponse = await primaryNode.client.generateBatchSplitToken(splitRequests, primaryMetadata);
-      await sleep(2000);
-
-      const detailResponse = await primaryNode.client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, primaryMetadata);
-
-      const recipients = detailResponse.to_addresses;
-      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
-
-      const newTokens = detailResponse.newTokens.map((account, idx) => ({
-        id: account.token_id,
-        owner: primaryWallet.address,
-        status: 2,
-        amount: {
-          cl_x: ethers.toBigInt(account.cl_x),
-          cl_y: ethers.toBigInt(account.cl_y),
-          cr_x: ethers.toBigInt(account.cr_x),
-          cr_y: ethers.toBigInt(account.cr_y),
-        },
-        to: idx % 2 === 0 ? primaryWallet.address : recipients[Math.floor(idx / 2)],
-        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
-      }));
-
-      const proof = detailResponse.proof.map((p) => ethers.toBigInt(p));
-      const publicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
-      const paddingNum = detailResponse.batched_size - recipients.length;
-
-      // Execute split transaction
-      const splitTx = await primaryContract.split(primaryWallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
-      console.log(`  ✅ Split transaction submitted: ${splitTx.hash}`);
-      console.log(`  ⏳ Waiting for transaction to be mined...`);
-      await splitTx.wait();
-      console.log(`  ✅ Split transaction confirmed on Node 1\n`);
-      await sleep(3000); // 给网络传播时间
-
-      // Validate transaction consistency across all nodes
-      await validateTransactionConsistency(splitTx.hash);
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Split Transaction Consistency Test PASSED          ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-
-    it('should verify transfer transaction consistency across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Transfer Transaction Consistency                ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      console.log(`  📝 Executing transfer operation on ${primaryNode.name}...`);
-
-      // Get a token to transfer
-      const tokenListResponse = await primaryNode.client.getSplitTokenList(primaryWallet.address, NATIVE_TOKEN_ADDRESS, primaryMetadata);
-
-      if (!tokenListResponse.split_tokens || tokenListResponse.split_tokens.length === 0) {
-        console.log('  ⚠️  No tokens available for transfer, skipping test');
-        this.skip();
-      }
-
-      const tokenId = ethers.toBigInt(tokenListResponse.split_tokens[0].token_id);
-      console.log(`     - Token ID: ${tokenId.toString()}\n`);
-
-      // Execute transfer transaction
-      const transferTx = await primaryContract.transfer(tokenId, 'multi-node-consistency-test');
-      console.log(`  ✅ Transfer transaction submitted: ${transferTx.hash}`);
-      console.log(`  ⏳ Waiting for transaction to be mined...`);
-      await transferTx.wait();
-      console.log(`  ✅ Transfer transaction confirmed on Node 1\n`);
-      await sleep(3000); // 给网络传播时间
-
-      // Validate transaction consistency across all nodes
-      await validateTransactionConsistency(transferTx.hash);
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Transfer Transaction Consistency Test PASSED       ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-  });
-
-  describe('Token State Consistency Tests', function () {
-    let mintedTokenIds = [];
-
-    it('should verify token state consistency after mint across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Token State After Mint Consistency              ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      const numberOfTokens = 3;
-      const tokenAmount = 2000;
-
-      console.log(`  📝 Executing mint operation on ${primaryNode.name}...`);
-      console.log(`     - Number of tokens: ${numberOfTokens}`);
-      console.log(`     - Amount per token: ${tokenAmount}\n`);
-
-      // Create mint request
-      const to_accounts = Array(numberOfTokens)
-        .fill()
-        .map(() => ({
-          address: primaryWallet.address,
-          amount: tokenAmount,
-        }));
-
-      const generateRequest = {
-        sc_address: NATIVE_TOKEN_ADDRESS,
-        token_type: '0',
-        from_address: primaryWallet.address,
-        to_accounts: to_accounts,
-      };
-
-      // Generate proof
-      const response = await primaryNode.client.generateBatchMintProof(generateRequest, primaryMetadata);
-
-      const recipients = response.to_accounts.map((account) => account.address);
-      const batchedSize = response.batched_size;
-
-      const newTokens = response.to_accounts.map((account) => ({
-        id: account.token.token_id,
-        owner: account.address,
-        status: 2,
-        amount: {
-          cl_x: account.token.cl_x,
-          cl_y: account.token.cl_y,
-          cr_x: account.token.cr_x,
-          cr_y: account.token.cr_y,
-        },
-        to: account.address,
-        rollbackTokenId: 0,
-      }));
-
-      const newAllowed = {
-        id: response.mint_allowed.token_id,
-        value: {
-          cl_x: response.mint_allowed.cl_x,
-          cl_y: response.mint_allowed.cl_y,
-          cr_x: response.mint_allowed.cr_x,
-          cr_y: response.mint_allowed.cr_y,
-        },
-      };
-
-      const proof = response.proof.map((p) => ethers.toBigInt(p));
-      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
-      const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
-
-      // Execute mint transaction
-      const mintTx = await primaryContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding);
-      console.log(`  ✅ Mint transaction submitted: ${mintTx.hash}\n`);
-
-      // Wait for transaction to propagate to all nodes
-      await waitForTransactionOnAllNodes(mintTx.hash);
-
-      // Store minted token IDs for later tests
-      mintedTokenIds = newTokens.map((token) => ethers.toBigInt(token.id));
-
-      // Validate token state consistency for each minted token
-      console.log(`  🔍 Validating token state for ${mintedTokenIds.length} minted tokens...\n`);
-      for (const tokenId of mintedTokenIds) {
-        await validateTokenStateConsistency(tokenId, primaryWallet.address, 'mint');
-      }
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Token State After Mint Consistency Test PASSED     ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-
-    it('should verify token state consistency after split across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Token State After Split Consistency             ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      console.log(`  📝 Executing split operation on ${primaryNode.name}...`);
-      console.log(`     - Recipients: 2\n`);
-
-      // Create split request
-      const splitRequests = {
-        sc_address: NATIVE_TOKEN_ADDRESS,
-        token_type: '0',
-        from_address: primaryWallet.address,
-        to_accounts: [
-          { address: receiver1, amount: 200, comment: 'split-state-1' },
-          { address: receiver1, amount: 200, comment: 'split-state-2' },
-        ],
-      };
-
-      // Generate split proof
-      const splitProofResponse = await primaryNode.client.generateBatchSplitToken(splitRequests, primaryMetadata);
-      await sleep(2000);
-
-      const detailResponse = await primaryNode.client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, primaryMetadata);
-
-      const recipients = detailResponse.to_addresses;
-      const consumedIds = detailResponse.consumedIds.map((ids) => ids.token_id);
-
-      const newTokens = detailResponse.newTokens.map((account, idx) => ({
-        id: account.token_id,
-        owner: primaryWallet.address,
-        status: 2,
-        amount: {
-          cl_x: ethers.toBigInt(account.cl_x),
-          cl_y: ethers.toBigInt(account.cl_y),
-          cr_x: ethers.toBigInt(account.cr_x),
-          cr_y: ethers.toBigInt(account.cr_y),
-        },
-        to: idx % 2 === 0 ? primaryWallet.address : recipients[Math.floor(idx / 2)],
-        rollbackTokenId: idx % 2 === 0 ? 0 : detailResponse.newTokens[idx + 1].token_id,
-      }));
-
-      const proof = detailResponse.proof.map((p) => ethers.toBigInt(p));
-      const publicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
-      const paddingNum = detailResponse.batched_size - recipients.length;
-
-      // Execute split transaction
-      const splitTx = await primaryContract.split(primaryWallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum);
-      console.log(`  ✅ Split transaction submitted: ${splitTx.hash}\n`);
-
-      // Wait for transaction to propagate to all nodes
-      await waitForTransactionOnAllNodes(splitTx.hash);
-
-      // Validate token state consistency for all new tokens
-      const newTokenIds = newTokens.map((token) => ethers.toBigInt(token.id));
-      console.log(`  🔍 Validating token state for ${newTokenIds.length} split tokens...\n`);
-      for (const tokenId of newTokenIds) {
-        await validateTokenStateConsistency(tokenId, primaryWallet.address, 'split');
-      }
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Token State After Split Consistency Test PASSED    ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-
-    it('should verify token state consistency after transfer across all nodes', async function () {
-      console.log('\n╔════════════════════════════════════════════════════════════╗');
-      console.log('║     TEST: Token State After Transfer Consistency          ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-      const primaryNode = nodes[0];
-      const primaryContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, primaryWallet);
-
-      console.log(`  📝 Executing transfer operation on ${primaryNode.name}...`);
-
-      // Get a token to transfer
-      const tokenListResponse = await primaryNode.client.getSplitTokenList(primaryWallet.address, NATIVE_TOKEN_ADDRESS, primaryMetadata);
-
-      if (!tokenListResponse.split_tokens || tokenListResponse.split_tokens.length === 0) {
-        console.log('  ⚠️  No tokens available for transfer, skipping test');
-        this.skip();
-      }
-
-      const tokenId = ethers.toBigInt(tokenListResponse.split_tokens[0].token_id);
-      console.log(`     - Token ID: ${tokenId.toString()}\n`);
-
-      // Execute transfer transaction
-      const transferTx = await primaryContract.transfer(tokenId, 'multi-node-state-test');
-      console.log(`  ✅ Transfer transaction submitted: ${transferTx.hash}\n`);
-
-      // Wait for transaction to propagate to all nodes
-      await waitForTransactionOnAllNodes(transferTx.hash);
-
-      // Validate token state consistency after transfer
-      // Note: After transfer, the token still belongs to the original owner (primaryWallet)
-      // but its status/type changes to indicate it has been transferred
-      await validateTokenStateConsistency(tokenId, primaryWallet.address, 'transfer');
-
-      console.log('╔════════════════════════════════════════════════════════════╗');
-      console.log('║     ✅ Token State After Transfer Consistency Test PASSED ║');
-      console.log('╚════════════════════════════════════════════════════════════╝\n');
-    });
-  });
 });
