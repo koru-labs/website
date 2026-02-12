@@ -772,7 +772,7 @@ describe('Multi Node Consistency Test', function () {
       syncTestTxHash = setAllowedTx.hash;
       console.log(`✅ Mint allowance set on Node 3, tx: ${syncTestTxHash}`);
       expect(setAllowedTx.hash).to.be.a('string');
-      await sleep(5000);
+      await sleep(10000);
     });
 
     it('Step 3: Verify transaction propagation to all nodes', async function () {
