@@ -733,7 +733,7 @@ describe('Multi Node Consistency Test', function () {
       console.log(`\n✅ All 3 token ownership transfers verified successfully`);
     });
   });
-  describe.only('Scenario 4: Multi-Node Synchronization Test', function () {
+  describe('Scenario 4: Multi-Node Synchronization Test', function () {
     let syncTestTokenId, syncTestTxHash, syncTestSplitTokenId;
 
     it('Step 1: Verify initial blockchain sync across all nodes', async function () {
