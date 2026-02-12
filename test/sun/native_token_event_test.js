@@ -2,8 +2,8 @@ const {ethers} = require("hardhat");
 
 // L2Event ABI for event listening (defined in contracts/test/INativeToken.sol - IL2Event interface)
 const l2EventAbi = [
-    "event EventReceived(address eventSource, address eventAccount, string topic, bytes eventBody)",
-    "event RollupEventReceived(address eventSource, string topic, bytes eventBody)"
+    "event EventReceived(string eventId, address eventSource, address eventAccount, string topic, bytes eventBody)",
+    "event RollupEventReceived(string eventId, address eventSource, string topic, bytes eventBody)"
 ];
 
 const tokenNativeTokenAddr = "0x2025"
@@ -18,8 +18,9 @@ async function setupEventListeners(nativeTokenAddress) {
     const l2Event = new ethers.Contract(nativeTokenAddress, l2EventAbi, signer);
 
     // Listen for EventReceived (TokenMinted, TokenMintAllowedUpdated, TokenDeleted, TokenCanceled)
-    l2Event.on("EventReceived", (eventSource, eventAccount, topic, eventBody) => {
+    l2Event.on("EventReceived", (eventId, eventSource, eventAccount, topic, eventBody) => {
         console.log("\n========== EventReceived ==========");
+        console.log("Event ID:", eventId);
         console.log("Event Source:", eventSource);
         console.log("Event Account:", eventAccount);
         console.log("Topic:", topic);
@@ -43,8 +44,9 @@ async function setupEventListeners(nativeTokenAddress) {
     });
 
     // Listen for RollupEventReceived (RollupSplit, RollupTransfer, RollupMint)
-    l2Event.on("RollupEventReceived", (eventSource, topic, eventBody) => {
+    l2Event.on("RollupEventReceived", (eventId, eventSource, topic, eventBody) => {
         console.log("\n======== RollupEventReceived ========");
+        console.log("Event ID:", eventId);
         console.log("Event Source:", eventSource);
         console.log("Topic:", topic);
         console.log("Event Body (hex):", eventBody);
