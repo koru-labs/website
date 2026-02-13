@@ -105,9 +105,9 @@ describe('Multi Node Consistency Test', function () {
       const allowanceAmount = 100000000;
 
       const setAllowedTx = await withTimeout(
-        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
-        60000,
-        'setupMintAllowance timeout'
+          setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+          60000,
+          'setupMintAllowance timeout'
       );
 
       console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
@@ -176,9 +176,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -203,14 +203,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       console.log(`Split tx: ${splitTx.hash}, waiting...`);
 
@@ -250,7 +250,7 @@ describe('Multi Node Consistency Test', function () {
       const receipt = await transferTx.wait();
 
       console.log(
-        `✅ Transfer done. Token: ${splitTokenId.toString()}, To: ${accounts.To1}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
+          `✅ Transfer done. Token: ${splitTokenId.toString()}, To: ${accounts.To1}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
       );
       expect(receipt.status).to.equal(1);
 
@@ -349,9 +349,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -376,14 +376,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       const splitReceipt = await splitTx.wait();
 
@@ -422,9 +422,9 @@ describe('Multi Node Consistency Test', function () {
       const allowanceAmount = 100000000;
 
       const setAllowedTx = await withTimeout(
-        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
-        60000,
-        'setupMintAllowance timeout'
+          setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+          60000,
+          'setupMintAllowance timeout'
       );
 
       console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
@@ -494,9 +494,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -521,14 +521,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       console.log(`Split tx: ${splitTx.hash}, waiting...`);
 
@@ -569,7 +569,7 @@ describe('Multi Node Consistency Test', function () {
       const receipt = await transferTx.wait();
 
       console.log(
-        `✅ Transfer done. Token: ${splitTokenId2.toString()}, To: ${targetReceiver}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
+          `✅ Transfer done. Token: ${splitTokenId2.toString()}, To: ${targetReceiver}, Memo: ${memo} (block: ${receipt.blockNumber}, gas: ${receipt.gasUsed})`
       );
       expect(receipt.status).to.equal(1);
 
@@ -629,9 +629,9 @@ describe('Multi Node Consistency Test', function () {
       const allowanceAmount = 100000000;
 
       const setAllowedTx = await withTimeout(
-        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
-        60000,
-        'setupMintAllowance timeout'
+          setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+          60000,
+          'setupMintAllowance timeout'
       );
 
       console.log(`✅ Mint allowance set, tx: ${setAllowedTx.hash}`);
@@ -712,9 +712,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -739,14 +739,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       console.log(`Split tx: ${splitTx.hash}, waiting...`);
 
@@ -865,11 +865,11 @@ describe('Multi Node Consistency Test', function () {
       console.log('Step 1: Verify Initial Blockchain Sync');
 
       const blockNumbers = await Promise.all(
-        allProviders.map(async (provider, idx) => {
-          const blockNum = await provider.getBlockNumber();
-          console.log(`   ${NODE_CONFIGS[idx].name}: Block ${blockNum}`);
-          return blockNum;
-        })
+          allProviders.map(async (provider, idx) => {
+            const blockNum = await provider.getBlockNumber();
+            console.log(`   ${NODE_CONFIGS[idx].name}: Block ${blockNum}`);
+            return blockNum;
+          })
       );
 
       const maxBlock = Math.max(...blockNumbers);
@@ -888,9 +888,9 @@ describe('Multi Node Consistency Test', function () {
       const allowanceAmount = 100000000;
 
       const setAllowedTx = await withTimeout(
-        setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
-        60000,
-        'setupMintAllowance timeout'
+          setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
+          60000,
+          'setupMintAllowance timeout'
       );
 
       syncTestTxHash = setAllowedTx.hash;
@@ -1027,11 +1027,11 @@ describe('Multi Node Consistency Test', function () {
       if (successStates.length > 1) {
         const first = successStates[0];
         const allConsistent = successStates.every(
-          (s) =>
-            s.owner.toLowerCase() === first.owner.toLowerCase() &&
-            s.status === first.status &&
-            s.to.toLowerCase() === first.to.toLowerCase() &&
-            s.id === first.id
+            (s) =>
+                s.owner.toLowerCase() === first.owner.toLowerCase() &&
+                s.status === first.status &&
+                s.to.toLowerCase() === first.to.toLowerCase() &&
+                s.id === first.id
         );
 
         expect(allConsistent).to.be.true;
@@ -1060,9 +1060,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -1087,14 +1087,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       console.log(`First Split tx: ${splitTx.hash}, waiting...`);
 
@@ -1353,9 +1353,9 @@ describe('Multi Node Consistency Test', function () {
       await sleep(2000);
 
       const detailResponse = await withTimeout(
-        client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
-        60000,
-        'getBatchSplitTokenDetail timeout'
+          client.getBatchSplitTokenDetail({ request_id: splitProofResponse.request_id }, minterMetadata),
+          60000,
+          'getBatchSplitTokenDetail timeout'
       );
 
       const splitRecipients = detailResponse.to_addresses;
@@ -1380,14 +1380,14 @@ describe('Multi Node Consistency Test', function () {
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
       const splitTx = await minterContract.split(
-        minterWallet.address,
-        splitRecipients,
-        consumedIds,
-        splitNewTokens,
-        splitProof,
-        splitPublicInputs,
-        paddingNum,
-        { gasLimit: 100000 }
+          minterWallet.address,
+          splitRecipients,
+          consumedIds,
+          splitNewTokens,
+          splitProof,
+          splitPublicInputs,
+          paddingNum,
+          { gasLimit: 100000 }
       );
       console.log(`Second Split tx: ${splitTx.hash}, waiting...`);
 
@@ -1579,27 +1579,27 @@ describe('Multi Node Consistency Test', function () {
 
   async function verifyTokenConsistencyAcrossNodes(tokenId, ownerAddress, contracts) {
     const results = await Promise.all(
-      contracts.map(async (contract, idx) => {
-        try {
-          const token = await contract.getToken(ownerAddress, tokenId);
-          return {
-            nodeIndex: idx,
-            nodeName: NODE_CONFIGS[idx].name,
-            success: true,
-            owner: token.owner,
-            status: token.status,
-            to: token.to,
-            id: token.id.toString(),
-          };
-        } catch (error) {
-          return {
-            nodeIndex: idx,
-            nodeName: NODE_CONFIGS[idx].name,
-            success: false,
-            error: error.message,
-          };
-        }
-      })
+        contracts.map(async (contract, idx) => {
+          try {
+            const token = await contract.getToken(ownerAddress, tokenId);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: true,
+              owner: token.owner,
+              status: token.status,
+              to: token.to,
+              id: token.id.toString(),
+            };
+          } catch (error) {
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              success: false,
+              error: error.message,
+            };
+          }
+        })
     );
 
     const successResults = results.filter((r) => r.success);
@@ -1607,8 +1607,8 @@ describe('Multi Node Consistency Test', function () {
 
     const first = successResults[0];
     const consistent = successResults.every(
-      (r) =>
-        r.owner.toLowerCase() === first.owner.toLowerCase() && r.status === first.status && r.to.toLowerCase() === first.to.toLowerCase() && r.id === first.id
+        (r) =>
+            r.owner.toLowerCase() === first.owner.toLowerCase() && r.status === first.status && r.to.toLowerCase() === first.to.toLowerCase() && r.id === first.id
     );
 
     return { consistent, results, successCount: successResults.length };
@@ -1616,25 +1616,25 @@ describe('Multi Node Consistency Test', function () {
 
   async function verifyTransactionPropagation(txHash, providers) {
     const receipts = await Promise.all(
-      providers.map(async (provider, idx) => {
-        try {
-          const receipt = await provider.getTransactionReceipt(txHash);
-          return {
-            nodeIndex: idx,
-            nodeName: NODE_CONFIGS[idx].name,
-            found: !!receipt,
-            blockNumber: receipt?.blockNumber,
-            status: receipt?.status,
-          };
-        } catch (error) {
-          return {
-            nodeIndex: idx,
-            nodeName: NODE_CONFIGS[idx].name,
-            found: false,
-            error: error.message,
-          };
-        }
-      })
+        providers.map(async (provider, idx) => {
+          try {
+            const receipt = await provider.getTransactionReceipt(txHash);
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: !!receipt,
+              blockNumber: receipt?.blockNumber,
+              status: receipt?.status,
+            };
+          } catch (error) {
+            return {
+              nodeIndex: idx,
+              nodeName: NODE_CONFIGS[idx].name,
+              found: false,
+              error: error.message,
+            };
+          }
+        })
     );
 
     return {
