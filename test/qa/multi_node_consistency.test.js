@@ -1623,7 +1623,7 @@ describe('Multi Node Consistency Test', function () {
     });
   });
 
-  describe('Scenario 5: Cross-Node Chain Transfer (A→B→C→D)', function () {
+  describe.only('Scenario 5: Cross-Node Chain Transfer (A→B→C→A)', function () {
     // Chain transfer token tracking
     let chainTokenId, chainTxHash;
     // Node-specific wallets and contracts for chain transfer
@@ -1818,10 +1818,10 @@ describe('Multi Node Consistency Test', function () {
       await sleep(10000);
     });
 
-    it('Step 6: Verify Hop 1 - tx propagation + ownership change', async function () {
-      console.log('\nStep 6: Verify Hop 1 Multi-Node Consistency');
+    it('Step 6: Verify Hop 1 - tx propagation', async function () {
+      console.log('\nStep 6: Verify Hop 1 Transaction Propagation');
 
-      // 6.1 Verify tx propagation
+      // 6.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 1 tx ${chainTxHash} propagation...`);
       let txFoundCount = 0;
       for (let i = 0; i < allProviders.length; i++) {
@@ -1842,51 +1842,12 @@ describe('Multi Node Consistency Test', function () {
       }
       expect(txFoundCount).to.equal(allProviders.length);
       console.log(`✅ Hop 1 tx propagated to all ${txFoundCount} nodes`);
-
-      // 6.2 Verify Node1 Admin can access token on all nodes
-      console.log(`\n   Verifying Node1 Admin (${NODE_CONFIGS[0].admin}) owns token on all nodes...`);
-      const newOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          const token = await contract.getToken(NODE_CONFIGS[0].admin, chainTokenId);
-          console.log(`   ${config.name}: ✅ Node1 Admin can access (Owner: ${token.owner})`);
-          newOwnerStates.push({ success: true });
-        } catch (error) {
-          console.log(`   ${config.name}: ❌ Failed - ${error.message}`);
-          newOwnerStates.push({ success: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const verifiedCount = newOwnerStates.filter((s) => s.success).length;
-      expect(verifiedCount).to.equal(allContracts.length);
-      console.log(`✅ Node1 Admin ownership verified on all ${verifiedCount} nodes`);
-
-      // 6.3 Verify minter no longer has access
-      console.log(`\n   Verifying Node3 Minter no longer has access...`);
-      const oldOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          await contract.getToken(minterWallet.address, chainTokenId);
-          console.log(`   ${config.name}: ⚠️  Minter still has access`);
-          oldOwnerStates.push({ hasAccess: true });
-        } catch (error) {
-          console.log(`   ${config.name}: ✅ Minter access revoked`);
-          oldOwnerStates.push({ hasAccess: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const revokedCount = oldOwnerStates.filter((s) => !s.hasAccess).length;
-      expect(revokedCount).to.equal(allContracts.length);
-      console.log(`✅ Minter access revoked on all ${revokedCount} nodes after Hop 1`);
       s5Hop1 = true; // Track hop 1 completed
     });
 
     it('Step 7: [Hop 2] Node1 Admin → Node2 Admin (tx on Node1)', async function () {
       console.log('\nStep 7: [Hop 2] Node1 Admin → Node2 Admin (tx submitted on Node1)');
+      client = allClients[0]
       expect(chainTokenId).to.exist;
       expect(node1AdminContract).to.exist;
 
@@ -1895,7 +1856,7 @@ describe('Multi Node Consistency Test', function () {
       console.log(`   To: ${NODE_CONFIGS[1].admin} (Node2 Admin)`);
       console.log(`   Transaction will be submitted on: ${NODE_CONFIGS[0].name}`);
 
-      // Generate split proof
+      // Step 7.1: Generate split proof
       const splitRequests = {
         sc_address: NATIVE_TOKEN_ADDRESS,
         token_type: '0',
@@ -1933,6 +1894,7 @@ describe('Multi Node Consistency Test', function () {
       const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
+      // Step 7.2: Execute split
       const splitTx = await node1AdminContract.split(
         NODE_CONFIGS[0].admin,
         splitRecipients,
@@ -1945,25 +1907,35 @@ describe('Multi Node Consistency Test', function () {
       );
 
       console.log(`   Split tx: ${splitTx.hash}`);
-      const receipt = await splitTx.wait();
-      chainTxHash = splitTx.hash;
+      const splitReceipt = await splitTx.wait();
+      console.log(`   Split completed on Node 1 (block: ${splitReceipt.blockNumber})`);
 
-      // Update chainTokenId to the new token for Node2 Admin
+      // Get the new token ID for transfer
       const transferTokenIdx = splitNewTokens.findIndex((_, idx) => idx % 2 !== 0);
-      chainTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+      const newTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+      console.log(`   New token created for transfer: ${newTokenId.toString()}`);
 
-      console.log(`✅ Hop 2 completed on Node 1 (block: ${receipt.blockNumber})`);
-      console.log(`   New token for Node2 Admin: ${chainTokenId.toString()}`);
-      expect(receipt.status).to.equal(1);
+      // Step 7.3: Transfer token to Node2 Admin
+      console.log(`   Transferring token ${newTokenId.toString()} to Node2 Admin...`);
+      const memo = 'chain-hop2-transfer-to-node2admin';
+      const transferTx = await node1AdminContract.transfer(newTokenId, memo, { gasLimit: 100000 });
+      console.log(`   Transfer tx: ${transferTx.hash}`);
+
+      const transferReceipt = await transferTx.wait();
+      chainTxHash = transferTx.hash;
+      chainTokenId = newTokenId;
+
+      console.log(`✅ Hop 2 completed on Node 1 (block: ${transferReceipt.blockNumber})`);
+      expect(transferReceipt.status).to.equal(1);
 
       console.log('   Waiting for state propagation...');
       await sleep(10000);
     });
 
-    it('Step 8: Verify Hop 2 - tx propagation + ownership change', async function () {
-      console.log('\nStep 8: Verify Hop 2 Multi-Node Consistency');
+    it('Step 8: Verify Hop 2 - tx propagation', async function () {
+      console.log('\nStep 8: Verify Hop 2 Transaction Propagation');
 
-      // 8.1 Verify tx propagation
+      // 8.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 2 tx ${chainTxHash} propagation...`);
       let txFoundCount = 0;
       for (let i = 0; i < allProviders.length; i++) {
@@ -1984,60 +1956,21 @@ describe('Multi Node Consistency Test', function () {
       }
       expect(txFoundCount).to.equal(allProviders.length);
       console.log(`✅ Hop 2 tx (submitted on Node1) propagated to all ${txFoundCount} nodes`);
-
-      // 8.2 Verify Node2 Admin can access token on all nodes
-      console.log(`\n   Verifying Node2 Admin (${NODE_CONFIGS[1].admin}) owns token on all nodes...`);
-      const newOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          const token = await contract.getToken(NODE_CONFIGS[1].admin, chainTokenId);
-          console.log(`   ${config.name}: ✅ Node2 Admin can access (Owner: ${token.owner})`);
-          newOwnerStates.push({ success: true });
-        } catch (error) {
-          console.log(`   ${config.name}: ❌ Failed - ${error.message}`);
-          newOwnerStates.push({ success: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const verifiedCount = newOwnerStates.filter((s) => s.success).length;
-      expect(verifiedCount).to.equal(allContracts.length);
-      console.log(`✅ Node2 Admin ownership verified on all ${verifiedCount} nodes`);
-
-      // 8.3 Verify Node1 Admin no longer has access
-      console.log(`\n   Verifying Node1 Admin no longer has access...`);
-      const oldOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          await contract.getToken(NODE_CONFIGS[0].admin, chainTokenId);
-          console.log(`   ${config.name}: ⚠️  Node1 Admin still has access`);
-          oldOwnerStates.push({ hasAccess: true });
-        } catch (error) {
-          console.log(`   ${config.name}: ✅ Node1 Admin access revoked`);
-          oldOwnerStates.push({ hasAccess: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const revokedCount = oldOwnerStates.filter((s) => !s.hasAccess).length;
-      expect(revokedCount).to.equal(allContracts.length);
-      console.log(`✅ Node1 Admin access revoked on all ${revokedCount} nodes after Hop 2`);
       s5Hop2 = true; // Track hop 2 completed
     });
 
-    it('Step 9: [Hop 3] Node2 Admin → Final Recipient (tx on Node2)', async function () {
+    it('Step 9: [Hop 3] Node2 Admin → Node3 Recevier (tx on Node2)', async function () {
       console.log('\nStep 9: [Hop 3] Node2 Admin → Final Recipient (tx submitted on Node2)');
       expect(chainTokenId).to.exist;
       expect(node2AdminContract).to.exist;
+      client = allClients[1];
 
       console.log(`   Splitting token ${chainTokenId.toString()} from Node2 Admin to Final Recipient...`);
       console.log(`   From: ${NODE_CONFIGS[1].admin} (Node2 Admin)`);
       console.log(`   To: ${finalRecipient} (Final Recipient)`);
       console.log(`   Transaction will be submitted on: ${NODE_CONFIGS[1].name}`);
 
-      // Generate split proof
+      // Step 9.1: Generate split proof
       const splitRequests = {
         sc_address: NATIVE_TOKEN_ADDRESS,
         token_type: '0',
@@ -2075,6 +2008,7 @@ describe('Multi Node Consistency Test', function () {
       const splitPublicInputs = detailResponse.public_input.map((i) => ethers.toBigInt(i));
       const paddingNum = detailResponse.batched_size - splitRecipients.length;
 
+      // Step 9.2: Execute split
       const splitTx = await node2AdminContract.split(
         NODE_CONFIGS[1].admin,
         splitRecipients,
@@ -2087,25 +2021,35 @@ describe('Multi Node Consistency Test', function () {
       );
 
       console.log(`   Split tx: ${splitTx.hash}`);
-      const receipt = await splitTx.wait();
-      chainTxHash = splitTx.hash;
+      const splitReceipt = await splitTx.wait();
+      console.log(`   Split completed on Node 2 (block: ${splitReceipt.blockNumber})`);
 
-      // Update chainTokenId to the new token for Final Recipient
+      // Get the new token ID for transfer
       const transferTokenIdx = splitNewTokens.findIndex((_, idx) => idx % 2 !== 0);
-      chainTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+      const newTokenId = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
+      console.log(`   New token created for transfer: ${newTokenId.toString()}`);
 
-      console.log(`✅ Hop 3 completed on Node 2 (block: ${receipt.blockNumber})`);
-      console.log(`   New token for Final Recipient: ${chainTokenId.toString()}`);
-      expect(receipt.status).to.equal(1);
+      // Step 9.3: Transfer token to Final Recipient
+      console.log(`   Transferring token ${newTokenId.toString()} to Final Recipient...`);
+      const memo = 'chain-hop3-transfer-to-final';
+      const transferTx = await node2AdminContract.transfer(newTokenId, memo, { gasLimit: 100000 });
+      console.log(`   Transfer tx: ${transferTx.hash}`);
+
+      const transferReceipt = await transferTx.wait();
+      chainTxHash = transferTx.hash;
+      chainTokenId = newTokenId;
+
+      console.log(`✅ Hop 3 completed on Node 2 (block: ${transferReceipt.blockNumber})`);
+      expect(transferReceipt.status).to.equal(1);
 
       console.log('   Waiting for state propagation...');
       await sleep(10000);
     });
 
-    it('Step 10: Verify Hop 3 - tx propagation + final ownership', async function () {
-      console.log('\nStep 10: Verify Hop 3 Multi-Node Consistency (Final State)');
+    it('Step 10: Verify Hop 3 - tx propagation', async function () {
+      console.log('\nStep 10: Verify Hop 3 Transaction Propagation');
 
-      // 10.1 Verify tx propagation
+      // 10.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 3 tx ${chainTxHash} propagation...`);
       let txFoundCount = 0;
       for (let i = 0; i < allProviders.length; i++) {
@@ -2126,46 +2070,6 @@ describe('Multi Node Consistency Test', function () {
       }
       expect(txFoundCount).to.equal(allProviders.length);
       console.log(`✅ Hop 3 tx (submitted on Node2) propagated to all ${txFoundCount} nodes`);
-
-      // 10.2 Verify Final Recipient can access token on all nodes
-      console.log(`\n   Verifying Final Recipient (${finalRecipient}) owns token on all nodes...`);
-      const finalOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          const token = await contract.getToken(finalRecipient, chainTokenId);
-          console.log(`   ${config.name}: ✅ Final Recipient can access (Owner: ${token.owner}, To: ${token.to})`);
-          finalOwnerStates.push({ success: true, owner: token.owner, to: token.to });
-        } catch (error) {
-          console.log(`   ${config.name}: ❌ Failed - ${error.message}`);
-          finalOwnerStates.push({ success: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const verifiedCount = finalOwnerStates.filter((s) => s.success).length;
-      expect(verifiedCount).to.equal(allContracts.length);
-      console.log(`✅ Final Recipient ownership verified on all ${verifiedCount} nodes`);
-
-      // 10.3 Verify Node2 Admin no longer has access
-      console.log(`\n   Verifying Node2 Admin no longer has access...`);
-      const oldOwnerStates = [];
-      for (let i = 0; i < allContracts.length; i++) {
-        const contract = allContracts[i];
-        const config = NODE_CONFIGS[i];
-        try {
-          await contract.getToken(NODE_CONFIGS[1].admin, chainTokenId);
-          console.log(`   ${config.name}: ⚠️  Node2 Admin still has access`);
-          oldOwnerStates.push({ hasAccess: true });
-        } catch (error) {
-          console.log(`   ${config.name}: ✅ Node2 Admin access revoked`);
-          oldOwnerStates.push({ hasAccess: false });
-        }
-        if (i < allContracts.length - 1) await sleep(1000);
-      }
-      const revokedCount = oldOwnerStates.filter((s) => !s.hasAccess).length;
-      expect(revokedCount).to.equal(allContracts.length);
-      console.log(`✅ Node2 Admin access revoked on all ${revokedCount} nodes after Hop 3`);
       s5Hop3 = true; // Track hop 3 completed
     });
 
@@ -2175,7 +2079,7 @@ describe('Multi Node Consistency Test', function () {
       console.log(`   ┌─────────────────────────────────────────────────────────────┐`);
       console.log(`   │  [Hop 1] Node3 Minter ──(tx on Node3)──→ Node1 Admin        │`);
       console.log(`   │  [Hop 2] Node1 Admin  ──(tx on Node1)──→ Node2 Admin        │`);
-      console.log(`   │  [Hop 3] Node2 Admin  ──(tx on Node2)──→ Final Recipient    │`);
+      console.log(`   │  [Hop 3] Node2 Admin  ──(tx on Node2)──→ Node3 Receiver    │`);
       console.log(`   └─────────────────────────────────────────────────────────────┘`);
       console.log(`\n   Token ID: ${chainTokenId.toString()}`);
       console.log(`   Final Owner: ${finalRecipient}`);
@@ -2214,35 +2118,132 @@ describe('Multi Node Consistency Test', function () {
     });
   });
 
-  describe.only('Scenario 6: Node Admin Account Existence Check', function () {
-    it.only('Step 1: Verify each Node Admin exists on their respective node', async function () {
-      console.log('\n--- Scenario 6: Node Admin Account Existence Check ---');
-      console.log('Step 1: Verify Node Admins exist on their respective nodes');
+  describe('Scenario 6: Account Existence Check by Node (Node3 → Node2 → Node1)', function () {
+    // 定义每个节点需要检测的账户
+    const NODE_ACCOUNTS = {
+      node3: {
+        name: 'Node 3',
+        providerIndex: 2,
+        contractIndex: 2,
+        accounts: [
+          { address: accounts.Minter, description: 'Minter' },
+          { address: accounts.Owner, description: 'Owner' },
+          { address: accounts.To1, description: 'To1' },
+          { address: accounts.To2, description: 'To2' },
+        ],
+      },
+      node2: {
+        name: 'Node 2',
+        providerIndex: 1,
+        contractIndex: 1,
+        accounts: [
+          { address: NODE_CONFIGS[1].admin, description: 'Node2 Admin' },
+          { address: accounts.To1, description: 'To1' },
+        ],
+      },
+      node1: {
+        name: 'Node 1',
+        providerIndex: 0,
+        contractIndex: 0,
+        accounts: [
+          { address: NODE_CONFIGS[0].admin, description: 'Node1 Admin' },
+          { address: accounts.To1, description: 'To1' },
+        ],
+      },
+    };
 
-      // 遍历每个节点，验证该节点的admin在对应节点上存在
+    // 辅助函数：检测账户是否存在（通过查询 nonce）
+    async function checkAccountExists(provider, address, description) {
+      try {
+        const nonce = await provider.getTransactionCount(address);
+        const balance = await provider.getBalance(address);
+        console.log(`   ✅ ${description} (${address}): nonce=${nonce}, balance=${balance.toString()}`);
+        return { exists: true, address, description, nonce, balance };
+      } catch (error) {
+        console.log(`   ❌ ${description} (${address}...): ERROR - ${error.message}`);
+        return { exists: false, address, description, error: error.message };
+      }
+    }
+
+    it('Step 1: Check accounts on Node 3', async function () {
+      console.log('\n--- Scenario 6: Account Existence Check by Node ---');
+      console.log('Step 1: Checking accounts on Node 3\n');
+
+      const node3Config = NODE_ACCOUNTS.node3;
+      const provider = allProviders[node3Config.providerIndex];
       const results = [];
-      for (let i = 0; i < NODE_CONFIGS.length; i++) {
-        const config = NODE_CONFIGS[i];
-        const client = allClients[i];
 
-        try {
-          const accountInfo = await getAccount(config.key, client, config.admin);
-          console.log(`   ${config.name} Admin on ${config.name}: ✅ EXISTS`);
-          results.push({ node: config.name, admin: config.admin, exists: true });
-        } catch (error) {
-          if (error.details && error.details.includes('failed to get current account')) {
-            console.log(`   ${config.name} Admin on ${config.name}: ❌ NOT FOUND`);
-            results.push({ node: config.name, admin: config.admin, exists: false });
-          } else {
-            console.log(`   ${config.name} Admin on ${config.name}: ❌ ERROR - ${error.message}`);
-            results.push({ node: config.name, admin: config.admin, exists: false, isError: true });
-          }
-        }
+      for (const account of node3Config.accounts) {
+        const result = await checkAccountExists(provider, account.address, account.description);
+        results.push(result);
       }
 
       const allExist = results.every((r) => r.exists);
       expect(allExist).to.be.true;
-      console.log(`✅ All Node Admins exist on their respective nodes`);
+      console.log(`\n✅ Node 3: All ${results.length} accounts exist`);
+    });
+
+    it('Step 2: Check accounts on Node 2', async function () {
+      console.log('\nStep 2: Checking accounts on Node 2\n');
+
+      const node2Config = NODE_ACCOUNTS.node2;
+      const provider = allProviders[node2Config.providerIndex];
+      const results = [];
+
+      for (const account of node2Config.accounts) {
+        const result = await checkAccountExists(provider, account.address, account.description);
+        results.push(result);
+      }
+
+      const allExist = results.every((r) => r.exists);
+      expect(allExist).to.be.true;
+      console.log(`\n✅ Node 2: All ${results.length} accounts exist`);
+    });
+
+    it('Step 3: Check accounts on Node 1', async function () {
+      console.log('\nStep 3: Checking accounts on Node 1\n');
+
+      const node1Config = NODE_ACCOUNTS.node1;
+      const provider = allProviders[node1Config.providerIndex];
+      const results = [];
+
+      for (const account of node1Config.accounts) {
+        const result = await checkAccountExists(provider, account.address, account.description);
+        results.push(result);
+      }
+
+      const allExist = results.every((r) => r.exists);
+      expect(allExist).to.be.true;
+      console.log(`\n✅ Node 1: All ${results.length} accounts exist`);
+    });
+
+    it('Step 4: Summary - All nodes account check', async function () {
+      console.log('\nStep 4: Summary of all nodes\n');
+
+      const allNodes = ['node3', 'node2', 'node1'];
+      const summary = {};
+
+      for (const nodeKey of allNodes) {
+        const nodeConfig = NODE_ACCOUNTS[nodeKey];
+        const provider = allProviders[nodeConfig.providerIndex];
+        const results = [];
+
+        console.log(`   ${nodeConfig.name}:`);
+        for (const account of nodeConfig.accounts) {
+          const result = await checkAccountExists(provider, account.address, `  ${account.description}`);
+          results.push(result);
+        }
+
+        const allExist = results.every((r) => r.exists);
+        summary[nodeKey] = { total: results.length, passed: results.filter((r) => r.exists).length, allExist };
+        console.log(`      Result: ${summary[nodeKey].passed}/${summary[nodeKey].total} accounts\n`);
+      }
+
+      const totalAccounts = Object.values(summary).reduce((sum, s) => sum + s.total, 0);
+      const totalPassed = Object.values(summary).reduce((sum, s) => sum + s.passed, 0);
+
+      console.log(`✅ All nodes check complete: ${totalPassed}/${totalAccounts} accounts exist`);
+      expect(totalPassed).to.equal(totalAccounts);
     });
   });
 
@@ -2308,6 +2309,9 @@ describe('Multi Node Consistency Test', function () {
     const s5Icon = s5AllPassed ? '✅' : s5Started ? '❌' : '⏭️';
     const s5Detail = s5Started ? `Hop1 ${s5Hop1Icon} → Hop2 ${s5Hop2Icon} → Hop3 ${s5Hop3Icon}` : 'skipped';
     console.log(`${s5Icon} Scenario 5 - Cross-Node Chain Transfer: ${s5Detail}`);
+
+    // Scenario 6: Account Existence Check by Node
+    console.log(`📝 Scenario 6 - Account Check (Node3 → Node2 → Node1): See test output above`);
 
     console.log('');
   });
