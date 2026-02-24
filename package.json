@@ -31,7 +31,8 @@
     "node-rsa": "^1.1.1",
     "npm": "^10.8.3",
     "poseidon-lite": "^0.2.0",
-    "protobufjs": "^7.5.0"
+    "protobufjs": "^7.5.0",
+    "ws": "^8.19.0"
   },
   "scripts": {
     "deploy-infra-qa": "npx hardhat run script/infra/deploy.js --network ucl_L2_qa",
@@ -47,8 +48,6 @@
     "deploy-infra-user-prod": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_prod",
     "deploy-token-prod": "npx hardhat run script/token/deploy.js --network ucl_L2_prod",
     "deploy-demo-token-prod": "npx hardhat run script/token/deploy.js --network ucl_L2_prod",
-
-
     "circle-test": "npx hardhat run script/deploy_hamsatoken.js --network ucl_L2_qa",
     "qa-test": "npx hardhat run test/qa/testUtils.js --network ucl_L2_qa",
     "wlin-test": "npx hardhat run test/wlin/wlin_test.js --network ucl_L2_qa",
@@ -68,14 +67,11 @@
     "wlin-private-dummy": "npx hardhat run test/wlin/dummy_private_token_test.js --network local_L2",
     "native-registry": "npx hardhat run test/wlin/native_registry_test.js --network local_L2",
     "wlin-native": "npx hardhat run test/wlin/native_token_test.js --network local_L2",
-
-
     "storage-layout": "node script/util/storageLayout.js",
     "demo-bank-deploy": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa_bank",
     "demo-bank-deploy2": "npx hardhat run  script/new-bank/register_new_bank.js --network ucl_L2_qa",
     "mc-test-qa": "npx hardhat run test/mc/mc_test.js --network ucl_L2_qa",
     "mc-test-dev": "npx hardhat run test/mc/mc_test.js --network ucl_L2_dev",
-
     "qa-regression": "npx hardhat test test/qa/regression.test.js --network ucl_L2_qa",
     "qa-regression-dev": "npx hardhat test test/qa/regression.test.js --network ucl_L2_dev",
     "qa-edge": "npx hardhat test test/qa/edge_case.test.js --network ucl_L2_prod",
@@ -89,7 +85,6 @@
     "qa-func": "npx hardhat test test/qa/func.test.js --network ucl_L2_prod",
     "qa-upgrade": "npx hardhat test test/qa/private_usdc_proxy_extended.test.js --network ucl_L2_qa",
     "qa-upgrade2": "npx hardhat run test/mc/hamsa_l2_event_proxy_test.js --network ucl_L2_qa",
-
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,sol}\"",
     "format:sol": "prettier --write \"**/*.sol\"",
@@ -104,7 +99,7 @@
     "sun-native-registry": "npx hardhat run test/sun/test_native_token_registry.js --network local_L2",
     "sun-native": "npx hardhat run test/sun/native_token_test.js --network local_L2",
     "ckun-native_test": "npx hardhat run test/chenkun/native_token_performance_test.js --network dev_L2",
-    "ckun-decoder": "npx hardhat run test/chenkun/test_decoder.js --network dev_L2"
-
+    "ckun-decoder": "npx hardhat run test/chenkun/test_decoder.js --network dev_L2",
+    "wlin-ws": "npx hardhat run test/wlin/simpleToken_ws_test.js"
   }
 }

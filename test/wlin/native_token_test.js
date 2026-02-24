@@ -548,6 +548,6 @@ async function testBurn() {
 // testMint().then();
 // testTransfer().then();
 // testSplit().then();
-// getTokenById().then();
+getTokenById().then();
 // encodeBurn().then();
-testBurn().then();
+// testBurn().then();

@@ -202,7 +202,7 @@ async function testCreateNativeToken() {
         abi,
         signer
     );
-    let tx = await registry.createNativeToken("wlin-native", "$w", 6);
+    let tx = await registry.createNativeToken("wlin-native2", "$w", 6);
     let r = await tx.wait();
 
     console.log(r);
@@ -225,7 +225,7 @@ async  function getTokenDetails(){
         abi,
         signer
     );
-    let response = await registry.getTokenMetadata("0x2E66bec28349b70961d2bea744F8B26705DeBDfA");
+    let response = await registry.getTokenMetadata("0xc2a5eFA5ED18627cB965aab4349389Ba5267b249");
     console.log(response);
 }
 
@@ -236,7 +236,7 @@ async function testDisableToken(){
         abi,
         signer
     );
-    let tx = await registry.enableOrDisableNativeToken("0x2E66bec28349b70961d2bea744F8B26705DeBDfA", false);
+    let tx = await registry.enableOrDisableNativeToken("0xc2a5eFA5ED18627cB965aab4349389Ba5267b249", false);
     await tx.wait();
 }
 
