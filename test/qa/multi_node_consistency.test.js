@@ -1632,38 +1632,30 @@ describe('Multi Node Consistency Test', function () {
     // Final recipient
     const finalRecipient = accounts.To1;
 
-    it('Step 1: Setup Node1 Admin and Node2 Admin wallets', async function () {
+    it('Step 1: Setup - wallets, sync check, and allowance', async function () {
       console.log('\n--- Scenario 5: Cross-Node Chain Transfer (A→B→C→D) ---');
-      console.log('Step 1: Setup Node Admin Wallets for Chain Transfer\n');
+      console.log('Step 1: Setup - wallets, sync check, and allowance\n');
 
-      // Node1 Admin wallet connected to Node1 provider
+      // 1.1 Setup Node1 Admin wallet
       const node1Provider = allProviders[0];
       node1AdminWallet = new ethers.Wallet(NODE_CONFIGS[0].key, node1Provider);
       node1AdminContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, node1AdminWallet);
       node1AdminMetadata = await createAuthMetadata(NODE_CONFIGS[0].key);
-
       console.log(`   Node1 Admin: ${node1AdminWallet.address}`);
-      console.log(`   Connected to: ${NODE_CONFIGS[0].name} (${NODE_CONFIGS[0].httpUrl})`);
 
-      // Node2 Admin wallet connected to Node2 provider
+      // 1.2 Setup Node2 Admin wallet
       const node2Provider = allProviders[1];
       node2AdminWallet = new ethers.Wallet(NODE_CONFIGS[1].key, node2Provider);
       node2AdminContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, node2AdminWallet);
       node2AdminMetadata = await createAuthMetadata(NODE_CONFIGS[1].key);
-
       console.log(`   Node2 Admin: ${node2AdminWallet.address}`);
-      console.log(`   Connected to: ${NODE_CONFIGS[1].name} (${NODE_CONFIGS[1].httpUrl})`);
-
       console.log(`   Final Recipient: ${finalRecipient}`);
 
       expect(node1AdminWallet.address).to.equal(NODE_CONFIGS[0].admin);
       expect(node2AdminWallet.address).to.equal(NODE_CONFIGS[1].admin);
-      console.log('\n✅ All node admin wallets initialized');
-    });
 
-    it('Step 2: Verify initial blockchain sync across all nodes', async function () {
-      console.log('\nStep 2: Verify Initial Blockchain Sync');
-
+      // 1.3 Verify blockchain sync
+      console.log('\n   Verifying blockchain sync...');
       const blockNumbers = await Promise.all(
         allProviders.map(async (provider, idx) => {
           const blockNum = await provider.getBlockNumber();
@@ -1671,34 +1663,29 @@ describe('Multi Node Consistency Test', function () {
           return blockNum;
         })
       );
-
       const maxBlock = Math.max(...blockNumbers);
       const minBlock = Math.min(...blockNumbers);
       const blockDiff = maxBlock - minBlock;
-
       console.log(`   Block height difference: ${blockDiff} blocks`);
       expect(blockDiff).to.be.at.most(3);
-      console.log(`✅ All nodes are synchronized (max diff: ${blockDiff} blocks)`);
-    });
 
-    it('Step 3: Set mint allowance on Node 3', async function () {
-      console.log('\nStep 3: Set Mint Allowance on Node 3');
+      // 1.4 Set mint allowance
+      console.log('\n   Setting mint allowance...');
       const allowanceAmount = 100000000;
-
       const setAllowedTx = await withTimeout(
         setupMintAllowance(ownerContract, client, minterWallet.address, accounts.OwnerKey, allowanceAmount),
         60000,
         'setupMintAllowance timeout'
       );
-
-      chainTxHash = setAllowedTx.hash;
-      console.log(`✅ Mint allowance set on Node 3, tx: ${chainTxHash}`);
+      console.log(`   Allowance tx: ${setAllowedTx.hash}`);
       expect(setAllowedTx.hash).to.be.a('string');
+
+      console.log('\n✅ Setup complete - wallets initialized, nodes synced, allowance set');
       await sleep(10000);
     });
 
-    it('Step 4: Mint and Split token on Node 3 (prepare for chain transfer)', async function () {
-      console.log('\nStep 4: Mint and Split Token on Node 3');
+    it('Step 2: Mint and Split token on Node 3 (prepare for chain transfer)', async function () {
+      console.log('\nStep 2: Mint and Split Token on Node 3');
       const tokenAmount = 1000;
 
       // Mint
@@ -1797,8 +1784,8 @@ describe('Multi Node Consistency Test', function () {
       console.log(`✅ Token ${chainTokenId.toString()} ready for chain transfer (to=${NODE_CONFIGS[0].admin})`);
     });
 
-    it('Step 5: [Hop 1] Node3 Minter → Node1 Admin (tx on Node3)', async function () {
-      console.log('\nStep 5: [Hop 1] Node3 Minter → Node1 Admin');
+    it('Step 3: [Hop 1] Node3 Minter → Node1 Admin (tx on Node3)', async function () {
+      console.log('\nStep 3: [Hop 1] Node3 Minter → Node1 Admin');
       expect(chainTokenId).to.exist;
       console.log(`   Transferring token ${chainTokenId.toString()} from Node3 Minter to Node1 Admin...`);
       console.log(`   From: ${minterWallet.address} (Node3 Minter)`);
@@ -1818,8 +1805,8 @@ describe('Multi Node Consistency Test', function () {
       await sleep(10000);
     });
 
-    it('Step 6: Verify Hop 1 - tx propagation', async function () {
-      console.log('\nStep 6: Verify Hop 1 Transaction Propagation');
+    it('Step 4: Verify Hop 1 - tx propagation', async function () {
+      console.log('\nStep 4: Verify Hop 1 Transaction Propagation');
 
       // 6.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 1 tx ${chainTxHash} propagation...`);
@@ -1845,8 +1832,8 @@ describe('Multi Node Consistency Test', function () {
       s5Hop1 = true; // Track hop 1 completed
     });
 
-    it('Step 7: [Hop 2] Node1 Admin → Node2 Admin (tx on Node1)', async function () {
-      console.log('\nStep 7: [Hop 2] Node1 Admin → Node2 Admin (tx submitted on Node1)');
+    it('Step 5: [Hop 2] Node1 Admin → Node2 Admin (tx on Node1)', async function () {
+      console.log('\nStep 5: [Hop 2] Node1 Admin → Node2 Admin (tx submitted on Node1)');
       client = allClients[0]
       expect(chainTokenId).to.exist;
       expect(node1AdminContract).to.exist;
@@ -1932,8 +1919,8 @@ describe('Multi Node Consistency Test', function () {
       await sleep(10000);
     });
 
-    it('Step 8: Verify Hop 2 - tx propagation', async function () {
-      console.log('\nStep 8: Verify Hop 2 Transaction Propagation');
+    it('Step 6: Verify Hop 2 - tx propagation', async function () {
+      console.log('\nStep 6: Verify Hop 2 Transaction Propagation');
 
       // 8.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 2 tx ${chainTxHash} propagation...`);
@@ -1959,8 +1946,8 @@ describe('Multi Node Consistency Test', function () {
       s5Hop2 = true; // Track hop 2 completed
     });
 
-    it('Step 9: [Hop 3] Node2 Admin → Node3 Recevier (tx on Node2)', async function () {
-      console.log('\nStep 9: [Hop 3] Node2 Admin → Final Recipient (tx submitted on Node2)');
+    it('Step 7: [Hop 3] Node2 Admin → Node3 Recevier (tx on Node2)', async function () {
+      console.log('\nStep 7: [Hop 3] Node2 Admin → Final Recipient (tx submitted on Node2)');
       expect(chainTokenId).to.exist;
       expect(node2AdminContract).to.exist;
       client = allClients[1];
@@ -2046,8 +2033,8 @@ describe('Multi Node Consistency Test', function () {
       await sleep(10000);
     });
 
-    it('Step 10: Verify Hop 3 - tx propagation', async function () {
-      console.log('\nStep 10: Verify Hop 3 Transaction Propagation');
+    it('Step 8: Verify Hop 3 - tx propagation', async function () {
+      console.log('\nStep 8: Verify Hop 3 Transaction Propagation');
 
       // 10.1 Verify tx propagation only
       console.log(`\n   Verifying Hop 3 tx ${chainTxHash} propagation...`);
@@ -2073,8 +2060,8 @@ describe('Multi Node Consistency Test', function () {
       s5Hop3 = true; // Track hop 3 completed
     });
 
-    it('Step 11: Verify complete chain transfer history', async function () {
-      console.log('\nStep 11: Verify Complete Chain Transfer Summary');
+    it('Step 9: Verify complete chain transfer history', async function () {
+      console.log('\nStep 9: Verify Complete Chain Transfer Summary');
       console.log('\n   Chain Transfer Path:');
       console.log(`   ┌─────────────────────────────────────────────────────────────┐`);
       console.log(`   │  [Hop 1] Node3 Minter ──(tx on Node3)──→ Node1 Admin        │`);
