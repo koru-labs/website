@@ -34,7 +34,7 @@ describe('Regression Native Token Tests', function () {
     nativeContract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
   });
 
-  describe('Setup', function () {
+  describe.only('Setup', function () {
     it('should set mint allowance for minter', async function () {
       // Setup mint allowance using helper function
       const ownerWallet = new ethers.Wallet(accounts.OwnerKey, ethers.provider);
@@ -106,7 +106,7 @@ describe('Regression Native Token Tests', function () {
       const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
 
       console.log('Executing batch mint transaction...');
-      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 1000000 });
       const receipt = await mintTx.wait();
       expect(receipt.status).to.equal(1);
       console.log('Batch mint successful, tx:', mintTx.hash);
@@ -189,7 +189,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing split transaction...');
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       const receipt = await splitTx.wait();
       expect(receipt.status).to.equal(1);
@@ -264,7 +264,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing split transaction...');
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       const receipt = await splitTx.wait();
       expect(receipt.status).to.equal(1);
@@ -354,7 +354,7 @@ describe('Regression Native Token Tests', function () {
       const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
 
       console.log(`Executing mint transaction for amount ${amount}...`);
-      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 1000000 });
       const receipt = await mintTx.wait();
       expect(receipt.status).to.equal(1);
       console.log('Mint successful, tx:', mintTx.hash);
@@ -401,7 +401,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing split transaction...');
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       const receipt = await splitTx.wait();
       expect(receipt.status).to.equal(1);
@@ -471,7 +471,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing transfer transaction for token ID:', tokenId.toString());
       // Use populateTransaction to build the transaction like in the performance test
-      let tx = await nativeContract.transfer(tokenId, 'regression transfer', { gasLimit: 100000 });
+      let tx = await nativeContract.transfer(tokenId, 'regression transfer', { gasLimit: 1000000 });
       let receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
       console.log('Transfer successful, tx:', tx.hash);
@@ -517,7 +517,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing split transaction...');
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       const receipt = await splitTx.wait();
       expect(receipt.status).to.equal(1);
@@ -543,7 +543,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing burn transaction for token ID:', tokenId.toString());
       // Use populateTransaction to build the transaction like in the performance test
-      let tx = await nativeContract.burn(tokenId, { gasLimit: 100000 });
+      let tx = await nativeContract.burn(tokenId, { gasLimit: 1000000 });
       let receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
       console.log('Burn successful, tx:', tx.hash);
@@ -551,7 +551,7 @@ describe('Regression Native Token Tests', function () {
     });
   });
   describe('Complete Workflow Scenarios', function () {
-    it.only('should complete workflow: mint 1 token -> split 1 token -> transfer 1 token', async function () {
+    it('should complete workflow: mint 1 token -> split 1 token -> transfer 1 token', async function () {
       console.log('\n🔄 TEST: Complete workflow with 1 token (Mint → Split → Transfer)');
       console.log('   Purpose: Verify end-to-end workflow with single token operations');
       console.log('   Expected: Successfully mint, split, and transfer 1 token through complete lifecycle\n');
@@ -607,7 +607,7 @@ describe('Regression Native Token Tests', function () {
       const publicInputs = response.input.map((i) => ethers.toBigInt(i));
       const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
 
-      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 1000000 });
       const mintReceipt = await mintTx.wait();
       expect(mintReceipt.status).to.equal(1);
       console.log(`✅ Minted 1 token successfully, tx: ${mintTx.hash}`);
@@ -661,7 +661,7 @@ describe('Regression Native Token Tests', function () {
         splitProof,
         splitPublicInputs,
         paddingNum,
-        { gasLimit: 100000 }
+        { gasLimit: 1000000 }
       );
       const splitReceipt = await splitTx.wait();
       expect(splitReceipt.status).to.equal(1);
@@ -678,7 +678,7 @@ describe('Regression Native Token Tests', function () {
       const tokenIdToTransfer = ethers.toBigInt(splitNewTokens[transferTokenIdx].id);
       console.log(`   Selected token index: ${transferTokenIdx}, Token ID: ${tokenIdToTransfer.toString()}`);
 
-      const transferTx = await nativeContract.transfer(tokenIdToTransfer, 'workflow-transfer-1', { gasLimit: 100000 });
+      const transferTx = await nativeContract.transfer(tokenIdToTransfer, 'workflow-transfer-1', { gasLimit: 1000000 });
       const transferReceipt = await transferTx.wait();
       expect(transferReceipt.status).to.equal(1);
       console.log(`✅ Transferred 1 token successfully, tx: ${transferTx.hash}`);
@@ -687,7 +687,7 @@ describe('Regression Native Token Tests', function () {
       console.log('\n✅ Complete workflow with 1 token finished successfully!');
     });
 
-    it.skip('should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)', async function () {
+    it.only('should complete workflow: 64 concurrent splits (128 tokens each) -> concurrent transfers(8192 tokens total)', async function () {
       this.timeout(3600000); // 1 hour timeout for large batch operations
 
       console.log('\n🔄 TEST: Complete workflow with 64 concurrent splits (128 tokens each) and concurrent transfers 8192 tokens');
@@ -749,7 +749,7 @@ describe('Regression Native Token Tests', function () {
       const publicInputs = response.input.map((i) => ethers.toBigInt(i));
       const padding = Math.max(Number(batchedSize) - to_accounts.length, 0);
 
-      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 100000 });
+      const mintTx = await nativeContract.mint(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 10000000 });
       const mintReceipt = await mintTx.wait();
       expect(mintReceipt.status).to.equal(1);
       console.log(`✅ Minted ${tokensToMint} tokens successfully, tx: ${mintTx.hash}`);
@@ -832,7 +832,7 @@ describe('Regression Native Token Tests', function () {
       const paddingNum = detailResponse.batched_size - recipients.length;
 
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       await splitTx.wait();
 
@@ -842,7 +842,7 @@ describe('Regression Native Token Tests', function () {
 
       // First transfer should succeed
       console.log('Attempting first transfer...');
-      const tx1 = await nativeContract.transfer(tokenId, 'first-transfer', { gasLimit: 100000 });
+      const tx1 = await nativeContract.transfer(tokenId, 'first-transfer', { gasLimit: 1000000 });
       const receipt1 = await tx1.wait();
       expect(receipt1.status).to.equal(1);
       console.log('✅ First transfer successful, tx:', tx1.hash);
@@ -851,7 +851,7 @@ describe('Regression Native Token Tests', function () {
       // Second transfer with same tokenId should fail
       console.log('Attempting second transfer with same tokenId...');
       try {
-        const tx2 = await nativeContract.transfer(tokenId, 'second-transfer', { gasLimit: 100000 });
+        const tx2 = await nativeContract.transfer(tokenId, 'second-transfer', { gasLimit: 1000000 });
         await tx2.wait();
         console.log('❌ Second transfer unexpectedly succeeded');
         expect.fail('Second transfer should have failed but succeeded');
@@ -898,7 +898,7 @@ describe('Regression Native Token Tests', function () {
       const paddingNum = detailResponse.batched_size - recipients.length;
 
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       await splitTx.wait();
 
@@ -908,7 +908,7 @@ describe('Regression Native Token Tests', function () {
 
       // First burn should succeed
       console.log('Attempting first burn...');
-      const burnTx1 = await nativeContract.burn(burnTokenId, { gasLimit: 100000 });
+      const burnTx1 = await nativeContract.burn(burnTokenId, { gasLimit: 1000000 });
       const burnReceipt1 = await burnTx1.wait();
       expect(burnReceipt1.status).to.equal(1);
       console.log('✅ First burn successful, tx:', burnTx1.hash);
@@ -917,7 +917,7 @@ describe('Regression Native Token Tests', function () {
       // Second burn with same tokenId should fail
       console.log('Attempting second burn with same tokenId...');
       try {
-        const burnTx2 = await nativeContract.burn(burnTokenId, { gasLimit: 100000 });
+        const burnTx2 = await nativeContract.burn(burnTokenId, { gasLimit: 1000000 });
         await burnTx2.wait();
         console.log('❌ Second burn unexpectedly succeeded');
         expect.fail('Second burn should have failed but succeeded');
@@ -964,7 +964,7 @@ describe('Regression Native Token Tests', function () {
       const paddingNum = detailResponse.batched_size - recipients.length;
 
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       await splitTx.wait();
 
@@ -974,7 +974,7 @@ describe('Regression Native Token Tests', function () {
 
       // First transfer the token
       console.log('Attempting transfer...');
-      const transferTx = await nativeContract.transfer(testTokenId, 'transfer-before-burn', { gasLimit: 100000 });
+      const transferTx = await nativeContract.transfer(testTokenId, 'transfer-before-burn', { gasLimit: 1000000 });
       const transferReceipt = await transferTx.wait();
       expect(transferReceipt.status).to.equal(1);
       console.log('✅ Transfer successful, tx:', transferTx.hash);
@@ -983,7 +983,7 @@ describe('Regression Native Token Tests', function () {
       // Then try to burn the same tokenId - should fail
       console.log('Attempting burn after transfer with same tokenId...');
       try {
-        const burnTx = await nativeContract.burn(testTokenId, { gasLimit: 100000 });
+        const burnTx = await nativeContract.burn(testTokenId, { gasLimit: 1000000 });
         await burnTx.wait();
         console.log('❌ Burn after transfer unexpectedly succeeded');
         expect.fail('Burn after transfer should have failed but succeeded');
@@ -1041,7 +1041,7 @@ describe('Regression Native Token Tests', function () {
 
       console.log('Executing split transaction...');
       const splitTx = await nativeContract.split(minter1Wallet.address, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, {
-        gasLimit: 100000,
+        gasLimit: 1000000,
       });
       await splitTx.wait();
 
@@ -1197,7 +1197,7 @@ describe('Regression Native Token Tests', function () {
 
       // Transfer the token
       console.log('Transferring token...');
-      const transferTx = await nativeContract.transfer(tokenId, 'query-after-transfer-test', { gasLimit: 100000 });
+      const transferTx = await nativeContract.transfer(tokenId, 'query-after-transfer-test', { gasLimit: 1000000 });
       await transferTx.wait();
       console.log('✅ Transfer successful, tx:', transferTx.hash);
       await sleep(2000);
