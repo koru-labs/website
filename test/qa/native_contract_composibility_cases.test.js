@@ -76,7 +76,7 @@ describe('Native Token QA Integration Test', function () {
         },
       };
       // #region agent log
-      fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_token_qa_integration.test.js:Case1',message:'allowance set for this address',data:{allowanceFor:minterWallet.address,qaContractAddress:await qaContract.getAddress()},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_contract_composibility_cases.test.js:Case1',message:'allowance set for this address',data:{allowanceFor:minterWallet.address,qaContractAddress:await qaContract.getAddress()},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       // Fix: native token checks msg.sender on mint(); caller is qaContract, so set allowance for qaContract
       const tx = await qaContract.privateSetMintAllowed(await qaContract.getAddress(), allowed, { gasLimit: 100000 });
@@ -137,7 +137,7 @@ describe('Native Token QA Integration Test', function () {
       const padding = Math.max(Number(mintResponse.batched_size) - 1, 0);
 
       // #region agent log
-      fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_token_qa_integration.test.js:Case2.1',message:'caller of mint at native token',data:{qaContractAddress:await qaContract.getAddress(),minterWalletAddress:minterWallet.address,padding,batchedSize:mintResponse.batched_size},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_contract_composibility_cases.test.js:Case2.1',message:'caller of mint at native token',data:{qaContractAddress:await qaContract.getAddress(),minterWalletAddress:minterWallet.address,padding,batchedSize:mintResponse.batched_size},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       const tx1 = await qaContract.privateMints(recipients, newTokens, newAllowed, proof, publicInputs, padding, { gasLimit: 1000000 });
       const receipt1 = await tx1.wait();
@@ -153,7 +153,7 @@ describe('Native Token QA Integration Test', function () {
       if (mintEvents.length > 0) {
         console.log('  privateMints TestResult (raw message):', mintEvents[0].message);
         // #region agent log
-        fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_token_qa_integration.test.js:afterMint',message:'mint result',data:{receiptStatus:receipt1.status,innerSuccess:mintEvents[0].success},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7439/ingest/30ecee5e-ef82-4ff1-8fd0-57dcf45cd5a9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'368b2e'},body:JSON.stringify({sessionId:'368b2e',location:'native_contract_composibility_cases.test.js:afterMint',message:'mint result',data:{receiptStatus:receipt1.status,innerSuccess:mintEvents[0].success},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
         // #endregion
       }
       expect(mintEvents.length).to.be.greaterThan(0);
@@ -216,15 +216,15 @@ describe('Native Token QA Integration Test', function () {
       // Wait for split to be fully processed
       await sleep(3000);
 
-      // Get the tokenId for transfer (odd index - the one going to To1)
+      // Get the tokenId for transfer (odd index - the one intended for To1)
       const transferTokenId = splitNewTokens.find((_, idx) => idx % 2 === 1)?.id;
       console.log('  Transfer tokenId:', transferTokenId);
 
-      // Step 3: checkTokenIds (check token belongs to To1 after transfer preparation)
+      // Step 3: checkTokenIds (check token is associated with To1 for transfer preparation)
       console.log('\nStep 3: checkTokenIds');
       let checkedResults;
       try {
-        // After split, the transfer token (odd index) belongs to To1
+        // After split, owner of the transfer token is still minter; only after transfer() does owner change
         // Try calling directly from native contract first
         console.log('  Checking token directly from native contract...');
         checkedResults = await nativeContract.checkTokenIds(accounts.To1, [transferTokenId]);
@@ -234,13 +234,14 @@ describe('Native Token QA Integration Test', function () {
         checkedResults = [];
       }
 
-      // Step 4: privateTransfer
+      // Step 4: privateTransfer — minter (owner) calls transfer; only after success does token owner change to recipient.
+      // 说明：native token 的 transfer 会校验 msg.sender === owner；经 qaContract 调用时代币看到 msg.sender 为 QA 合约，
+      // 与 owner 不一致会返回 false。若链上支持代理调用（如按 tx.origin 校验或白名单），此处可保持通过 qaContract 调用。
       console.log('\nStep 4: privateTransfer');
       const tx3 = await qaContract.privateTransfer([transferTokenId], ['transfer-memo'], { gasLimit: 100000 });
       const receipt3 = await tx3.wait();
       console.log('  privateTransfer tx:', tx3.hash);
 
-      // Check TestResult events for transfer
       const transferEvents = parseTestResultEvents(receipt3);
       console.log('  privateTransfer TestResult:', transferEvents);
       expect(transferEvents.length).to.be.greaterThan(0);
