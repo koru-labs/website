@@ -108,39 +108,6 @@ contract NativeTokenQA {
         return success;
     }
 
-    function privateTransfer(
-        uint256[] calldata tokenIds,
-        string[] calldata memos
-    ) external returns (bool) {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            (bool success,) = nativeTokenContract.call(
-                abi.encodeWithSignature("transfer(uint256,string)", tokenIds[i], memos[i])
-            );
-            if (!success) {
-                emit TestResult("privateTransfer", false, "transfer failed");
-                return false;
-            }
-        }
-        emit TestResult("privateTransfer", true, "success");
-        return true;
-    }
-
-    function privateBurn(
-        uint256[] calldata tokenIds
-    ) external returns (bool) {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            (bool success,) = nativeTokenContract.call(
-                abi.encodeWithSignature("burn(uint256)", tokenIds[i])
-            );
-            if (!success) {
-                emit TestResult("privateBurn", false, "burn failed");
-                return false;
-            }
-        }
-        emit TestResult("privateBurn", true, "success");
-        return true;
-    }
-
     function checkTokenIds(
         address owner,
         uint256[] calldata tokenIds
