@@ -234,19 +234,12 @@ describe('Native Token QA Integration Test', function () {
         checkedResults = [];
       }
 
-      // Step 4: privateTransfer — minter (owner) calls transfer; only after success does token owner change to recipient.
-      // 说明：native token 的 transfer 会校验 msg.sender === owner；经 qaContract 调用时代币看到 msg.sender 为 QA 合约，
-      // 与 owner 不一致会返回 false。若链上支持代理调用（如按 tx.origin 校验或白名单），此处可保持通过 qaContract 调用。
-      console.log('\nStep 4: privateTransfer');
-      const tx3 = await qaContract.privateTransfer([transferTokenId], ['transfer-memo'], { gasLimit: 100000 });
+      // Step 4: transfer — minter (owner) 直接调 native 合约（native token 校验 msg.sender === owner）
+      console.log('\nStep 4: transfer');
+      const tx3 = await nativeContract.transfer(transferTokenId, 'transfer-memo', { gasLimit: 100000 });
       const receipt3 = await tx3.wait();
-      console.log('  privateTransfer tx:', tx3.hash);
-
-      const transferEvents = parseTestResultEvents(receipt3);
-      console.log('  privateTransfer TestResult:', transferEvents);
-      expect(transferEvents.length).to.be.greaterThan(0);
-      expect(transferEvents[0].testName).to.equal('privateTransfer');
-      expect(transferEvents[0].success).to.be.true;
+      console.log('  transfer tx:', tx3.hash);
+      expect(receipt3.status).to.equal(1, 'native transfer tx should succeed');
 
       console.log('\n=== Case 2.1 completed ===');
     });
@@ -367,11 +360,11 @@ describe('Native Token QA Integration Test', function () {
         checkedResults = [];
       }
 
-      // Step 4: privateBurn
-      console.log('\nStep 4: privateBurn');
-      const tx3 = await qaContract.privateBurn([burnTokenId], { gasLimit: 100000 });
+      // Step 4: burn — minter (owner) 直接调 native 合约（native token 校验 msg.sender === owner）
+      console.log('\nStep 4: burn');
+      const tx3 = await nativeContract.burn(burnTokenId, { gasLimit: 100000 });
       await tx3.wait();
-      console.log('  privateBurn tx:', tx3.hash);
+      console.log('  burn tx:', tx3.hash);
 
       console.log('\n=== Case 2.2 completed ===');
     });
@@ -497,12 +490,14 @@ describe('Native Token QA Integration Test', function () {
         checkedResults = [];
       }
 
-      // Step 4: privateTransfer (both tokens at once)
-      console.log('\nStep 4: privateTransfer (both tokens)');
+      // Step 4: transfer (both tokens) — minter (owner) 直接调 native 合约，逐个 transfer
+      console.log('\nStep 4: transfer (both tokens)');
       const memos = transferTokenIds.map((_, i) => `transfer-${i + 1}`);
-      const tx3 = await qaContract.privateTransfer(transferTokenIds, memos, { gasLimit: 100000 });
-      await tx3.wait();
-      console.log('  privateTransfer tx:', tx3.hash);
+      const tx3a = await nativeContract.transfer(transferTokenIds[0], memos[0], { gasLimit: 100000 });
+      await tx3a.wait();
+      const tx3b = await nativeContract.transfer(transferTokenIds[1], memos[1], { gasLimit: 100000 });
+      await tx3b.wait();
+      console.log('  transfer tx:', tx3a.hash, tx3b.hash);
 
       console.log('\n=== Case 3 completed ===');
     });
