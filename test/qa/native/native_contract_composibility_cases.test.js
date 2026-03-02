@@ -1,9 +1,9 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { createClient } = require('./token_grpc');
-const accounts = require('./../../deployments/account.json');
+const { createClient } = require('../token_grpc');
+const accounts = require('../../../deployments/account.json');
 
-const { NATIVE_TOKEN_ADDRESS, NATIVE_ABI, createAuthMetadata, sleep } = require('./../help/NativeTestHelper');
+const { NATIVE_TOKEN_ADDRESS, NATIVE_ABI, createAuthMetadata, sleep } = require('../../help/NativeTestHelper');
 
 const GRPC_URL = 'dev2-node3-rpc.hamsa-ucl.com:50051';
 const RPC = 'http://l2-node3-native.hamsa-ucl.com:8545';

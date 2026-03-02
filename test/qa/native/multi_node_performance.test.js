@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { createClient } = require('./token_grpc');
-const accounts = require('./../../deployments/account.json');
+const { createClient } = require('../token_grpc');
+const accounts = require('../../../deployments/account.json');
 const grpc = require('@grpc/grpc-js');
 const {promises: fs} = require("fs");
 
@@ -15,7 +15,7 @@ const {
   generateSplitProofs,
   executeBatchedConcurrentSplits,
   executeBatchTransfers,
-} = require('./../help/NativeTestHelper');
+} = require('../../help/NativeTestHelper');
 
 
 const NODE_CONFIGS = [

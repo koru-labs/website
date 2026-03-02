@@ -130,6 +130,29 @@ class TokenTestHelper {
         console.log("tokenIds", tokenIds)
         return callPrivateBurns(this.contractAddress, fromWallet, tokenIds);
     }
+    async burnsMul(fromWallet, amount,count, metadata) {
+        const tokenIds = [];
+        for (let i = 0; i < count; i++) {
+            console.log(`generateSplitProof for ${i} time`)
+            const proof = await this.generateSplitProof(
+                fromWallet.address,
+                null,
+                amount,
+                CommentType.BURN,
+                metadata
+            );
+            await sleep(1000)
+            tokenIds.push(ethers.toBigInt(proof.transfer_token_id));
+        }
+        console.log("tokenIds", tokenIds)
+        for (let i = 0; i < tokenIds.length; i++){
+            console.log(`callPrivateBurns tokenId ${tokenIds[i]}`)
+            let result = await callPrivateBurns(this.contractAddress, fromWallet, [tokenIds[i]])
+            console.log(result)
+        }
+
+        // return callPrivateBurns(this.contractAddress, fromWallet, tokenIds);
+    }
 
     async approveTransferFrom(ownerWallet, spenderWallet, toAddress, amount, ownerMetadata) {
         const request = {

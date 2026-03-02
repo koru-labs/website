@@ -332,6 +332,14 @@ describe('Account service cases', function () {
             expect(afterTransferBalance).equal(afterMintBalance - 10);
         });
     });
+
+    describe.skip('register institution and update it', function () {
+        const pkX = '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d217'
+        const pkY = '0x4a202a0b8b7c1f0e0f7c0c4c0f1f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0e0d0c0b0a0f0'
+
+
+
+    });
 });
 // 辅助函数
 function sleep(ms) {

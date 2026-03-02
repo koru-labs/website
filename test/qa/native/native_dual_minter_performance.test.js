@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { createClient } = require('./token_grpc');
-const accounts = require('./../../deployments/account.json');
+const { createClient } = require('../token_grpc');
+const accounts = require('../../../deployments/account.json');
 const grpc = require('@grpc/grpc-js');
 
-const native_token_address = '0xc35F5826875DC62fc5c51B9EE778836fac406e7b';
+const native_token_address = '0x14Cf747669B78516424CAd20E1E5d53fD76EA850';
 const rpcUrl = 'dev2-node3-rpc.hamsa-ucl.com:50051';
 const client = createClient(rpcUrl);
 const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
@@ -221,7 +221,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
 });
 
 // New test case: Save split token IDs to JSON file, then read and execute transfer
-describe.only('Native Dual Minter Split & Transfer with JSON Storage', function () {
+describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
   let client, owner, minter;
   let nativeOwner, nativeMinter;
   let mintedTokens = {};
@@ -704,7 +704,7 @@ describe.only('Native Dual Minter Split & Transfer with JSON Storage', function 
   });
 });
 
-describe('Native Dual Minter Transfer Performance Tests', function () {
+describe.only('Native Dual Minter Transfer Performance Tests', function () {
   let client, owner, minter;
   let nativeOwner, nativeMinter;
   let mintedTokens = {};

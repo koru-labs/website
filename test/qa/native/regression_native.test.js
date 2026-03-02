@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { ethers, network } = require('hardhat');
-const { createClient } = require('./token_grpc');
-const accounts = require('./../../deployments/account.json');
+const { createClient } = require('../token_grpc');
+const accounts = require('../../../deployments/account.json');
 
 // Import from NativeTestHelper
 const {
@@ -15,7 +15,7 @@ const {
   generateSplitProofs,
   executeBatchedConcurrentSplits,
   executeBatchTransfers,
-} = require('./../help/NativeTestHelper');
+} = require('../../help/NativeTestHelper');
 
 describe('Regression Native Token Tests', function () {
   this.timeout(600000); // 10 minutes

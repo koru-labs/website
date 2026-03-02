@@ -264,6 +264,7 @@ describe('Private Token - Function Cases', function () {
             expect(senderFinalBalance).to.equal(senderInitialBalance - TRANSFER_AMOUNT);
             expect(recipientFinalBalance).to.equal(recipientInitialBalance + TRANSFER_AMOUNT);
         });
+
         it('should transfer all available balance success', async function () {
             await helper.cancelAllSplitTokens(helper.wallets.minter);
             await helper.revokeAllApprovedTokens(helper.wallets.minter);
@@ -414,6 +415,15 @@ describe('Private Token - Function Cases', function () {
             await helper.mint(accounts.Minter, 210)
             const initialBalance = await helper.getPrivateBalance(accounts.Minter);
             await helper.burns(helper.wallets.minter, 10,10, metadata.minter);
+            await sleep(3000)
+            const finalBalance = await helper.getPrivateBalance(accounts.Minter);
+            console.log(initialBalance,finalBalance)
+            expect(finalBalance).to.equal(initialBalance - 100);
+        })
+        it.only('should burns tokens successfully for 10 times', async function () {
+            await helper.mint(accounts.Minter, 210)
+            const initialBalance = await helper.getPrivateBalance(accounts.Minter);
+            await helper.burnsMul(helper.wallets.minter, 10,10, metadata.minter);
             await sleep(3000)
             const finalBalance = await helper.getPrivateBalance(accounts.Minter);
             console.log(initialBalance,finalBalance)

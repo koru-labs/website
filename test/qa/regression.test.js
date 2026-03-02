@@ -22,8 +22,8 @@ function getConfigurationForNetwork() {
             return require("../../script/dev_configuration");
         case 'qa':
             return require("../../script/qa_configuration");
-        case 'demo':
-            return require("../../script/demo_configuration");
+        // case 'demo':
+        //     return require("../../script/demo_configuration");
         case 'prod':
             return require("../../script/prod_configuration");
         default:
@@ -74,6 +74,7 @@ const {
     getEvents,
     getSplitTokenList,
     callPrivateTransferFrom,
+    callPrivateTransferFroms,
     callPrivateRevoke,
     // getApprovedAllowance,
     allowBanksInTokenSmartContract,
@@ -117,6 +118,7 @@ async function mint(address, amount) {
     console.log("callPrivateMint:", receipt)
     let tx = await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
     console.log("callPrivateMint:", tx)
+    await sleep(1000)
     return receipt
 }
 
@@ -217,6 +219,28 @@ async function ApproveAndTransferFrom(fromWallet, spenderWallet, fromAddress, to
     let receipt = await callPrivateTransferFrom(spenderWallet, scAddress, fromAddress, toAddress, tokenId)
     await sleep(2000)
     console.log("receipt", receipt)
+    return receipt
+}
+async function ApproveAndTransferFroms(fromWallet, spenderWallet, fromAddress, toAddress, amount,count, fromMetadata) {
+    let tokenIds = []
+    for (let i = 0; i < count; i++) {
+        const splitRequest = {
+            sc_address: scAddress,
+            token_type: '0',
+            from_address: fromAddress,
+            spender_address: accounts.Spender1,
+            to_address: toAddress,
+            amount: amount,
+            comment: "ApproveTransferFrom"
+        };
+        let response = await client3.generateApproveProof(splitRequest, fromMetadata);
+        await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, fromMetadata)
+        const tokenId = ethers.toBigInt(response.transfer_token_id)
+        tokenIds.push(tokenId)
+    }
+    let receipt = await callPrivateTransferFroms(spenderWallet, scAddress, fromAddress, toAddress, tokenIds)
+    console.log("receipt", receipt)
+    await sleep(2000)
     return receipt
 }
 
@@ -506,6 +530,7 @@ describe.only("Function Cases", function () {
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance + 1);
         });
+        
         it('Approve transfer: minter to user cross bank ', async () => {
             preBalance = await getTokenBalanceByAdmin(accounts.Minter);
             await ApproveAndTransferFrom(minterWallet, spender1Wallet, accounts.Minter, userInNode4, 1, minterMeta)
@@ -517,6 +542,11 @@ describe.only("Function Cases", function () {
             await ApproveAndTransferFrom(to1Wallet, spender1Wallet, accounts.To1, accounts.To2, 1, to1Meta)
             postBalance = await getTokenBalanceByAdmin(accounts.To1);
             expect(postBalance).to.equal(preBalance - 1);
+        });
+        it('Approve transfers: to1 to to2 in bank ', async () => { 
+            await mint(accounts.To1,100)
+            preBalance = await getTokenBalanceByAdmin(accounts.To1);
+            await ApproveAndTransfers(to1Wallet, spender1Wallet, accounts.To1, accounts.To2, [1,2], to1Meta)
         });
 
         it('Approve transfer: approve twice and transfer one of them ', async () => {
@@ -728,7 +758,7 @@ describe.only("Function Cases", function () {
         });
 
     });
-    describe.only("check contract totalSupply", function () {
+    describe("check contract totalSupply", function () {
         this.timeout(1200000);
         let totalSupplyPre, totalSupplyPost;
         before(async function () {
@@ -740,7 +770,7 @@ describe.only("Function Cases", function () {
             console.log("contract totalSupply is ", await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet));
             console.log("contract publicTotalSupply is", await getPublicTotalSupply(scAddress));
         });
-        it.only('totalSupply_add_after_mint ', async () => {
+        it('totalSupply_add_after_mint ', async () => {
             totalSupplyPre = await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet);
             await mint(accounts.Minter, amount);
             totalSupplyPost = await getTotalSupplyNode3(client3, scAddress, adminMeta,adminWallet);
@@ -1171,7 +1201,12 @@ describe.only("Function Cases", function () {
             const contractAddress = configuration.ADDRESSES.PROXY_ADDRESS
             contract = await ethers.getContractAt("InstitutionUserRegistry", contractAddress);
         });
+        it('simple connection test', async () => {
+            const blockNumber = await ethers.provider.getBlockNumber();
+            console.log("Current block:", blockNumber);
+        });
         it('get all insititutions ',async () => {
+            console.log(contract.target)
             const institutions = await contract.getAllInstitutions();
             console.log(institutions);
             // expect(institutions.length).equal(2);
