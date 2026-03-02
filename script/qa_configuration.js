@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-            "HAMSAL2EVENT_IMPLEMENTATION": "0x8CA2cB0045f6bde5F3E321941855B81849880dbe",
-            // Hamsa L2 event proxy address on target network
-            "HAMSAL2EVENT_PROXY": "0xC8cBf813b4e1D4F5563C4DC15AC56f238EEAcB3C",
+            "HAMSAL2EVENT_IMPLEMENTATION": "0x77833B8a64b292C624AEd41B07C75EEDA2512F10",
+            // Hamsa L2 event proxy address on target network (QA chain - 必须与 image9.json qa 一致)
+            "HAMSAL2EVENT_PROXY": "0x9819E86e9040646d657d3A19d33D8756C6f3aFA3",
             // Optional alternate implementation for A/B rollout
             "HAMSAL2EVENT_IMPLEMENTATION_B": "",
             // Percentage of traffic delegated to implementation B (0 - 100)
@@ -13,10 +13,10 @@ module.exports = {
             "L1_VERIFY_ADDRESS": "0xb4B46bdAA835F8E4b4d8e208B6559cD267851051",
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
-            // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0x1b0854594EdFA67b046290631224dA71aBB2D734",
-            // Proxy contract address for institution user operations
-            "PROXY_ADDRESS": "0x01721A145Dcd8764368DaCC18245D26F17d4F07A"
+            // Institution registration contract address (QA chain)
+            "INSTITUTION_REGISTRATION": "0x10F555aaE81be4b909d60b67AFDDfeD13D49Fc09",
+            // Proxy contract address for institution user operations (QA chain)
+            "PROXY_ADDRESS": "0x1f841d9c63B76923f0B544Dc6b605630377f3c55"
         },
     // Institution configurations
     institutions: [
