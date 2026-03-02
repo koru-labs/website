@@ -2,9 +2,9 @@ module.exports = {
     "ADDRESSES":
         {
             // Hamsa L2 event implementation contract address (leave empty to deploy a new one)
-            "HAMSAL2EVENT_IMPLEMENTATION": "0x6B29B0759195F6AE2cf0242FF5e2Ac8d0ED8b25E",
+            "HAMSAL2EVENT_IMPLEMENTATION": "0x8CA2cB0045f6bde5F3E321941855B81849880dbe",
             // Hamsa L2 event proxy address on target network
-            "HAMSAL2EVENT_PROXY": "0xa0a58283101047B8B10C27818167E26363713a7E",
+            "HAMSAL2EVENT_PROXY": "0xC8cBf813b4e1D4F5563C4DC15AC56f238EEAcB3C",
             // Optional alternate implementation for A/B rollout
             "HAMSAL2EVENT_IMPLEMENTATION_B": "",
             // Percentage of traffic delegated to implementation B (0 - 100)
@@ -14,9 +14,9 @@ module.exports = {
             // L1 blob commitment verification contract address
             "L1_BLOB_COMMITMENT_VERIFY": "0x8535783fFb4dADB97FCE36471289EacA644cbD6D",
             // Institution registration contract address
-            "INSTITUTION_REGISTRATION": "0x037f503d966ff1b5BF15453D00953aFe8c0EBaAe",
+            "INSTITUTION_REGISTRATION": "0x1b0854594EdFA67b046290631224dA71aBB2D734",
             // Proxy contract address for institution user operations
-            "PROXY_ADDRESS": "0x9950e4B83154c832283e1c4Ab0e6aC81AA57aaBf"
+            "PROXY_ADDRESS": "0x01721A145Dcd8764368DaCC18245D26F17d4F07A"
         },
     // Institution configurations
     institutions: [
