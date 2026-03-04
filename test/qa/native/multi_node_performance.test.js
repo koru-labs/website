@@ -1034,7 +1034,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
             const contract = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, wallet);
             const tx = await contract.transfer.populateTransaction(tokenId, `transfer-${name}-${i}`, {
               nonce: baseNonce + i,
-              gasLimit: 3000000,
+              gasLimit: 6000000,
               gasPrice: 0,
             });
             tx.from = wallet.address;
