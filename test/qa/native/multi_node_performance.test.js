@@ -1075,7 +1075,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
   }
 
   // Batch send
-  const BATCH_SIZE = 4000;
+  const BATCH_SIZE = 6000;
   const results = [];
   const pushPromises = [];
   const txHashMap = new Map(); // Store tokenId -> txHash mapping
