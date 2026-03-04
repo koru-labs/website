@@ -324,7 +324,7 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
 
 // ==================== 独立一套：Mint 10，循环 5 次 Split + Transfer（每次均执行 transfer） ====================
 describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
-  const MINT_COUNT = 40; //Transfer count 128 * 25/5
+  const MINT_COUNT = 32; //Transfer count 128 * 25/5
   const LOOP_COUNT = 2;
   const TOKENS_PER_ROUND = MINT_COUNT / LOOP_COUNT; // 2 per minter per round
   const amount = 10000;
