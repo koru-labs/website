@@ -322,36 +322,155 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
   });
 });
 
+// ==================== 独立一套：Mint 10，循环 5 次 Split + Transfer（每次均执行 transfer） ====================
+describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
+  const MINT_COUNT = 40; //Transfer count 128 * 25/5
+  const LOOP_COUNT = 2;
+  const TOKENS_PER_ROUND = MINT_COUNT / LOOP_COUNT; // 2 per minter per round
+  const amount = 10000;
+
+  let client;
+  let provider;
+  let nativeOwner;
+
+  before(async function () {
+    this.timeout(300000);
+    const node3Config = NODE_CONFIGS[2];
+    provider = new ethers.JsonRpcProvider(node3Config.httpUrl, l1CustomNetwork, providerOptions);
+    client = createClient(node3Config.grpcUrl);
+    const ownerWallet = new ethers.Wallet(accounts.OwnerKey, provider);
+    nativeOwner = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, ownerWallet);
+
+    await setupMintAllowance(nativeOwner, client, MINTERS.minter1.address, accounts.OwnerKey, 100000000);
+    await setupMintAllowance(nativeOwner, client, MINTERS.minter2.address, accounts.OwnerKey, 100000000);
+
+    console.log(`\nMinting ${MINT_COUNT} tokens per minter...`);
+    await mintTokensForMinters(client, MINTERS, MINT_COUNT, amount);
+    await sleep(3000);
+  });
+
+  it(`should run ${LOOP_COUNT} rounds of split + transfer (each round executes transfer)`, async function () {
+    this.timeout(9000000 * LOOP_COUNT + 6000000 * LOOP_COUNT);
+
+    const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
+    const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
+    const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
+    const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
+
+    for (let round = 1; round <= LOOP_COUNT; round++) {
+      console.log(`\n========== Round ${round}/${LOOP_COUNT}: Split + Transfer ==========`);
+
+      const splitRequests1 = [];
+      for (let i = 0; i < TOKENS_PER_ROUND; i++) {
+        const to_accounts = [];
+        for (let j = 0; j < 64; j++) {
+          to_accounts.push(
+            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m1-${i}-${j}-r1` },
+            { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m1-${i}-${j}-r2` }
+          );
+        }
+        splitRequests1.push({
+          sc_address: NATIVE_TOKEN_ADDRESS,
+          token_type: '0',
+          from_address: minter1Wallet.address,
+          to_accounts
+        });
+      }
+
+      const splitRequests2 = [];
+      for (let i = 0; i < TOKENS_PER_ROUND; i++) {
+        const to_accounts = [];
+        for (let j = 0; j < 64; j++) {
+          to_accounts.push(
+            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m2-${i}-${j}-r1` },
+            { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m2-${i}-${j}-r2` }
+          );
+        }
+        splitRequests2.push({
+          sc_address: NATIVE_TOKEN_ADDRESS,
+          token_type: '0',
+          from_address: minter2Wallet.address,
+          to_accounts
+        });
+      }
+
+      console.log(`[Round ${round}] Generating split proofs (${splitRequests1.length} + ${splitRequests2.length} requests)...`);
+      const requestIds1 = [];
+      for (let i = 0; i < splitRequests1.length; i++) {
+        const response = await client.generateBatchSplitToken(splitRequests1[i], minter1Metadata);
+        requestIds1.push(response.request_id);
+      }
+      const requestIds2 = [];
+      for (let i = 0; i < splitRequests2.length; i++) {
+        const response = await client.generateBatchSplitToken(splitRequests2[i], minter2Metadata);
+        requestIds2.push(response.request_id);
+      }
+
+      console.log(`[Round ${round}] Executing splits for minter1 (${requestIds1.length})...`);
+      for (let i = 0; i < requestIds1.length; i++) {
+        const result = await executeSingleSplitSequential(client, 'minter1', requestIds1[i], MINTERS.minter1.privateKey);
+        if (!result.success) {
+          throw new Error(`Round ${round} Minter1 split failed: ${result.error}`);
+        }
+        await sleep(500);
+      }
+      console.log(`[Round ${round}] Executing splits for minter2 (${requestIds2.length})...`);
+      for (let i = 0; i < requestIds2.length; i++) {
+        const result = await executeSingleSplitSequential(client, 'minter2', requestIds2[i], MINTERS.minter2.privateKey);
+        if (!result.success) {
+          throw new Error(`Round ${round} Minter2 split failed: ${result.error}`);
+        }
+        await sleep(500);
+      }
+
+      const roundMinter1List = await extractRecipientTokenIds(client, 'minter1', requestIds1, MINTERS.minter1.privateKey);
+      const roundMinter2List = await extractRecipientTokenIds(client, 'minter2', requestIds2, MINTERS.minter2.privateKey);
+      if (roundMinter1List.length === 0 || roundMinter2List.length === 0) {
+        throw new Error(`Round ${round} token extraction failed: Minter1=${roundMinter1List.length}, Minter2=${roundMinter2List.length}`);
+      }
+      await sleep(3000);
+
+      console.log(`[Round ${round}] Executing transfer (TPS)...`);
+      await executeBatchTransfersSigned(roundMinter1List, roundMinter2List);
+      console.log(`[Round ${round}] Split + Transfer done.\n`);
+    }
+  });
+
+  after(async function () {
+    console.log('Node3 Mint 10 + 5x Split+Transfer completed.');
+  });
+});
+
 // ==================== 新增：Multi-Node TPS Test ====================
-// NOTE: This test follows Scenario 5 pattern with batch operations for TPS testing
-// To run full TPS test, change:
-//   - tokenAmount: 1 → 2 (or more)
-//   - splitsPerToken: 4 → 128 (or more)
-describe.only('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function () {
+// NOTE: Data volume is controlled by count and total_count.
+//   count = tokens per party (minter, node2 admin, node1 admin) for final split; total_count = count * 3 = mint total in Step 2.
+describe('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function () {
   let client1, client2, client3;
   let provider1, provider2, provider3;
   let node1AdminWallet, node2AdminWallet, node1AdminContract, node2AdminContract;
   let minterWallet, ownerWallet, minterContract, ownerContract;
   let minterMetadata, node1AdminMetadata, node2AdminMetadata;
   
-  // Step 2: Minted tokens for each address
-  let minterTokens = [];           // 2 tokens for Step 3
-  let node2AdminTokens = [];       // 2 tokens for Step 4
-  let node1AdminTokens = [];       // 2 tokens for Step 5
+  // Step 2: Minted tokens for each address (length = count each after distribution)
+  let minterTokens = [];
+  let node2AdminTokens = [];
+  let node1AdminTokens = [];
   
-  // Step 3-5: Pre-signed transactions
-  let minterSignedTxs = [];        // 256 signed txs from Step 3 (Node3)
-  let node2AdminSignedTxs = [];    // 256 signed txs from Step 4 (Node2)
-  let node1AdminSignedTxs = [];    // 256 signed txs from Step 5 (Node1)
+  // Step 3-5: Pre-signed transactions (count * SPLITS_PER_TOKEN per party)
+  let minterSignedTxs = [];
+  let node2AdminSignedTxs = [];
+  let node1AdminSignedTxs = [];
 
   const node1Config = NODE_CONFIGS[0];
   const node2Config = NODE_CONFIGS[1];
   const node3Config = NODE_CONFIGS[2];
 
-  // Test configuration
-  const TOKENS_PER_ADDRESS = 2;    // Tokens minted to each address in Step 2
-  const SPLITS_PER_TOKEN = 128;    // Number of splits per token
+  // Test configuration: count = tokens per party; total_count = count * 3 = Step 2 mint total
+  const count = 8;
+  const total_count = count * 3;
+  const SPLITS_PER_TOKEN = 128;   // Each token split into 128 in Step 3-5
   const TRANSFER_AMOUNT = 1;       // Amount per split
+  const MINT_BATCH_SIZE = 128;    // Max tokens per mint call when total_count > 128
 
   before(async function () {
     this.timeout(300000);
@@ -407,28 +526,39 @@ describe.only('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function
     
     let allMintedTokens = [];
     
-    it('should mint 6 tokens for minter', async function () {
-      console.log('\nStep 2.1: Mint 6 Tokens for Minter');
-      const tokens = await mintMultipleTokens(
-        client3, 
-        minterWallet, 
-        minterWallet.address, 
-        TOKENS_PER_ADDRESS * 3,  // 6 tokens total
-        10000
-      );
-      allMintedTokens = tokens;
-      console.log(`✓ Minter minted ${tokens.length} tokens: ${tokens.join(', ')}`);
+    it('should mint total_count tokens for minter', async function () {
+      console.log(`\nStep 2.1: Mint ${total_count} Tokens for Minter (count=${count}, total_count=count*3)`);
+      if (total_count <= MINT_BATCH_SIZE) {
+        const tokens = await mintMultipleTokens(
+          client3,
+          minterWallet,
+          minterWallet.address,
+          total_count,
+          10000
+        );
+        allMintedTokens = tokens;
+      } else {
+        for (let i = 0; i < total_count; i += MINT_BATCH_SIZE) {
+          const batchSize = Math.min(MINT_BATCH_SIZE, total_count - i);
+          const tokens = await mintMultipleTokens(
+            client3,
+            minterWallet,
+            minterWallet.address,
+            batchSize,
+            10000
+          );
+          allMintedTokens = allMintedTokens.concat(tokens);
+          if (i + MINT_BATCH_SIZE < total_count) await sleep(3000);
+        }
+      }
+      console.log(`✓ Minter minted ${allMintedTokens.length} tokens`);
       await sleep(5000);
     });
 
-    it('should split and transfer 2 tokens to node2 admin', async function () {
-      console.log('\nStep 2.2: Split and Transfer 2 Tokens to Node2 Admin');
+    it('should split and transfer count tokens to node2 admin', async function () {
+      console.log(`\nStep 2.2: Split and Transfer ${count} Tokens to Node2 Admin`);
       
-      // Take first 2 tokens for Node2 Admin
-      const tokensToSplit = allMintedTokens.slice(0, 2);
-      console.log(`  Tokens to split: ${tokensToSplit.join(', ')}`);
-      
-      // Split tokens (1 split per token, amount = 1, recipient = Node2 Admin)
+      const tokensToSplit = allMintedTokens.slice(0, count);
       console.log(`  Splitting ${tokensToSplit.length} tokens...`);
       const splitTokens = await batchSplitTokens(
         client3,
@@ -436,34 +566,33 @@ describe.only('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function
         accounts.MinterKey,
         tokensToSplit,
         node2Config.admin,
-        1,  // 1 split per token (creates 2 tokens total: 1 for minter, 1 for node2Admin)
-        10000  // full amount
+        1,  // 1 split per token (creates 2 tokens: 1 for minter, 1 for node2Admin)
+        5000
       );
-      console.log(`✓ Split completed: ${splitTokens.length} tokens created`);
+      // With 1 split per token, helper returns 2 recipient tokens per original token; we need exactly count for Node2
+      const tokensToTransferToNode2 = splitTokens.slice(0, count);
+      console.log(`✓ Split completed: ${splitTokens.length} tokens (using ${tokensToTransferToNode2.length} for Node2 Admin)`);
       
-      // Transfer the split tokens to Node2 Admin
-      console.log(`  Transferring ${splitTokens.length} tokens to Node2 Admin...`);
-      for (let i = 0; i < splitTokens.length; i++) {
-        const tokenId = splitTokens[i];
+      console.log(`  Transferring ${tokensToTransferToNode2.length} tokens to Node2 Admin...`);
+      for (let i = 0; i < tokensToTransferToNode2.length; i++) {
+        const tokenId = tokensToTransferToNode2[i];
         const memo = `transfer-to-node2admin-${i}`;
-        const transferTx = await minterContract.transfer(tokenId, memo, { gasLimit: 100000 });
+        const transferTx = await minterContract.transfer(tokenId, memo, { gasLimit: 1000000 });
         await transferTx.wait();
-        console.log(`  ✓ [${i + 1}/${splitTokens.length}] Transferred token ${tokenId.slice(0, 16)}...`);
+        if ((i + 1) % 10 === 0 || i === tokensToTransferToNode2.length - 1) {
+          console.log(`  ✓ [${i + 1}/${tokensToTransferToNode2.length}] Transferred to Node2 Admin`);
+        }
       }
       
-      node2AdminTokens = splitTokens;
+      node2AdminTokens = tokensToTransferToNode2;
       console.log(`✓ Node2 Admin received ${node2AdminTokens.length} tokens`);
       await sleep(5000);
     });
 
-    it('should split and transfer 2 tokens to node1 admin', async function () {
-      console.log('\nStep 2.3: Split and Transfer 2 Tokens to Node1 Admin');
+    it('should split and transfer count tokens to node1 admin', async function () {
+      console.log(`\nStep 2.3: Split and Transfer ${count} Tokens to Node1 Admin`);
       
-      // Take next 2 tokens for Node1 Admin
-      const tokensToSplit = allMintedTokens.slice(2, 4);
-      console.log(`  Tokens to split: ${tokensToSplit.join(', ')}`);
-      
-      // Split tokens (1 split per token, amount = 1, recipient = Node1 Admin)
+      const tokensToSplit = allMintedTokens.slice(count, count * 2);
       console.log(`  Splitting ${tokensToSplit.length} tokens...`);
       const splitTokens = await batchSplitTokens(
         client3,
@@ -471,28 +600,30 @@ describe.only('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function
         accounts.MinterKey,
         tokensToSplit,
         node1Config.admin,
-        1,  // 1 split per token (creates 2 tokens total: 1 for minter, 1 for node1Admin)
-        10000  // full amount
+        1,  // 1 split per token (creates 2 tokens: 1 for minter, 1 for node1Admin)
+        5000
       );
-      console.log(`✓ Split completed: ${splitTokens.length} tokens created`);
+      // With 1 split per token, helper returns 2 recipient tokens per original token; we need exactly count for Node1
+      const tokensToTransferToNode1 = splitTokens.slice(0, count);
+      console.log(`✓ Split completed: ${splitTokens.length} tokens (using ${tokensToTransferToNode1.length} for Node1 Admin)`);
       
-      // Transfer the split tokens to Node1 Admin
-      console.log(`  Transferring ${splitTokens.length} tokens to Node1 Admin...`);
-      for (let i = 0; i < splitTokens.length; i++) {
-        const tokenId = splitTokens[i];
+      console.log(`  Transferring ${tokensToTransferToNode1.length} tokens to Node1 Admin...`);
+      for (let i = 0; i < tokensToTransferToNode1.length; i++) {
+        const tokenId = tokensToTransferToNode1[i];
         const memo = `transfer-to-node1admin-${i}`;
         const transferTx = await minterContract.transfer(tokenId, memo, { gasLimit: 100000 });
         await transferTx.wait();
-        console.log(`  ✓ [${i + 1}/${splitTokens.length}] Transferred token ${tokenId.slice(0, 16)}...`);
+        if ((i + 1) % 10 === 0 || i === tokensToTransferToNode1.length - 1) {
+          console.log(`  ✓ [${i + 1}/${tokensToTransferToNode1.length}] Transferred to Node1 Admin`);
+        }
       }
       
-      node1AdminTokens = splitTokens;
+      node1AdminTokens = tokensToTransferToNode1;
       console.log(`✓ Node1 Admin received ${node1AdminTokens.length} tokens`);
       
-      // Minter keeps the remaining 2 tokens
-      minterTokens = allMintedTokens.slice(4, 6);
-      console.log(`✓ Minter keeps ${minterTokens.length} tokens: ${minterTokens.join(', ')}`);
-      console.log(`\n✓ Total distributed: ${minterTokens.length + node2AdminTokens.length + node1AdminTokens.length} tokens`);
+      minterTokens = allMintedTokens.slice(count * 2, count * 3);
+      console.log(`✓ Minter keeps ${minterTokens.length} tokens`);
+      console.log(`\n✓ Total distributed: ${minterTokens.length + node2AdminTokens.length + node1AdminTokens.length} tokens (${count} per party)`);
       await sleep(5000);
     });
   });
@@ -637,14 +768,15 @@ describe.only('Multi-Node Transfer TPS Test (Node3 -> Node2 -> Node1)', function
     it('should display test summary', async function () {
       console.log('\n=== Test Summary ===');
       console.log(`Configuration:`);
-      console.log(`  - Tokens per address: ${TOKENS_PER_ADDRESS}`);
+      console.log(`  - count (tokens per party): ${count}`);
+      console.log(`  - total_count (mint total): ${total_count}`);
       console.log(`  - Splits per token: ${SPLITS_PER_TOKEN}`);
       console.log(`  - Transfer amount per split: ${TRANSFER_AMOUNT}`);
       console.log(`\nExecution Pattern: PARALLEL`);
-      console.log(`  Step 2: Minted 6 tokens (2 each to minter, node2Admin, node1Admin)`);
-      console.log(`  Step 3: Minter split ${TOKENS_PER_ADDRESS} tokens → ${minterSignedTxs.length} signed txs (Node3)`);
-      console.log(`  Step 4: Node2Admin split ${TOKENS_PER_ADDRESS} tokens → ${node2AdminSignedTxs.length} signed txs (Node2)`);
-      console.log(`  Step 5: Node1Admin split ${TOKENS_PER_ADDRESS} tokens → ${node1AdminSignedTxs.length} signed txs (Node1)`);
+      console.log(`  Step 2: Minted ${total_count} tokens (${count} each to minter, node2Admin, node1Admin)`);
+      console.log(`  Step 3: Minter split ${count} tokens → ${minterSignedTxs.length} signed txs (Node3)`);
+      console.log(`  Step 4: Node2Admin split ${count} tokens → ${node2AdminSignedTxs.length} signed txs (Node2)`);
+      console.log(`  Step 5: Node1Admin split ${count} tokens → ${node1AdminSignedTxs.length} signed txs (Node1)`);
       console.log(`  Step 6: Pushed ${minterSignedTxs.length + node2AdminSignedTxs.length + node1AdminSignedTxs.length} transactions simultaneously`);
       console.log(`\nTotal Transactions: ${minterSignedTxs.length + node2AdminSignedTxs.length + node1AdminSignedTxs.length}`);
     });
