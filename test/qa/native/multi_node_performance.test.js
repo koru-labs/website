@@ -65,6 +65,8 @@ const RECEIVER_CONFIG = {
   receiver2: '0xc9ca4bc173e151dfd4579f3802429684acdba4e7',
 };
 
+const MINT_BATCH_SIZE_LIMIT = 128;
+
 async function mintTokensForMinters(client, minters, number, amount) {
   const mintedTokens = {};
 
@@ -72,88 +74,87 @@ async function mintTokensForMinters(client, minters, number, amount) {
   for (const [minterName, minterConfig] of Object.entries(minters)) {
     const minterWallet = new ethers.Wallet(minterConfig.privateKey, ethers.provider);
     const minterMetadata = await createAuthMetadata(minterConfig.privateKey);
-
-    // Dynamically create to_accounts array
-    const to_accounts = Array(number)
-        .fill()
-        .map(() => ({
-          address: minterConfig.address,
-          amount: amount,
-        }));
-
-    const generateRequest = {
-      sc_address: NATIVE_TOKEN_ADDRESS,
-      token_type: '0',
-      from_address: minterConfig.address,
-      to_accounts: to_accounts,
-    };
-
-    let response;
-    try {
-      response = await client.generateBatchMintProof(generateRequest, minterMetadata);
-    } catch (error) {
-      console.error(`[${minterName}] Proof generation failed: ${error.message}`);
-      throw error;
-    }
-
-    // Process response data
-    const recipients = response.to_accounts.map((account) => account.address);
-    const bathcedSize = response.batched_size;
-    const newTokens = response.to_accounts.map((account, index) => ({
-      id: account.token.token_id,
-      owner: account.address,
-      status: 2,
-      amount: {
-        cl_x: account.token.cl_x,
-        cl_y: account.token.cl_y,
-        cr_x: account.token.cr_x,
-        cr_y: account.token.cr_y,
-      },
-      to: account.address,
-      rollbackTokenId: 0,
-    }));
-
-    const newAllowed = {
-      id: response.mint_allowed.token_id,
-      value: {
-        cl_x: response.mint_allowed.cl_x,
-        cl_y: response.mint_allowed.cl_y,
-        cr_x: response.mint_allowed.cr_x,
-        cr_y: response.mint_allowed.cr_y,
-      },
-    };
-
-    const proof = response.proof.map((p) => ethers.toBigInt(p));
-    const publicInputs = response.input.map((i) => ethers.toBigInt(i));
-
-    console.log(`\n[${minterName}] ===== Preparing to execute mint transaction =====`);
-    console.log(`[${minterName}] Recipients count: ${recipients.length}`);
-    console.log(`[${minterName}] NewTokens count: ${newTokens.length}`);
-    console.log(`[${minterName}] First Token ID: ${newTokens[0]?.id}`);
-    console.log(`[${minterName}] MintAllowed ID: ${newAllowed.id}`);
-
-    // Prepare contract instance
     const native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minterWallet);
+    mintedTokens[minterName] = [];
 
-    try {
-      const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 10000000 });
-      const receipt = await tx.wait();
+    // Batch mint: each batch at most MINT_BATCH_SIZE_LIMIT (128), until total reaches number
+    for (let offset = 0; offset < number; offset += MINT_BATCH_SIZE_LIMIT) {
+      const batchSize = Math.min(MINT_BATCH_SIZE_LIMIT, number - offset);
 
-      // Save token IDs
-      mintedTokens[minterName] = newTokens.map((token) => token.id);
-    } catch (error) {
-      console.error(`[${minterName}] Mint transaction failed: ${error.message}`);
-      throw error;
+      const to_accounts = Array(batchSize)
+          .fill()
+          .map(() => ({
+            address: minterConfig.address,
+            amount: amount,
+          }));
+
+      const generateRequest = {
+        sc_address: NATIVE_TOKEN_ADDRESS,
+        token_type: '0',
+        from_address: minterConfig.address,
+        to_accounts: to_accounts,
+      };
+
+      let response;
+      try {
+        response = await client.generateBatchMintProof(generateRequest, minterMetadata);
+      } catch (error) {
+        console.error(`[${minterName}] Proof generation failed: ${error.message}`);
+        throw error;
+      }
+
+      const recipients = response.to_accounts.map((account) => account.address);
+      const bathcedSize = response.batched_size;
+      const newTokens = response.to_accounts.map((account) => ({
+        id: account.token.token_id,
+        owner: account.address,
+        status: 2,
+        amount: {
+          cl_x: account.token.cl_x,
+          cl_y: account.token.cl_y,
+          cr_x: account.token.cr_x,
+          cr_y: account.token.cr_y,
+        },
+        to: account.address,
+        rollbackTokenId: 0,
+      }));
+
+      const newAllowed = {
+        id: response.mint_allowed.token_id,
+        value: {
+          cl_x: response.mint_allowed.cl_x,
+          cl_y: response.mint_allowed.cl_y,
+          cr_x: response.mint_allowed.cr_x,
+          cr_y: response.mint_allowed.cr_y,
+        },
+      };
+
+      const proof = response.proof.map((p) => ethers.toBigInt(p));
+      const publicInputs = response.input.map((i) => ethers.toBigInt(i));
+
+      console.log(`\n[${minterName}] ===== Batch mint ${recipients.length} tokens (offset ${offset}, total target ${number}) =====`);
+      console.log(`[${minterName}] First Token ID: ${newTokens[0]?.id}`);
+
+      try {
+        const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 10000000 });
+        await tx.wait();
+        mintedTokens[minterName].push(...newTokens.map((token) => token.id));
+      } catch (error) {
+        console.error(`[${minterName}] Mint transaction failed: ${error.message}`);
+        throw error;
+      }
     }
+
+    console.log(`[${minterName}] Minted total: ${mintedTokens[minterName].length} tokens`);
   }
 
   return mintedTokens;
 }
 
-describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
+describe.only('Native Dual Minter Transfer Performance Tests In Node3', function () {
   let client;
   let nativeOwner, nativeMinter;
-  const total_number = 2; //total_number *2 *128
+  const total_number = 64; //total_number *2 *128
   const amount = 10000;
   let minter1List, minter2List;
   const node3Config = NODE_CONFIGS[2];
@@ -171,7 +172,7 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
 
   });
 
-  describe('Case 1: Setup mint allowance for two minters', function () {
+  describe.only('Case 1: Setup mint allowance for two minters', function () {
     it('should set mint allowance for minter1', async function () {
       this.timeout(120000);
       await setupMintAllowance(nativeOwner, client, MINTERS.minter1.address, accounts.OwnerKey, 100000000);
@@ -183,7 +184,7 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
     });
   });
 
-  describe('Case 2: Mint tokens for both minters', function () {
+  describe.only('Case 2: Mint tokens for both minters', function () {
     this.timeout(6000000); // 10 minutes
 
     it(`should mint ${total_number} tokens for each minter`, async function () {
@@ -202,7 +203,7 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
     });
   });
 
-  describe('Case 3: Split tokens', function () {
+  describe.skip('Case 3: Split tokens', function () {
     this.timeout(9000000);
 
     it('should split tokens with sequential execution to ensure success', async function () {
@@ -309,7 +310,99 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
     });
   });
 
-  describe('Case 4: Excute Transfers TPS', function () {
+  describe.only('Case 3 (backup): Split tokens with batched concurrent execution', function () {
+    this.timeout(9000000);
+
+    it('should split tokens with executeBatchedConcurrentSplits', async function () {
+      const minter1Wallet = new ethers.Wallet(MINTERS.minter1.privateKey, provider);
+      const minter2Wallet = new ethers.Wallet(MINTERS.minter2.privateKey, provider);
+      const minter1Metadata = await createAuthMetadata(MINTERS.minter1.privateKey);
+      const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
+
+      const splitRequests1 = [];
+      for (let i = 0; i < total_number; i++) {
+        const to_accounts = [];
+        for (let j = 0; j < 64; j++) {
+          to_accounts.push(
+            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `split-m1-${i}-${j}-r1` },
+            { address: RECEIVER_CONFIG.receiver1, amount: 2, comment: `split-m1-${i}-${j}-r2` }
+          );
+        }
+        splitRequests1.push({
+          sc_address: NATIVE_TOKEN_ADDRESS,
+          token_type: '0',
+          from_address: minter1Wallet.address,
+          to_accounts
+        });
+      }
+
+      const splitRequests2 = [];
+      for (let i = 0; i < total_number; i++) {
+        const to_accounts = [];
+        for (let j = 0; j < 64; j++) {
+          to_accounts.push(
+            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `split-m2-${i}-${j}-r1` },
+            { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `split-m2-${i}-${j}-r2` }
+          );
+        }
+        splitRequests2.push({
+          sc_address: NATIVE_TOKEN_ADDRESS,
+          token_type: '0',
+          from_address: minter2Wallet.address,
+          to_accounts
+        });
+      }
+
+      console.log(`\n[Minter1] Generating ${splitRequests1.length} split proofs...`);
+      const requestIds1 = [];
+      for (let i = 0; i < splitRequests1.length; i++) {
+        const response = await client.generateBatchSplitToken(splitRequests1[i], minter1Metadata);
+        requestIds1.push(response.request_id);
+        if ((i + 1) % 5 === 0 || i === splitRequests1.length - 1) {
+          console.log(`  Progress: ${i + 1}/${splitRequests1.length}`);
+        }
+      }
+
+      console.log(`\n[Minter2] Generating ${splitRequests2.length} split proofs...`);
+      const requestIds2 = [];
+      for (let i = 0; i < splitRequests2.length; i++) {
+        const response = await client.generateBatchSplitToken(splitRequests2[i], minter2Metadata);
+        requestIds2.push(response.request_id);
+        if ((i + 1) % 5 === 0 || i === splitRequests2.length - 1) {
+          console.log(`  Progress: ${i + 1}/${splitRequests2.length}`);
+        }
+      }
+
+      const minter1Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
+      const minter2Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter2Wallet);
+      const RECEIPT_TIMEOUT_MS = 300000;
+
+      console.log(`\n[Minter1] Executing batch splits (${requestIds1.length}) via executeBatchedConcurrentSplits...`);
+      const result1 = await executeBatchedConcurrentSplits(client, requestIds1, minter1Wallet, minter1Metadata, minter1Native, provider, RECEIPT_TIMEOUT_MS);
+      if (result1.failedTransactions > 0) {
+        throw new Error(`Minter1 split failed: ${result1.failedTransactions}/${result1.totalTransactions}`);
+      }
+      console.log(`[Minter1] ✓ ${result1.successfulTransactions}/${result1.totalTransactions} splits completed\n`);
+
+      await sleep(5000);
+
+      console.log(`[Minter2] Executing batch splits (${requestIds2.length}) via executeBatchedConcurrentSplits...`);
+      const result2 = await executeBatchedConcurrentSplits(client, requestIds2, minter2Wallet, minter2Metadata, minter2Native, provider, RECEIPT_TIMEOUT_MS);
+      if (result2.failedTransactions > 0) {
+        throw new Error(`Minter2 split failed: ${result2.failedTransactions}/${result2.totalTransactions}`);
+      }
+      console.log(`[Minter2] ✓ ${result2.successfulTransactions}/${result2.totalTransactions} splits completed\n`);
+
+      minter1List = result1.recipientTokens;
+      minter2List = result2.recipientTokens;
+      if (minter1List.length === 0 || minter2List.length === 0) {
+        throw new Error(`Token extraction failed: Minter1 has ${minter1List.length} tokens, Minter2 has ${minter2List.length} tokens`);
+      }
+      await sleep(3000);
+    });
+  });
+
+  describe.only('Case 4: Excute Transfers TPS', function () {
     this.timeout(6000000);
     it('should execute transfers with TPS', async function () {
       await executeBatchTransfersSigned(minter1List, minter2List);
@@ -323,10 +416,10 @@ describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
 });
 
 // ==================== 独立一套：Mint 10，循环 5 次 Split + Transfer（每次均执行 transfer） ====================
-describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
-  const MINT_COUNT = 40; //Transfer count 128 * 25/5
-  const LOOP_COUNT = 2;
-  const TOKENS_PER_ROUND = MINT_COUNT / LOOP_COUNT; // 2 per minter per round
+describe('Node3: Mint tokens then 5x Split + Transfer', function () {
+  const MINT_COUNT = 128; //Transfer count 128 * 80/5
+  const LOOP_COUNT = 1;
+  const TOKENS_PER_ROUND = MINT_COUNT / LOOP_COUNT; // per minter per round
   const amount = 10000;
 
   let client;
@@ -344,7 +437,7 @@ describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
     await setupMintAllowance(nativeOwner, client, MINTERS.minter1.address, accounts.OwnerKey, 100000000);
     await setupMintAllowance(nativeOwner, client, MINTERS.minter2.address, accounts.OwnerKey, 100000000);
 
-    console.log(`\nMinting ${MINT_COUNT} tokens per minter...`);
+    console.log(`\nMinting ${MINT_COUNT} tokens per minter (in batches of up to ${MINT_BATCH_SIZE_LIMIT})...`);
     await mintTokensForMinters(client, MINTERS, MINT_COUNT, amount);
     await sleep(3000);
   });
@@ -406,25 +499,25 @@ describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
         requestIds2.push(response.request_id);
       }
 
-      console.log(`[Round ${round}] Executing splits for minter1 (${requestIds1.length})...`);
-      for (let i = 0; i < requestIds1.length; i++) {
-        const result = await executeSingleSplitSequential(client, 'minter1', requestIds1[i], MINTERS.minter1.privateKey);
-        if (!result.success) {
-          throw new Error(`Round ${round} Minter1 split failed: ${result.error}`);
-        }
-        await sleep(500);
+      const minter1Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
+      const minter2Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter2Wallet);
+
+      // 单笔等 receipt 超时 5 分钟，避免节点拥堵时 minter2 批量超时
+      const RECEIPT_TIMEOUT_MS = 300000; // 5 min per tx
+      console.log(`[Round ${round}] Executing batch splits for minter1 (${requestIds1.length})...`);
+      const result1 = await executeBatchedConcurrentSplits(client, requestIds1, minter1Wallet, minter1Metadata, minter1Native, provider, RECEIPT_TIMEOUT_MS);
+      if (result1.failedTransactions > 0) {
+        throw new Error(`Round ${round} Minter1 split failed: ${result1.failedTransactions}/${result1.totalTransactions}`);
       }
-      console.log(`[Round ${round}] Executing splits for minter2 (${requestIds2.length})...`);
-      for (let i = 0; i < requestIds2.length; i++) {
-        const result = await executeSingleSplitSequential(client, 'minter2', requestIds2[i], MINTERS.minter2.privateKey);
-        if (!result.success) {
-          throw new Error(`Round ${round} Minter2 split failed: ${result.error}`);
-        }
-        await sleep(500);
+      await sleep(5000);
+      console.log(`[Round ${round}] Executing batch splits for minter2 (${requestIds2.length})...`);
+      const result2 = await executeBatchedConcurrentSplits(client, requestIds2, minter2Wallet, minter2Metadata, minter2Native, provider, RECEIPT_TIMEOUT_MS);
+      if (result2.failedTransactions > 0) {
+        throw new Error(`Round ${round} Minter2 split failed: ${result2.failedTransactions}/${result2.totalTransactions}`);
       }
 
-      const roundMinter1List = await extractRecipientTokenIds(client, 'minter1', requestIds1, MINTERS.minter1.privateKey);
-      const roundMinter2List = await extractRecipientTokenIds(client, 'minter2', requestIds2, MINTERS.minter2.privateKey);
+      const roundMinter1List = result1.recipientTokens;
+      const roundMinter2List = result2.recipientTokens;
       if (roundMinter1List.length === 0 || roundMinter2List.length === 0) {
         throw new Error(`Round ${round} token extraction failed: Minter1=${roundMinter1List.length}, Minter2=${roundMinter2List.length}`);
       }
@@ -863,8 +956,8 @@ async function splitTokenToRecipient(client, wallet, privateKey, recipientAddres
   // Generate split proofs
   const requestIds = await generateSplitProofs(client, splitRequests, metadata);
   
-  // Execute splits
-  const splitResults = await executeBatchedConcurrentSplits(client, requestIds, wallet, metadata, nativeContract);
+  // Execute splits (pass wallet.provider so receipt is polled on same node as send)
+  const splitResults = await executeBatchedConcurrentSplits(client, requestIds, wallet, metadata, nativeContract, wallet.provider);
   
   return { 
     recipientTokens: splitResults.recipientTokens,
@@ -896,8 +989,8 @@ async function batchSplitTokens(client, wallet, privateKey, tokenIds, recipientA
   // Generate split proofs
   const requestIds = await generateSplitProofs(client, splitRequests, metadata);
   
-  // Execute splits
-  const splitResults = await executeBatchedConcurrentSplits(client, requestIds, wallet, metadata, nativeContract);
+  // Execute splits (pass wallet.provider so receipt is polled on same node as send)
+  const splitResults = await executeBatchedConcurrentSplits(client, requestIds, wallet, metadata, nativeContract, wallet.provider);
   
   return splitResults.recipientTokens;
 }
@@ -1075,7 +1168,7 @@ async function executeBatchTransfersSigned(tokenList1, tokenList2) {
   }
 
   // Batch send
-  const BATCH_SIZE = 6000;
+  const BATCH_SIZE = 5000;
   const results = [];
   const pushPromises = [];
   const txHashMap = new Map(); // Store tokenId -> txHash mapping

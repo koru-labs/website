@@ -4,7 +4,7 @@ const grpc = require("@grpc/grpc-js");
 // ==================== 常量配置 ====================
 
 // const NATIVE_TOKEN_ADDRESS = "0x7634899C18372657baC3eb6198fBC5791e736586";
-const NATIVE_TOKEN_ADDRESS = "0x4dA51d6A39687ffCf9f5fc163C102aE8b23a123d";
+const NATIVE_TOKEN_ADDRESS = "0x83ADCE9F4B6c9f11443Be3E5a29Fe209e993609F";
 const RPC_URL = "dev2-node3-rpc.hamsa-ucl.com:50051";
 // const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
 const RPC = 'http://l2-node3-native.hamsa-ucl.com:8545';
@@ -150,9 +150,11 @@ async function generateSplitProofs(client, requests, minterMetadata) {
  * @param {ethers.Wallet} minterWallet - Minter 钱包
  * @param {grpc.Metadata} minterMetadata - Minter 认证元数据
  * @param {ethers.Contract} nativeContract - Native token 合约实例
+ * @param {ethers.Provider} [receiptProvider] - 用于轮询 receipt 的 provider；不传则用 ethers.provider（多节点测试需传发交易同一节点的 provider，否则会超时）
+ * @param {number} [receiptTimeoutMs=120000] - 单笔交易等 receipt 的超时（毫秒），默认 300 秒（5 分钟）
  * @returns {Object} 执行结果统计
  */
-async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, minterMetadata, nativeContract) {
+async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, minterMetadata, nativeContract, receiptProvider, receiptTimeoutMs = 300000) {
     console.log(`\n⚡ Starting concurrent split transaction execution...`);
     console.log(`Executing ${requestIds.length} split requests`);
 
@@ -228,45 +230,66 @@ async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, 
         console.error(`❌ ${failedSigning.length} transactions failed to sign.`);
     }
 
-    // Push all signed transactions in one batch
+    // Push signed transactions one by one with 0.1s interval
     const results = [];
     const pendingTxHashes = [];
+    let totalRequestBodyBytes = 0;
+    const receiptProviderToUse = receiptProvider ?? ethers.provider;
+    const sendViaProvider = !!receiptProvider; // when receiptProvider given, send via same provider (multi-node)
+    if (sendViaProvider) {
+        console.log(`📡 Using same provider for send + receipt (receiptTimeout=${receiptTimeoutMs / 1000}s per tx)`);
+    }
 
-    console.log(`📤 Pushing ${signed.length} signed transactions...`);
+    console.log(`📤 Pushing ${signed.length} signed transactions one by one (0.1s interval)...`);
 
-    const payload = signed.map((item, idx) => ({
-        jsonrpc: "2.0", id: idx, method: "eth_sendRawTransaction", params: [item.signedTx]
-    }));
+    for (let i = 0; i < signed.length; i++) {
+        const item = signed[i];
+        const payload = {
+            jsonrpc: "2.0",
+            id: i,
+            method: "eth_sendRawTransaction",
+            params: [item.signedTx]
+        };
+        totalRequestBodyBytes += Buffer.byteLength(JSON.stringify(payload), 'utf8');
 
-    const response = await fetch(RPC, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-
-    const res = await response.json();
-    const batchResponses = Array.isArray(res) ? res : [res];
-
-    batchResponses.forEach((resp, idx) => {
-        const isSuccess = !resp.error;
-        if (isSuccess && resp.result) {
-            pendingTxHashes.push(resp.result);
+        try {
+            let txHash = null;
+            if (sendViaProvider) {
+                txHash = await receiptProviderToUse.send('eth_sendRawTransaction', [item.signedTx]);
+            } else {
+                const response = await fetch(RPC, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const res = await response.json();
+                if (!res.error && res.result) txHash = res.result;
+                if (res.error) throw new Error(res.error.message || res.error);
+            }
+            const isSuccess = !!txHash;
+            if (isSuccess) pendingTxHashes.push(txHash);
+            results.push({ success: isSuccess, error: null });
+            console.log(`   [${i + 1}/${signed.length}] ${isSuccess ? '✅' : '❌'} ${isSuccess ? 'Sent' : 'Failed'}`);
+        } catch (e) {
+            results.push({ success: false, error: e.message });
+            console.log(`   [${i + 1}/${signed.length}] ❌ Error: ${e.message}`);
         }
-        results.push({
-            success: isSuccess,
-            error: resp.error ? resp.error.message : null
-        });
-    });
 
-    // Wait for all transactions to be mined
+        if (i < signed.length - 1) {
+            await sleep(100);
+        }
+    }
+
+    // Wait for all transactions to be mined (use same provider as send when receiptProvider was passed)
     if (pendingTxHashes.length > 0) {
         console.log(`⏳ Waiting for ${pendingTxHashes.length} transactions to be mined...`);
         
-        const pollReceipt = async (hash, timeout = 60000) => {
+        // Use send('eth_getTransactionReceipt') so receipt is queried via same RPC path as send (avoids any batching/load-balance split)
+        const pollReceipt = async (hash, timeout = receiptTimeoutMs) => {
             const start = Date.now();
             while (Date.now() - start < timeout) {
-                const receipt = await ethers.provider.getTransactionReceipt(hash);
-                if (receipt) return receipt;
+                const raw = await receiptProviderToUse.send('eth_getTransactionReceipt', [hash]);
+                if (raw != null && raw.blockHash) return raw;
                 await sleep(1000);
             }
             throw new Error(`Timeout waiting for receipt of ${hash}`);
@@ -287,9 +310,11 @@ async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, 
     const successCount = results.filter(r => r.success).length;
     const failedCount = results.filter(r => !r.success).length;
 
+    const totalRequestBodyMB = (totalRequestBodyBytes / (1024 * 1024)).toFixed(4);
     console.log(`\n✅ Split execution completed in ${duration}s`);
     console.log(`   Successful: ${successCount}/${results.length}`);
     console.log(`   Failed: ${failedCount}/${results.length}`);
+    console.log(`   Request body total: ${totalRequestBodyMB} MB (${totalRequestBodyBytes} bytes)`);
 
     // Collect all recipient tokens (odd indices)
     const allRecipientTokens = [];
@@ -308,7 +333,9 @@ async function executeBatchedConcurrentSplits(client, requestIds, minterWallet, 
         successfulTransactions: successCount,
         failedTransactions: failedCount,
         recipientTokens: allRecipientTokens,
-        duration: duration
+        duration: duration,
+        totalRequestBodyBytes,
+        totalRequestBodyMB
     };
 }
 
