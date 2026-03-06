@@ -62,7 +62,7 @@ const MINTERS = {
 // Fixed two receiver addresses
 const RECEIVER_CONFIG = {
   receiver1: '0x4312488937D47A007De24d48aB82940C809EEb2b',
-  receiver2: '0xc9ca4bc173e151dfd4579f3802429684acdba4e7',
+  receiver2: '0x57829d5E80730D06B1364A2b05342F44bFB70E8f',
 };
 
 const MINT_BATCH_SIZE_LIMIT = 128;
@@ -136,7 +136,7 @@ async function mintTokensForMinters(client, minters, number, amount) {
       console.log(`[${minterName}] First Token ID: ${newTokens[0]?.id}`);
 
       try {
-        const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 10000000 });
+        const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 50000000 });
         await tx.wait();
         mintedTokens[minterName].push(...newTokens.map((token) => token.id));
       } catch (error) {
@@ -151,10 +151,10 @@ async function mintTokensForMinters(client, minters, number, amount) {
   return mintedTokens;
 }
 
-describe.only('Native Dual Minter Transfer Performance Tests In Node3', function () {
+describe('Native Dual Minter Transfer Performance Tests In Node3', function () {
   let client;
   let nativeOwner, nativeMinter;
-  const total_number = 64; //total_number *2 *128
+  const total_number = 128; //total_number *2 *128
   const amount = 10000;
   let minter1List, minter2List;
   const node3Config = NODE_CONFIGS[2];
@@ -172,7 +172,7 @@ describe.only('Native Dual Minter Transfer Performance Tests In Node3', function
 
   });
 
-  describe.only('Case 1: Setup mint allowance for two minters', function () {
+  describe('Case 1: Setup mint allowance for two minters', function () {
     it('should set mint allowance for minter1', async function () {
       this.timeout(120000);
       await setupMintAllowance(nativeOwner, client, MINTERS.minter1.address, accounts.OwnerKey, 100000000);
@@ -184,7 +184,7 @@ describe.only('Native Dual Minter Transfer Performance Tests In Node3', function
     });
   });
 
-  describe.only('Case 2: Mint tokens for both minters', function () {
+  describe('Case 2: Mint tokens for both minters', function () {
     this.timeout(6000000); // 10 minutes
 
     it(`should mint ${total_number} tokens for each minter`, async function () {
@@ -310,7 +310,7 @@ describe.only('Native Dual Minter Transfer Performance Tests In Node3', function
     });
   });
 
-  describe.only('Case 3 (backup): Split tokens with batched concurrent execution', function () {
+  describe('Case 3 (backup): Split tokens with batched concurrent execution', function () {
     this.timeout(9000000);
 
     it('should split tokens with executeBatchedConcurrentSplits', async function () {
@@ -402,7 +402,7 @@ describe.only('Native Dual Minter Transfer Performance Tests In Node3', function
     });
   });
 
-  describe.only('Case 4: Excute Transfers TPS', function () {
+  describe('Case 4: Excute Transfers TPS', function () {
     this.timeout(6000000);
     it('should execute transfers with TPS', async function () {
       await executeBatchTransfersSigned(minter1List, minter2List);
@@ -416,10 +416,10 @@ describe.only('Native Dual Minter Transfer Performance Tests In Node3', function
 });
 
 // ==================== 独立一套：Mint 10，循环 5 次 Split + Transfer（每次均执行 transfer） ====================
-describe('Node3: Mint tokens then 5x Split + Transfer', function () {
+describe.only('Node3: Mint tokens then 5x Split + Transfer', function () {
   const MINT_COUNT = 128; //Transfer count 128 * 80/5
-  const LOOP_COUNT = 1;
-  const TOKENS_PER_ROUND = MINT_COUNT / LOOP_COUNT; // per minter per round
+  const LOOP_COUNT = 50;
+  const TOKENS_PER_ROUND = MINT_COUNT; // per minter per round
   const amount = 10000;
 
   let client;
@@ -436,10 +436,8 @@ describe('Node3: Mint tokens then 5x Split + Transfer', function () {
 
     await setupMintAllowance(nativeOwner, client, MINTERS.minter1.address, accounts.OwnerKey, 100000000);
     await setupMintAllowance(nativeOwner, client, MINTERS.minter2.address, accounts.OwnerKey, 100000000);
+    await sleep(3000)
 
-    console.log(`\nMinting ${MINT_COUNT} tokens per minter (in batches of up to ${MINT_BATCH_SIZE_LIMIT})...`);
-    await mintTokensForMinters(client, MINTERS, MINT_COUNT, amount);
-    await sleep(3000);
   });
 
   it(`should run ${LOOP_COUNT} rounds of split + transfer (each round executes transfer)`, async function () {
@@ -451,81 +449,86 @@ describe('Node3: Mint tokens then 5x Split + Transfer', function () {
     const minter2Metadata = await createAuthMetadata(MINTERS.minter2.privateKey);
 
     for (let round = 1; round <= LOOP_COUNT; round++) {
-      console.log(`\n========== Round ${round}/${LOOP_COUNT}: Split + Transfer ==========`);
-
-      const splitRequests1 = [];
-      for (let i = 0; i < TOKENS_PER_ROUND; i++) {
-        const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
-          to_accounts.push(
-            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m1-${i}-${j}-r1` },
-            { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m1-${i}-${j}-r2` }
-          );
-        }
-        splitRequests1.push({
-          sc_address: NATIVE_TOKEN_ADDRESS,
-          token_type: '0',
-          from_address: minter1Wallet.address,
-          to_accounts
-        });
-      }
-
-      const splitRequests2 = [];
-      for (let i = 0; i < TOKENS_PER_ROUND; i++) {
-        const to_accounts = [];
-        for (let j = 0; j < 64; j++) {
-          to_accounts.push(
-            { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m2-${i}-${j}-r1` },
-            { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m2-${i}-${j}-r2` }
-          );
-        }
-        splitRequests2.push({
-          sc_address: NATIVE_TOKEN_ADDRESS,
-          token_type: '0',
-          from_address: minter2Wallet.address,
-          to_accounts
-        });
-      }
-
-      console.log(`[Round ${round}] Generating split proofs (${splitRequests1.length} + ${splitRequests2.length} requests)...`);
-      const requestIds1 = [];
-      for (let i = 0; i < splitRequests1.length; i++) {
-        const response = await client.generateBatchSplitToken(splitRequests1[i], minter1Metadata);
-        requestIds1.push(response.request_id);
-      }
-      const requestIds2 = [];
-      for (let i = 0; i < splitRequests2.length; i++) {
-        const response = await client.generateBatchSplitToken(splitRequests2[i], minter2Metadata);
-        requestIds2.push(response.request_id);
-      }
-
-      const minter1Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
-      const minter2Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter2Wallet);
-
-      // 单笔等 receipt 超时 5 分钟，避免节点拥堵时 minter2 批量超时
-      const RECEIPT_TIMEOUT_MS = 300000; // 5 min per tx
-      console.log(`[Round ${round}] Executing batch splits for minter1 (${requestIds1.length})...`);
-      const result1 = await executeBatchedConcurrentSplits(client, requestIds1, minter1Wallet, minter1Metadata, minter1Native, provider, RECEIPT_TIMEOUT_MS);
-      if (result1.failedTransactions > 0) {
-        throw new Error(`Round ${round} Minter1 split failed: ${result1.failedTransactions}/${result1.totalTransactions}`);
-      }
-      await sleep(5000);
-      console.log(`[Round ${round}] Executing batch splits for minter2 (${requestIds2.length})...`);
-      const result2 = await executeBatchedConcurrentSplits(client, requestIds2, minter2Wallet, minter2Metadata, minter2Native, provider, RECEIPT_TIMEOUT_MS);
-      if (result2.failedTransactions > 0) {
-        throw new Error(`Round ${round} Minter2 split failed: ${result2.failedTransactions}/${result2.totalTransactions}`);
-      }
-
-      const roundMinter1List = result1.recipientTokens;
-      const roundMinter2List = result2.recipientTokens;
-      if (roundMinter1List.length === 0 || roundMinter2List.length === 0) {
-        throw new Error(`Round ${round} token extraction failed: Minter1=${roundMinter1List.length}, Minter2=${roundMinter2List.length}`);
-      }
+      console.log(`\n========== Round ${round}/${LOOP_COUNT}: Mint + Split + Transfer ==========`);
+      // mint
+      console.log(`\nMinting ${MINT_COUNT} tokens per minter (in batches of up to ${MINT_BATCH_SIZE_LIMIT})...`);
+      await mintTokensForMinters(client, MINTERS, MINT_COUNT, amount);
       await sleep(3000);
 
-      console.log(`[Round ${round}] Executing transfer (TPS)...`);
-      await executeBatchTransfersSigned(roundMinter1List, roundMinter2List);
-      console.log(`[Round ${round}] Split + Transfer done.\n`);
+      // split
+      // const splitRequests1 = [];
+      // for (let i = 0; i < TOKENS_PER_ROUND; i++) {
+      //   const to_accounts = [];
+      //   for (let j = 0; j < 64; j++) {
+      //     to_accounts.push(
+      //       { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m1-${i}-${j}-r1` },
+      //       { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m1-${i}-${j}-r2` }
+      //     );
+      //   }
+      //   splitRequests1.push({
+      //     sc_address: NATIVE_TOKEN_ADDRESS,
+      //     token_type: '0',
+      //     from_address: minter1Wallet.address,
+      //     to_accounts
+      //   });
+      // }
+      //
+      // const splitRequests2 = [];
+      // for (let i = 0; i < TOKENS_PER_ROUND; i++) {
+      //   const to_accounts = [];
+      //   for (let j = 0; j < 64; j++) {
+      //     to_accounts.push(
+      //       { address: RECEIVER_CONFIG.receiver1, amount: 1, comment: `r${round}-m2-${i}-${j}-r1` },
+      //       { address: RECEIVER_CONFIG.receiver2, amount: 2, comment: `r${round}-m2-${i}-${j}-r2` }
+      //     );
+      //   }
+      //   splitRequests2.push({
+      //     sc_address: NATIVE_TOKEN_ADDRESS,
+      //     token_type: '0',
+      //     from_address: minter2Wallet.address,
+      //     to_accounts
+      //   });
+      // }
+      //
+      // console.log(`[Round ${round}] Generating split proofs (${splitRequests1.length} + ${splitRequests2.length} requests)...`);
+      // const requestIds1 = [];
+      // for (let i = 0; i < splitRequests1.length; i++) {
+      //   const response = await client.generateBatchSplitToken(splitRequests1[i], minter1Metadata);
+      //   requestIds1.push(response.request_id);
+      // }
+      // const requestIds2 = [];
+      // for (let i = 0; i < splitRequests2.length; i++) {
+      //   const response = await client.generateBatchSplitToken(splitRequests2[i], minter2Metadata);
+      //   requestIds2.push(response.request_id);
+      // }
+      //
+      // const minter1Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter1Wallet);
+      // const minter2Native = new ethers.Contract(NATIVE_TOKEN_ADDRESS, NATIVE_ABI, minter2Wallet);
+      //
+      // // 单笔等 receipt 超时 5 分钟，避免节点拥堵时 minter2 批量超时
+      // const RECEIPT_TIMEOUT_MS = 300000; // 5 min per tx
+      // console.log(`[Round ${round}] Executing batch splits for minter1 (${requestIds1.length})...`);
+      // const result1 = await executeBatchedConcurrentSplits(client, requestIds1, minter1Wallet, minter1Metadata, minter1Native, provider, RECEIPT_TIMEOUT_MS);
+      // if (result1.failedTransactions > 0) {
+      //   throw new Error(`Round ${round} Minter1 split failed: ${result1.failedTransactions}/${result1.totalTransactions}`);
+      // }
+      // await sleep(5000);
+      // console.log(`[Round ${round}] Executing batch splits for minter2 (${requestIds2.length})...`);
+      // const result2 = await executeBatchedConcurrentSplits(client, requestIds2, minter2Wallet, minter2Metadata, minter2Native, provider, RECEIPT_TIMEOUT_MS);
+      // if (result2.failedTransactions > 0) {
+      //   throw new Error(`Round ${round} Minter2 split failed: ${result2.failedTransactions}/${result2.totalTransactions}`);
+      // }
+      //
+      // const roundMinter1List = result1.recipientTokens;
+      // const roundMinter2List = result2.recipientTokens;
+      // if (roundMinter1List.length === 0 || roundMinter2List.length === 0) {
+      //   throw new Error(`Round ${round} token extraction failed: Minter1=${roundMinter1List.length}, Minter2=${roundMinter2List.length}`);
+      // }
+      // await sleep(3000);
+      //
+      // console.log(`[Round ${round}] Executing transfer (TPS)...`);
+      // await executeBatchTransfersSigned(roundMinter1List, roundMinter2List);
+      // console.log(`[Round ${round}] Split + Transfer done.\n`);
     }
   });
 
