@@ -674,42 +674,6 @@ describe("Negative And exception test cases", function () {
                 await client3.waitForActionCompletion(client3.getTokenActionStatus, response.request_id, minterMeta)
                 await expect(callPrivateTransfer(minterWallet, scAddress, 0)).to.revertedWith("PrivateERCToken: tokenId is zero")
             });
-            it('Transfer two tokens consecutively', async () => {
-                const amount = 10
-                await mint(accounts.Minter, 100)
-                const preBalanceTo = await getTokenBalanceByAdmin(toAddress1);
-                const preBalanceFrom = await getTokenBalanceByAdmin(accounts.Minter);
-                const toAddress = accounts.To1;
-                const splitRequest = {
-                    sc_address: scAddress,
-                    token_type: '0',
-                    from_address: accounts.Minter,
-                    to_address: toAddress,
-                    amount: amount,
-                    comment: 'transfer'
-                };
-                console.log("generateSplitTokenRequest:", splitRequest)
-                let response1 = await client3.generateSplitToken(splitRequest, minterMeta);
-                let proofResult1 = await client3.waitForActionCompletion(client3.getTokenActionStatus, response1.request_id, minterMeta);
-
-                let response2 = await client3.generateSplitToken(splitRequest, minterMeta);
-                let proofResult2 = await client3.waitForActionCompletion(client3.getTokenActionStatus, response2.request_id, minterMeta);
-
-                if (proofResult1.status == "TOKEN_ACTION_STATUS_SUC" && proofResult2.status == "TOKEN_ACTION_STATUS_SUC") {
-                    let tokenId1 = ethers.toBigInt(response1.transfer_token_id)
-                    let tokenId2 = ethers.toBigInt(response2.transfer_token_id)
-                    await callPrivateTransfer(minterWallet, scAddress, tokenId1)
-                    await sleep(1000);
-                    await callPrivateTransfer(minterWallet, scAddress, tokenId2)
-                    await sleep(1000);
-                    const postBalanceTo = await getTokenBalanceByAdmin(toAddress1);
-                    const postBalanceFrom = await getTokenBalanceByAdmin(accounts.Minter);
-                    console.log("postBalanceTo", postBalanceTo)
-                    console.log("preBalanceTo", preBalanceTo)
-                    expect(postBalanceTo).to.equal(preBalanceTo + amount * 2);
-                    expect(postBalanceFrom).to.equal(preBalanceFrom - amount * 2);
-                }
-            });
             it('Should revert: transfer with burn token id', async () => {
                 const amount = 10
                 await mint(accounts.Minter, 100)

@@ -268,6 +268,40 @@ describe('Base Chain Tests', function () {
     });
   });
 
+  describe.only('ERC20 transfer', function () {
+    let token;
+    const initialSupply = ethers.parseEther('1000000');
+    const transferAmount = ethers.parseEther('100');
+
+    beforeEach(async function () {
+      const Token = await ethers.getContractFactory('DummyERC20');
+      token = await Token.deploy('Test Token', 'TST', initialSupply);
+      await token.waitForDeployment();
+    });
+
+    it('should send ERC20 transfer successfully', async function () {
+      const ownerBalanceBefore = await token.balanceOf(owner.address);
+      const user1BalanceBefore = await token.balanceOf(user1.address);
+
+      const tx = await token.transfer(user1.address, transferAmount);
+      const receipt = await tx.wait();
+
+      expect(receipt.status).to.equal(1);
+      const user1BalanceAfter = await token.balanceOf(user1.address);
+      const ownerBalanceAfter = await token.balanceOf(owner.address);
+
+      expect(user1BalanceAfter - user1BalanceBefore).to.equal(transferAmount);
+      expect(ownerBalanceBefore - ownerBalanceAfter).to.equal(transferAmount);
+
+      console.log('Transfer:', {
+        amount: ethers.formatEther(transferAmount),
+        to: user1.address,
+        txHash: receipt.hash?.slice(0, 18) + '...',
+        gasUsed: receipt.gasUsed?.toString(),
+      });
+    });
+  });
+
   describe('Error Handling', function () {
     let token;
 

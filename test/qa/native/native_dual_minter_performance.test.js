@@ -7,7 +7,8 @@ const grpc = require('@grpc/grpc-js');
 const native_token_address = '0x14Cf747669B78516424CAd20E1E5d53fD76EA850';
 const rpcUrl = 'dev2-node3-rpc.hamsa-ucl.com:50051';
 const client = createClient(rpcUrl);
-const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
+// const RPC = 'http://dev2-ucl-l2.hamsa-ucl.com:8545';
+const RPC = 'http://l2-node3-native.hamsa-ucl.com:8545';
 
 // Fixed two minter addresses and private keys
 const MINTERS = {
@@ -59,17 +60,18 @@ async function setupMintAllowance(native, client, minters, amount) {
       },
     };
 
-    const tx = await native.setMintAllowed(minterConfig.address, allowed);
+    const tx = await native.setMintAllowed(minterConfig.address, allowed,{ gasLimit: 100000 });
     await tx.wait();
   }
 }
 
-async function mintTokensForMinters(client, minters, number, amount) {
+async function mintTokensForMinters(client, minters, number, amount, provider) {
   const mintedTokens = {};
+  const resolvedProvider = provider || ethers.provider;
 
   // Iterate through all minter configurations
   for (const [minterName, minterConfig] of Object.entries(minters)) {
-    const minterWallet = new ethers.Wallet(minterConfig.privateKey, ethers.provider);
+    const minterWallet = new ethers.Wallet(minterConfig.privateKey, resolvedProvider);
     const minterMetadata = await createAuthMetadata(minterConfig.privateKey);
 
     // Dynamically create to_accounts array
@@ -135,7 +137,7 @@ async function mintTokensForMinters(client, minters, number, amount) {
     const native = new ethers.Contract(native_token_address, abi, minterWallet);
 
     try {
-      const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 100000 });
+      const tx = await native.mint(recipients, newTokens, newAllowed, proof, publicInputs, bathcedSize - to_accounts.length, { gasLimit: 20000000 });
       const receipt = await tx.wait();
 
       // Save token IDs
@@ -153,7 +155,7 @@ describe('Native Dual Minter Split Performance Tests', function () {
   let client, owner, minter;
   let nativeOwner, nativeMinter;
   let mintedTokens = {};
-  const total_number = 128;
+  const total_number = 32;
   const amount = 1000;
   let minter1List, minter2List;
 
@@ -225,7 +227,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
   let client, owner, minter;
   let nativeOwner, nativeMinter;
   let mintedTokens = {};
-  const total_number = 2; // Number of tokens to test
+  const total_number = 16; // Number of tokens to test
   const amount = 10000;
   const jsonFilePath = './split_tokens.json';
 
@@ -310,7 +312,7 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
       console.log('   - Action: Generating mint proofs and executing mint transactions');
       console.log('⏳ Starting minting process...\n');
 
-      const batchSize = 32;
+      const batchSize = 128;
       for (let i = 0; i < total_number; i += batchSize) {
         const currentBatchSize = Math.min(batchSize, total_number - i);
         const isLastBatch = i + batchSize >= total_number;
@@ -707,8 +709,9 @@ describe('Native Dual Minter Split & Transfer with JSON Storage', function () {
 describe.only('Native Dual Minter Transfer Performance Tests', function () {
   let client, owner, minter;
   let nativeOwner, nativeMinter;
+  let l2Provider;
   let mintedTokens = {};
-  const total_number = 2; //total_number *2 *128
+  const total_number = 30; //total_number *2 *128
   const amount = 1000;
   let minter1List, minter2List;
 
@@ -716,7 +719,9 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
     this.timeout(300000);
 
     client = createClient(rpcUrl);
-    [owner, minter] = await ethers.getSigners();
+    l2Provider = new ethers.JsonRpcProvider(RPC);
+    owner = new ethers.Wallet(accounts.OwnerKey, l2Provider);
+    minter = new ethers.Wallet(MINTERS.minter1.privateKey, l2Provider);
 
     nativeOwner = new ethers.Contract(native_token_address, abi, owner);
     nativeMinter = new ethers.Contract(native_token_address, abi, minter);
@@ -744,7 +749,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
         const currentBatchSize = Math.min(batchSize, total_number - i);
         const isLastBatch = i + batchSize >= total_number;
 
-        await mintTokensForMinters(client, MINTERS, currentBatchSize, amount);
+        await mintTokensForMinters(client, MINTERS, currentBatchSize, amount, l2Provider);
 
         if (!isLastBatch) {
           await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -764,7 +769,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
       for (let i = 0; i < requestIds.minter1.length; i++) {
         const requestId = requestIds.minter1[i];
         console.log(`[Minter1] Processing token ${i + 1}/${requestIds.minter1.length} - RequestId: ${requestId}`);
-        const result = await executeSingleSplitSequential('minter1', requestId, MINTERS.minter1.privateKey);
+        const result = await executeSingleSplitSequential('minter1', requestId, MINTERS.minter1.privateKey, l2Provider);
         if (!result.success) {
           throw new Error(`Minter1 split operation failed for request ${requestId}: ${result.error}`);
         }
@@ -777,7 +782,7 @@ describe.only('Native Dual Minter Transfer Performance Tests', function () {
       for (let i = 0; i < requestIds.minter2.length; i++) {
         const requestId = requestIds.minter2[i];
         console.log(`[Minter2] Processing token ${i + 1}/${requestIds.minter2.length} - RequestId: ${requestId}`);
-        const result = await executeSingleSplitSequential('minter2', requestId, MINTERS.minter2.privateKey);
+        const result = await executeSingleSplitSequential('minter2', requestId, MINTERS.minter2.privateKey, l2Provider);
         if (!result.success) {
           throw new Error(`Minter2 split operation failed for request ${requestId}: ${result.error}`);
         }
@@ -1625,8 +1630,9 @@ async function executeBatchBurnsSigned(tokenList1, tokenList2) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-async function executeSingleSplitSequential(minterName, requestId, privateKey) {
-  const minterWallet = new ethers.Wallet(privateKey, ethers.provider);
+async function executeSingleSplitSequential(minterName, requestId, privateKey, provider) {
+  const resolvedProvider = provider || ethers.provider;
+  const minterWallet = new ethers.Wallet(privateKey, resolvedProvider);
   const derivedAddress = minterWallet.address;
   const configAddress = MINTERS[minterName].address;
 
@@ -1662,7 +1668,7 @@ async function executeSingleSplitSequential(minterName, requestId, privateKey) {
     const publicInputs = response.public_input.map((i) => ethers.toBigInt(i));
     const paddingNum = response.batched_size - recipients.length;
 
-    const tx = await minterNative.split(derivedAddress, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, { gasLimit: 100000 });
+    const tx = await minterNative.split(derivedAddress, recipients, consumedIds, newTokens, proof, publicInputs, paddingNum, { gasLimit: 20000000 });
 
     const receipt = await tx.wait();
 
