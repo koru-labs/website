@@ -1,0 +1,13 @@
+services:
+  docs-site:
+    container_name: ucl-docs-site
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./docs:/app/content:ro
+    restart: unless-stopped

@@ -1,0 +1,16 @@
+{
+  "name": "ucl-document",
+  "private": true,
+  "scripts": {
+    "dev": "next",
+    "build": "next build --webpack",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^16.0.7",
+    "nextra": "^4.0.0",
+    "nextra-theme-docs": "^4.0.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}
