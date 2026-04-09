@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx hardhat:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(ln:*)"
+    ]
+  }
+}

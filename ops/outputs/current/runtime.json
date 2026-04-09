@@ -1,0 +1,12 @@
+{
+  "environment": "current",
+  "network": "ucl_target",
+  "chainId": 100,
+  "rpcUrl": "http://127.0.0.1:18545",
+  "contracts": {
+    "HamsaL2EventImplementation": "0x35AFB3c0d77217f4527b3ACa2832a9Bb0d3153bF",
+    "HamsaL2Event": "0x3536Ca51D15f6fc0a76c1f42693F7949b5165F0D",
+    "InstitutionUserRegistry": "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8",
+    "InstUserProxy": "0x7f1Dc0F5F8dafd9715Ea51f6c11b92929b2Dbdea"
+  }
+}

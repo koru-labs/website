@@ -1,0 +1,480 @@
+/**
+ * MC 测试脚本 - 使用重构后的 helpers 库
+ * 测试私有代币的核心功能: Mint, Burn, Approve, Transfer
+ */
+
+const { ethers, network } = require('hardhat');
+const hardhatConfig = require('../../hardhat.config');
+const { getImage9EnvironmentData } = require('../../script/deploy_help');
+const config = getImage9EnvironmentData();
+const accounts = require('../../deployments/account.json');
+const { createClient } = require('../qa/token_grpc');
+
+// 使用重构后的 helpers 库
+const {
+    callPrivateMint,
+    callPrivateTransfers,
+    callPrivateBurns,
+    callPrivateTransferFroms,
+    callPrivateBurnFroms,
+    getApproveTokenList,
+    createAuthMetadata,
+    sleep,
+    config: helperConfig,
+} = require('../../script/helpers');
+
+const rpcUrl = 'qa-node3-rpc.hamsa-ucl.com:50051';
+const client = createClient(rpcUrl);
+
+const l1CustomNetwork = {
+    name: 'BESU',
+    chainId: 1337,
+};
+const options = {
+    batchMaxCount: 1,
+    staticNetwork: true,
+};
+
+const CONSTANTS = {
+    network: {
+        name: 'BESU',
+        chainId: 1337,
+    },
+    providerOptions: {
+        batchMaxCount: 1,
+        staticNetwork: true,
+    },
+    defaultAmount: 1,
+    waitTimes: {
+        short: 1000,
+        medium: 2000,
+        long: 5000,
+    },
+};
+
+let L1Url;
+const networkName = network.name;
+if (hardhatConfig.networks[networkName] && hardhatConfig.networks[networkName].url) {
+    L1Url = hardhatConfig.networks[networkName].url;
+}
+
+console.log('L1Url:', L1Url);
+
+const l1Provider = new ethers.JsonRpcProvider(L1Url, l1CustomNetwork, options);
+
+const minterWallet = new ethers.Wallet(accounts.MinterKey, l1Provider);
+const to1Wallet = new ethers.Wallet(accounts.To1PrivateKey, l1Provider);
+
+const amount = 1;
+
+/**
+ * 铸造代币 - 测试入口
+ */
+async function mintForStart() {
+    console.log('=== Starting Mint Process ===');
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    console.log(config);
+    const generateRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Minter,
+        amount: 100,
+    };
+
+    let response = await client.generateMintProof(generateRequest, metadata);
+    console.log('Generate Mint Proof response:', response);
+
+    let receipt = await callPrivateMint(config.contracts.PrivateERCToken, response, minterWallet);
+    console.log('Mint receipt:', receipt);
+
+    await sleep(2000);
+
+    console.log('Checking privateTotalSupply after mint...');
+    const contract = await ethers.getContractAt('PrivateERCToken', config.contracts.PrivateERCToken, minterWallet);
+    const privateTotalSupply = await contract.privateTotalSupply();
+    console.log('Private total supply after mint:', privateTotalSupply);
+
+    await sleep(2000);
+    console.log('✅ Mint completed successfully');
+}
+
+/**
+ * 测试销毁代币
+ */
+async function testBurnToken() {
+    console.log('=== Starting Token Burn Process ===');
+    try {
+        const metadata = await createAuthMetadata(accounts.MinterKey);
+
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            amount: CONSTANTS.defaultAmount,
+            comment: 'for burn',
+        };
+
+        console.log('Splitting token...');
+        let response = await client.generateSplitToken(splitRequest, metadata);
+        console.log('Token split response:', response);
+
+        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+        await sleep(CONSTANTS.waitTimes.long);
+
+        console.log('Burning split token...');
+        const burnTokenId = ethers.toBigInt(response.transfer_token_id);
+
+        let receipt = await callPrivateBurns(config.contracts.PrivateERCToken, minterWallet, [burnTokenId]);
+
+        await sleep(CONSTANTS.waitTimes.medium);
+
+        console.log('Burning split token success!');
+
+        return receipt;
+    } catch (error) {
+        console.error(`Reserve tokens and burn test failed: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * 测试审批代币
+ */
+async function testApproveToken() {
+    console.log('=== Starting Token Approval Process ===');
+
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const approveRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        spender_address: accounts.Spender1,
+        to_address: accounts.To1,
+        amount: CONSTANTS.defaultAmount,
+        comment: '123',
+    };
+
+    console.log('Generating approval proof...');
+    let response = await client.generateApproveProof(approveRequest, metadata);
+    console.log('Approval proof response:', response);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+    await sleep(CONSTANTS.waitTimes.medium);
+    console.log('✅ Token approval completed successfully');
+
+    return ethers.toBigInt(response.transfer_token_id);
+}
+
+/**
+ * 测试从转账
+ */
+async function testTransferFrom(approveTokenId) {
+    console.log('=== Starting Transfer From Process ===');
+    console.log('Transferring token ID:', ethers.toBeHex(approveTokenId));
+
+    // 使用 Spender1 钱包转账已授权的代币到 To1
+    const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
+
+    let receipt = await callPrivateTransferFroms(
+        spender1Wallet,
+        config.contracts.PrivateERCToken,
+        accounts.Minter,
+        accounts.To1,
+        [approveTokenId]
+    );
+    console.log('TransferFrom receipt:', receipt);
+
+    await sleep(2000);
+    console.log('✅ TransferFrom completed successfully');
+}
+
+/**
+ * 测试批量 BurnFrom
+ */
+async function testBurnFromBatch(approveTokenIds) {
+    console.log('=== Starting BurnFrom Batch Process ===');
+    console.log('Burning allowance token IDs:', approveTokenIds.map((id) => ethers.toBeHex(id)));
+
+    const spender1Wallet = new ethers.Wallet(accounts.Spender1Key, l1Provider);
+
+    let receipt = await callPrivateBurnFroms(
+        spender1Wallet,
+        config.contracts.PrivateERCToken,
+        accounts.Minter,
+        approveTokenIds
+    );
+    console.log('BurnFrom batch receipt:', receipt);
+
+    await sleep(CONSTANTS.waitTimes.short);
+    console.log('✅ BurnFrom batch completed successfully');
+}
+
+/**
+ * 测试分裂代币
+ */
+async function testSplitTokens() {
+    console.log('=== Starting Token Split Process ===');
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const splitRequest = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.To1,
+        amount: amount,
+    };
+
+    let response = await client.generateSplitToken(splitRequest, metadata);
+    console.log('Generate Split Token Proof response:', response);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+    console.log('Split Token completed successfully');
+
+    global.transferTokenId = ethers.toBigInt(response.transfer_token_id);
+    console.log('Transfer Token ID stored for cancellation:', ethers.toBeHex(global.transferTokenId));
+
+    console.log('✅ Token split completed successfully');
+
+    return global.transferTokenId;
+}
+
+/**
+ * 测试多次授权
+ */
+async function testApproveMultipleTokens() {
+    console.log('=== Starting Multiple Token Approval Process ===');
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+
+    // 第一次授权
+    console.log('--- First Approval ---');
+    const splitRequest1 = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
+        amount: 1,
+        comment: 'Approval',
+    };
+
+    let response1 = await client.generateSplitToken(splitRequest1, metadata);
+    console.log('First Generate Split Token Proof response:', response1);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response1.request_id, metadata);
+    console.log('First Split Token completed successfully');
+
+    const firstApprovalTokenId = ethers.toBigInt(response1.transfer_token_id);
+    console.log('First Approval Token ID:', ethers.toBeHex(firstApprovalTokenId));
+
+    // 第二次授权
+    console.log('--- Second Approval ---');
+    const splitRequest2 = {
+        sc_address: config.contracts.PrivateERCToken,
+        token_type: '0',
+        from_address: accounts.Minter,
+        to_address: accounts.Spender1,
+        amount: 1,
+        comment: 'Approval',
+    };
+
+    let response2 = await client.generateSplitToken(splitRequest2, metadata);
+    console.log('Second Generate Split Token Proof response:', response2);
+
+    await client.waitForActionCompletion(client.getTokenActionStatus, response2.request_id, metadata);
+    console.log('Second Split Token completed successfully');
+
+    const secondApprovalTokenId = ethers.toBigInt(response2.transfer_token_id);
+    console.log('Second Approval Token ID:', ethers.toBeHex(secondApprovalTokenId));
+
+    var approvedTokens;
+    // 检查授权列表,查询10次
+    for (let i = 0; i < 10; i++) {
+        await sleep(2000);
+        console.log('--- Checking Approval List ---');
+
+        const contract = await ethers.getContractAt('PrivateERCToken', config.contracts.PrivateERCToken, minterWallet);
+        console.log('需要查询授权列表，原查询方法废弃');
+
+        approvedTokens = await getApproveTokenList(client, accounts.Minter, config.contracts.PrivateERCToken, accounts.Spender1, metadata);
+        console.log('Approved tokens for Spender1 (from gRPC):', approvedTokens);
+    }
+
+    console.log('✅ Multiple token approval completed successfully');
+
+    return {
+        firstApprovalTokenId,
+        secondApprovalTokenId,
+    };
+}
+
+/**
+ * 测试取消代币
+ */
+async function testCancel(transferTokenId) {
+    console.log('=== Starting Token Cancellation Process ===');
+    console.log('Transfer Token ID to cancel:', transferTokenId);
+
+    const metadata = await createAuthMetadata(accounts.MinterKey);
+    const contract = await ethers.getContractAt('PrivateERCToken', config.contracts.PrivateERCToken, minterWallet);
+    const tx = await contract.privateCancelToken(transferTokenId);
+    const receipt = await tx.wait();
+    console.log('Cancel receipt:', receipt);
+
+    await sleep(2000);
+
+    console.log('✅ Cancel completed successfully');
+}
+
+/**
+ * 测试转账
+ */
+async function testTransfer() {
+    try {
+        const metadata = await createAuthMetadata(accounts.MinterKey);
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: accounts.To1,
+            amount: CONSTANTS.defaultAmount,
+            comment: '123',
+        };
+
+        console.log('Splitting token...');
+        let response = await client.generateSplitToken(splitRequest, metadata);
+        console.log('Token split response:', response);
+
+        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+        await sleep(10000);
+
+        console.log('Transferring split token with privateTransfer...');
+        const transferTokenId = ethers.toBigInt(response.transfer_token_id);
+
+        // 使用 token 模块中的 callPrivateTransfer
+        const { callPrivateTransfer } = require('../../script/helpers');
+        let receipt = await callPrivateTransfer(minterWallet, config.contracts.PrivateERCToken, transferTokenId);
+
+        await sleep(CONSTANTS.waitTimes.short);
+        console.log('Private transfer successful!');
+
+        return receipt;
+    } catch (error) {
+        console.error(`Reserve tokens and transfer test failed: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * 测试批量转账
+ */
+async function testTransfers() {
+    try {
+        console.log('Starting reserve tokens and transfer test...');
+        const metadata = await createAuthMetadata(accounts.MinterKey);
+        const splitRequest = {
+            sc_address: config.contracts.PrivateERCToken,
+            token_type: '0',
+            from_address: accounts.Minter,
+            to_address: accounts.To1,
+            amount: CONSTANTS.defaultAmount,
+            comment: '123',
+        };
+
+        console.log('Splitting token...');
+        let response = await client.generateSplitToken(splitRequest, metadata);
+        console.log('Token split response:', response);
+
+        await client.waitForActionCompletion(client.getTokenActionStatus, response.request_id, metadata);
+
+        await sleep(10000);
+
+        console.log('Transferring split token with privateTransfers...');
+        const transferTokenId = ethers.toBigInt(response.transfer_token_id);
+        let receipt = await callPrivateTransfers(minterWallet, config.contracts.PrivateERCToken, [transferTokenId]);
+
+        await sleep(CONSTANTS.waitTimes.short);
+        console.log('PrivateTransfers test successful!');
+
+        return receipt;
+    } catch (error) {
+        console.error(`Reserve tokens and transfers test failed: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * 运行主测试流程
+ */
+async function runMainTestProcess() {
+    console.log('🚀 Start');
+    console.log('========================================');
+
+    try {
+        await mintForStart();
+
+        await sleep(5000);
+
+        // Test burn functionality
+        await testBurnToken();
+
+        await sleep(5000);
+
+        // Test approve functionality
+        const approvedTokenId = await testApproveToken();
+
+        await sleep(10000);
+
+        // Test transferFrom functionality
+        await testTransferFrom(approvedTokenId);
+
+        await sleep(5000);
+
+        // Prepare new approval for burnFrom batch
+        const burnApprovalTokenId = await testApproveToken();
+
+        await sleep(10000);
+
+        // Test burnFrom batch functionality
+        await testBurnFromBatch([burnApprovalTokenId]);
+
+        await sleep(5000);
+
+        // Test transfers functionality
+        await testTransfers();
+
+        console.log('========================================');
+        console.log('🎉 Test Suite Completed Successfully!');
+    } catch (error) {
+        console.error('❌ Test suite failed:', error.message);
+        console.error('Stack trace:', error.stack);
+        throw error;
+    }
+}
+
+// 直接运行时执行 mintForStart
+if (require.main === module) {
+    mintForStart()
+        .then(() => {
+            console.log('All tests completed!');
+            process.exit(0);
+        })
+        .catch((error) => {
+            console.error('Test execution failed:', error);
+            process.exit(1);
+        });
+}
+
+module.exports = {
+    mintForStart,
+    testBurnToken,
+    testApproveToken,
+    testTransferFrom,
+    testBurnFromBatch,
+    testSplitTokens,
+    testApproveMultipleTokens,
+    testCancel,
+    testTransfer,
+    testTransfers,
+    runMainTestProcess,
+};

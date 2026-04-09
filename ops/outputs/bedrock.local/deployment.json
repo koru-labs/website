@@ -1,0 +1,35 @@
+{
+  "environment": "bedrock.local",
+  "network": "bedrock_local",
+  "chainId": 100,
+  "rpcUrl": "http://127.0.0.1:18545",
+  "libraries": {
+    "CurveBabyJubJub": "0xb9A219631Aed55eBC3D998f17C3840B7eC39C0cc",
+    "CurveBabyJubJubHelper": "0x4D2D24899c0B115a1fce8637FCa610Fe02f1909e",
+    "MintAllowedTokenVerifier": "0xc0ED63E3A70BfCB003452B1Cc083db822e1f23e1",
+    "SplitTokenVerifier": "0xA9F8FeF0B3DF9159F1443427dAa79210fCEB009C",
+    "SplitAllowanceTokenVerifier": "0xC8c03647d39a96f02f6Ce8999bc22493C290e734",
+    "Convert2pUSDCVerifier": "0x446e083592D2dFa6661E20097F6898990C3CACE5",
+    "Convert2USDCVerifier": "0xFa5B6432308d45B54A1CE1373513Fab77166436f",
+    "RevealTotalSupplyVerifier": "0x7105A11e8487BfaF8c02aA6A7cdA5283f971107c",
+    "TokenVerificationLib": "0x0a143BDF026Eabaf95d3E88AbB88169674Db92f5",
+    "SignatureChecker": "0x5dc1E82631a4BE896333F38a8214554326C11796",
+    "TokenEventLib": "0x7cb50610e7e107b09acf3FBB8724C6df3f3e1c1d",
+    "TokenUtilsLib": "0x9Dee536694e1f0Adc640972E61826732666345b3"
+  },
+  "contracts": {
+    "HamsaL2EventImplementation": "0x35AFB3c0d77217f4527b3ACa2832a9Bb0d3153bF",
+    "HamsaL2Event": "0x3536Ca51D15f6fc0a76c1f42693F7949b5165F0D",
+    "InstitutionUserRegistry": "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8",
+    "InstUserProxy": "0x7f1Dc0F5F8dafd9715Ea51f6c11b92929b2Dbdea",
+    "PrivateERCToken": "0x1b0854594EdFA67b046290631224dA71aBB2D734",
+    "PrivateERCTokenImplementation": "0xC8cBf813b4e1D4F5563C4DC15AC56f238EEAcB3C"
+  },
+  "accounts": {
+    "Owner": "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
+    "OwnerKey": "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
+    "MasterMinter": "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+    "Pauser": "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB",
+    "BlackLister": "0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB"
+  }
+}

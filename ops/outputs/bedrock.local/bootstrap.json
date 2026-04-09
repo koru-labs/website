@@ -1,0 +1,21 @@
+{
+  "environment": "bedrock.local",
+  "network": "bedrock_local",
+  "chainId": 100,
+  "registeredInstitutions": [
+    "Node3",
+    "Node4"
+  ],
+  "registeredUsers": [],
+  "skippedInstitutions": [
+    {
+      "institution": "Node3",
+      "reason": "missing grpcUrl"
+    },
+    {
+      "institution": "Node4",
+      "reason": "missing grpcUrl"
+    }
+  ],
+  "configuredMinters": []
+}
