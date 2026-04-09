@@ -35,6 +35,10 @@
     "ws": "^8.19.0"
   },
   "scripts": {
+    "ops:deploy": "npx hardhat run ops/deploy/run.js --network ucl_target",
+    "ops:bootstrap": "npx hardhat run ops/bootstrap/run.js --network ucl_target",
+    "ops:init": "npm run ops:deploy && npm run ops:bootstrap",
+    "ops:scenario:mint": "npx hardhat run ops/scenarios/mint.js --network ucl_target",
     "deploy-infra-qa": "npx hardhat run script/infra/deploy.js --network ucl_L2_qa",
     "deploy-L1-qa": "npx hardhat run script/infra/deploy_L1_rollup.js --network eth_L1_qa",
     "deploy-infra-user-qa": "npx hardhat run script/infra/register_inst_user.js --network ucl_L2_qa",

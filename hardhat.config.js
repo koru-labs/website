@@ -1,5 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 
+const opsCurrentConfig = require("./ops/config/current");
+
 
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -101,7 +103,7 @@ module.exports = {
             ],
         },
         ucl_L2_qa: {
-            url: "https://L2-node11.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
+            url: "https://l2-node11.hamsa-ucl.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
             accounts: [
                 // "555332672ce947d150d23a36bf3847078291f89bda7073829bb718c77d626787", // owner 0xe46Fe251dd1d9FfC247bc0DDb6D61e4EE4416ecB
                 "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", //masterMint 0xf17f52151EbEF6C7334FAD080c5704D77216b732 //// node3 manager address (circle manager, master minter, blackList)
@@ -219,6 +221,28 @@ module.exports = {
                 "5ce8c4aea462de54d0a8ecbfe5cc8c8ac18926979c66a66e5a463ba8506401c0", //fE5acd71116FB8a03510FF171222F01164609c97，admin,do not use business processes
             ],
             chainId: 1337
+        },
+        ucl_target: {
+            url: opsCurrentConfig.rpcUrl,
+            accounts: [
+                "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
+                "f7a610afa00eac908941fe2c9f8cd57142408d2edf13aed4e4efa52fe7958ab1",
+                "32ef95df4ea8de4f6b5518106e97dbb3e5b97cdbb4a33adfeaa9f14e729f51eb",
+                "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
+                "35c285cae6a13a0e13ef7db25776e60b02745922da3b39513b94114c2c5d9add",
+                "e047c057b8b11153322c91f2d5474b73d691fa4351d053148582f07462ad1ae1",
+                "a8ee6be3949318b57fbdfefdc86cd3a9033b8946789cb33db209e0c623c45cb5",
+                "2b42ed39b2d9c3d576320af626b90a62ce726ee0f25764061947891415dbe782",
+                "f951e1bd9ef0359e6886ae77e5fd30d566ef098d099c78fd3fb68588657618cc",
+                "d9597e2d88463e47d1b6c2431879f06d440a6ff980a51a1f8c830623b112f329",
+                "81690fb141b4ae5682ad1fd73b29ae1bcc67891e93de73c6f636402deac21171",
+                "360b3f569579a0e824fab18c21d6e583b060e2339142c6833c899029fc8e428d",
+                "1bf1fbfb91c484e78cb8adb55ff3fee99825b49af57ba0eb0b79f82b3ffb563f",
+                "f083c679bb978f6e2eb8611de27319b2e3a329d307eb5fd1d532a1cd6b63fff9",
+                "518eb784dd768d8c0cdf9218d44ae8f498d0cadf7ecf98f5ecf27c6b793986ca",
+                "5ce8c4aea462de54d0a8ecbfe5cc8c8ac18926979c66a66e5a463ba8506401c0",
+            ],
+            chainId: opsCurrentConfig.chainId
         },
         dev_L2: {
             // url: "http://afd800b6ae2e34ab292e09729ff51e30-364478555.us-west-1.elb.amazonaws.com:8545", //k8s,ucl-node2,v2.  3.145.110.33, L2-node44.hamsa-ucl.com
